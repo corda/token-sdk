@@ -11,7 +11,7 @@ sourceSets {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     // Corda dependencies.
     cordaCompile "$corda_release_group:corda-core:$corda_release_version"
@@ -24,5 +24,12 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
         apiVersion = "1.1"
         jvmTarget = "1.8"
         javaParameters = true   // Useful for reflection.
+    }
+}
+
+cordapp {
+    info {
+        vendor = "R3"
+        targetPlatformVersion = "4"
     }
 }
