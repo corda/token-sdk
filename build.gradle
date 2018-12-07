@@ -1,13 +1,11 @@
 buildscript {
     ext {
         corda_release_group = 'net.corda'
-        corda_release_version = '3.3-corda'
-        corda_gradle_plugins_version = '3.2.1'
-        kotlin_version = '1.1.60'
+        corda_release_version = '4.0-SNAPSHOT'
+        corda_gradle_plugins_version = '4.0.34'
+        kotlin_version = '1.2.71'
         junit_version = '4.12'
-        quasar_version = '0.7.9'
-        spring_boot_version = '2.0.2.RELEASE'
-        spring_boot_gradle_plugin_version = '2.0.2.RELEASE'
+        quasar_version = '0.7.10'
         slf4j_version = '1.7.25'
         log4j_version = '2.9.1'
     }
@@ -16,6 +14,10 @@ buildscript {
         mavenLocal()
         mavenCentral()
         jcenter()
+        // For Corda binaries.
+        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-dev' }
+        // For Gradle Plugins binaries.
+        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda/' }
     }
 
     dependencies {
@@ -23,7 +25,6 @@ buildscript {
         classpath "net.corda.plugins:cordapp:$corda_gradle_plugins_version"
         classpath "net.corda.plugins:cordformation:$corda_gradle_plugins_version"
         classpath "net.corda.plugins:quasar-utils:$corda_gradle_plugins_version"
-        classpath "org.springframework.boot:spring-boot-gradle-plugin:$spring_boot_gradle_plugin_version"
     }
 }
 
@@ -32,7 +33,8 @@ allprojects {
         mavenLocal()
         jcenter()
         mavenCentral()
-        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda' }
+        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-dev' }
+        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda/' }
         maven { url 'https://jitpack.io' }
     }
 }
@@ -51,7 +53,7 @@ sourceSets {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     // Corda dependencies.
     cordaCompile "$corda_release_group:corda-core:$corda_release_version"
@@ -116,5 +118,12 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
                 "$project.group:cordapp:$project.version"
         ]
         rpcUsers = [[ user: "user1", "password": "test", "permissions": ["ALL"]]]
+    }
+}
+
+cordapp {
+    info {
+        vendor = "R3"
+        targetPlatformVersion = "4"
     }
 }
