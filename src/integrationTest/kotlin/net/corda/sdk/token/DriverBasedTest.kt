@@ -1,4 +1,4 @@
-package net.corda.token
+package net.corda.sdk.token
 
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.utilities.getOrThrow
@@ -31,7 +31,7 @@ class DriverBasedTest {
 
     // Runs a test inside the Driver DSL, which provides useful functions for starting nodes, etc.
     private fun withDriver(test: DriverDSL.() -> Unit) = driver(
-        DriverParameters(isDebug = true, startNodesInProcess = true)
+            DriverParameters(isDebug = true, startNodesInProcess = true)
     ) { test() }
 
     // Makes an RPC call to retrieve another node's name from the network map.
@@ -42,6 +42,6 @@ class DriverBasedTest {
 
     // Starts multiple nodes simultaneously, then waits for them all to be ready.
     private fun DriverDSL.startNodes(vararg identities: TestIdentity) = identities
-        .map { startNode(providedName = it.name) }
-        .waitForAll()
+            .map { startNode(providedName = it.name) }
+            .waitForAll()
 }

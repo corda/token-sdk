@@ -50,6 +50,23 @@ sourceSets {
             srcDir rootProject.file("config/dev")
         }
     }
+    test {
+        resources {
+            srcDir rootProject.file("config/test")
+        }
+    }
+    integrationTest {
+        kotlin {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/integrationTest/kotlin')
+        }
+    }
+}
+
+configurations {
+    integrationTestCompile.extendsFrom testCompile
+    integrationTestRuntime.extendsFrom testRuntime
 }
 
 dependencies {
@@ -60,12 +77,10 @@ dependencies {
     cordaCompile "$corda_release_group:corda-node-api:$corda_release_version"
     cordaRuntime "$corda_release_group:corda:$corda_release_version"
 
-    // CorDapp dependencies.
-    cordapp project(":cordapp")
-    cordapp project(":cordapp-contracts-states")
+    testCompile "junit:junit:$junit_version"
+    testCompile "$corda_release_group:corda-node-driver:$corda_release_version"
 
     cordaCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
-    cordaCompile "org.apache.logging.log4j:log4j-web:${log4j_version}"
     cordaCompile "org.slf4j:jul-to-slf4j:$slf4j_version"
 }
 
@@ -88,10 +103,7 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
             address("localhost:10003")
             adminAddress("localhost:10043")
         }
-        cordapps = [
-                "$project.group:cordapp-contracts-states:$project.version",
-                "$project.group:cordapp:$project.version"
-        ]
+        cordapps = []
     }
     node {
         name "O=PartyA,L=London,C=GB"
@@ -100,10 +112,7 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
             address("localhost:10006")
             adminAddress("localhost:10046")
         }
-        cordapps = [
-                "$project.group:cordapp-contracts-states:$project.version",
-                "$project.group:cordapp:$project.version"
-        ]
+        cordapps = []
         rpcUsers = [[ user: "user1", "password": "test", "permissions": ["ALL"]]]
     }
     node {
@@ -113,10 +122,7 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
             address("localhost:10009")
             adminAddress("localhost:10049")
         }
-        cordapps = [
-                "$project.group:cordapp-contracts-states:$project.version",
-                "$project.group:cordapp:$project.version"
-        ]
+        cordapps = []
         rpcUsers = [[ user: "user1", "password": "test", "permissions": ["ALL"]]]
     }
 }
