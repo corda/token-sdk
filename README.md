@@ -4,6 +4,29 @@
 
 # Corda Token SDK
 
+How to use the SDK:
+
+Assets:
+
+* All custom tokens should be created as sub-classes of `Token`.
+* Tokens that are intended to be split and merged and that do not evolve
+   should be created as `FixedDefinition`s.
+* Tokens that are intended to be split and merged and that do evolve
+  should be created as `EvolvableDefinition`s.
+* Non fungible tokens should sub-class `Evolvable Token` and be composed
+  within `OwnedToken`.
+
+Agreements:
+
+* Anything that is not an asset should be a linear state.
+
+Keeping mind that:
+
+* Issued tokens are liabilities to issuers.
+* Issued tokens are assets to owners.
+* Issuers / owners should not be hard-coded into tokens. They should be added
+  via the `Issued` class and `OwnedToken` / `OwnedTokenAmount` classes.
+
 TODO:
 
 * Add JAR publishing stuff to gradle files (Ask Clinton about this)
@@ -35,19 +58,4 @@ TODO:
  6. Are non fungible things just token types?
  7. Do we need to inline token symbol and description for fungible token pointers? How does this affect coin selection?
  8. How does all this interact with obligations?
-
-/**
- *
- * Fungible Token types:
- *
- * CurrencyType
- *  Fiat
- *  Crypto
- * Securities
- *  Equities
- *  Fixed income
- * Non-Finance
- * Exchange traded derivatives
- *
- */
 
