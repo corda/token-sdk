@@ -3,7 +3,7 @@ package net.corda.sdk.token.contracts
 import net.corda.core.contracts.Contract
 import net.corda.core.transactions.LedgerTransaction
 
-abstract class TokenTypeContract : Contract {
+class OwnedTokenAmountContract : Contract {
 
     companion object {
         val contractId = this::class.java.enclosingClass.canonicalName
@@ -14,3 +14,7 @@ abstract class TokenTypeContract : Contract {
     }
 
 }
+
+// How does one add additional functionality to this contract?
+// - encumbrances?
+// - sub-class?
