@@ -3,7 +3,10 @@ package net.corda.sdk.token.contracts
 import net.corda.core.contracts.Contract
 import net.corda.core.transactions.LedgerTransaction
 
-class TokenContract : Contract {
+/**
+ * You would typically implement your own contract for evolvable token definitions.
+ */
+abstract class TokenContract : Contract {
 
     companion object {
         val contractId = this::class.java.enclosingClass.canonicalName
