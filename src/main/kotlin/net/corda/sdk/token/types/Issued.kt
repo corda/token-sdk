@@ -6,6 +6,7 @@ import net.corda.sdk.token.types.token.Token
 import java.math.BigDecimal
 
 /**
+ * TODO: Name clashes with corda core Issued.
  * A type to wrap a token amount that is issued on the ledger. This might be a ledger native asset such as
  * an equity which is issued directly on to the ledger, in which case the issuer _IS_ the securities issuer. In other
  * cases, the token would represent a depository receipt. In this case the issuer would be the custodian or securities

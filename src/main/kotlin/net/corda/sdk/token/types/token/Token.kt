@@ -3,6 +3,9 @@ package net.corda.sdk.token.types.token
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.TokenizableAssetInfo
+import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 import net.corda.sdk.token.types.token.Token.*
 import java.math.BigDecimal
@@ -34,8 +37,12 @@ sealed class Token : TokenizableAssetInfo {
         override fun toString(): String = "Pointer(${pointer.pointer.id}, ${pointer.type.canonicalName})"
     }
 
-    interface EvolvableDefinition : TokenizableAssetInfo, LinearState {
-        fun toPointer(): Pointer<*>
+    abstract class EvolvableDefinition(
+            open val maintainer: Party,
+            final override val linearId: UniqueIdentifier = UniqueIdentifier()
+    ) : TokenizableAssetInfo, LinearState {
+        final override val participants: List<AbstractParty> get() = listOf(maintainer)
+        abstract fun toPointer(): Pointer<*>
     }
 
 }

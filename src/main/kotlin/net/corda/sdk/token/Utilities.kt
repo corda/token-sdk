@@ -4,6 +4,7 @@ import net.corda.core.contracts.Amount
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.internal.uncheckedCast
+import net.corda.sdk.token.states.OwnedToken
 import net.corda.sdk.token.states.OwnedTokenAmount
 import net.corda.sdk.token.types.Issued
 import net.corda.sdk.token.types.money.DigitalCurrency
@@ -33,6 +34,8 @@ infix fun Token.`issued by`(issuer: Party) = issuedBy(issuer)
 // For adding ownership information to a Token. Wraps an amount of some Issued Token with an OwnedTokenAmount state.
 infix fun <T : Token> Amount<Issued<T>>.`owned by`(owner: AbstractParty) = ownedBy(owner)
 infix fun <T : Token> Amount<Issued<T>>.ownedBy(owner: AbstractParty) = OwnedTokenAmount(this, owner)
+infix fun <T : Token> Issued<T>.`owned by`(owner: AbstractParty) = ownedBy(owner)
+infix fun <T : Token> Issued<T>.ownedBy(owner: AbstractParty) = OwnedToken(this, owner)
 
 /** Fiat currencies. */
 

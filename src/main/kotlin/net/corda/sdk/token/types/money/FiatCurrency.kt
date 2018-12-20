@@ -6,6 +6,7 @@ import java.math.BigDecimal
 import java.util.*
 
 /**
+ * TODO: this is a temporary class for now.
  * A wrapper for money as the Java Currency type doesn't implement our interfaces and adds specificity around the
  * money being fiat. Note that fiat money backed stable coins such as Tether could be classed as either a
  * [FiatCurrency] coupled with the Tether issuer party, or a [DigitalCurrency] ("USDT") coupled with the Tether issuer.

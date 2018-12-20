@@ -1,6 +1,6 @@
 <p align="center">
-      <img src="https://www.corda.net/wp-content/uploads/2016/11/fg005_corda_b.png" alt="Corda" width="500">
-    </p>
+    <img src="https://www.corda.net/wp-content/uploads/2016/11/fg005_corda_b.png" alt="Corda" width="500">
+</p>
 
 # Corda Token SDK
 
@@ -26,6 +26,7 @@ Keeping mind that:
 * Issued tokens are assets to owners.
 * Issuers / owners should not be hard-coded into tokens. They should be added
   via the `Issued` class and `OwnedToken` / `OwnedTokenAmount` classes.
+  This means we can use the same token definition across multiple issuers.
 
 TODO:
 
