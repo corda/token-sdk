@@ -4,6 +4,7 @@ import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.TypeOnlyCommandData
 
 interface TokenCommands : CommandData {
-    class Create : CommandData, TypeOnlyCommandData()
-    class Update : CommandData, TypeOnlyCommandData()
+    class Create : OwnedTokenCommands, TypeOnlyCommandData()
+    class Update : OwnedTokenCommands, TypeOnlyCommandData()
+    class Delete : OwnedTokenCommands, TypeOnlyCommandData()
 }

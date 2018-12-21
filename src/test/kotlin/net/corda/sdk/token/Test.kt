@@ -1,33 +1,36 @@
 package net.corda.sdk.token
 
 import net.corda.core.contracts.Amount
-import net.corda.core.contracts.LinearPointer
+import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.sdk.token.states.OwnedToken
 import net.corda.sdk.token.states.OwnedTokenAmount
 import net.corda.sdk.token.types.Issued
 import net.corda.sdk.token.types.money.FiatCurrency
-import net.corda.sdk.token.types.token.Token
+import net.corda.sdk.token.types.token.EmbeddableToken
+import net.corda.sdk.token.types.token.EvolvableToken
+import net.corda.sdk.token.types.token.TokenPointer
 import net.corda.testing.core.TestIdentity
 import org.junit.Test
 import java.math.BigDecimal
+import kotlin.test.assertEquals
 
 class Test {
 
     val ALICE = TestIdentity(CordaX500Name("Alice", "London", "GB"))
     val BOB = TestIdentity(CordaX500Name("Bob", "New York", "GB"))
-    val BOE = TestIdentity(CordaX500Name("Bank of England", "London", "GB"))
 
     @Test
-    fun `inlined token definition`() {
-        // Inlined token for GBP stable coin.
-        val pounds: FiatCurrency = GBP
-        // Some amount of stable coin.
-        val tenPounds: Amount<FiatCurrency> = 10.GBP
-        // Some amount of stable coin issued by bank of england.
-        val tenPoundsIssuedByBandOfEngland: OwnedTokenAmount<FiatCurrency> = tenPounds `issued by` BOE.party `owned by` ALICE.party
-        println(tenPoundsIssuedByBandOfEngland)
+    fun `creating inlined token definition`() {
+        // Some amount of GBP issued by the Bank of England and owned by Alice.
+        val tenPoundsIssuedByBobOwnedByAlice = 10.GBP issuedBy BOB.party ownedBy ALICE.party
+        // Test everything is assigned correctly.
+        assertEquals(GBP, tenPoundsIssuedByBobOwnedByAlice.amount.token.product)
+        assertEquals(1000, tenPoundsIssuedByBobOwnedByAlice.amount.quantity)
+        assertEquals(BOB.party, tenPoundsIssuedByBobOwnedByAlice.amount.token.issuer)
+        assertEquals(ALICE.party, tenPoundsIssuedByBobOwnedByAlice.owner)
+        println(tenPoundsIssuedByBobOwnedByAlice)
     }
 
     @Test
@@ -37,27 +40,21 @@ class Test {
                 val address: String,
                 val valuation: Amount<FiatCurrency>,
                 override val maintainer: Party,
-                override val displayTokenSize: BigDecimal = BigDecimal.ZERO
-        ) : Token.EvolvableDefinition(maintainer) {
-            // This is non fungible for now but could be fungible in the future if needs be.
+                override val displayTokenSize: BigDecimal = BigDecimal.ZERO,
+                override val linearId: UniqueIdentifier = UniqueIdentifier()
+        ) : EvolvableToken()
 
-            override fun toPointer(): Token.Pointer<House> {
-                return Token.Pointer(LinearPointer(linearId, House::class.java), displayTokenSize)
-            }
-        }
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, BOB.party)
+        val housePointer: TokenPointer<House> = house.toPointer()
 
-        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, BOE.party)
-        val housePointer: Token.Pointer<House> = house.toPointer()
-        val houseIssuedByBob: Issued<Token> = housePointer `issued by` BOB.party
-        val houseIssuedByBobOwnedByAlice: OwnedToken<Token> = houseIssuedByBob `owned by` ALICE.party
+        // TODO: Make types more specific here.
+        val houseIssuedByBob: Issued<EmbeddableToken> = housePointer issuedBy BOB.party
+        val houseIssuedByBobOwnedByAlice: OwnedToken<EmbeddableToken> = houseIssuedByBob ownedBy ALICE.party
 
         // Now we want to do fractional ownership in this house...
         // Redeem the OwnedToken and reissue it as an OwnedTokenAmount
-        // TODO: figure out how to do amounts of some evolvable token using teh linear ID.
-        val oneHundredUnitsOfOwnershipInHouse = Amount(100L, houseIssuedByBob)
-        val oneHundredUnitsOfOwnershipInHouseOwnedByAlice: OwnedTokenAmount<Token> = oneHundredUnitsOfOwnershipInHouse `owned by` ALICE.party
+        val oneUnitsOfHouse: OwnedTokenAmount<TokenPointer<House>> = 100 of housePointer issuedBy BOB.party ownedBy ALICE.party
     }
-
 
 }
 

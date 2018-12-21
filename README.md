@@ -60,3 +60,27 @@ TODO:
  7. Do we need to inline token symbol and description for fungible token pointers? How does this affect coin selection?
  8. How does all this interact with obligations?
 
+Coin selection woes
+
+* Need to discriminate on issuer, notary\
+
+Comment from Alex
+
+* Resolving token pointer to evolvable definition to just get the maintainer could vet tedious.
+  If we are constantly doing it then why not embed the maintainer in the pointer or the issued type.
+
+TODO:
+
+* Introduce some nice kotlin DSL syntax for creating amounts of some evolvable token type. how would one do this?
+* Write some flows for creating token types and updating token types
+* Write some flows for creating `OwnedToken`s and `OwnedTokenAmount`s
+* Write a small persistence app for tracking tokens which have been issued. Can only remove a token from the ledger if nothing is issued and owned of it
+* Draw diagrams to explain how issued and owns works by wrapping the tokens
+* Explain how to issue a token from an evolvable token type. perhaps we can use some kind of DSL?
+    * First we need to know the token type (maybe by ID, or through some search)
+* Implement issuer whitelisting
+* Implement an example of a non issued/owned token, such as an agreement
+    * With issued owned tokens, the token is ALWAYS a liability of the issuer and always an asset of the owner
+    * With agreements, the token might not be of some financial thing and if it is, either side could hold an asset/liability and it may change (derivatives)
+* Start implementing coin selection for all token types
+
