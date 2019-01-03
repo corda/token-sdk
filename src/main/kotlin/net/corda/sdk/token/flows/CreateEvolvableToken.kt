@@ -8,7 +8,7 @@ import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
-import net.corda.sdk.token.commands.TokenCommands
+import net.corda.sdk.token.commands.TokenCommand
 import net.corda.sdk.token.types.token.EvolvableToken
 
 /**
@@ -24,8 +24,9 @@ class CreateEvolvableToken(
     @Suspendable
     override fun call(): SignedTransaction {
         // Create a transaction which updates the ledger with the new evolvable token.
+        val signingKeys = evolvableToken.maintainers.map { it.owningKey }
         val utx: TransactionBuilder = TransactionBuilder(notary = notary).apply {
-            addCommand(data = TokenCommands.Create(), keys = listOf(evolvableToken.maintainer.owningKey))
+            addCommand(data = TokenCommand.Create(), keys = signingKeys)
             addOutputState(state = evolvableToken, contract = contract)
         }
         // Sign the transaction. Only Concrete Parties should be used here.

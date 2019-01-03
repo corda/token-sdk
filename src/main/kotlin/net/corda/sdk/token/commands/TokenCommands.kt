@@ -8,8 +8,8 @@ import net.corda.core.contracts.TypeOnlyCommandData
  * implement [TokenCommands]. For example, a stock token will require a "stock split" command, which would implement
  * the [TokenCommands] interface.
  */
-interface TokenCommands : CommandData {
-    class Create : TokenCommands, TypeOnlyCommandData()
-    class Update : TokenCommands, TypeOnlyCommandData()
-    class Delete : TokenCommands, TypeOnlyCommandData()
+interface TokenCommand : CommandData {
+    class Create : TokenCommand, TypeOnlyCommandData()
+    class Update : TokenCommand, TypeOnlyCommandData()
+    class Delete : TokenCommand, TypeOnlyCommandData()
 }

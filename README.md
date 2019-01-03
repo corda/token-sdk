@@ -36,6 +36,9 @@ TODO:
 
 Thoughts:
 
+* Does it make sense to have more than one maintainer for a token type? Currently there is a list of maintainers but does there need to be?
+* Think about how to assign command to in out groups.
+
 The [Issuer] type is nice because it allows you to strip the issuer and
 then group same the same currencies as fungible, if you'd like to view
 them that way. A step up from this would be the ability to specify fungibility

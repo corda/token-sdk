@@ -104,12 +104,12 @@ class Test {
         data class House(
                 val address: String,
                 val valuation: Amount<FiatCurrency>,
-                override val maintainer: Party,
+                override val maintainers: List<Party>,
                 override val displayTokenSize: BigDecimal = BigDecimal.ZERO,
                 override val linearId: UniqueIdentifier = UniqueIdentifier()
         ) : EvolvableToken()
 
-        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, BOB.party)
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(BOB.party))
         val housePointer: TokenPointer<House> = house.toPointer()
 
         // TODO: Make types more specific here.

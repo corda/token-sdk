@@ -6,7 +6,7 @@ import net.corda.core.contracts.OwnableState
 import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
-import net.corda.sdk.token.commands.OwnedTokenCommands
+import net.corda.sdk.token.commands.Move
 import net.corda.sdk.token.contracts.OwnedTokenContract
 import net.corda.sdk.token.types.Issued
 import net.corda.sdk.token.types.token.EmbeddableToken
@@ -23,7 +23,7 @@ data class OwnedToken<T : EmbeddableToken>(val token: Issued<T>, override val ow
 
     /** Helper for changing the owner of the state. */
     override fun withNewOwner(newOwner: AbstractParty): CommandAndState {
-        return CommandAndState(OwnedTokenCommands.Move(), OwnedToken(token, newOwner))
+        return CommandAndState(Move(token), OwnedToken(token, newOwner))
     }
 
     override fun toString(): String {

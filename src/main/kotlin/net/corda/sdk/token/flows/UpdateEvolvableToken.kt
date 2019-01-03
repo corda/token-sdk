@@ -5,7 +5,7 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.*
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
-import net.corda.sdk.token.commands.TokenCommands
+import net.corda.sdk.token.commands.TokenCommand
 import net.corda.sdk.token.schemas.DistributionRecord
 import net.corda.sdk.token.types.token.EvolvableToken
 import java.util.*
@@ -20,8 +20,10 @@ class UpdateEvolvableToken(
     @Suspendable
     override fun call(): SignedTransaction {
         // Create a transaction which updates the ledger with the new evolvable token.
+        // The parties listed as maintainers in the old state should be the signers.
+        val signingKeys = old.state.data.maintainers.map { it.owningKey }
         val utx: TransactionBuilder = TransactionBuilder(notary = old.state.notary).apply {
-            addCommand(data = TokenCommands.Update(), keys = listOf(new.maintainer.owningKey))
+            addCommand(data = TokenCommand.Update(), keys = signingKeys)
             addInputState(old)
             addOutputState(state = new, contract = old.state.contract)
         }

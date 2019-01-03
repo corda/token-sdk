@@ -34,8 +34,11 @@ object RequestAdditionToDistributionList {
         @Suspendable
         override fun call() {
             val state = stateAndRef.state.data
-            val session = initiateFlow(state.maintainer)
-            logger.info("Requesting addition to ${state.maintainer} distribution list for ${state.linearId}.")
+            // Pick the first maintainer.
+            // TODO: Try each maintainer.
+            val maintainer = state.maintainers.first()
+            val session = initiateFlow(maintainer)
+            logger.info("Requesting addition to $maintainer distribution list for ${state.linearId}.")
             val result = session.sendAndReceive<FlowResult>(stateAndRef).unwrap { it }
             // Don't do anything with the flow result for now.
             return when (result) {
