@@ -7,7 +7,7 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.sdk.token.commands.TokenCommand
 import net.corda.sdk.token.schemas.DistributionRecord
-import net.corda.sdk.token.types.token.EvolvableToken
+import net.corda.sdk.token.types.EvolvableToken
 import java.util.*
 import javax.persistence.criteria.CriteriaQuery
 

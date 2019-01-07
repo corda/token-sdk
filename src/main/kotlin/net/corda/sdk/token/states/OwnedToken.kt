@@ -8,8 +8,8 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.sdk.token.commands.Move
 import net.corda.sdk.token.contracts.OwnedTokenContract
+import net.corda.sdk.token.types.EmbeddableToken
 import net.corda.sdk.token.types.Issued
-import net.corda.sdk.token.types.token.EmbeddableToken
 
 /**
  * This class is for handling the issuer / owner relationship for non-fungible token types. It allows the token

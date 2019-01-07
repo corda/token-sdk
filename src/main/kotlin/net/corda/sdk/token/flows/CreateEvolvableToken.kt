@@ -9,7 +9,7 @@ import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.sdk.token.commands.TokenCommand
-import net.corda.sdk.token.types.token.EvolvableToken
+import net.corda.sdk.token.types.EvolvableToken
 
 /**
  * Flow for creating an evolvable token type. This is just a simple flow for now. Although it can be invoked via the

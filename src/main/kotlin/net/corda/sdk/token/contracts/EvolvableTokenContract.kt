@@ -4,7 +4,7 @@ import net.corda.core.contracts.Contract
 import net.corda.core.contracts.requireSingleCommand
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.sdk.token.commands.TokenCommand
-import net.corda.sdk.token.types.token.EvolvableToken
+import net.corda.sdk.token.types.EvolvableToken
 import net.corda.sdk.token.utilities.singleInput
 import net.corda.sdk.token.utilities.singleOutput
 

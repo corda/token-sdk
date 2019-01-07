@@ -14,11 +14,11 @@ object DistributionRecordSchema : MappedSchema(
 )
 
 @Entity
-@IdClass(DistributionRecordId::class)
 @Table(name = "distribution_records")
 class DistributionRecord(
-        @Id @Column(name = "linearId") var linearId: UUID,
-        @Id @Column(name = "party") var party: Party
-)
-
-data class DistributionRecordId(var linearId: UUID, var party: Party)
+        @Id @GeneratedValue @Column(name = "id", unique = true, nullable = false) val id: Long,
+        @Column(name = "linear_id") var linearId: UUID,
+        @Column(name = "party") var party: Party
+) {
+    constructor(linearId: UUID, party: Party) : this(0, linearId, party)
+}

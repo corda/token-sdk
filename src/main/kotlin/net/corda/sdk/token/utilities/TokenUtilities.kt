@@ -6,24 +6,34 @@ import net.corda.core.identity.Party
 import net.corda.core.internal.uncheckedCast
 import net.corda.sdk.token.states.OwnedToken
 import net.corda.sdk.token.states.OwnedTokenAmount
+import net.corda.sdk.token.types.EmbeddableToken
 import net.corda.sdk.token.types.Issued
-import net.corda.sdk.token.types.token.EmbeddableToken
-import net.corda.sdk.token.types.token.Token
 import java.math.BigDecimal
 
 /** Helpers. */
 
-// For parsing amount quantities. Like so: 1_000.GBP.
-fun <T : Token> AMOUNT(amount: Int, token: T): Amount<T> = AMOUNT(amount.toLong(), token)
+// For parsing amount quantities of embeddable tokens that are not wrapped with an issuer. Like so: 1_000.GBP.
+fun <T : EmbeddableToken> AMOUNT(amount: Int, token: T): Amount<T> = AMOUNT(amount.toLong(), token)
 
-fun <T : Token> AMOUNT(amount: Long, token: T): Amount<T> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
-fun <T : Token> AMOUNT(amount: Double, token: T): Amount<T> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
+fun <T : EmbeddableToken> AMOUNT(amount: Long, token: T): Amount<T> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
+fun <T : EmbeddableToken> AMOUNT(amount: Double, token: T): Amount<T> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
 
-// For parsing amounts of non-fixed token definitions. Like so: 1_000 of token.
+// As above but works with embeddable tokens wrapped with an issuer.
+fun <T : EmbeddableToken> AMOUNT(amount: Int, token: Issued<T>): Amount<Issued<T>> = AMOUNT(amount.toLong(), token)
+
+fun <T : EmbeddableToken> AMOUNT(amount: Long, token: Issued<T>): Amount<Issued<T>> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
+fun <T : EmbeddableToken> AMOUNT(amount: Double, token: Issued<T>): Amount<Issued<T>> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
+
+// For parsing amounts of embeddable tokens that are not wrapped with an issuer. Like so: 1_000 of token.
 infix fun <T : EmbeddableToken> Int.of(token: T) = AMOUNT(this, token)
-
 infix fun <T : EmbeddableToken> Long.of(token: T) = AMOUNT(this, token)
 infix fun <T : EmbeddableToken> Double.of(token: T) = AMOUNT(this, token)
+
+// As above but for tokens which are wrapped with an issuer.
+infix fun <T : Issued<EmbeddableToken>> Int.of(token: T) = AMOUNT(this, token)
+
+infix fun <T : Issued<EmbeddableToken>> Long.of(token: T) = AMOUNT(this, token)
+infix fun <T : Issued<EmbeddableToken>> Double.of(token: T) = AMOUNT(this, token)
 
 // For wrapping amounts of a fixed token definition with an issuer: Amount<Token> -> Amount<Issued<Token>>.
 // Note: these helpers are not compatible with EvolvableDefinitions, only EmbeddableDefinitions.

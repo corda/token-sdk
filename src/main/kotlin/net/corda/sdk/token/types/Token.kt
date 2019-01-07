@@ -1,4 +1,4 @@
-package net.corda.sdk.token.types.token
+package net.corda.sdk.token.types
 
 import net.corda.core.contracts.TokenizableAssetInfo
 
