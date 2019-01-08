@@ -2,12 +2,12 @@ package net.corda.sdk.token.states
 
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
-import net.corda.core.contracts.OwnableState
 import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.sdk.token.commands.Move
 import net.corda.sdk.token.contracts.OwnedTokenContract
+import net.corda.sdk.token.types.AbstractOwnedToken
 import net.corda.sdk.token.types.EmbeddableToken
 import net.corda.sdk.token.types.Issued
 
@@ -16,7 +16,7 @@ import net.corda.sdk.token.types.Issued
  * definition to evolve independently of who owns it, if necessary.
  */
 @BelongsToContract(OwnedTokenContract::class)
-data class OwnedToken<T : EmbeddableToken>(val token: Issued<T>, override val owner: AbstractParty) : OwnableState {
+data class OwnedToken<T : EmbeddableToken>(val token: Issued<T>, override val owner: AbstractParty) : AbstractOwnedToken<T>() {
 
     /** The current [owner] is always the sole participant. */
     override val participants: List<AbstractParty> get() = listOf(owner)

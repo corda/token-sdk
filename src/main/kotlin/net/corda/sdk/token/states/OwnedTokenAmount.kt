@@ -1,11 +1,15 @@
 package net.corda.sdk.token.states
 
-import net.corda.core.contracts.*
+import net.corda.core.contracts.Amount
+import net.corda.core.contracts.BelongsToContract
+import net.corda.core.contracts.CommandAndState
+import net.corda.core.contracts.FungibleState
 import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.sdk.token.commands.Move
 import net.corda.sdk.token.contracts.OwnedTokenAmountContract
+import net.corda.sdk.token.types.AbstractOwnedToken
 import net.corda.sdk.token.types.EmbeddableToken
 import net.corda.sdk.token.types.Issued
 
@@ -17,10 +21,7 @@ import net.corda.sdk.token.types.Issued
 data class OwnedTokenAmount<T : EmbeddableToken>(
         override val amount: Amount<Issued<T>>,
         override val owner: AbstractParty
-) : FungibleState<Issued<T>>, OwnableState {
-
-    /** The current [owner] is always the sole participant. */
-    override val participants: List<AbstractParty> get() = listOf(owner)
+) : FungibleState<Issued<T>>, AbstractOwnedToken<T>() {
 
     /** Helper for changing the owner of the state. */
     override fun withNewOwner(newOwner: AbstractParty): CommandAndState {

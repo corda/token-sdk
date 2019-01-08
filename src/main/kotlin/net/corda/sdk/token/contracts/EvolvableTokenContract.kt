@@ -24,13 +24,13 @@ abstract class EvolvableTokenContract : Contract {
     }
 
     /** For CorDapp developers to implement. */
-    abstract fun additionalCreateChecks()
+    abstract fun additionalCreateChecks(tx: LedgerTransaction)
 
     /** For CorDapp developers to implement. */
-    abstract fun additionalUpdateChecks()
+    abstract fun additionalUpdateChecks(tx: LedgerTransaction)
 
     /** For CorDapp developers to implement. */
-    abstract fun additionalDeleteChecks()
+    abstract fun additionalDeleteChecks(tx: LedgerTransaction)
 
     private fun handleCreate(tx: LedgerTransaction) {
         require(tx.outputs.size == 1) { "Create evolvable token transactions may only contain one output." }
@@ -40,7 +40,7 @@ abstract class EvolvableTokenContract : Contract {
         require(command.signers.toSet() == token.maintainers.toSet()) {
             "The token maintainers only must sign the create evolvable token transaction."
         }
-        additionalCreateChecks()
+        additionalCreateChecks(tx)
     }
 
     private fun handleUpdate(tx: LedgerTransaction) {
@@ -53,7 +53,7 @@ abstract class EvolvableTokenContract : Contract {
         require(command.signers.toSet() == output.maintainers.toSet() + input.maintainers.toSet()) {
             "The old and new maintainers all must sign the update evolvable token transaction."
         }
-        additionalUpdateChecks()
+        additionalUpdateChecks(tx)
     }
 
     private fun handleDelete(tx: LedgerTransaction) {
@@ -64,7 +64,7 @@ abstract class EvolvableTokenContract : Contract {
         require(command.signers.toSet() == token.maintainers.toSet()) {
             "The token maintainers only must sign the delete evolvable token transaction."
         }
-        additionalDeleteChecks()
+        additionalDeleteChecks(tx)
     }
 
 }
