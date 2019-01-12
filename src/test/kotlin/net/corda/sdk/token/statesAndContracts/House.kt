@@ -16,7 +16,7 @@ data class House(
         val address: String,
         val valuation: Amount<FiatCurrency>,
         override val maintainers: List<Party>,
-        override val displayTokenSize: BigDecimal = BigDecimal.ZERO,
+        override val displayTokenSize: BigDecimal = BigDecimal.ONE,
         override val linearId: UniqueIdentifier = UniqueIdentifier()
 ) : EvolvableToken()
 

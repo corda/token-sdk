@@ -9,6 +9,7 @@ import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.utilities.ProgressTracker
 import net.corda.sdk.token.commands.TokenCommand
 import net.corda.sdk.token.types.EvolvableToken
 import net.corda.sdk.token.utilities.withNotary
@@ -24,19 +25,40 @@ class CreateEvolvableToken<T : EvolvableToken>(val transactionState: Transaction
 
     constructor(evolvableToken: T, notary: Party) : this(evolvableToken withNotary notary)
 
+    companion object {
+        object CREATING : ProgressTracker.Step("Creating transaction proposal.")
+        object SIGNING : ProgressTracker.Step("Signing transaction proposal.")
+        object RECORDING : ProgressTracker.Step("Recording signed transaction.") {
+            override fun childProgressTracker() = FinalityFlow.tracker()
+        }
+
+        fun tracker() = ProgressTracker(CREATING, SIGNING, RECORDING)
+    }
+
+    override val progressTracker: ProgressTracker = tracker()
+
     @Suspendable
     override fun call(): SignedTransaction {
         // Create a transaction which updates the ledger with the new evolvable token.
-        // Note that initally it is not shared with anyone.
+        // Note that initially it is not shared with anyone.
+        progressTracker.currentStep = CREATING
         val evolvableToken = transactionState.data
         val signingKeys = evolvableToken.maintainers.map { it.owningKey }
         val utx: TransactionBuilder = TransactionBuilder().apply {
             addCommand(data = TokenCommand.Create(), keys = signingKeys)
             addOutputState(state = transactionState)
         }
+
         // Sign the transaction. Only Concrete Parties should be used here.
+        progressTracker.currentStep = SIGNING
         val stx: SignedTransaction = serviceHub.signInitialTransaction(utx)
+
         // No need to pass in a session as there's no counterparty involved.
-        return subFlow(FinalityFlow(transaction = stx, sessions = listOf()))
+        progressTracker.currentStep = RECORDING
+        return subFlow(FinalityFlow(
+                transaction = stx,
+                progressTracker = RECORDING.childProgressTracker(),
+                sessions = emptyList()
+        ))
     }
 }

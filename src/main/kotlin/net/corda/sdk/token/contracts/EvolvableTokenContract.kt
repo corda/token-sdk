@@ -37,7 +37,8 @@ abstract class EvolvableTokenContract : Contract {
         require(tx.inputs.isEmpty()) { "Create evolvable token transactions must not contain any inputs." }
         val token = tx.singleOutput<EvolvableToken>()
         val command = tx.commands.requireSingleCommand<TokenCommand.Create>()
-        require(command.signers.toSet() == token.maintainers.toSet()) {
+        val maintainerKeys = token.maintainers.map { it.owningKey }
+        require(command.signers.toSet() == maintainerKeys.toSet()) {
             "The token maintainers only must sign the create evolvable token transaction."
         }
         additionalCreateChecks(tx)

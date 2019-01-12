@@ -9,6 +9,7 @@ import net.corda.sdk.token.types.Issued
 import net.corda.sdk.token.types.TokenPointer
 import net.corda.sdk.token.types.money.FiatCurrency
 import net.corda.sdk.token.types.money.GBP
+import net.corda.sdk.token.types.money.USD
 import net.corda.sdk.token.utilities.issuedBy
 import net.corda.sdk.token.utilities.of
 import net.corda.sdk.token.utilities.ownedBy
@@ -20,10 +21,13 @@ class Examples : LedgerTestWithPersistence() {
     @Test
     fun `creating inlined token definition`() {
         // Some amount of GBP issued by the Bank of England and owned by Alice.
+
+        val money: OwnedTokenAmount<FiatCurrency> = 10 of USD issuedBy ISSUER.party ownedBy ALICE.party
+
         val tenPoundsIssuedByIssuerOwnedByAlice: OwnedTokenAmount<FiatCurrency> = 10.GBP issuedBy ISSUER.party ownedBy ALICE.party
         val gbp: FiatCurrency = GBP
-        val token: Issued<EmbeddableToken> = GBP issuedBy ISSUER.party
-        val tokenAmount: Amount<Issued<EmbeddableToken>> = 1_000_000 of token
+        val bgpIssuedByISSUER: Issued<EmbeddableToken> = GBP issuedBy ISSUER.party
+        val tokenAmount: Amount<Issued<EmbeddableToken>> = 1_000_000 of bgpIssuedByISSUER
         val ownedToken: OwnedTokenAmount<EmbeddableToken> = tokenAmount ownedBy ALICE.party
         // Test everything is assigned correctly.
         assertEquals(GBP, tenPoundsIssuedByIssuerOwnedByAlice.amount.token.product)
@@ -35,12 +39,12 @@ class Examples : LedgerTestWithPersistence() {
 
     @Test
     fun `evolvable token definition`() {
-        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(BOB.party))
+        val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(BOB.party))
         val housePointer: TokenPointer<House> = house.toPointer()
 
         // TODO: Make types more specific here.
-        val houseIssuedByBob: Issued<EmbeddableToken> = housePointer issuedBy BOB.party
-        val houseIssuedByBobOwnedByAlice: OwnedToken<EmbeddableToken> = houseIssuedByBob ownedBy ALICE.party
+        val houseIssuedByBob: Issued<TokenPointer<House>> = housePointer issuedBy BOB.party
+        val houseIssuedByBobOwnedByAlice: OwnedToken<TokenPointer<House>> = houseIssuedByBob ownedBy ALICE.party
 
         // Now we want to do fractional ownership in this house...
         // Redeem the OwnedToken and reissue it as an OwnedTokenAmount

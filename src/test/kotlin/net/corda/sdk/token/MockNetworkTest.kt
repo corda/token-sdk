@@ -10,8 +10,11 @@ import net.corda.core.toFuture
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.sdk.token.flows.CreateEvolvableToken
+import net.corda.sdk.token.flows.IssueToken
+import net.corda.sdk.token.types.EmbeddableToken
 import net.corda.sdk.token.types.EvolvableToken
 import net.corda.sdk.token.utilities.withNotary
+import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
 import org.junit.After
@@ -21,7 +24,8 @@ abstract class MockNetworkTest(val numberOfNodes: Int) {
 
     protected val network = MockNetwork(
             cordappPackages = listOf("net.corda.sdk.token"),
-            threadPerNode = true
+            threadPerNode = true,
+            networkParameters = testNetworkParameters(minimumPlatformVersion = 4)
     )
 
     /** The nodes which makes up the network. */
@@ -52,7 +56,7 @@ abstract class MockNetworkTest(val numberOfNodes: Int) {
 
     fun StartedMockNode.legalIdentity() = services.myInfo.legalIdentities.first()
 
-    protected val notary: StartedMockNode get() = network.defaultNotaryNode
+    protected val NOTARY: StartedMockNode get() = network.defaultNotaryNode
 
     /** From a transaction which produces a single output, retrieve that output. */
     inline fun <reified T : LinearState> WireTransaction.singleOutput() = outRefsOfType<T>().single()
@@ -67,7 +71,25 @@ abstract class MockNetworkTest(val numberOfNodes: Int) {
 
     /** Create an evolvable token. */
     fun <T : EvolvableToken> StartedMockNode.createEvolvableToken(evolvableToken: T, notary: Party): CordaFuture<SignedTransaction> {
-        return transaction { startFlow(CreateEvolvableToken(evolvableToken withNotary notary)) }
+        return transaction { startFlow(CreateEvolvableToken(transactionState = evolvableToken withNotary notary)) }
+    }
+
+    fun <T : EmbeddableToken> StartedMockNode.issueToken(
+            embeddableToken: T,
+            owner: StartedMockNode,
+            notary: StartedMockNode,
+            amount: Long? = null,
+            anonymous: Boolean = true
+    ): CordaFuture<SignedTransaction> {
+        return transaction {
+            startFlow(IssueToken.Initiator(
+                    token = embeddableToken,
+                    owner = owner.legalIdentity(),
+                    notary = notary.legalIdentity(),
+                    amount = amount,
+                    anonymous = anonymous
+            ))
+        }
     }
 
 }

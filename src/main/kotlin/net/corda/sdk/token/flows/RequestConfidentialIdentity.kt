@@ -3,7 +3,9 @@ package net.corda.sdk.token.flows
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.crypto.DigitalSignature
 import net.corda.core.crypto.verify
-import net.corda.core.flows.*
+import net.corda.core.flows.FlowException
+import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.FlowSession
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.identity.PartyAndCertificate
@@ -19,23 +21,19 @@ import java.security.SignatureException
  */
 object RequestConfidentialIdentity {
 
-    @InitiatingFlow
-    @StartableByRPC
-    class Initiator(val party: Party) : FlowLogic<PartyAndCertificate>() {
+    class Initiator(val session: FlowSession) : FlowLogic<PartyAndCertificate>() {
         @Suspendable
         override fun call(): PartyAndCertificate {
-            val session = initiateFlow(party)
             return session.sendAndReceive<IdentityWithSignature>(ConfidentialIdentityRequest()).unwrap { theirIdentWithSig ->
-                validateAndRegisterIdentity(serviceHub, party, theirIdentWithSig.identity, theirIdentWithSig.signature)
+                validateAndRegisterIdentity(serviceHub, session.counterparty, theirIdentWithSig.identity, theirIdentWithSig.signature)
             }
         }
     }
 
-    @InitiatedBy(Initiator::class)
     class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
         @Suspendable
         override fun call() {
-            otherSession.receive<ConfidentialIdentityRequest>().unwrap { /** Do some checking. */ }
+            otherSession.receive<ConfidentialIdentityRequest>().unwrap { it }
             val ourAnonymousIdentity: PartyAndCertificate = serviceHub.keyManagementService.freshKeyAndCert(ourIdentityAndCert, false)
             val data: ByteArray = buildDataToSign(ourAnonymousIdentity)
             val signature: DigitalSignature = serviceHub.keyManagementService.sign(data, ourAnonymousIdentity.owningKey).withoutKey()
@@ -44,8 +42,10 @@ object RequestConfidentialIdentity {
         }
     }
 
+    @CordaSerializable
     class ConfidentialIdentityRequest
 
+    @CordaSerializable
     open class Exception(message: String, cause: Throwable? = null) : FlowException(message, cause)
 
     internal fun validateAndRegisterIdentity(
