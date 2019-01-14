@@ -14,6 +14,7 @@ import java.math.BigDecimal
  * of the security would be implied via some of information contained within the token type state. E.g. a stock symbol
  * or a party object of the securities issuer, if they had a node on the network.
  */
+
 @CordaSerializable
 data class Issued<out T : EmbeddableToken>(val issuer: Party, val product: T) : TokenizableAssetInfo {
     override fun toString(): String = "$product issued by ${issuer.name.organisation}"
