@@ -4,7 +4,8 @@
         <Console name="Console-Appender" target="SYSTEM_OUT">
             <PatternLayout>
                 <pattern>
-                    [%-5level] %d{HH:mm:ss.SSS} [%t] %c{1}.%M - %msg%n
+                    %highlight{[%-5level] %d{HH:mm:ss.SSS} [%t] %c{1}.%M - %msg%n}{INFO=white,WARN=red,FATAL=bright red
+                    blink}
                 </pattern>>
             </PatternLayout>
         </Console>

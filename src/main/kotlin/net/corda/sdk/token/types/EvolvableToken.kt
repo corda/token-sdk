@@ -1,4 +1,4 @@
-package net.corda.sdk.token.types.token
+package net.corda.sdk.token.types
 
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
@@ -16,21 +16,21 @@ import net.corda.core.identity.Party
 abstract class EvolvableToken : Token, LinearState {
 
     /**
-     * The [Party] which creates and maintains this token definition. It probably _is_ the issuer of the token but
+     * The [Party]s which create and maintain this token definition. It probably _is_ the issuer of the token but
      * may not necessarily be the issuer. For example. A reference data maintainer may create a token for some stock,
      * keep all the details up-to-date, and distribute the updates... However, it can be used by many issuers to create
      * depository receipts for the stock in question. Also the actual stock issuer (if they had a Corda node on the
      * network) could use the same stock token to issue ledger native stock.
      */
-    abstract val maintainer: Party
+    abstract val maintainers: List<Party>
 
     /** Defaults to the maintainer but can be overridden if necessary. */
-    override val participants: List<AbstractParty> get() = listOf(maintainer)
+    override val participants: List<AbstractParty> get() = maintainers
 
     /** For obtaining a pointer to this [EvolveableToken]. */
     inline fun <reified T : EvolvableToken> toPointer(): TokenPointer<T> {
         val linearPointer = LinearPointer(linearId, T::class.java)
-        return TokenPointer(linearPointer, displayTokenSize)
+        return TokenPointer(linearPointer, maintainers, displayTokenSize)
     }
 
 }

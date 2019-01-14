@@ -3,7 +3,6 @@ package net.corda.sdk.token.types
 import net.corda.core.contracts.TokenizableAssetInfo
 import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
-import net.corda.sdk.token.types.token.EmbeddableToken
 import java.math.BigDecimal
 
 /**
