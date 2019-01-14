@@ -54,7 +54,7 @@ import net.corda.sdk.token.utilities.withNotary
 object IssueToken {
 
     @CordaSerializable
-    class TokenIssuanceNotification(val anonymous: Boolean = true)
+    data class TokenIssuanceNotification(val anonymous: Boolean)
 
     @InitiatingFlow
     @StartableByRPC
@@ -68,21 +68,19 @@ object IssueToken {
 
         @Suspendable
         override fun call(): SignedTransaction {
-            // This is the identity which will be used to issue tokens, we also need a session for the other side.
+            // This is the identity which will be used to issue tokens.
+            // We also need a session for the other side.
             val me: Party = ourIdentity
             val ownerSession = initiateFlow(owner)
 
-            // Notify the recipient that we'll be issuing them a token / some tokens and advise them of anything
-            // they need to do, e.g. generate a confidential identity for the issuer.
+            // Notify the recipient that we'll be issuing them a tokens and advise them of anything they must do, e.g.
+            // generate a confidential identity for the issuer or sign up for updates for evolvable tokens.
             ownerSession.send(TokenIssuanceNotification(anonymous = anonymous))
 
             // This is the recipient of the tokens identity.
-            val owningParty: AbstractParty = if (true) {
+            val owningParty: AbstractParty = if (anonymous) {
                 subFlow(RequestConfidentialIdentity.Initiator(ownerSession)).party.anonymise()
             } else owner
-
-            // First send the token to the recipient, if it contains a token pointer then sign up for updates.
-            ownerSession.send(token)
 
             // Create the issued token. We add this to the commands for grouping.
             val issuedToken: Issued<T> = token issuedBy me
@@ -92,6 +90,20 @@ object IssueToken {
                 issuedToken ownedBy owningParty
             } else {
                 amount of issuedToken ownedBy owningParty
+            }
+
+            // At this point, the issuer signs up the recipient to automatic updates for evolvable tokens. On the other
+            // hand, if the token is a fixed inline definition, then the recipient will receive the definition with the
+            // owned token amount, so there's no need to sign up to updates.
+            //
+            // NOTE: It might be the case that the issuer is not actually the token maintainer for the evolvable token!
+            // In which case, signing up to updates in the manner provided by "RequestAdditionToDistributionList" would
+            // not work, as the issuer would not be making the updates to the token - some other party would be. This is
+            // where data distribution groups come in very handy! The token issuers would sign up to updates from the
+            // token maintainer, and in turn, the recipients of those tokens from the issuer would sign up to updates
+            // from the issuer, this way the token updates proliferate through the network.
+            if (token is TokenPointer<*>) {
+                subFlow(AddPartyToDistributionList(owner, token.pointer.pointer))
             }
 
             // Create the transaction.
@@ -111,26 +123,15 @@ object IssueToken {
     class Responder(val otherSession: FlowSession) : FlowLogic<SignedTransaction>() {
         @Suspendable
         override fun call(): SignedTransaction {
-            // Receive an issuance notification from the issuer. There's some stuff we may or may not have to do.
-            val tokenIssuanceNotification = otherSession.receive<TokenIssuanceNotification>().unwrap { it }
-            // Generate and send over a new confidential identity.
-            if (tokenIssuanceNotification.anonymous) {
+            // Receive an issuance notification from the issuer. It tells us if we need to sign up for token updates or
+            // generate a confidential identity.
+            val issuanceNotification = otherSession.receive<TokenIssuanceNotification>().unwrap { it }
+
+            // Generate and send over a new confidential identity, if necessary.
+            if (issuanceNotification.anonymous) {
                 subFlow(RequestConfidentialIdentity.Responder(otherSession))
             }
-            // Receive the token from the issuer. At this point, the recipient can sign up to automatic updates of the
-            // evolvable token. It might be the case that the issuer is not actually the token maintainer for the
-            // evolvable token! In which case, signing up to updates in the manner provided by
-            // "RequestAdditionToDistributionList" would not work, as the issuer would not be making the updates to the
-            // token - some other party would be. This is where data distribution groups come in very handy! The token
-            // issuers would sign up to updates from the token maintainer, and in turn, the recipients of those tokens
-            // from the issuer would sign up to updates from the issuer, this way the token updates proliferate through
-            // the network. On the other hand, if the token is a fixed inline definition, then the recipient will
-            // receive the definition with the owned token amount.
-            val token = otherSession.receive<EmbeddableToken>().unwrap { it }
-            if (token is TokenPointer<*>) {
-                // Make sure that the recipient is pushed updates to the evolvable token.
-                subFlow(AddPartyToDistributionList(otherSession.counterparty, token.pointer.pointer))
-            }
+
             // Resolve the issuance transaction.
             return subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ALL_VISIBLE))
         }

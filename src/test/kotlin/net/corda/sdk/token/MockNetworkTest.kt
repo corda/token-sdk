@@ -1,6 +1,7 @@
 package net.corda.sdk.token
 
 import net.corda.core.concurrent.CordaFuture
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.crypto.SecureHash
@@ -8,9 +9,9 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.toFuture
 import net.corda.core.transactions.SignedTransaction
-import net.corda.core.transactions.WireTransaction
 import net.corda.sdk.token.flows.CreateEvolvableToken
 import net.corda.sdk.token.flows.IssueToken
+import net.corda.sdk.token.flows.UpdateEvolvableToken
 import net.corda.sdk.token.types.EmbeddableToken
 import net.corda.sdk.token.types.EvolvableToken
 import net.corda.sdk.token.utilities.withNotary
@@ -59,7 +60,7 @@ abstract class MockNetworkTest(val numberOfNodes: Int) {
     protected val NOTARY: StartedMockNode get() = network.defaultNotaryNode
 
     /** From a transaction which produces a single output, retrieve that output. */
-    inline fun <reified T : LinearState> WireTransaction.singleOutput() = outRefsOfType<T>().single()
+    inline fun <reified T : ContractState> SignedTransaction.singleOutput() = tx.outRefsOfType<T>().single()
 
     /** Gets the linearId from a LinearState. */
     inline fun <reified T : LinearState> StateAndRef<T>.linearId() = state.data.linearId
@@ -72,6 +73,11 @@ abstract class MockNetworkTest(val numberOfNodes: Int) {
     /** Create an evolvable token. */
     fun <T : EvolvableToken> StartedMockNode.createEvolvableToken(evolvableToken: T, notary: Party): CordaFuture<SignedTransaction> {
         return transaction { startFlow(CreateEvolvableToken(transactionState = evolvableToken withNotary notary)) }
+    }
+
+    /** Update an evolvable token. */
+    fun <T : EvolvableToken> StartedMockNode.updateEvolvableToken(old: StateAndRef<T>, new: T): CordaFuture<SignedTransaction> {
+        return transaction { startFlow(UpdateEvolvableToken(old = old, new = new)) }
     }
 
     fun <T : EmbeddableToken> StartedMockNode.issueToken(
