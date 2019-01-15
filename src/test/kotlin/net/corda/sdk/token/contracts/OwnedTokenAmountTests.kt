@@ -176,9 +176,9 @@ class OwnedTokenAmountTests {
             // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
             input(OwnedTokenAmountContract.contractId, 10 of issuedToken ownedBy ALICE.party)
 
-            // Add the move command, signed by ALICE.
+            // Add the redeem command, signed by the ISSUER.
             tweak {
-                command(ALICE.publicKey, Redeem(issuedToken))
+                command(ISSUER.publicKey, Redeem(issuedToken))
                 verifies()
             }
 

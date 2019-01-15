@@ -72,7 +72,7 @@ class OwnedTokenAmountContract : Contract {
                     // Moves may contain more than one move command.
                     is Move<*> -> handleMove(group, matchedCommands)
                     // Redeems must only contain one redeem command.
-                    is Redeem<*> -> handleIssue(group, matchedCommands.single())
+                    is Redeem<*> -> handleRedeem(group, matchedCommands.single())
                 }
             }
         }
