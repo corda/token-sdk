@@ -82,9 +82,19 @@ Corda ledger.
 
 TODO:
 
+* Start writing the standards docs - research how best to do this and
+  look at ERC20 as one example.
+* Start thinking about a Java API or a shim over the kotlin API for
+  java users. For example, the infix functions for using tokens are
+  nasty for Java developers.
+* Add the tokens branch to the cordapp template kotlin
 * Add JAR publishing stuff to gradle files (Ask Clinton about this)
 * The repo needs splitting into multiple parts as the states and contracts
   need to be in separate repositories to the flows and whatnot.
+* Talk to Jose and Tudor about JAR signing
+* Talk to dev ops about getting CI set up for this repo
+* Talk to Gavin on release process steps
+* Talk to clinton on artifactory / bintray use
 * Add schemas for tokens and owned tokens.
 * Add query utilities for tokens and owned tokens.
 * Write a small persistence app for tracking tokens which have been issued.
@@ -108,6 +118,8 @@ can use some kind of DSL?
 ## Release Notes
 
 *Unreleased*
+
+Add these!
 
 ## Roadmap
 
