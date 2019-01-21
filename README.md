@@ -134,10 +134,10 @@ viable.
 * Create and update evolvable token types
 * Subscribe to updates of evolvable tokens
 * Issue amounts of some token to owners
-* Database agnostic token selection via the database
-* Move tokens by selecting the appropriate subset of tokens
-* Redeem tokens
-* Schemas for tokens and owned tokens which allow custom querying
+* Database agnostic token selection via the database XXX
+* Move tokens by selecting the appropriate subset of tokens XXX
+* Redeem tokens XXX
+* Schemas for tokens and owned tokens which allow custom querying XXX
 * Basic documentation and examples
 * Beginnings of some standards
 * Token Template for bootstrapping token projects
@@ -155,15 +155,15 @@ The focus will be on implementing in memory token selection.
 
 ### March
 
-Focus will be on implementing data distribution groups to syndicate
-token reference data around a Corda network.
-
 * Add accounts - note there is support in Corda 4, for this
 * Optimised in memory token selection for parallel flows
-* Data distribution groups first pass
 * Publish standards
 
 ### April
+
+Data distribution groups
+
+### May
 
 Adding commonly requested features.
 
@@ -176,7 +176,7 @@ Adding commonly requested features.
 * Chain snipping - cut the chain of provenance for privacy and
   performance reasons
 * Token owner whitelisting - often required by regulators. A feature
-  which allows issuers to restrict ownnership of their issued assets to
+  which allows issuers to restrict ownership of their issued assets to
   only those parties which have been added to a whitelist. The whitelist
   is manifested as a list of signed public keys. For a party to receive
   a “restricted” token, they must prove their their public key has been
@@ -185,20 +185,20 @@ Adding commonly requested features.
 * Begin to start defining abstract types for commonly used evolvable
   tokens, e.g. equities and bonds
 
-### May
+### June
 
 Start adding support for "wallets"
 
-* Beginnning of support for keys generated out of process
-* Add more flow now that typical abstractions will have been identified
+* Beginning of support for keys generated out of process
+* Add more flows now that typical abstractions will have been identified
   E.g. atomic swaps, repos, lending...
 
-### June
+### July
 
 * Hopefully, start making some changing to the identity model to
   support beneficial owners
 
-### July
+### August
 
 Add more support and tooling for issuers.
 
@@ -207,7 +207,7 @@ Add more support and tooling for issuers.
 * The issuer SDK will contain utilities for issuers such as keeping
   track of issued tokens and managing off-ledger records.
 
-## August
+## September
 
 Start thinking about other topics:
 
@@ -217,6 +217,30 @@ Start thinking about other topics:
   the same notary
 * Zero knowledge proofs for amounts and potentially public keys
 
-## September
+## October
 
 * Integrate the ISDA CDM to the token SDK
+
+
+
+// John Smith @ Barclays
+// JS as CA can only create certs in his name
+
+Some notes from Antony:
+
+What is the Token SDK and what is its history
+The finance module was originally built by Mike Hearn as the first example corDapp.  This contained a number of flows and states that represented Cash transactions.  It didn’t model other financial instruments nor did it provide common flows (issue, redeem etc).  It also uses old and incorrect terminology and needs to be deprecated.
+The Token SDK provides a more comprehensive set of states, flows and functions to model any financial instrument / token. Its design reduces the code required to issue a fungible or non-fungible token and defines standard that will aid integration in the future (think ERC20).
+This SDK is similar to what Cordite team have been working on, but provides additional functionality and may soon form part of the core Corda platform once no longer evolving (not in the short term)
+
+Why use it?
+Intention is for this to become the standard for Corda Tokens so they will be commonly understood.
+R3 has done the complex thinking so other don’t have to
+It will also help with marketing - Corda can (it already does) do tokens!
+R3 will continue to maintain this, with input from the open source community.
+The SDK contains a bunch of examples
+
+SDK Next Steps:
+The Token SDK is available at  https://github.com/corda/token-sdk , but has not yet been launched. It requires Corda 4.
+The first version and associated documentation should be completed by the end of the month.
+The current roadmap includes items such as issuer whitelisting, confidential tx helpers and some ZKP features.  The roadmap will be defined over the coming weeks.

@@ -11,6 +11,7 @@ import java.util.*
  * money being fiat. Note that fiat money backed stable coins such as Tether could be classed as either a
  * [FiatCurrency] coupled with the Tether issuer party, or a [DigitalCurrency] ("USDT") coupled with the Tether issuer.
  * TODO: Replace with a "better" implementation.
+ * TODO: Potentially merge this with DigitalCurrency in the future. All currencies are tokenised on the ledger.
  */
 class FiatCurrency(private val currency: Currency) : Money() {
     override val symbol: String get() = currency.currencyCode

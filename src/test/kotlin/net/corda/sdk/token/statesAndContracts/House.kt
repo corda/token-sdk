@@ -40,4 +40,5 @@ class HouseContract : EvolvableTokenContract() {
     override fun additionalDeleteChecks(tx: LedgerTransaction) {
         // TODO: Add some checks.
     }
+
 }

@@ -1,7 +1,6 @@
 package net.corda.sdk.token.types
 
 import net.corda.core.contracts.LinearPointer
-import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 import java.math.BigDecimal
 
@@ -21,17 +20,28 @@ sealed class EmbeddableToken : Token
  * redeeming and re-issuing the [OwnedToken] or [OwnedTokenAmount] with the new token. However, if your token is likely
  * to need updating often, then use the [EvolvableToken] type.
  */
-abstract class FixedToken : EmbeddableToken()
+abstract class FixedToken : EmbeddableToken() {
+
+    /** All Tokens must have a symbol, which is typically a 4-4 character, upper case alphabetic string. */
+    abstract val symbol: String
+
+// TODO: Decide if we need this.
+//    /**
+//     * A description for the token, which provides further context. It helps de-duping if there are two tokens with
+//     * the same symbol.
+//     */
+//    val description: String
+
+}
 
 /**
  * To harness the power of [EvolvableToken]s, they cannot be directly embedded in [OwnedToken] or [OwnedTokenAmoun]s.
  * Instead, a [TokenPointer] is embedded. The pointer can be resolved inside the verify function to obtain the data
- * within the token defintion. This way, the [Token] can evolve independently from who owns it as the data is held in
+ * within the token definition. This way, the [Token] can evolve independently from who owns it as the data is held in
  * separate state objects.
  */
 data class TokenPointer<T : EvolvableToken>(
         val pointer: LinearPointer<T>,
-        val maintainer: List<Party>,
         override val displayTokenSize: BigDecimal
 ) : EmbeddableToken() {
     override fun toString(): String = "Pointer(${pointer.pointer.id}, ${pointer.type.canonicalName})"

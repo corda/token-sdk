@@ -30,7 +30,7 @@ abstract class EvolvableToken : Token, LinearState {
     /** For obtaining a pointer to this [EvolveableToken]. */
     inline fun <reified T : EvolvableToken> toPointer(): TokenPointer<T> {
         val linearPointer = LinearPointer(linearId, T::class.java)
-        return TokenPointer(linearPointer, maintainers, displayTokenSize)
+        return TokenPointer(linearPointer, displayTokenSize)
     }
 
 }

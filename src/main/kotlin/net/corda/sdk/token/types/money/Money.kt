@@ -20,7 +20,6 @@ import net.corda.sdk.token.types.FixedToken
         JsonSubTypes.Type(value = DigitalCurrency::class, name = "digital")
 )
 abstract class Money : FixedToken() {
-    abstract val symbol: String
     abstract val description: String
 }
 

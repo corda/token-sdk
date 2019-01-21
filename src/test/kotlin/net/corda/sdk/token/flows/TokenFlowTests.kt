@@ -6,6 +6,7 @@ import net.corda.sdk.token.statesAndContracts.House
 import net.corda.sdk.token.types.TokenPointer
 import net.corda.sdk.token.types.money.GBP
 import net.corda.sdk.token.utilities.getDistributionList
+import net.corda.sdk.token.utilities.of
 import net.corda.testing.node.StartedMockNode
 import org.junit.Before
 import org.junit.Test
@@ -54,7 +55,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 3) {
         val token = createTokenTx.singleOutput<House>()
         // Issue amount of the token.
         val housePointer: TokenPointer<House> = house.toPointer()
-        val issueTokenAmountTx = I.issueToken(housePointer, A, NOTARY, 100).getOrThrow()
+        val issueTokenAmountTx = I.issueToken(housePointer, A, NOTARY, 100 of housePointer).getOrThrow()
         A.watchForTransaction(issueTokenAmountTx.id).getOrThrow()
         // Check to see that A was added to I's distribution list.
         val distributionList = I.transaction { getDistributionList(I.services, token.linearId()) }
@@ -71,7 +72,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 3) {
         val token = createTokenTx.singleOutput<House>()
         // Issue amount of the token.
         val housePointer: TokenPointer<House> = house.toPointer()
-        val issueTokenAmountTx = I.issueToken(housePointer, A, NOTARY, 100).getOrThrow()
+        val issueTokenAmountTx = I.issueToken(housePointer, A, NOTARY, 100 of housePointer).getOrThrow()
         A.watchForTransaction(issueTokenAmountTx.id).toCompletableFuture().getOrThrow()
         // Update the token.
         val proposedToken = house.copy(valuation = 950_000.GBP)

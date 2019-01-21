@@ -10,7 +10,7 @@ import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
-import net.corda.sdk.token.commands.EvolvableTokenCommand
+import net.corda.sdk.token.commands.Create
 import net.corda.sdk.token.types.EvolvableToken
 import net.corda.sdk.token.utilities.withNotary
 
@@ -45,7 +45,7 @@ class CreateEvolvableToken<T : EvolvableToken>(val transactionState: Transaction
         val evolvableToken = transactionState.data
         val signingKeys = evolvableToken.maintainers.map { it.owningKey }
         val utx: TransactionBuilder = TransactionBuilder().apply {
-            addCommand(data = EvolvableTokenCommand.Create(), keys = signingKeys)
+            addCommand(data = Create(), keys = signingKeys)
             addOutputState(state = transactionState)
         }
 

@@ -8,8 +8,8 @@ import net.corda.core.flows.InitiatingFlow
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
-import net.corda.sdk.token.commands.EvolvableTokenCommand
-import net.corda.sdk.token.schemas.DistributionRecord
+import net.corda.sdk.token.commands.Update
+import net.corda.sdk.token.persistence.schemas.DistributionRecord
 import net.corda.sdk.token.types.EvolvableToken
 import net.corda.sdk.token.utilities.getDistributionList
 
@@ -25,7 +25,7 @@ class UpdateEvolvableToken(
         // The parties listed as maintainers in the old state should be the signers.
         val signingKeys = old.state.data.maintainers.map { it.owningKey }
         val utx: TransactionBuilder = TransactionBuilder(notary = old.state.notary).apply {
-            addCommand(data = EvolvableTokenCommand.Update(), keys = signingKeys)
+            addCommand(data = Update(), keys = signingKeys)
             addInputState(old)
             addOutputState(state = new, contract = old.state.contract)
         }

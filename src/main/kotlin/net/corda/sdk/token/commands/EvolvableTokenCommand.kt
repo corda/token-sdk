@@ -12,7 +12,7 @@ import net.corda.core.contracts.TypeOnlyCommandData
  * evolvable token model. Given that [EvolvableToken]s are not storage hungry, this is an acceptable trade-off - they
  * can just persist on the ledger even if they are not required.
  */
-interface EvolvableTokenCommand : CommandData {
-    class Create : EvolvableTokenCommand, TypeOnlyCommandData()
-    class Update : EvolvableTokenCommand, TypeOnlyCommandData()
-}
+interface EvolvableTokenCommand : CommandData
+
+class Create : EvolvableTokenCommand, TypeOnlyCommandData()
+class Update : EvolvableTokenCommand, TypeOnlyCommandData()

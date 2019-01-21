@@ -1,6 +1,7 @@
 package net.corda.sdk.token.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionState
 import net.corda.core.flows.*
 import net.corda.core.identity.AbstractParty
@@ -13,7 +14,6 @@ import net.corda.core.utilities.unwrap
 import net.corda.sdk.token.commands.Issue
 import net.corda.sdk.token.types.*
 import net.corda.sdk.token.utilities.issuedBy
-import net.corda.sdk.token.utilities.of
 import net.corda.sdk.token.utilities.ownedBy
 import net.corda.sdk.token.utilities.withNotary
 
@@ -62,7 +62,7 @@ object IssueToken {
             val token: T,
             val owner: Party,
             val notary: Party,
-            val amount: Long? = null,
+            val amount: Amount<T>? = null,
             val anonymous: Boolean = true
     ) : FlowLogic<SignedTransaction>() {
 
@@ -86,10 +86,10 @@ object IssueToken {
             val issuedToken: Issued<T> = token issuedBy me
 
             // Create the token. It's either an OwnedToken or OwnedTokenAmount.
-            val ownedToken: AbstractOwnedToken<T> = if (amount == null) {
+            val ownedToken: AbstractOwnedToken = if (amount == null) {
                 issuedToken ownedBy owningParty
             } else {
-                amount of issuedToken ownedBy owningParty
+                amount issuedBy me ownedBy owningParty
             }
 
             // At this point, the issuer signs up the recipient to automatic updates for evolvable tokens. On the other
@@ -107,7 +107,7 @@ object IssueToken {
             }
 
             // Create the transaction.
-            val transactionState: TransactionState<AbstractOwnedToken<T>> = ownedToken withNotary notary
+            val transactionState: TransactionState<AbstractOwnedToken> = ownedToken withNotary notary
             val utx: TransactionBuilder = TransactionBuilder(notary = notary).apply {
                 addCommand(data = Issue(issuedToken), keys = me.owningKey)
                 addOutputState(state = transactionState)

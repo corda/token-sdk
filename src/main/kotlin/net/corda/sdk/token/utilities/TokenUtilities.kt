@@ -12,28 +12,31 @@ import net.corda.sdk.token.types.EmbeddableToken
 import net.corda.sdk.token.types.Issued
 import java.math.BigDecimal
 
-/** Helpers. */
+/** Helpers for composing tokens with issuers, owners and amounts. */
 
 // For parsing amount quantities of embeddable tokens that are not wrapped with an issuer. Like so: 1_000.GBP.
 fun <T : EmbeddableToken> AMOUNT(amount: Int, token: T): Amount<T> = AMOUNT(amount.toLong(), token)
 fun <T : EmbeddableToken> AMOUNT(amount: Long, token: T): Amount<T> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
 fun <T : EmbeddableToken> AMOUNT(amount: Double, token: T): Amount<T> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
+fun <T : EmbeddableToken> AMOUNT(amount: BigDecimal, token: T): Amount<T> = Amount.fromDecimal(amount, token)
 
 // As above but works with embeddable tokens wrapped with an issuer.
 fun <T : EmbeddableToken> AMOUNT(amount: Int, token: Issued<T>): Amount<Issued<T>> = AMOUNT(amount.toLong(), token)
 fun <T : EmbeddableToken> AMOUNT(amount: Long, token: Issued<T>): Amount<Issued<T>> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
 fun <T : EmbeddableToken> AMOUNT(amount: Double, token: Issued<T>): Amount<Issued<T>> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
+fun <T : EmbeddableToken> AMOUNT(amount: BigDecimal, token: Issued<T>): Amount<Issued<T>> = Amount.fromDecimal(amount, token)
 
 // For parsing amounts of embeddable tokens that are not wrapped with an issuer. Like so: 1_000 of token.
 infix fun <T : EmbeddableToken> Int.of(token: T) = AMOUNT(this, token)
 infix fun <T : EmbeddableToken> Long.of(token: T) = AMOUNT(this, token)
 infix fun <T : EmbeddableToken> Double.of(token: T) = AMOUNT(this, token)
+infix fun <T : EmbeddableToken> BigDecimal.of(token: T) = AMOUNT(this, token)
 
 // As above but for tokens which are wrapped with an issuer.
 infix fun <T : Issued<U>, U : EmbeddableToken> Int.of(token: T) = AMOUNT(this, token)
-
 infix fun <T : Issued<U>, U : EmbeddableToken> Long.of(token: T) = AMOUNT(this, token)
 infix fun <T : Issued<U>, U : EmbeddableToken> Double.of(token: T) = AMOUNT(this, token)
+infix fun <T : Issued<U>, U : EmbeddableToken> BigDecimal.of(token: T) = AMOUNT(this, token)
 
 // For wrapping amounts of a fixed token definition with an issuer: Amount<Token> -> Amount<Issued<Token>>.
 // Note: these helpers are not compatible with EvolvableDefinitions, only EmbeddableDefinitions.
@@ -59,3 +62,18 @@ infix fun <T : EmbeddableToken> Issued<T>._ownedBy(owner: AbstractParty) = Owned
 infix fun <T : ContractState> T.withNotary(notary: Party): TransactionState<T> = _withNotary(notary)
 
 infix fun <T : ContractState> T._withNotary(notary: Party): TransactionState<T> = TransactionState(data = this, notary = notary)
+
+/** Helpers for summing [Amount]s of tokens. */
+
+// If the given iterable of [Amount]s yields any elements, sum them, throwing an [IllegalArgumentException] if
+// any of the token types are mismatched; if the iterator yields no elements, return null.
+fun <T : EmbeddableToken> Iterable<Amount<T>>.sumOrNull() = if (!iterator().hasNext()) null else sumOrThrow()
+
+// Sums the amounts yielded by the given iterable, throwing an [IllegalArgumentException] if any of the token
+// types are mismatched.
+fun <T : EmbeddableToken> Iterable<Amount<T>>.sumOrThrow() = reduce { left, right -> left + right }
+
+// If the given iterable of [Amount]s yields any elements, sum them, throwing an [IllegalArgumentException] if
+// any of the token types are mismatched; if the iterator yields no elements, return a zero amount of the given
+// token type.
+fun <T : EmbeddableToken> Iterable<Amount<T>>.sumOrZero(token: T) = if (iterator().hasNext()) sumOrThrow() else Amount.zero(token)

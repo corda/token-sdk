@@ -1,4 +1,4 @@
-package net.corda.sdk.token.schemas
+package net.corda.sdk.token.persistence.schemas
 
 import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
@@ -17,8 +17,9 @@ object DistributionRecordSchema : MappedSchema(
 )
 
 @Entity
-@Table(name = "distribution_records")
+@Table(name = "distribution_record")
 class DistributionRecord(
+
         @Id
         var id: Long,
 
@@ -27,6 +28,7 @@ class DistributionRecord(
 
         @Column(name = "party", nullable = false)
         var party: Party
+
 ) {
     constructor(linearId: UUID, party: Party) : this(0, linearId, party)
 }

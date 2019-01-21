@@ -1,6 +1,7 @@
 package net.corda.sdk.token
 
 import net.corda.core.concurrent.CordaFuture
+import net.corda.core.contracts.Amount
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
@@ -84,7 +85,7 @@ abstract class MockNetworkTest(val numberOfNodes: Int) {
             embeddableToken: T,
             owner: StartedMockNode,
             notary: StartedMockNode,
-            amount: Long? = null,
+            amount: Amount<T>? = null,
             anonymous: Boolean = true
     ): CordaFuture<SignedTransaction> {
         return transaction {

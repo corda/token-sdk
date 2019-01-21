@@ -5,7 +5,7 @@ import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.Party
-import net.corda.sdk.token.schemas.DistributionRecord
+import net.corda.sdk.token.persistence.schemas.DistributionRecord
 
 /**
  * Simple flow to persist a new entity pertaining to a distribution record.
