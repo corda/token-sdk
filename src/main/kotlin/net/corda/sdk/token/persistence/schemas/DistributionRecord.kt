@@ -18,6 +18,7 @@ object DistributionRecordSchema : MappedSchema(
 
 @Entity
 @Table(name = "distribution_record")
+// TODO: Add index and remove auto generated key in favour of composite key (linear ID, party)
 class DistributionRecord(
 
         @Id

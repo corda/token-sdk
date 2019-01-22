@@ -11,7 +11,7 @@ import javax.persistence.Table
 object OwnedTokenSchema
 
 object OwnedTokenSchemaV1 : MappedSchema(
-        schemaFamily = OwnedTokenAmountSchema.javaClass,
+        schemaFamily = OwnedTokenSchema.javaClass,
         version = 1,
         mappedTypes = listOf(PersistentOwnedToken::class.java)
 )

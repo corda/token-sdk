@@ -17,7 +17,7 @@ object OwnedTokenAmountSchemaV1 : MappedSchema(
 )
 
 @Entity
-@Table(name = "owned_token")
+@Table(name = "owned_token_amount")
 // TODO: Add an index to this table.
 class PersistentOwnedTokenAmount(
 
