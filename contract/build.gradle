@@ -1,5 +1,6 @@
 apply plugin: 'kotlin'
 apply plugin: 'kotlin-jpa'
+apply plugin: 'maven'
 apply plugin: 'net.corda.plugins.cordapp'
 apply plugin: 'net.corda.plugins.cordformation'
 
@@ -53,4 +54,36 @@ cordapp {
         licence "Apache 2"
         versionId 1
     }
+}
+
+
+configure(install.repositories.mavenInstaller) {
+    pom.project {
+        groupId 'net.corda.sdk.token'
+        artifactId 'contract'
+        inceptionYear '2019'
+        packaging 'jar'
+        licenses {
+            license {
+                name 'Apache 2.0'
+                url 'https://www.apache.org/licenses/LICENSE-2.0'
+                distribution 'repo'
+            }
+        }
+    }
+}
+
+task sourcesJar(type: Jar, dependsOn:classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn:javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
 }

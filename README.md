@@ -88,14 +88,10 @@ TODO:
   java users. For example, the infix functions for using tokens are
   nasty for Java developers.
 * Add the tokens branch to the cordapp template kotlin
-* Add JAR publishing stuff to gradle files (Ask Clinton about this)
-* The repo needs splitting into multiple parts as the states and contracts
-  need to be in separate repositories to the flows and whatnot.
-* Talk to Jose and Tudor about JAR signing
 * Talk to dev ops about getting CI set up for this repo
 * Talk to Gavin on release process steps
 * Talk to clinton on artifactory / bintray use
-* Add schemas for tokens and owned tokens.
+* Add schemas for tokens.
 * Add query utilities for tokens and owned tokens.
 * Write a small persistence app for tracking tokens which have been issued.
   Can only remove a token from the ledger if nothing is issued and owned

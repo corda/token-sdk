@@ -28,7 +28,6 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 3) {
     // List of tokens to create for the tests.
     private val gbpTokens = listOf(100.GBP, 50.GBP, 25.GBP)
     private val usdTokens = listOf(200.USD, 100.USD)
-    private val allTokens = gbpTokens + usdTokens
 
     @Before
     fun setUp() {
