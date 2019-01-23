@@ -1,4 +1,4 @@
-package net.corda.sdk.token.workflow.flows
+package net.corda.sdk.token.workflow
 
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.queryBy
@@ -11,7 +11,6 @@ import net.corda.sdk.token.contracts.utilities.sumOrThrow
 import net.corda.sdk.token.money.BTC
 import net.corda.sdk.token.money.GBP
 import net.corda.sdk.token.money.USD
-import net.corda.sdk.token.workflow.MockNetworkTest
 import net.corda.sdk.token.workflow.utilities.ownedTokenAmountsByToken
 import net.corda.sdk.token.workflow.utilities.ownedTokensByToken
 import net.corda.sdk.token.workflow.utilities.tokenBalance

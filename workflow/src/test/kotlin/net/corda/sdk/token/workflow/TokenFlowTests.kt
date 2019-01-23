@@ -1,4 +1,4 @@
-package net.corda.sdk.token.workflow.flows
+package net.corda.sdk.token.workflow
 
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.node.services.queryBy
@@ -6,7 +6,6 @@ import net.corda.core.utilities.getOrThrow
 import net.corda.sdk.token.contracts.types.TokenPointer
 import net.corda.sdk.token.contracts.utilities.of
 import net.corda.sdk.token.money.GBP
-import net.corda.sdk.token.workflow.MockNetworkTest
 import net.corda.sdk.token.workflow.statesAndContracts.House
 import net.corda.sdk.token.workflow.utilities.getDistributionList
 import net.corda.testing.node.StartedMockNode

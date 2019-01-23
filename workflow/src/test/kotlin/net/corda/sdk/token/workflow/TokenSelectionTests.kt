@@ -1,9 +1,8 @@
-package net.corda.sdk.token.workflow.flows
+package net.corda.sdk.token.workflow
 
 import net.corda.core.utilities.getOrThrow
 import net.corda.sdk.token.money.GBP
 import net.corda.sdk.token.money.USD
-import net.corda.sdk.token.workflow.MockNetworkTest
 import net.corda.sdk.token.workflow.utilities.selectOwnedTokenAmountsForSpending
 import net.corda.testing.node.StartedMockNode
 import org.junit.Before
