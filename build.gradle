@@ -29,20 +29,6 @@ buildscript {
     }
 }
 
-//plugins {
-//    id 'base'
-//    id 'maven-publish'
-//}
-//
-//publishing {
-//    publications {
-//        mavenJava(MavenPublication) {
-//            artifactId = 'token-sdk'
-//            from components.java
-//        }
-//    }
-//}
-
 allprojects {
     repositories {
         mavenLocal()

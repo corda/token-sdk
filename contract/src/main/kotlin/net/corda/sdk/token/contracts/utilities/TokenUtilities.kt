@@ -83,3 +83,10 @@ fun <T : EmbeddableToken> Iterable<Amount<T>>.sumOrThrow() = reduce { left, righ
 // any of the token types are mismatched; if the iterator yields no elements, return a zero amount of the given
 // token type.
 fun <T : EmbeddableToken> Iterable<Amount<T>>.sumOrZero(token: T) = if (iterator().hasNext()) sumOrThrow() else Amount.zero(token)
+
+/**
+ * Strips the issuer and returns an [Amount] of the raw token directly. This is useful when you are mixing code that
+ * cares about specific issuers with code that will accept any, or which is imposing issuer constraints via some
+ * other mechanism and the additional type safety is not wanted.
+ */
+fun <T : EmbeddableToken> Amount<Issued<T>>.withoutIssuer(): Amount<T> = Amount(quantity, displayTokenSize, token.product)

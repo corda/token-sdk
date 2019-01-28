@@ -9,6 +9,8 @@ import net.corda.core.node.services.Vault
 import net.corda.core.node.services.VaultService
 import net.corda.core.node.services.queryBy
 import net.corda.core.node.services.vault.QueryCriteria
+import net.corda.core.node.services.vault.Sort
+import net.corda.core.node.services.vault.SortAttribute
 import net.corda.core.node.services.vault.builder
 import net.corda.sdk.token.contracts.schemas.PersistentOwnedToken
 import net.corda.sdk.token.contracts.schemas.PersistentOwnedTokenAmount
@@ -58,6 +60,12 @@ internal fun <T : EmbeddableToken> ownedTokenAmountCriteria(embeddableToken: T):
     }
     val tokenIdentifierCriteria = QueryCriteria.VaultCustomQueryCriteria(tokenIdentifier)
     return tokenClassCriteria.and(tokenIdentifierCriteria)
+}
+
+// Sorts a query by state ref ascending.
+internal fun sortByStateRefAscending(): Sort {
+    val sortAttribute = SortAttribute.Standard(Sort.CommonStateAttribute.STATE_REF)
+    return Sort(setOf(Sort.SortColumn(sortAttribute, Sort.Direction.ASC)))
 }
 
 // TODO: Merge this code with the code above.

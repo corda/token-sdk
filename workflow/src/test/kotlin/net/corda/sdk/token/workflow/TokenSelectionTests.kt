@@ -1,9 +1,11 @@
 package net.corda.sdk.token.workflow
 
+import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.getOrThrow
 import net.corda.sdk.token.money.GBP
 import net.corda.sdk.token.money.USD
-import net.corda.sdk.token.workflow.utilities.selectOwnedTokenAmountsForSpending
+import net.corda.sdk.token.workflow.selection.TokenSelection
+import net.corda.sdk.token.workflow.types.PartyAndAmount
 import net.corda.testing.node.StartedMockNode
 import org.junit.Before
 import org.junit.Test
@@ -12,17 +14,19 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 // TODO: Improve these tests. E.g. Order states in a list by state ref, so we can specify exactly which will be picked.
-class TokenSelectionTests : MockNetworkTest(numberOfNodes = 3) {
+class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
 
     lateinit var A: StartedMockNode
     lateinit var B: StartedMockNode
     lateinit var I: StartedMockNode
+    lateinit var J: StartedMockNode
 
     @Before
     override fun initialiseNodes() {
         A = nodes[0]
         B = nodes[1]
         I = nodes[2]
+        J = nodes[3]
     }
 
     // List of tokens to create for the tests.
@@ -34,31 +38,50 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 3) {
         // Create some new token amounts.
         I.issueToken(GBP, A, NOTARY, 100.GBP).getOrThrow()
         I.issueToken(GBP, A, NOTARY, 50.GBP).getOrThrow()
-        I.issueToken(GBP, A, NOTARY, 25.GBP).getOrThrow()
+        J.issueToken(GBP, A, NOTARY, 25.GBP).getOrThrow()
         I.issueToken(USD, A, NOTARY, 200.USD).getOrThrow()
-        I.issueToken(USD, A, NOTARY, 100.USD).getOrThrow()
+        J.issueToken(USD, A, NOTARY, 100.USD).getOrThrow()
         network.waitQuiescent()
     }
 
     @Test
     fun `select up to available amount with tokens sorted by state ref`() {
+        val tokenSelection = TokenSelection(A.services)
         val uuid = UUID.randomUUID()
-        val one = A.transaction { A.services.vaultService.selectOwnedTokenAmountsForSpending(160.GBP, uuid) }
+        val one = A.transaction { tokenSelection.attemptSpend(160.GBP, uuid) }
         assertEquals(gbpTokens.size, one.size)
-        val two = A.transaction { A.services.vaultService.selectOwnedTokenAmountsForSpending(175.GBP, uuid) }
+        val two = A.transaction { tokenSelection.attemptSpend(175.GBP, uuid) }
         assertEquals(gbpTokens.size, two.size)
-        val results = A.transaction { A.services.vaultService.selectOwnedTokenAmountsForSpending(25.GBP, uuid) }
+        val results = A.transaction { tokenSelection.attemptSpend(25.GBP, uuid) }
         assertEquals(1, results.size)
     }
 
     @Test
     fun `not enough tokens available`() {
+        val tokenSelection = TokenSelection(A.services)
         val uuid = UUID.randomUUID()
         assertFailsWith<IllegalStateException> {
             A.transaction {
-                A.services.vaultService.selectOwnedTokenAmountsForSpending(176.GBP, uuid)
+                tokenSelection.attemptSpend(176.GBP, uuid)
             }
         }
     }
+
+    @Test
+    fun `generate move test`() {
+        val tokenSelection = TokenSelection(A.services)
+        val moves = listOf(
+                PartyAndAmount(B.legalIdentity(), 140.GBP),
+                PartyAndAmount(I.legalIdentity(), 30.GBP)
+        )
+        val (builder, _) = A.transaction {
+            tokenSelection.generateMove(TransactionBuilder(), moves)
+        }
+        println(builder.toWireTransaction(A.services))
+        // Just using this to check and see if the output is as expected.
+        // TODO: Assert something...
+    }
+
+    // TODO: Test with different notaries.
 
 }
