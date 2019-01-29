@@ -15,6 +15,7 @@ import net.corda.sdk.token.contracts.types.EvolvableToken
 import net.corda.sdk.token.contracts.utilities.withNotary
 import net.corda.sdk.token.workflow.flows.CreateEvolvableToken
 import net.corda.sdk.token.workflow.flows.IssueToken
+import net.corda.sdk.token.workflow.flows.MoveToken
 import net.corda.sdk.token.workflow.flows.UpdateEvolvableToken
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.node.MockNetwork
@@ -84,7 +85,7 @@ abstract class MockNetworkTest(val numberOfNodes: Int) {
         return transaction { startFlow(UpdateEvolvableToken(old = old, new = new)) }
     }
 
-    fun <T : EmbeddableToken> StartedMockNode.issueToken(
+    fun <T : EmbeddableToken> StartedMockNode.issueTokens(
             embeddableToken: T,
             owner: StartedMockNode,
             notary: StartedMockNode,
@@ -100,6 +101,23 @@ abstract class MockNetworkTest(val numberOfNodes: Int) {
                     anonymous = anonymous
             ))
         }
+    }
+
+    fun <T : EmbeddableToken> StartedMockNode.moveTokens(
+            embeddableToken: T,
+            owner: StartedMockNode,
+            amount: Amount<T>? = null,
+            anonymous: Boolean = true
+    ): CordaFuture<SignedTransaction> {
+        return transaction {
+            startFlow(MoveToken.Initiator(
+                    ownedToken = embeddableToken,
+                    owner = owner.legalIdentity(),
+                    amount = amount,
+                    anonymous = anonymous
+            ))
+        }
+
     }
 
 }

@@ -49,15 +49,15 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     @Before
     fun setUp() {
         // Create some new token amounts.
-        I.issueToken(GBP, A, NOTARY, 100.GBP).getOrThrow()
-        I.issueToken(GBP, A, NOTARY, 50.GBP).getOrThrow()
-        I.issueToken(GBP, A, NOTARY, 25.GBP).getOrThrow()
-        I.issueToken(USD, A, NOTARY, 200.USD).getOrThrow()
-        I.issueToken(USD, A, NOTARY, 100.USD).getOrThrow()
-        I.issueToken(BTC, A, NOTARY, 500.BTC).getOrThrow()
+        I.issueTokens(GBP, A, NOTARY, 100.GBP).getOrThrow()
+        I.issueTokens(GBP, A, NOTARY, 50.GBP).getOrThrow()
+        I.issueTokens(GBP, A, NOTARY, 25.GBP).getOrThrow()
+        I.issueTokens(USD, A, NOTARY, 200.USD).getOrThrow()
+        I.issueTokens(USD, A, NOTARY, 100.USD).getOrThrow()
+        I.issueTokens(BTC, A, NOTARY, 500.BTC).getOrThrow()
         // Non-fungible tokens.
-        I.issueToken(fooToken, A, NOTARY)
-        I.issueToken(barToken, A, NOTARY)
+        I.issueTokens(fooToken, A, NOTARY)
+        I.issueTokens(barToken, A, NOTARY)
         network.waitQuiescent()
     }
 

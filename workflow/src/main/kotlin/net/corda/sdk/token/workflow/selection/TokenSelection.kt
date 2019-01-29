@@ -103,6 +103,8 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
     ): List<StateAndRef<OwnedTokenAmount<T>>> {
         val stateAndRefs = mutableListOf<StateAndRef<OwnedTokenAmount<T>>>()
         for (retryCount in 1..maxRetries) {
+            // TODO: Need to specify exactly why it fails. Locked states or literally _no_ states!
+            // No point in retrying if there will never be enough...
             if (!executeQuery(requiredAmount, lockId, additionalCriteria, sorter, stateAndRefs)) {
                 logger.warn("Token selection failed on attempt $retryCount.")
                 // TODO: revisit the back off strategy for contended spending.
@@ -112,6 +114,8 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
                     FlowLogic.sleep(durationMillis.millis)
                 } else {
                     logger.warn("Insufficient spendable states identified for $requiredAmount.")
+                    // TODO: Create new exception type.
+                    throw IllegalStateException("Insufficient spendable states identified for $requiredAmount.")
                 }
             } else {
                 break
