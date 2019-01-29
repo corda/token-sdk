@@ -22,11 +22,6 @@ Keeping mind that:
   via the `Issued` class and `OwnedToken` / `OwnedTokenAmount` classes.
   This means we can use the same token definition across multiple issuers.
 
-Thoughts:
-
-* Does it make sense to have more than one maintainer for a token type? Currently there is a list of maintainers but does there need to be?
-* Think about how to assign command to in out groups.
-
 The [Issuer] type is nice because it allows you to strip the issuer and
 then group same the same currencies as fungible, if you'd like to view
 them that way. A step up from this would be the ability to specify fungibility
@@ -50,16 +45,14 @@ Corda have an issuer, so this probably doesn't hold.
 
 Other areas which need more thought:
 
- 1. The token type interfaces. Ledger native vs depository receipt etc. Issued, redeemable, etc.
- 2. Need to develop a nice API for using Token pointers. Currently the API is a bit clunky.
- 3. Where does reference data sit? On ledger? In library? In attachments? Where exactly?
- 4. What token types will be used as pointers, what tokens will be inlined? Equities probably pointers, money will
+ 1. Need to develop a nice API for using Token pointers. Currently the API is a bit clunky.
+ 2. Where does reference data sit? On ledger? In library? In attachments? Where exactly?
+ 3. What token types will be used as pointers, what tokens will be inlined? Equities probably pointers, money will
     be inlined.
- 5. Depth of modelling, do we want to model commercial bank money as a liability of a commerical bank to deliver a
+ 4. Depth of modelling, do we want to model commercial bank money as a liability of a commerical bank to deliver a
     liability of a central bank?? Would be nice if we could but is this overly complex?
- 6. Are non fungible things just tokens?
- 7. Do we need to inline token symbol and description for fungible token pointers? How does this affect token selection?
- 8. How does all this interact with obligations?
+ 5. Are non fungible things just tokens?
+ 6. How does all this interact with obligations?
 
 Token selection:
 
