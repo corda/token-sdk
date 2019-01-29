@@ -25,9 +25,9 @@ import javax.persistence.criteria.CriteriaQuery
 /** Miscellaneous helpers. */
 
 // Grabs the latest version of a linear state for a specified linear ID.
-inline fun <reified T : LinearState> getLinearStateById(linearId: UniqueIdentifier, services: ServiceHub): StateAndRef<T>? {
-    val query = QueryCriteria.LinearStateQueryCriteria(linearId = listOf(linearId), status = Vault.StateStatus.UNCONSUMED)
-    return services.vaultService.queryBy<T>(query).states.singleOrNull()
+inline fun <reified T : LinearState> VaultService.getLinearStateById(linearId: UniqueIdentifier): StateAndRef<T>? {
+    val query = QueryCriteria.LinearStateQueryCriteria(linearId = listOf(linearId), status = Vault.StateStatus.UNCONSUMED, relevancyStatus = Vault.RelevancyStatus.ALL)
+    return queryBy<T>(query).states.singleOrNull()
 }
 
 // Gets the distribution list for a particular token.
