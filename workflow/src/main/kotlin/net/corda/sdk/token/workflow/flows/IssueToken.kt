@@ -136,7 +136,7 @@ object IssueToken {
             }
 
             // Resolve the issuance transaction.
-            return subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ALL_VISIBLE))
+            return subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
         }
     }
 
