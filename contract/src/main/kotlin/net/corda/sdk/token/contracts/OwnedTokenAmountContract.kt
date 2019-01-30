@@ -14,7 +14,6 @@ import net.corda.sdk.token.contracts.states.OwnedTokenAmount
 import net.corda.sdk.token.contracts.types.EmbeddableToken
 import net.corda.sdk.token.contracts.types.Issued
 import net.corda.sdk.token.contracts.utilities.sumTokens
-import net.corda.sdk.token.contracts.utilities.sumTokensOrNull
 import java.security.PublicKey
 
 /**
@@ -104,10 +103,10 @@ class OwnedTokenAmountContract : Contract {
         require(group.inputs.isNotEmpty()) { "When moving tokens, there must be input states present." }
         require(group.outputs.isNotEmpty()) { "When moving tokens, there must be output states present." }
         // Sum the amount of input and output tokens.
-        val inputAmount: Amount<Issued<EmbeddableToken>> = group.inputs.sumTokensOrNull()
-                ?: throw IllegalArgumentException("In move groups there must an amount of input tokens > ZERO.")
-        val outputAmount: Amount<Issued<EmbeddableToken>> = group.outputs.sumTokensOrNull()
-                ?: throw IllegalArgumentException("In move groups there must an amount of output tokens > ZERO.")
+        val inputAmount: Amount<Issued<EmbeddableToken>> = group.inputs.sumTokens()
+        require(inputAmount > Amount.zero(token)) { "In move groups there must be an amount of input tokens > ZERO." }
+        val outputAmount: Amount<Issued<EmbeddableToken>> = group.outputs.sumTokens()
+        require(outputAmount > Amount.zero(token)) { "In move groups there must be an amount of output tokens > ZERO." }
         // Input and output amounts must be equal.
         require(inputAmount == outputAmount) {
             "In move groups the amount of input tokens MUST EQUAL the amount of output tokens. In other words, you " +

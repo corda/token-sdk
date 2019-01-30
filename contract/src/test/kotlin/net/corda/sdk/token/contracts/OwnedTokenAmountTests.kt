@@ -164,7 +164,101 @@ class OwnedTokenAmountTests {
                 verifies()
             }
 
-            // TODO: Write more test cases.
+            // Move coupled with an issue.
+            tweak {
+                output(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
+                command(BOB.publicKey, Issue(USD issuedBy BOB.party))
+                // Command for the move.
+                command(ALICE.publicKey, Move(issuedToken))
+                verifies()
+            }
+
+            // Input missing.
+            tweak {
+                output(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy BOB.party)
+                command(ALICE.publicKey, Move(USD issuedBy BOB.party))
+                // Command for the move.
+                command(ALICE.publicKey, Move(issuedToken))
+                this `fails with` "When moving tokens, there must be input states present."
+            }
+
+            // Output missing.
+            tweak {
+                input(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
+                command(ALICE.publicKey, Move(USD issuedBy BOB.party))
+                // Command for the move.
+                command(ALICE.publicKey, Move(issuedToken))
+                this `fails with` "When moving tokens, there must be output states present."
+            }
+
+            // Inputs sum to zero.
+            tweak {
+                input(OwnedTokenAmountContract.contractId, 0.USD issuedBy BOB.party ownedBy ALICE.party)
+                input(OwnedTokenAmountContract.contractId, 0.USD issuedBy BOB.party ownedBy ALICE.party)
+                output(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy BOB.party)
+                command(ALICE.publicKey, Move(USD issuedBy BOB.party))
+                // Command for the move.
+                command(ALICE.publicKey, Move(issuedToken))
+                this `fails with` "In move groups there must be an amount of input tokens > ZERO."
+            }
+
+            // Outputs sum to zero.
+            tweak {
+                input(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
+                output(OwnedTokenAmountContract.contractId, 0.USD issuedBy BOB.party ownedBy BOB.party)
+                output(OwnedTokenAmountContract.contractId, 0.USD issuedBy BOB.party ownedBy BOB.party)
+                command(ALICE.publicKey, Move(USD issuedBy BOB.party))
+                // Command for the move.
+                command(ALICE.publicKey, Move(issuedToken))
+                this `fails with` "In move groups there must be an amount of output tokens > ZERO."
+            }
+
+            // Unbalanced move.
+            tweak {
+                input(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
+                output(OwnedTokenAmountContract.contractId, 11.USD issuedBy BOB.party ownedBy BOB.party)
+                command(ALICE.publicKey, Move(USD issuedBy BOB.party))
+                // Command for the move.
+                command(ALICE.publicKey, Move(issuedToken))
+                this `fails with` "In move groups the amount of input tokens MUST EQUAL the amount of output tokens. " +
+                        "In other words, you cannot create or destroy value when moving tokens."
+            }
+
+            tweak {
+                input(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
+                output(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy BOB.party)
+                output(OwnedTokenAmountContract.contractId, 0.USD issuedBy BOB.party ownedBy BOB.party)
+                command(ALICE.publicKey, Move(USD issuedBy BOB.party))
+                // Command for the move.
+                command(ALICE.publicKey, Move(issuedToken))
+                this `fails with` "You cannot create output token amounts with a ZERO amount."
+            }
+
+            // Two moves (two different groups).
+            tweak {
+                input(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
+                output(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy BOB.party)
+                command(ALICE.publicKey, Move(USD issuedBy BOB.party))
+                // Command for the move.
+                command(ALICE.publicKey, Move(issuedToken))
+                verifies()
+            }
+
+            // Wrong public key.
+            tweak {
+                command(BOB.publicKey, Move(issuedToken))
+                this `fails with` "There are required signers missing or some of the specified signers are not " +
+                        "required. A transaction to move owned token amounts must be signed by ONLY ALL the owners " +
+                        "of ALL the input owned token amounts."
+            }
+
+            // Includes an incorrect public with the correct key still being present.
+            tweak {
+                command(listOf(BOB.publicKey, ALICE.publicKey), Move(issuedToken))
+                this `fails with` "There are required signers missing or some of the specified signers are not " +
+                        "required. A transaction to move owned token amounts must be signed by ONLY ALL the owners " +
+                        "of ALL the input owned token amounts."
+            }
 
         }
     }
