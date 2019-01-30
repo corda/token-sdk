@@ -106,7 +106,7 @@ class OwnedTokenAmountContract : Contract {
         // Sum the amount of input and output tokens.
         val inputAmount: Amount<Issued<EmbeddableToken>> = group.inputs.sumTokensOrNull()
                 ?: throw IllegalArgumentException("In move groups there must an amount of input tokens > ZERO.")
-        val outputAmount: Amount<Issued<EmbeddableToken>> = group.inputs.sumTokensOrNull()
+        val outputAmount: Amount<Issued<EmbeddableToken>> = group.outputs.sumTokensOrNull()
                 ?: throw IllegalArgumentException("In move groups there must an amount of output tokens > ZERO.")
         // Input and output amounts must be equal.
         require(inputAmount == outputAmount) {
