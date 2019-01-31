@@ -10,8 +10,8 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.toFuture
 import net.corda.core.transactions.SignedTransaction
+import net.corda.sdk.token.contracts.states.EvolvableToken
 import net.corda.sdk.token.contracts.types.EmbeddableToken
-import net.corda.sdk.token.contracts.types.EvolvableToken
 import net.corda.sdk.token.contracts.utilities.withNotary
 import net.corda.sdk.token.workflow.flows.CreateEvolvableToken
 import net.corda.sdk.token.workflow.flows.IssueToken

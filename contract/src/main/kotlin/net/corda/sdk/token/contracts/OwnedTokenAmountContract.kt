@@ -2,14 +2,10 @@ package net.corda.sdk.token.contracts
 
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.CommandWithParties
-import net.corda.core.contracts.Contract
-import net.corda.core.contracts.select
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.LedgerTransaction.InOutGroup
-import net.corda.sdk.token.contracts.commands.Issue
-import net.corda.sdk.token.contracts.commands.Move
 import net.corda.sdk.token.contracts.commands.OwnedTokenCommand
-import net.corda.sdk.token.contracts.commands.Redeem
+import net.corda.sdk.token.contracts.states.AbstractOwnedToken
 import net.corda.sdk.token.contracts.states.OwnedTokenAmount
 import net.corda.sdk.token.contracts.types.EmbeddableToken
 import net.corda.sdk.token.contracts.types.Issued
@@ -17,67 +13,32 @@ import net.corda.sdk.token.contracts.utilities.sumTokens
 import java.security.PublicKey
 
 /**
- * This is the [OwnedTokenAmount] contract. It is likely to be present in MANY transacrtions. The [OwnedTokenAmount]
+ * This is the [OwnedTokenAmount] contract. It is likely to be present in MANY transactions. The [OwnedTokenAmount]
  * state is a "lowest common denominator" state in that its contract does not reference any other state types, only the
  * [OwnedTokenAmount]. However, the [OwnedTokenAmount] state can and will be referenced by many other contracts, for
  * example, the obligation contract.
  *
- * This contract works by grouping tokens by type and then verifying each group individually. It must do this because
- * different tokens are not fungible. For example: 10 GBP is not equal to 10 GBP.
- *
- * This contract doesn't need to care about the specific details of tokens. It's really only concerned with ensuring
- * that tokens are issued, moved (input amount == output amount) and redeemed correctly.
+ * The [OwnedTokenAmount] contract sub-classes the [AbstractOwnedToken] contract which contains the "verify" method.
+ * To add functionality to this contract, developers should:
+ * 1. Create their own commands which implement the [OwnedTokenCommand] interface.
+ * 2. override the [AbstractOwnedTokenContract.dispatchOnCommand] method to add support for the new command, remembering
+ *    to call the super method to handle the existing commands.
+ * 3. Add a method to handle the new command in the new sub-class contract.
  */
-class OwnedTokenAmountContract : Contract {
+open class OwnedTokenAmountContract : AbstractOwnedTokenContract<OwnedTokenAmount<EmbeddableToken>>() {
 
     companion object {
         val contractId = this::class.java.enclosingClass.canonicalName
     }
 
-    override fun verify(tx: LedgerTransaction) {
-        // Group owned token amounts by token type. We need to do this because tokens of different types need to be
-        // verified separately. This works for the same token type with different issuers, or different token types
-        // altogether. The grouping function returns a list containing groups of input and output states grouped by
-        // token type. The type is specified explicitly to aid understanding.
-        val groups: List<InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>> = tx.groupStates { state ->
-            state.amount.token
-        }
-        // A list of only the commands which implement OwnedTokenCommand.
-        val ownedTokenCommands = tx.commands.select<OwnedTokenCommand<Issued<EmbeddableToken>>>()
-        require(ownedTokenCommands.isNotEmpty()) { "There must be at least one owned token command this transaction." }
-        // As inputs and outputs are just "bags of states" and the InOutGroups do not contain commands, we must match
-        // the OwnedTokenCommand to each InOutGroup. There should be at least a single command for each group. If there
-        // isn't then we don't know what to do for each group. For token moves it might be the case that there is more
-        // than one command. However, for issuances and redemptions we would expect to see only one command.
-        groups.forEach { group ->
-            // Discard commands with a token which does not match the grouping key.
-            val matchedCommands = ownedTokenCommands.filter { it.value.token == group.groupingKey }
-            val matchedCommandValues = matchedCommands.map { it.value }.toSet()
-            when {
-                // There is a command of more than one type. The intended behaviour is ambiguous, so bail out.
-                matchedCommandValues.size > 1 -> throw IllegalArgumentException("There must be exactly one " +
-                        "OwnedTokenCommand type per group! For example: You cannot map an Issue AND a Move command " +
-                        "to one group of tokens in a transaction."
-                )
-                // No commands in this group.
-                matchedCommandValues.isEmpty() -> throw IllegalArgumentException("There is a token group with no assigned command!")
-                // This should never fail due to the above check.
-                // Handle each group individually. Although it is possible, there would not usually be a move group and
-                // an issue group in the same transaction. It doesn't make sense for privacy reasons. However, it is
-                // common to see multiple move groups in the same transaction.
-                matchedCommandValues.size == 1 -> when (matchedCommandValues.single()) {
-                    // Issuances should only contain one issue command.
-                    is Issue<*> -> handleIssue(group, matchedCommands.single())
-                    // Moves may contain more than one move command.
-                    is Move<*> -> handleMove(group, matchedCommands)
-                    // Redeems must only contain one redeem command.
-                    is Redeem<*> -> handleRedeem(group, matchedCommands.single())
-                }
-            }
-        }
+    override fun groupStates(tx: LedgerTransaction): List<InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>> {
+        return tx.groupStates { state -> state.amount.token }
     }
 
-    private fun handleIssue(group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>, issueCommand: CommandWithParties<OwnedTokenCommand<*>>) {
+    override fun handleIssue(
+            group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>,
+            issueCommand: CommandWithParties<OwnedTokenCommand<*>>
+    ) {
         val token = group.groupingKey
         require(group.inputs.isEmpty()) { "When issuing tokens, there cannot be any input states." }
         group.outputs.apply {
@@ -97,7 +58,10 @@ class OwnedTokenAmountContract : Contract {
         }
     }
 
-    private fun handleMove(group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>, moveCommands: List<CommandWithParties<OwnedTokenCommand<*>>>) {
+    override fun handleMove(
+            group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>,
+            moveCommands: List<CommandWithParties<OwnedTokenCommand<*>>>
+    ) {
         val token = group.groupingKey
         // There must be inputs and outputs present.
         require(group.inputs.isNotEmpty()) { "When moving tokens, there must be input states present." }
@@ -125,7 +89,10 @@ class OwnedTokenAmountContract : Contract {
         }
     }
 
-    private fun handleRedeem(group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>, redeemCommand: CommandWithParties<OwnedTokenCommand<*>>) {
+    override fun handleRedeem(
+            group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>,
+            redeemCommand: CommandWithParties<OwnedTokenCommand<*>>
+    ) {
         val token = group.groupingKey
         // There must be inputs and outputs present.
         require(group.outputs.isEmpty()) { "When redeeming tokens, there must be no output states." }

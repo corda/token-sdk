@@ -6,7 +6,7 @@ import net.corda.core.transactions.LedgerTransaction
 import net.corda.sdk.token.contracts.commands.Create
 import net.corda.sdk.token.contracts.commands.EvolvableTokenCommand
 import net.corda.sdk.token.contracts.commands.Update
-import net.corda.sdk.token.contracts.types.EvolvableToken
+import net.corda.sdk.token.contracts.states.EvolvableToken
 import net.corda.sdk.token.contracts.utilities.singleInput
 import net.corda.sdk.token.contracts.utilities.singleOutput
 
@@ -29,9 +29,6 @@ abstract class EvolvableTokenContract : Contract {
 
     /** For CorDapp developers to implement. */
     abstract fun additionalUpdateChecks(tx: LedgerTransaction)
-
-    /** For CorDapp developers to implement. */
-    abstract fun additionalDeleteChecks(tx: LedgerTransaction)
 
     private fun handleCreate(tx: LedgerTransaction) {
         require(tx.outputs.size == 1) { "Create evolvable token transactions may only contain one output." }

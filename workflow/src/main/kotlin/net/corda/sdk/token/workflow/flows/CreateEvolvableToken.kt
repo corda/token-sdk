@@ -11,7 +11,7 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 import net.corda.sdk.token.contracts.commands.Create
-import net.corda.sdk.token.contracts.types.EvolvableToken
+import net.corda.sdk.token.contracts.states.EvolvableToken
 import net.corda.sdk.token.contracts.utilities.withNotary
 
 /**

@@ -7,7 +7,7 @@ import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.Party
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.sdk.token.contracts.EvolvableTokenContract
-import net.corda.sdk.token.contracts.types.EvolvableToken
+import net.corda.sdk.token.contracts.states.EvolvableToken
 import net.corda.sdk.token.money.FiatCurrency
 import java.math.BigDecimal
 
@@ -37,10 +37,6 @@ class HouseContract : EvolvableTokenContract(), Contract {
         val newHouse = tx.outputStates.single() as House
         require(oldHouse.address == newHouse.address) { "The address cannot change." }
         require(newHouse.valuation > Amount.zero(newHouse.valuation.token)) { "Valuation must be greater than zero." }
-    }
-
-    override fun additionalDeleteChecks(tx: LedgerTransaction) {
-        // TODO: Add some checks.
     }
 
     override fun verify(tx: LedgerTransaction) {

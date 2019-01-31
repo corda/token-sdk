@@ -4,7 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.*
 import net.corda.core.utilities.unwrap
-import net.corda.sdk.token.contracts.types.EvolvableToken
+import net.corda.sdk.token.contracts.states.EvolvableToken
 
 /**
  * Simple set of flows for a party to request updates for a particular evolvable token. These flows don't do much

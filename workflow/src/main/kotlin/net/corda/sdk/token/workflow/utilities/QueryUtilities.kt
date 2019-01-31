@@ -14,9 +14,9 @@ import net.corda.core.node.services.vault.SortAttribute
 import net.corda.core.node.services.vault.builder
 import net.corda.sdk.token.contracts.schemas.PersistentOwnedToken
 import net.corda.sdk.token.contracts.schemas.PersistentOwnedTokenAmount
+import net.corda.sdk.token.contracts.states.AbstractOwnedToken
 import net.corda.sdk.token.contracts.states.OwnedToken
 import net.corda.sdk.token.contracts.states.OwnedTokenAmount
-import net.corda.sdk.token.contracts.types.AbstractOwnedToken
 import net.corda.sdk.token.contracts.types.EmbeddableToken
 import net.corda.sdk.token.workflow.schemas.DistributionRecord
 import java.util.*

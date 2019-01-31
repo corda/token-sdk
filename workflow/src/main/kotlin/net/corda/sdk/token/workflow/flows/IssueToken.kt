@@ -12,7 +12,7 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.unwrap
 import net.corda.sdk.token.contracts.commands.Issue
-import net.corda.sdk.token.contracts.types.AbstractOwnedToken
+import net.corda.sdk.token.contracts.states.AbstractOwnedToken
 import net.corda.sdk.token.contracts.types.EmbeddableToken
 import net.corda.sdk.token.contracts.types.Issued
 import net.corda.sdk.token.contracts.types.TokenPointer
