@@ -76,7 +76,7 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
         for (state in results.states) {
             stateAndRefs += state
             claimedAmount += state.state.data.amount.quantity
-            if (claimedAmount > requiredAmount.quantity) {
+            if (claimedAmount >= requiredAmount.quantity) {
                 break
             }
         }
@@ -126,6 +126,7 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
         return stateAndRefs.toList()
     }
 
+    @Suspendable
     fun <T : EmbeddableToken> generateMove(
             builder: TransactionBuilder,
             amount: Amount<T>,
