@@ -1,5 +1,6 @@
 package net.corda.sdk.token.workflow.selection
 
+import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Amount.Companion.sumOrThrow
 import net.corda.core.contracts.StateAndRef
@@ -95,6 +96,7 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
         return true
     }
 
+    @Suspendable
     fun <T : EmbeddableToken> attemptSpend(
             requiredAmount: Amount<T>,
             lockId: UUID,
@@ -133,6 +135,7 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
     }
 
     /** Mutates builder. */
+    @Suspendable
     fun <T : EmbeddableToken> generateMove(
             builder: TransactionBuilder,
             partyAndAmounts: List<PartyAndAmount<T>>
