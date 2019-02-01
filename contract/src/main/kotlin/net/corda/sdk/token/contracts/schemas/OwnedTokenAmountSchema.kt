@@ -20,7 +20,7 @@ object OwnedTokenAmountSchemaV1 : MappedSchema(
 @Entity
 @Table(name = "owned_token_amount", indexes = [
     Index(name = "amount_idx", columnList = "amount"),
-    Index(name = "token_idx", columnList = "token_class, token_identifier")
+    Index(name = "owned_token_amount_idx", columnList = "token_class, token_identifier")
 ])
 class PersistentOwnedTokenAmount(
         @Column(name = "issuer", nullable = false)

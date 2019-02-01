@@ -18,7 +18,7 @@ object OwnedTokenSchemaV1 : MappedSchema(
 )
 
 @Entity
-@Table(name = "owned_token", indexes = [Index(name = "token_idx", columnList = "token_class, token_identifier")])
+@Table(name = "owned_token", indexes = [Index(name = "owned_token_idx", columnList = "token_class, token_identifier")])
 class PersistentOwnedToken(
 
         @Column(name = "issuer", nullable = false)
