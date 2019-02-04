@@ -1,4 +1,4 @@
-package net.corda.sdk.token.money
+package com.r3.corda.sdk.token.money
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty

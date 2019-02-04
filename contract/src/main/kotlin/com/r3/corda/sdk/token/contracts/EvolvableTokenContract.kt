@@ -1,14 +1,14 @@
-package net.corda.sdk.token.contracts
+package com.r3.corda.sdk.token.contracts
 
+import com.r3.corda.sdk.token.contracts.commands.Create
+import com.r3.corda.sdk.token.contracts.commands.EvolvableTokenCommand
+import com.r3.corda.sdk.token.contracts.commands.Update
+import com.r3.corda.sdk.token.contracts.states.EvolvableToken
+import com.r3.corda.sdk.token.contracts.utilities.singleInput
+import com.r3.corda.sdk.token.contracts.utilities.singleOutput
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.requireSingleCommand
 import net.corda.core.transactions.LedgerTransaction
-import net.corda.sdk.token.contracts.commands.Create
-import net.corda.sdk.token.contracts.commands.EvolvableTokenCommand
-import net.corda.sdk.token.contracts.commands.Update
-import net.corda.sdk.token.contracts.states.EvolvableToken
-import net.corda.sdk.token.contracts.utilities.singleInput
-import net.corda.sdk.token.contracts.utilities.singleOutput
 
 /**
  * When developers implement contracts for their own token types, they should sub-class this abstract class. It contains

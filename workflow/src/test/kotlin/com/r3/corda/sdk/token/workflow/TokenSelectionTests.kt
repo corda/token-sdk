@@ -1,11 +1,11 @@
-package net.corda.sdk.token.workflow
+package com.r3.corda.sdk.token.workflow
 
+import com.r3.corda.sdk.token.money.GBP
+import com.r3.corda.sdk.token.money.USD
+import com.r3.corda.sdk.token.workflow.selection.TokenSelection
+import com.r3.corda.sdk.token.workflow.types.PartyAndAmount
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.getOrThrow
-import net.corda.sdk.token.money.GBP
-import net.corda.sdk.token.money.USD
-import net.corda.sdk.token.workflow.selection.TokenSelection
-import net.corda.sdk.token.workflow.types.PartyAndAmount
 import net.corda.testing.node.StartedMockNode
 import org.junit.Before
 import org.junit.Test

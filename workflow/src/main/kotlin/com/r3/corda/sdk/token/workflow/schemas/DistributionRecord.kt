@@ -1,4 +1,4 @@
-package net.corda.sdk.token.workflow.schemas
+package com.r3.corda.sdk.token.workflow.schemas
 
 import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema

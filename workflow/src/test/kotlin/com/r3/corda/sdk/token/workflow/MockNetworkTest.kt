@@ -1,5 +1,12 @@
-package net.corda.sdk.token.workflow
+package com.r3.corda.sdk.token.workflow
 
+import com.r3.corda.sdk.token.contracts.states.EvolvableToken
+import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
+import com.r3.corda.sdk.token.contracts.utilities.withNotary
+import com.r3.corda.sdk.token.workflow.flows.CreateEvolvableToken
+import com.r3.corda.sdk.token.workflow.flows.IssueToken
+import com.r3.corda.sdk.token.workflow.flows.MoveToken
+import com.r3.corda.sdk.token.workflow.flows.UpdateEvolvableToken
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.ContractState
@@ -10,13 +17,6 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.toFuture
 import net.corda.core.transactions.SignedTransaction
-import net.corda.sdk.token.contracts.states.EvolvableToken
-import net.corda.sdk.token.contracts.types.EmbeddableToken
-import net.corda.sdk.token.contracts.utilities.withNotary
-import net.corda.sdk.token.workflow.flows.CreateEvolvableToken
-import net.corda.sdk.token.workflow.flows.IssueToken
-import net.corda.sdk.token.workflow.flows.MoveToken
-import net.corda.sdk.token.workflow.flows.UpdateEvolvableToken
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
@@ -27,8 +27,9 @@ abstract class MockNetworkTest(val numberOfNodes: Int) {
 
     protected val network = MockNetwork(
             cordappPackages = listOf(
-                    "net.corda.sdk.token.contracts",
-                    "net.corda.sdk.token.workflow"
+                    "com.r3.corda.sdk.token.money",
+                    "com.r3.corda.sdk.token.contracts",
+                    "com.r3.corda.sdk.token.workflow"
             ),
             threadPerNode = true,
             networkParameters = testNetworkParameters(minimumPlatformVersion = 4)

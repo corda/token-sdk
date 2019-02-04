@@ -1,12 +1,12 @@
-package net.corda.sdk.token.contracts.states
+package com.r3.corda.sdk.token.contracts.states
 
+import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
+import com.r3.corda.sdk.token.contracts.types.FixedToken
+import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import net.corda.core.contracts.OwnableState
 import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
-import net.corda.sdk.token.contracts.types.EmbeddableToken
-import net.corda.sdk.token.contracts.types.FixedToken
-import net.corda.sdk.token.contracts.types.TokenPointer
 
 /** Contains common [OwnedToken] functionality. */
 abstract class AbstractOwnedToken : OwnableState {

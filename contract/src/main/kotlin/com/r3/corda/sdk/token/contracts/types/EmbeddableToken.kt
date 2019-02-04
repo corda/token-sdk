@@ -1,8 +1,8 @@
-package net.corda.sdk.token.contracts.types
+package com.r3.corda.sdk.token.contracts.types
 
+import com.r3.corda.sdk.token.contracts.states.EvolvableToken
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.serialization.CordaSerializable
-import net.corda.sdk.token.contracts.states.EvolvableToken
 import java.math.BigDecimal
 
 /**

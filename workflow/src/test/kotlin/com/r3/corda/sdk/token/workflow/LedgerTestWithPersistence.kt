@@ -1,4 +1,4 @@
-package net.corda.sdk.token.workflow
+package com.r3.corda.sdk.token.workflow
 
 import com.nhaarman.mockito_kotlin.whenever
 import net.corda.core.identity.CordaX500Name
@@ -40,7 +40,7 @@ abstract class LedgerTestWithPersistence {
     val testSerialization = SerializationEnvironmentRule()
 
     private val aliceDbAndServices = MockServices.makeTestDatabaseAndMockServices(
-            cordappPackages = listOf("net.corda.sdk.token"),
+            cordappPackages = listOf("com.r3.corda.sdk.token"),
             initialIdentity = ALICE,
             identityService = mockIdentityService,
             networkParameters = testNetworkParameters(minimumPlatformVersion = 4)
@@ -50,7 +50,7 @@ abstract class LedgerTestWithPersistence {
     protected val aliceServices = aliceDbAndServices.second
 
     private val bobDbAndServices = MockServices.makeTestDatabaseAndMockServices(
-            cordappPackages = listOf("net.corda.sdk.token"),
+            cordappPackages = listOf("com.r3.corda.sdk.token"),
             initialIdentity = BOB,
             identityService = mockIdentityService,
             networkParameters = testNetworkParameters(minimumPlatformVersion = 4)
@@ -60,7 +60,7 @@ abstract class LedgerTestWithPersistence {
     protected val bobServices = aliceDbAndServices.second
 
     private val issuerDbAndServices = MockServices.makeTestDatabaseAndMockServices(
-            cordappPackages = listOf("net.corda.sdk.token"),
+            cordappPackages = listOf("com.r3.corda.sdk.token"),
             initialIdentity = ISSUER,
             identityService = mockIdentityService,
             networkParameters = testNetworkParameters(minimumPlatformVersion = 4)

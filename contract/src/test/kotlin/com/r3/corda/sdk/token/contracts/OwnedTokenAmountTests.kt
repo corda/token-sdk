@@ -1,20 +1,20 @@
-package net.corda.sdk.token.contracts
+package com.r3.corda.sdk.token.contracts
 
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
+import com.r3.corda.sdk.token.contracts.commands.Issue
+import com.r3.corda.sdk.token.contracts.commands.Move
+import com.r3.corda.sdk.token.contracts.commands.Redeem
+import com.r3.corda.sdk.token.contracts.utilities.issuedBy
+import com.r3.corda.sdk.token.contracts.utilities.of
+import com.r3.corda.sdk.token.contracts.utilities.ownedBy
+import com.r3.corda.sdk.token.money.GBP
+import com.r3.corda.sdk.token.money.USD
 import net.corda.core.contracts.TypeOnlyCommandData
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.node.NotaryInfo
 import net.corda.node.services.api.IdentityServiceInternal
-import net.corda.sdk.token.contracts.commands.Issue
-import net.corda.sdk.token.contracts.commands.Move
-import net.corda.sdk.token.contracts.commands.Redeem
-import net.corda.sdk.token.contracts.utilities.issuedBy
-import net.corda.sdk.token.contracts.utilities.of
-import net.corda.sdk.token.contracts.utilities.ownedBy
-import net.corda.sdk.token.money.GBP
-import net.corda.sdk.token.money.USD
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.DUMMY_NOTARY_NAME
 import net.corda.testing.core.SerializationEnvironmentRule
@@ -41,7 +41,7 @@ class OwnedTokenAmountTests {
     val testSerialization = SerializationEnvironmentRule()
 
     private val aliceServices = MockServices(
-            cordappPackages = listOf("net.corda.sdk.token"),
+            cordappPackages = listOf("com.r3.corda.sdk.token.contracts", "com.r3.corda.sdk.token.money"),
             initialIdentity = ALICE,
             identityService = mock<IdentityServiceInternal>().also {
                 doReturn(ALICE.party).whenever(it).partyFromKey(ALICE.publicKey)

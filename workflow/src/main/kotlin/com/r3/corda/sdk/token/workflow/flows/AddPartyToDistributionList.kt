@@ -1,11 +1,11 @@
-package net.corda.sdk.token.workflow.flows
+package com.r3.corda.sdk.token.workflow.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.sdk.token.workflow.schemas.DistributionRecord
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.Party
-import net.corda.sdk.token.workflow.schemas.DistributionRecord
 
 /**
  * Simple flow to persist a new entity pertaining to a distribution record.

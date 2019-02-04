@@ -1,6 +1,15 @@
-package net.corda.sdk.token.workflow.selection
+package com.r3.corda.sdk.token.workflow.selection
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.sdk.token.contracts.commands.Move
+import com.r3.corda.sdk.token.contracts.states.OwnedTokenAmount
+import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
+import com.r3.corda.sdk.token.contracts.types.Issued
+import com.r3.corda.sdk.token.contracts.utilities.sumOrThrow
+import com.r3.corda.sdk.token.contracts.utilities.withNotary
+import com.r3.corda.sdk.token.workflow.types.PartyAndAmount
+import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountCriteria
+import com.r3.corda.sdk.token.workflow.utilities.sortByStateRefAscending
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Amount.Companion.sumOrThrow
 import net.corda.core.contracts.StateAndRef
@@ -16,15 +25,6 @@ import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.millis
 import net.corda.core.utilities.toNonEmptySet
-import net.corda.sdk.token.contracts.commands.Move
-import net.corda.sdk.token.contracts.states.OwnedTokenAmount
-import net.corda.sdk.token.contracts.types.EmbeddableToken
-import net.corda.sdk.token.contracts.types.Issued
-import net.corda.sdk.token.contracts.utilities.sumOrThrow
-import net.corda.sdk.token.contracts.utilities.withNotary
-import net.corda.sdk.token.workflow.types.PartyAndAmount
-import net.corda.sdk.token.workflow.utilities.ownedTokenAmountCriteria
-import net.corda.sdk.token.workflow.utilities.sortByStateRefAscending
 import java.security.PublicKey
 import java.util.*
 

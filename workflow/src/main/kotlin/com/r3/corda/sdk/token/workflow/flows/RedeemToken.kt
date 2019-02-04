@@ -1,4 +1,4 @@
-//package net.corda.sdk.token.workflow.flows
+//package com.r3.corda.sdk.token.workflow.flows
 //
 //import co.paralleluniverse.fibers.Suspendable
 //import net.corda.core.contracts.Amount
@@ -10,10 +10,10 @@
 //import net.corda.core.transactions.SignedTransaction
 //import net.corda.core.transactions.TransactionBuilder
 //import net.corda.core.utilities.unwrap
-//import net.corda.sdk.token.contracts.types.EmbeddableToken
-//import net.corda.sdk.token.contracts.utilities.withNotary
-//import net.corda.sdk.token.workflow.selection.TokenSelection
-//import net.corda.sdk.token.workflow.utilities.ownedTokensByToken
+//import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
+//import com.r3.corda.sdk.token.contracts.utilities.withNotary
+//import com.r3.corda.sdk.token.workflow.selection.TokenSelection
+//import com.r3.corda.sdk.token.workflow.utilities.ownedTokensByToken
 //
 //object RedeemToken {
 //

@@ -1,11 +1,11 @@
-package net.corda.sdk.token.contracts
+package com.r3.corda.sdk.token.contracts
 
+import com.r3.corda.sdk.token.contracts.commands.OwnedTokenCommand
+import com.r3.corda.sdk.token.contracts.states.OwnedToken
+import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
+import com.r3.corda.sdk.token.contracts.types.Issued
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.transactions.LedgerTransaction
-import net.corda.sdk.token.contracts.commands.OwnedTokenCommand
-import net.corda.sdk.token.contracts.states.OwnedToken
-import net.corda.sdk.token.contracts.types.EmbeddableToken
-import net.corda.sdk.token.contracts.types.Issued
 
 /**
  * See java doc for [OwnedTokenAmountContract].

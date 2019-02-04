@@ -1,4 +1,4 @@
-package net.corda.sdk.token.contracts.schemas
+package com.r3.corda.sdk.token.contracts.schemas
 
 import net.corda.core.schemas.MappedSchema
 

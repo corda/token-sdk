@@ -1,6 +1,10 @@
-package net.corda.sdk.token.workflow.flows
+package com.r3.corda.sdk.token.workflow.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.sdk.token.contracts.commands.Update
+import com.r3.corda.sdk.token.contracts.states.EvolvableToken
+import com.r3.corda.sdk.token.workflow.schemas.DistributionRecord
+import com.r3.corda.sdk.token.workflow.utilities.getDistributionList
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
@@ -8,10 +12,6 @@ import net.corda.core.flows.InitiatingFlow
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
-import net.corda.sdk.token.contracts.commands.Update
-import net.corda.sdk.token.contracts.states.EvolvableToken
-import net.corda.sdk.token.workflow.schemas.DistributionRecord
-import net.corda.sdk.token.workflow.utilities.getDistributionList
 
 @InitiatingFlow
 @StartableByRPC

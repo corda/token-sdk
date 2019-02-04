@@ -1,15 +1,15 @@
-package net.corda.sdk.token.contracts.utilities
+package com.r3.corda.sdk.token.contracts.utilities
 
+import com.r3.corda.sdk.token.contracts.states.OwnedToken
+import com.r3.corda.sdk.token.contracts.states.OwnedTokenAmount
+import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
+import com.r3.corda.sdk.token.contracts.types.Issued
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.TransactionState
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.internal.uncheckedCast
-import net.corda.sdk.token.contracts.states.OwnedToken
-import net.corda.sdk.token.contracts.states.OwnedTokenAmount
-import net.corda.sdk.token.contracts.types.EmbeddableToken
-import net.corda.sdk.token.contracts.types.Issued
 import java.math.BigDecimal
 
 /** Helpers for composing tokens with issuers, owners and amounts. */

@@ -1,11 +1,11 @@
-package net.corda.sdk.token.workflow
+package com.r3.corda.sdk.token.workflow
 
+import com.r3.corda.sdk.token.contracts.utilities.*
+import com.r3.corda.sdk.token.money.GBP
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.SecureHash
-import net.corda.sdk.token.contracts.utilities.*
-import net.corda.sdk.token.money.GBP
 import net.corda.testing.core.TestIdentity
 import org.junit.Test
 

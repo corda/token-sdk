@@ -1,7 +1,7 @@
-package net.corda.sdk.token.money
+package com.r3.corda.sdk.token.money
 
+import com.r3.corda.sdk.token.contracts.utilities.AMOUNT
 import net.corda.core.contracts.Amount
-import net.corda.sdk.token.contracts.utilities.AMOUNT
 
 /** Helpers for creating amounts of fixed token definitions. */
 

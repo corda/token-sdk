@@ -1,8 +1,8 @@
-package net.corda.sdk.token.money
+package com.r3.corda.sdk.token.money
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import net.corda.sdk.token.contracts.types.FixedToken
+import com.r3.corda.sdk.token.contracts.types.FixedToken
 
 /**
  * Interface for all things money. Unfortunately, the Java Currency type doesn't cater for digital assets,

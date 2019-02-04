@@ -1,15 +1,15 @@
-package net.corda.sdk.token.workflow
+package com.r3.corda.sdk.token.workflow
 
+import com.r3.corda.sdk.token.contracts.types.TokenPointer
+import com.r3.corda.sdk.token.contracts.utilities.of
+import com.r3.corda.sdk.token.money.GBP
+import com.r3.corda.sdk.token.workflow.statesAndContracts.House
+import com.r3.corda.sdk.token.workflow.utilities.getDistributionList
+import com.r3.corda.sdk.token.workflow.utilities.getLinearStateById
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
-import net.corda.sdk.token.contracts.types.TokenPointer
-import net.corda.sdk.token.contracts.utilities.of
-import net.corda.sdk.token.money.GBP
-import net.corda.sdk.token.workflow.statesAndContracts.House
-import net.corda.sdk.token.workflow.utilities.getDistributionList
-import net.corda.sdk.token.workflow.utilities.getLinearStateById
 import net.corda.testing.node.StartedMockNode
 import org.junit.Before
 import org.junit.Test

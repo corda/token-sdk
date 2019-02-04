@@ -1,5 +1,8 @@
-package net.corda.sdk.token.contracts.utilities
+package com.r3.corda.sdk.token.contracts.utilities
 
+import com.r3.corda.sdk.token.contracts.states.OwnedTokenAmount
+import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
+import com.r3.corda.sdk.token.contracts.types.Issued
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Amount.Companion.sumOrNull
 import net.corda.core.contracts.Amount.Companion.sumOrThrow
@@ -8,9 +11,6 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.identity.Party
 import net.corda.core.transactions.LedgerTransaction
-import net.corda.sdk.token.contracts.states.OwnedTokenAmount
-import net.corda.sdk.token.contracts.types.EmbeddableToken
-import net.corda.sdk.token.contracts.types.Issued
 
 /** Get single input/output from ledger transaction. */
 inline fun <reified T : ContractState> LedgerTransaction.singleInput() = inputsOfType<T>().single()

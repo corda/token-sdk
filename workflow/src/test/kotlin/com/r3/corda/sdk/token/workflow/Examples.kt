@@ -1,15 +1,15 @@
-package net.corda.sdk.token.workflow
+package com.r3.corda.sdk.token.workflow
 
-import net.corda.sdk.token.contracts.states.OwnedToken
-import net.corda.sdk.token.contracts.states.OwnedTokenAmount
-import net.corda.sdk.token.contracts.types.Issued
-import net.corda.sdk.token.contracts.types.TokenPointer
-import net.corda.sdk.token.contracts.utilities.issuedBy
-import net.corda.sdk.token.contracts.utilities.of
-import net.corda.sdk.token.contracts.utilities.ownedBy
-import net.corda.sdk.token.money.FiatCurrency
-import net.corda.sdk.token.money.GBP
-import net.corda.sdk.token.workflow.statesAndContracts.House
+import com.r3.corda.sdk.token.contracts.states.OwnedToken
+import com.r3.corda.sdk.token.contracts.states.OwnedTokenAmount
+import com.r3.corda.sdk.token.contracts.types.Issued
+import com.r3.corda.sdk.token.contracts.types.TokenPointer
+import com.r3.corda.sdk.token.contracts.utilities.issuedBy
+import com.r3.corda.sdk.token.contracts.utilities.of
+import com.r3.corda.sdk.token.contracts.utilities.ownedBy
+import com.r3.corda.sdk.token.money.FiatCurrency
+import com.r3.corda.sdk.token.money.GBP
+import com.r3.corda.sdk.token.workflow.statesAndContracts.House
 import org.junit.Test
 import kotlin.test.assertEquals
 

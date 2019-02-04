@@ -1,5 +1,12 @@
-package net.corda.sdk.token.workflow.utilities
+package com.r3.corda.sdk.token.workflow.utilities
 
+import com.r3.corda.sdk.token.contracts.schemas.PersistentOwnedToken
+import com.r3.corda.sdk.token.contracts.schemas.PersistentOwnedTokenAmount
+import com.r3.corda.sdk.token.contracts.states.AbstractOwnedToken
+import com.r3.corda.sdk.token.contracts.states.OwnedToken
+import com.r3.corda.sdk.token.contracts.states.OwnedTokenAmount
+import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
+import com.r3.corda.sdk.token.workflow.schemas.DistributionRecord
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
@@ -12,13 +19,6 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.node.services.vault.Sort
 import net.corda.core.node.services.vault.SortAttribute
 import net.corda.core.node.services.vault.builder
-import net.corda.sdk.token.contracts.schemas.PersistentOwnedToken
-import net.corda.sdk.token.contracts.schemas.PersistentOwnedTokenAmount
-import net.corda.sdk.token.contracts.states.AbstractOwnedToken
-import net.corda.sdk.token.contracts.states.OwnedToken
-import net.corda.sdk.token.contracts.states.OwnedTokenAmount
-import net.corda.sdk.token.contracts.types.EmbeddableToken
-import net.corda.sdk.token.workflow.schemas.DistributionRecord
 import java.util.*
 import javax.persistence.criteria.CriteriaQuery
 

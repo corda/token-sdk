@@ -1,14 +1,14 @@
-package net.corda.sdk.token.workflow.statesAndContracts
+package com.r3.corda.sdk.token.workflow.statesAndContracts
 
+import com.r3.corda.sdk.token.contracts.EvolvableTokenContract
+import com.r3.corda.sdk.token.contracts.states.EvolvableToken
+import com.r3.corda.sdk.token.money.FiatCurrency
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.Party
 import net.corda.core.transactions.LedgerTransaction
-import net.corda.sdk.token.contracts.EvolvableTokenContract
-import net.corda.sdk.token.contracts.states.EvolvableToken
-import net.corda.sdk.token.money.FiatCurrency
 import java.math.BigDecimal
 
 // A token representing a house on ledger.

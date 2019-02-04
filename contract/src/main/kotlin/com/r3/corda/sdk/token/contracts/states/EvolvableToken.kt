@@ -1,11 +1,11 @@
-package net.corda.sdk.token.contracts.states
+package com.r3.corda.sdk.token.contracts.states
 
+import com.r3.corda.sdk.token.contracts.types.Token
+import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
-import net.corda.sdk.token.contracts.types.Token
-import net.corda.sdk.token.contracts.types.TokenPointer
 
 /**
  * [EvolvableToken]s _are_ state objects because the expectation is that they will evolve over time. Of course in-lining

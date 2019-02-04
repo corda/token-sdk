@@ -1,4 +1,4 @@
-package net.corda.sdk.token.contracts.commands
+package com.r3.corda.sdk.token.contracts.commands
 
 import net.corda.core.contracts.CommandData
 

@@ -1,4 +1,4 @@
-package net.corda.sdk.token.workflow.flows
+package com.r3.corda.sdk.token.workflow.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.crypto.DigitalSignature

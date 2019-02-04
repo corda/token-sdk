@@ -1,5 +1,11 @@
-package net.corda.sdk.token.contracts.states
+package com.r3.corda.sdk.token.contracts.states
 
+import com.r3.corda.sdk.token.contracts.OwnedTokenAmountContract
+import com.r3.corda.sdk.token.contracts.commands.Move
+import com.r3.corda.sdk.token.contracts.schemas.OwnedTokenAmountSchemaV1
+import com.r3.corda.sdk.token.contracts.schemas.PersistentOwnedTokenAmount
+import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
+import com.r3.corda.sdk.token.contracts.types.Issued
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
@@ -8,12 +14,6 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.schemas.PersistentState
 import net.corda.core.schemas.QueryableState
-import net.corda.sdk.token.contracts.OwnedTokenAmountContract
-import net.corda.sdk.token.contracts.commands.Move
-import net.corda.sdk.token.contracts.schemas.OwnedTokenAmountSchemaV1
-import net.corda.sdk.token.contracts.schemas.PersistentOwnedTokenAmount
-import net.corda.sdk.token.contracts.types.EmbeddableToken
-import net.corda.sdk.token.contracts.types.Issued
 
 /**
  * This class is for handling the issuer / owner relationship for "non-fungible" token types. If the [EmbeddableToken]
