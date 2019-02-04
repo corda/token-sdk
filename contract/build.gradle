@@ -59,7 +59,7 @@ cordapp {
 
 configure(install.repositories.mavenInstaller) {
     pom.project {
-        groupId 'net.corda.sdk.token'
+        groupId 'com.r3.corda.sdk.token'
         artifactId 'contract'
         inceptionYear '2019'
         packaging 'jar'

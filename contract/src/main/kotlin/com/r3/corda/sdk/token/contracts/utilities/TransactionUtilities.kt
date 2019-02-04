@@ -14,6 +14,7 @@ import net.corda.sdk.token.contracts.types.Issued
 
 /** Get single input/output from ledger transaction. */
 inline fun <reified T : ContractState> LedgerTransaction.singleInput() = inputsOfType<T>().single()
+
 inline fun <reified T : ContractState> LedgerTransaction.singleOutput() = outputsOfType<T>().single()
 
 /**

@@ -80,7 +80,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 
 configure(install.repositories.mavenInstaller) {
     pom.project {
-        groupId 'net.corda.sdk.token'
+        groupId 'com.r3.corda.sdk.token'
         artifactId 'workflow'
         inceptionYear '2019'
         packaging 'jar'
