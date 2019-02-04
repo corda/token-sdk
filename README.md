@@ -41,10 +41,11 @@ publish binaries to your local maven repository like so:
     ./gradlew clean install
 
 With the binaries installed to your local maven repository, you can add
-the token SDK as a dependency to your CorDapp. Add the following line to
-the `build.gradle` file for your CorDapp:
+the token SDK as a dependency to your CorDapp. Add the following lines
+to the `build.gradle` file for your CorDapp:
 
-    compile "net.corda.sdk:token:0.1"
+    compile "net.corda.sdk.token:contract:0.1"
+    compile "net.corda.sdk.token:workflow:0.1"
 
 Alternatively, you can use the following bootstrapped token SDK template:
 
