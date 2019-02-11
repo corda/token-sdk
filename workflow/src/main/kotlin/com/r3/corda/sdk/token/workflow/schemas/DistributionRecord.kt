@@ -3,10 +3,7 @@ package com.r3.corda.sdk.token.workflow.schemas
 import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
 import java.util.*
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.Table
+import javax.persistence.*
 
 object DistributionRecordFamily
 
@@ -17,11 +14,11 @@ object DistributionRecordSchema : MappedSchema(
 )
 
 @Entity
-@Table(name = "distribution_record")
-// TODO: Add index and remove auto generated key in favour of composite key (linear ID, party)
+@Table(name = "distribution_record", indexes = [Index(name = "dist_record_idx", columnList = "linear_id")])
 class DistributionRecord(
 
         @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
         var id: Long,
 
         @Column(name = "linear_id", nullable = false)

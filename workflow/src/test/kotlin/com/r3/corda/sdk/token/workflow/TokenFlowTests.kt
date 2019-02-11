@@ -115,18 +115,30 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 3) {
         // Create new token.
         val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
         val createTokenTx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
-        println(createTokenTx.tx)
         // Issue amount of the token.
         val housePointer: TokenPointer<House> = house.toPointer()
         val issueTokenTx = I.issueTokens(housePointer, A, NOTARY, 100 of housePointer).getOrThrow()
-        println(issueTokenTx.tx)
         A.watchForTransaction(issueTokenTx.id).toCompletableFuture().getOrThrow()
         val houseQuery = A.transaction { A.services.vaultService.getLinearStateById<LinearState>(housePointer.pointer.pointer) }
-        println(houseQuery)
         // Move some of the tokens.
         val moveTokenTx = A.moveTokens(housePointer, B, 50 of housePointer, anonymous = true).getOrThrow()
         B.watchForTransaction(moveTokenTx.id).getOrThrow()
-        println(moveTokenTx.tx)
+    }
+
+    @Test
+    fun `create evolvable token and issue to multiple nodes`() {
+        // Create new token.
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
+        val housePointer: TokenPointer<House> = house.toPointer()
+        val tx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
+        val token = tx.singleOutput<House>()
+        assertEquals(house, token.state.data)
+        // Issue to node A.
+        val issueTokenA = I.issueTokens(housePointer, A, NOTARY, 50 of housePointer).getOrThrow()
+        A.watchForTransaction(issueTokenA.id).toCompletableFuture().getOrThrow()
+        // Issue to node B.
+        val issueTokenB = I.issueTokens(housePointer, A, NOTARY, 50 of housePointer).getOrThrow()
+        A.watchForTransaction(issueTokenB.id).toCompletableFuture().getOrThrow()
     }
 
 }

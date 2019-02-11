@@ -87,6 +87,7 @@ Corda ledger.
 
 TODO:
 
+* @roger3cev have some suggestion on TokenSelection class, 1. Make it open, so it would be possible to extend 2. For "generateMove" have possibility to give it acceptableCoins list as parameter or as I mentioned by sublcassing the class have the possibility to control that, as we most likely need api to limit acceptableCoins to externalIDs, so that we can choose only subset of coins
 * Start writing the standards docs - research how best to do this and
   look at ERC20 as one example.
 * Start thinking about a Java API or a shim over the kotlin API for
