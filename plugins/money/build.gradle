@@ -3,6 +3,20 @@ apply plugin: 'maven'
 apply plugin: 'net.corda.plugins.cordapp'
 apply plugin: 'net.corda.plugins.cordformation'
 
+cordapp {
+    targetPlatformVersion 4
+    minimumPlatformVersion 4
+    contract {
+        name "Token SDK money definitions"
+        vendor "R3"
+        licence "Apache 2"
+        versionId 1
+    }
+    signing {
+        enabled false
+    }
+}
+
 sourceSets {
     main {
         resources {
@@ -47,16 +61,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     }
 }
 
-cordapp {
-    targetPlatformVersion 4
-    minimumPlatformVersion 4
-    contract {
-        name "Token SDK money definitions"
-        vendor "R3"
-        licence "Apache 2"
-        versionId 1
-    }
-}
 
 configure(install.repositories.mavenInstaller) {
     pom.project {
