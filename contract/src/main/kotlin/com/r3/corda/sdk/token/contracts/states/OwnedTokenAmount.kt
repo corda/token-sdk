@@ -5,7 +5,7 @@ import com.r3.corda.sdk.token.contracts.commands.MoveTokenCommand
 import com.r3.corda.sdk.token.contracts.schemas.OwnedTokenAmountSchemaV1
 import com.r3.corda.sdk.token.contracts.schemas.PersistentOwnedTokenAmount
 import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
-import com.r3.corda.sdk.token.contracts.types.Issued
+import com.r3.corda.sdk.token.contracts.types.IssuedToken
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
@@ -20,7 +20,7 @@ import net.corda.core.schemas.QueryableState
  * is a [TokenPointer], then it allows the token can evolve independently of who owns it. This state object implements
  * [FungibleState] as the expectation is that it contains amounts of a token type which can be split and merged.
  *
- * All [EmbeddableToken]s are wrapped with an [Issued] class to add the issuer party. This is necessary so that the
+ * All [EmbeddableToken]s are wrapped with an [IssuedToken] class to add the issuer party. This is necessary so that the
  * [OwnedToken] represents a contract or agreement between an issuer and an owner. In effect, this token conveys a right
  * for the owner to make a claim on the issuer for whatever the [EmbeddableToken] represents.
  *
@@ -28,9 +28,9 @@ import net.corda.core.schemas.QueryableState
  */
 @BelongsToContract(OwnedTokenAmountContract::class)
 open class OwnedTokenAmount<T : EmbeddableToken>(
-        override val amount: Amount<Issued<T>>,
+        override val amount: Amount<IssuedToken<T>>,
         override val owner: AbstractParty
-) : FungibleState<Issued<T>>, AbstractOwnedToken(), QueryableState {
+) : FungibleState<IssuedToken<T>>, AbstractOwnedToken(), QueryableState {
     /** Helper for changing the owner of the state. */
     override fun withNewOwner(newOwner: AbstractParty): CommandAndState {
         return CommandAndState(MoveTokenCommand(amount.token), OwnedTokenAmount(amount, newOwner))

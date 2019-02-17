@@ -7,7 +7,7 @@ import java.math.BigDecimal
 
 /**
  * [EmbeddableToken]s are [Token]s which can be composed into an [OwnedToken] or an [OwnedTokenAmount]. They are almost
- * always wrapped with an [Issued] class.
+ * always wrapped with an [IssuedToken] class.
  */
 @CordaSerializable
 sealed class EmbeddableToken : Token

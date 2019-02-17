@@ -6,7 +6,7 @@ import com.r3.corda.sdk.token.contracts.commands.RedeemTokenCommand
 import com.r3.corda.sdk.token.contracts.commands.TokenCommand
 import com.r3.corda.sdk.token.contracts.states.AbstractOwnedToken
 import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
-import com.r3.corda.sdk.token.contracts.types.Issued
+import com.r3.corda.sdk.token.contracts.types.IssuedToken
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.select
@@ -26,8 +26,8 @@ abstract class AbstractOwnedTokenContract<T : AbstractOwnedToken> : Contract {
 
     /** This method can be overridden to handle additional command types. */
     open fun dispatchOnCommand(
-            matchedCommands: List<CommandWithParties<TokenCommand<Issued<EmbeddableToken>>>>,
-            group: LedgerTransaction.InOutGroup<T, Issued<EmbeddableToken>>
+            matchedCommands: List<CommandWithParties<TokenCommand<IssuedToken<EmbeddableToken>>>>,
+            group: LedgerTransaction.InOutGroup<T, IssuedToken<EmbeddableToken>>
     ) {
         when (matchedCommands.single().value) {
             // Issuances should only contain one issue command.
@@ -40,30 +40,30 @@ abstract class AbstractOwnedTokenContract<T : AbstractOwnedToken> : Contract {
     }
 
     abstract fun handleIssue(
-            group: LedgerTransaction.InOutGroup<T, Issued<EmbeddableToken>>,
+            group: LedgerTransaction.InOutGroup<T, IssuedToken<EmbeddableToken>>,
             issueCommand: CommandWithParties<TokenCommand<*>>
     )
 
     abstract fun handleMove(
-            group: LedgerTransaction.InOutGroup<T, Issued<EmbeddableToken>>,
+            group: LedgerTransaction.InOutGroup<T, IssuedToken<EmbeddableToken>>,
             moveCommands: List<CommandWithParties<TokenCommand<*>>>
     )
 
     abstract fun handleRedeem(
-            group: LedgerTransaction.InOutGroup<T, Issued<EmbeddableToken>>,
+            group: LedgerTransaction.InOutGroup<T, IssuedToken<EmbeddableToken>>,
             redeemCommand: CommandWithParties<TokenCommand<*>>
     )
 
-    abstract fun groupStates(tx: LedgerTransaction): List<LedgerTransaction.InOutGroup<T, Issued<EmbeddableToken>>>
+    abstract fun groupStates(tx: LedgerTransaction): List<LedgerTransaction.InOutGroup<T, IssuedToken<EmbeddableToken>>>
 
     final override fun verify(tx: LedgerTransaction) {
         // Group owned token amounts by token type. We need to do this because tokens of different types need to be
         // verified separately. This works for the same token type with different issuers, or different token types
         // altogether. The grouping function returns a list containing groups of input and output states grouped by
         // token type. The type is specified explicitly to aid understanding.
-        val groups: List<LedgerTransaction.InOutGroup<T, Issued<EmbeddableToken>>> = groupStates(tx)
+        val groups: List<LedgerTransaction.InOutGroup<T, IssuedToken<EmbeddableToken>>> = groupStates(tx)
         // A list of only the commands which implement TokenCommand.
-        val ownedTokenCommands = tx.commands.select<TokenCommand<Issued<EmbeddableToken>>>()
+        val ownedTokenCommands = tx.commands.select<TokenCommand<IssuedToken<EmbeddableToken>>>()
         require(ownedTokenCommands.isNotEmpty()) { "There must be at least one owned token command this transaction." }
         // As inputs and outputs are just "bags of states" and the InOutGroups do not contain commands, we must match
         // the TokenCommand to each InOutGroup. There should be at least a single command for each group. If there
@@ -72,7 +72,7 @@ abstract class AbstractOwnedTokenContract<T : AbstractOwnedToken> : Contract {
         groups.forEach { group ->
             // Discard commands with a token which does not match the grouping key.
             val matchedCommands = ownedTokenCommands.filter { it.value.token == group.groupingKey }
-            val matchedCommandValues: Set<TokenCommand<Issued<EmbeddableToken>>> = matchedCommands.map {
+            val matchedCommandValues: Set<TokenCommand<IssuedToken<EmbeddableToken>>> = matchedCommands.map {
                 it.value
             }.toSet()
 

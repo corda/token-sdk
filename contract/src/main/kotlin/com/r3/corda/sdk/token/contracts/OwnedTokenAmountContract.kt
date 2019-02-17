@@ -4,7 +4,7 @@ import com.r3.corda.sdk.token.contracts.commands.TokenCommand
 import com.r3.corda.sdk.token.contracts.states.AbstractOwnedToken
 import com.r3.corda.sdk.token.contracts.states.OwnedTokenAmount
 import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
-import com.r3.corda.sdk.token.contracts.types.Issued
+import com.r3.corda.sdk.token.contracts.types.IssuedToken
 import com.r3.corda.sdk.token.contracts.utilities.sumTokens
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.CommandWithParties
@@ -31,12 +31,12 @@ open class OwnedTokenAmountContract : AbstractOwnedTokenContract<OwnedTokenAmoun
         val contractId = this::class.java.enclosingClass.canonicalName
     }
 
-    override fun groupStates(tx: LedgerTransaction): List<InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>> {
+    override fun groupStates(tx: LedgerTransaction): List<InOutGroup<OwnedTokenAmount<EmbeddableToken>, IssuedToken<EmbeddableToken>>> {
         return tx.groupStates { state -> state.amount.token }
     }
 
     override fun handleIssue(
-            group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>,
+            group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, IssuedToken<EmbeddableToken>>,
             issueCommand: CommandWithParties<TokenCommand<*>>
     ) {
         val token = group.groupingKey
@@ -59,7 +59,7 @@ open class OwnedTokenAmountContract : AbstractOwnedTokenContract<OwnedTokenAmoun
     }
 
     override fun handleMove(
-            group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>,
+            group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, IssuedToken<EmbeddableToken>>,
             moveCommands: List<CommandWithParties<TokenCommand<*>>>
     ) {
         val token = group.groupingKey
@@ -67,9 +67,9 @@ open class OwnedTokenAmountContract : AbstractOwnedTokenContract<OwnedTokenAmoun
         require(group.inputs.isNotEmpty()) { "When moving tokens, there must be input states present." }
         require(group.outputs.isNotEmpty()) { "When moving tokens, there must be output states present." }
         // Sum the amount of input and output tokens.
-        val inputAmount: Amount<Issued<EmbeddableToken>> = group.inputs.sumTokens()
+        val inputAmount: Amount<IssuedToken<EmbeddableToken>> = group.inputs.sumTokens()
         require(inputAmount > Amount.zero(token)) { "In move groups there must be an amount of input tokens > ZERO." }
-        val outputAmount: Amount<Issued<EmbeddableToken>> = group.outputs.sumTokens()
+        val outputAmount: Amount<IssuedToken<EmbeddableToken>> = group.outputs.sumTokens()
         require(outputAmount > Amount.zero(token)) { "In move groups there must be an amount of output tokens > ZERO." }
         // Input and output amounts must be equal.
         require(inputAmount == outputAmount) {
@@ -90,7 +90,7 @@ open class OwnedTokenAmountContract : AbstractOwnedTokenContract<OwnedTokenAmoun
     }
 
     override fun handleRedeem(
-            group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>,
+            group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, IssuedToken<EmbeddableToken>>,
             redeemCommand: CommandWithParties<TokenCommand<*>>
     ) {
         val token = group.groupingKey

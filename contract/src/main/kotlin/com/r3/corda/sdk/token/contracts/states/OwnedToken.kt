@@ -5,7 +5,7 @@ import com.r3.corda.sdk.token.contracts.commands.MoveTokenCommand
 import com.r3.corda.sdk.token.contracts.schemas.OwnedTokenSchemaV1
 import com.r3.corda.sdk.token.contracts.schemas.PersistentOwnedToken
 import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
-import com.r3.corda.sdk.token.contracts.types.Issued
+import com.r3.corda.sdk.token.contracts.types.IssuedToken
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.identity.AbstractParty
@@ -19,7 +19,7 @@ import net.corda.core.schemas.QueryableState
  * in this class, as the assumption is there is only ever ONE of the [EmbeddableToken] provided. It is up to issuers to
  * ensure that only ONE of a non-fungible token is ever issued.
  *
- * All [EmbeddableToken]s are wrapped with an [Issued] class to add the issuer party. This is necessary so that the
+ * All [EmbeddableToken]s are wrapped with an [IssuedToken] class to add the issuer party. This is necessary so that the
  * [OwnedToken] represents a contract or agreement between an issuer and an owner. In effect, this token conveys a right
  * for the owner to make a claim on the issuer for whatever the [EmbeddableToken] represents.
  *
@@ -27,7 +27,7 @@ import net.corda.core.schemas.QueryableState
  */
 @BelongsToContract(OwnedTokenContract::class)
 open class OwnedToken<T : EmbeddableToken>(
-        val token: Issued<T>,
+        val token: IssuedToken<T>,
         override val owner: AbstractParty
 ) : AbstractOwnedToken(), QueryableState {
     /** Helper for changing the owner of the state. */

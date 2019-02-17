@@ -4,7 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.commands.IssueTokenCommand
 import com.r3.corda.sdk.token.contracts.states.AbstractOwnedToken
 import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
-import com.r3.corda.sdk.token.contracts.types.Issued
+import com.r3.corda.sdk.token.contracts.types.IssuedToken
 import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.ownedBy
@@ -33,14 +33,14 @@ import net.corda.core.utilities.unwrap
  * inlined into an owned token state. They are the most straight-forward token type to use. [FixedToken]s are mainly
  * used for things like [Money] which rarely change, if at all. For other types of token which have properties that are
  * expected to change over time, we use the [TokenPointer]. The [TokenPointer] points to an [EvolvableToken] which is
- * a [LinearState] that contains the details of the token. The token which is provided is not wrapped with an [Issued]
+ * a [LinearState] that contains the details of the token. The token which is provided is not wrapped with an [IssuedToken]
  * object, instead, the issuer becomes the party which invokes this flow. This makes sense because it is impossible to
  * have an issuer other than the node which invokes the [IssueToken.Initiator] flow.
  * @param amount the amount of the token to be issued. Note that this can be set to null. If it is set to null then an
- * [OwnedToken] state is issued. This state wraps a [Issued] [EmbeddableToken] with an [owner]. The [EmbeddableToken] is
+ * [OwnedToken] state is issued. This state wraps a [IssuedToken] [EmbeddableToken] with an [owner]. The [EmbeddableToken] is
  * non-fungible inside [OwnedToken]s - they cannot be split or merged because there is only ever one of them. However,
  * if an amount is specified, then that many tokens will be issued using an [OwnedTokenAmount] state. Currently, there
- * will be a single [OwnedTokenAmount] state issued for the amount of [Issued] [EmbeddableToken] specified. Note that
+ * will be a single [OwnedTokenAmount] state issued for the amount of [IssuedToken] [EmbeddableToken] specified. Note that
  * if an amount of ONE is specified and the token has fraction digits set to "0.1" then that ONE token could be split
  * into TEN atomic units of the token. Likewise, if the token has fraction digits set to "0.01", then that ONE token
  * could be split into ONE HUNDRED atomic units of the token.
@@ -86,7 +86,7 @@ object IssueToken {
             } else owner
 
             // Create the issued token. We add this to the commands for grouping.
-            val issuedToken: Issued<T> = token issuedBy me
+            val issuedToken: IssuedToken<T> = token issuedBy me
 
             // Create the token. It's either an OwnedToken or OwnedTokenAmount.
             val ownedToken: AbstractOwnedToken = if (amount == null) {
