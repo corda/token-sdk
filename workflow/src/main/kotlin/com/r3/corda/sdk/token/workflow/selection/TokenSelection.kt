@@ -1,7 +1,7 @@
 package com.r3.corda.sdk.token.workflow.selection
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.sdk.token.contracts.commands.Move
+import com.r3.corda.sdk.token.contracts.commands.MoveTokenCommand
 import com.r3.corda.sdk.token.contracts.states.OwnedTokenAmount
 import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
 import com.r3.corda.sdk.token.contracts.types.Issued
@@ -207,7 +207,7 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
         // Create a move command for each group.
         tokensGroupedByIssuer.map { (key, value) ->
             val keys = value.map { it.state.data.owner.owningKey }
-            builder.addCommand(Move(key), keys)
+            builder.addCommand(MoveTokenCommand(key), keys)
         }
 
         for (state in acceptableStates) builder.addInputState(state)

@@ -1,6 +1,6 @@
 package com.r3.corda.sdk.token.contracts
 
-import com.r3.corda.sdk.token.contracts.commands.OwnedTokenCommand
+import com.r3.corda.sdk.token.contracts.commands.TokenCommand
 import com.r3.corda.sdk.token.contracts.states.OwnedToken
 import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
 import com.r3.corda.sdk.token.contracts.types.Issued
@@ -22,7 +22,7 @@ class OwnedTokenContract : AbstractOwnedTokenContract<OwnedToken<EmbeddableToken
 
     override fun handleIssue(
             group: LedgerTransaction.InOutGroup<OwnedToken<EmbeddableToken>, Issued<EmbeddableToken>>,
-            issueCommand: CommandWithParties<OwnedTokenCommand<*>>
+            issueCommand: CommandWithParties<TokenCommand<*>>
     ) {
         val token = group.groupingKey
         require(group.inputs.isEmpty()) { "When issuing tokens, there cannot be any input states." }
@@ -42,7 +42,7 @@ class OwnedTokenContract : AbstractOwnedTokenContract<OwnedToken<EmbeddableToken
     // groups.
     override fun handleMove(
             group: LedgerTransaction.InOutGroup<OwnedToken<EmbeddableToken>, Issued<EmbeddableToken>>,
-            moveCommands: List<CommandWithParties<OwnedTokenCommand<*>>>
+            moveCommands: List<CommandWithParties<TokenCommand<*>>>
     ) {
         val token = group.groupingKey
         // There must be inputs and outputs present.
@@ -61,7 +61,7 @@ class OwnedTokenContract : AbstractOwnedTokenContract<OwnedToken<EmbeddableToken
 
     override fun handleRedeem(
             group: LedgerTransaction.InOutGroup<OwnedToken<EmbeddableToken>, Issued<EmbeddableToken>>,
-            redeemCommand: CommandWithParties<OwnedTokenCommand<*>>
+            redeemCommand: CommandWithParties<TokenCommand<*>>
     ) {
         // There must be inputs and outputs present.
         require(group.outputs.isEmpty()) { "When redeeming an owned token, there must be no output." }

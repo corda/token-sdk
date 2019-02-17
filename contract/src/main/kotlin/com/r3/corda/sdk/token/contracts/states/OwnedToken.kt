@@ -1,7 +1,7 @@
 package com.r3.corda.sdk.token.contracts.states
 
 import com.r3.corda.sdk.token.contracts.OwnedTokenContract
-import com.r3.corda.sdk.token.contracts.commands.Move
+import com.r3.corda.sdk.token.contracts.commands.MoveTokenCommand
 import com.r3.corda.sdk.token.contracts.schemas.OwnedTokenSchemaV1
 import com.r3.corda.sdk.token.contracts.schemas.PersistentOwnedToken
 import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
@@ -32,7 +32,7 @@ open class OwnedToken<T : EmbeddableToken>(
 ) : AbstractOwnedToken(), QueryableState {
     /** Helper for changing the owner of the state. */
     override fun withNewOwner(newOwner: AbstractParty): CommandAndState {
-        return CommandAndState(Move(token), OwnedToken(token, newOwner))
+        return CommandAndState(MoveTokenCommand(token), OwnedToken(token, newOwner))
     }
 
     override fun toString(): String = "$token owned by $ownerString"

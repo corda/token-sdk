@@ -1,7 +1,7 @@
 package com.r3.corda.sdk.token.workflow.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.sdk.token.contracts.commands.Issue
+import com.r3.corda.sdk.token.contracts.commands.IssueTokenCommand
 import com.r3.corda.sdk.token.contracts.states.AbstractOwnedToken
 import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
 import com.r3.corda.sdk.token.contracts.types.Issued
@@ -112,7 +112,7 @@ object IssueToken {
             // Create the transaction.
             val transactionState: TransactionState<AbstractOwnedToken> = ownedToken withNotary notary
             val utx: TransactionBuilder = TransactionBuilder(notary = notary).apply {
-                addCommand(data = Issue(issuedToken), keys = me.owningKey)
+                addCommand(data = IssueTokenCommand(issuedToken), keys = me.owningKey)
                 addOutputState(state = transactionState)
             }
             // Sign the transaction. Only Concrete Parties should be used here.
