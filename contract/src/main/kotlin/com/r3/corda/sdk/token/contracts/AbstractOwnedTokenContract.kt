@@ -26,7 +26,7 @@ abstract class AbstractOwnedTokenContract<T : AbstractOwnedToken> : Contract {
 
     /** This method can be overridden to handle additional command types. */
     open fun dispatchOnCommand(
-            matchedCommands: List<CommandWithParties<TokenCommand<IssuedToken<EmbeddableToken>>>>,
+            matchedCommands: List<CommandWithParties<TokenCommand<EmbeddableToken>>>,
             group: LedgerTransaction.InOutGroup<T, IssuedToken<EmbeddableToken>>
     ) {
         when (matchedCommands.single().value) {
@@ -63,7 +63,7 @@ abstract class AbstractOwnedTokenContract<T : AbstractOwnedToken> : Contract {
         // token type. The type is specified explicitly to aid understanding.
         val groups: List<LedgerTransaction.InOutGroup<T, IssuedToken<EmbeddableToken>>> = groupStates(tx)
         // A list of only the commands which implement TokenCommand.
-        val ownedTokenCommands = tx.commands.select<TokenCommand<IssuedToken<EmbeddableToken>>>()
+        val ownedTokenCommands = tx.commands.select<TokenCommand<EmbeddableToken>>()
         require(ownedTokenCommands.isNotEmpty()) { "There must be at least one owned token command this transaction." }
         // As inputs and outputs are just "bags of states" and the InOutGroups do not contain commands, we must match
         // the TokenCommand to each InOutGroup. There should be at least a single command for each group. If there
@@ -72,7 +72,7 @@ abstract class AbstractOwnedTokenContract<T : AbstractOwnedToken> : Contract {
         groups.forEach { group ->
             // Discard commands with a token which does not match the grouping key.
             val matchedCommands = ownedTokenCommands.filter { it.value.token == group.groupingKey }
-            val matchedCommandValues: Set<TokenCommand<IssuedToken<EmbeddableToken>>> = matchedCommands.map {
+            val matchedCommandValues: Set<TokenCommand<EmbeddableToken>> = matchedCommands.map {
                 it.value
             }.toSet()
 

@@ -1,5 +1,7 @@
 package com.r3.corda.sdk.token.contracts.commands
 
+import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
+import com.r3.corda.sdk.token.contracts.types.IssuedToken
 import net.corda.core.contracts.CommandData
 
 /**
@@ -8,10 +10,10 @@ import net.corda.core.contracts.CommandData
  * be able to attribute the correct command to each group. The most simple way to do this is including an [Issued]
  * [EmbeddableToken] in the command.
  */
-interface TokenCommand<T : Any> : CommandData {
-    val token: T
+interface TokenCommand<T : EmbeddableToken> : CommandData {
+    val token: IssuedToken<T>
 }
 
-data class IssueTokenCommand<T : Any>(override val token: T) : TokenCommand<T>
-data class MoveTokenCommand<T : Any>(override val token: T) : TokenCommand<T>
-data class RedeemTokenCommand<T : Any>(override val token: T) : TokenCommand<T>
+data class IssueTokenCommand<T : EmbeddableToken>(override val token: IssuedToken<T>) : TokenCommand<T>
+data class MoveTokenCommand<T : EmbeddableToken>(override val token: IssuedToken<T>) : TokenCommand<T>
+data class RedeemTokenCommand<T : EmbeddableToken>(override val token: IssuedToken<T>) : TokenCommand<T>
