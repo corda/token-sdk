@@ -8,6 +8,8 @@ import java.math.BigDecimal
 /**
  * [EmbeddableToken]s are [Token]s which can be composed into an [OwnedToken] or an [OwnedTokenAmount]. They are almost
  * always wrapped with an [IssuedToken] class.
+ *
+ * TODO: [EmbeddableToken] should be ready to be replaced with Token now.
  */
 @CordaSerializable
 sealed class EmbeddableToken : Token
@@ -28,6 +30,9 @@ abstract class FixedToken : EmbeddableToken() {
      * TODO: Add some validation for the symbol.
      */
     abstract val symbol: String
+    override val tokenIdentifier: String get() = symbol
+    override val tokenClass: String get() = javaClass.canonicalName
+    override fun toString(): String = "$tokenClass($tokenIdentifier)"
 }
 
 /**
@@ -40,7 +45,9 @@ data class TokenPointer<T : EvolvableToken>(
         val pointer: LinearPointer<T>,
         override val displayTokenSize: BigDecimal
 ) : EmbeddableToken() {
-    override fun toString(): String = "Pointer(${pointer.pointer.id}, ${pointer.type.canonicalName})"
+    override val tokenIdentifier: String get() = pointer.pointer.id.toString()
+    override val tokenClass: String get() = pointer.type.canonicalName
+    override fun toString(): String = "Pointer($tokenIdentifier, $tokenClass)"
 }
 
 

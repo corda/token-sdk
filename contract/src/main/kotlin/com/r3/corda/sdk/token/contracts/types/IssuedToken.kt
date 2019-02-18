@@ -16,7 +16,8 @@ import java.math.BigDecimal
  * Note: Possible name confusion with corda core "net.corda.corda.contracts.Issued".
  */
 @CordaSerializable
-data class IssuedToken<out T : EmbeddableToken>(val issuer: Party, val product: T) : TokenizableAssetInfo {
+data class IssuedToken<out T : EmbeddableToken>(val issuer: Party, val product: T) : TokenizableAssetInfo,
+        Token by product {
     override fun toString(): String = "$product issued by ${issuer.name.organisation}"
     override val displayTokenSize: BigDecimal get() = product.displayTokenSize
 }

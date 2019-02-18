@@ -41,8 +41,8 @@ open class OwnedToken<T : EmbeddableToken>(
         is OwnedTokenSchemaV1 -> PersistentOwnedToken(
                 issuer = token.issuer,
                 owner = owner,
-                tokenClass = tokenClass(token.product),
-                tokenIdentifier = tokenIdentifier(token.product)
+                tokenClass = token.product.tokenClass,
+                tokenIdentifier = token.product.tokenIdentifier
         )
         else -> throw IllegalArgumentException("Unrecognised schema $schema")
     }

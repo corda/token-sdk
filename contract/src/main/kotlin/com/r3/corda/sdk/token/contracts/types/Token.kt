@@ -9,4 +9,7 @@ import net.corda.core.contracts.TokenizableAssetInfo
  * the [OwnedTokenAmount] state for assigning amounts of some fungible token to an owner. Currently, this interface is
  * just a marker and it will probably stay that way.
  */
-interface Token : TokenizableAssetInfo
+interface Token : TokenizableAssetInfo {
+    val tokenIdentifier: String
+    val tokenClass: String
+}

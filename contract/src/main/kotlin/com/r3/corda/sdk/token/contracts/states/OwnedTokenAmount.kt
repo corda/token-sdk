@@ -43,8 +43,8 @@ open class OwnedTokenAmount<T : EmbeddableToken>(
                 issuer = amount.token.issuer,
                 owner = owner,
                 amount = amount.quantity,
-                tokenClass = tokenClass(amount.token.product),
-                tokenIdentifier = tokenIdentifier(amount.token.product)
+                tokenClass = amount.token.product.tokenClass,
+                tokenIdentifier = amount.token.product.tokenIdentifier
         )
         else -> throw IllegalArgumentException("Unrecognised schema $schema")
     }
