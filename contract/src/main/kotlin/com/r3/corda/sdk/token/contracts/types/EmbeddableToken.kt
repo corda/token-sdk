@@ -36,7 +36,7 @@ abstract class FixedToken : EmbeddableToken() {
 }
 
 /**
- * To harness the power of [EvolvableToken]s, they cannot be directly embedded in [OwnedToken] or [OwnedTokenAmoun]s.
+ * To harness the power of [EvolvableToken]s, they cannot be directly embedded in [OwnedToken] or [OwnedTokenAmount]s.
  * Instead, a [TokenPointer] is embedded. The pointer can be resolved inside the verify function to obtain the data
  * within the token definition. This way, the [Token] can evolve independently from who owns it, as the data is held in
  * a separate state object.
