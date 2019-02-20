@@ -1,10 +1,10 @@
 package com.r3.corda.sdk.token.contracts
 
-import com.r3.corda.sdk.token.contracts.commands.OwnedTokenCommand
+import com.r3.corda.sdk.token.contracts.commands.TokenCommand
 import com.r3.corda.sdk.token.contracts.states.AbstractOwnedToken
 import com.r3.corda.sdk.token.contracts.states.OwnedTokenAmount
 import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
-import com.r3.corda.sdk.token.contracts.types.Issued
+import com.r3.corda.sdk.token.contracts.types.IssuedToken
 import com.r3.corda.sdk.token.contracts.utilities.sumTokens
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.CommandWithParties
@@ -20,7 +20,7 @@ import java.security.PublicKey
  *
  * The [OwnedTokenAmount] contract sub-classes the [AbstractOwnedToken] contract which contains the "verify" method.
  * To add functionality to this contract, developers should:
- * 1. Create their own commands which implement the [OwnedTokenCommand] interface.
+ * 1. Create their own commands which implement the [TokenCommand] interface.
  * 2. override the [AbstractOwnedTokenContract.dispatchOnCommand] method to add support for the new command, remembering
  *    to call the super method to handle the existing commands.
  * 3. Add a method to handle the new command in the new sub-class contract.
@@ -31,13 +31,13 @@ open class OwnedTokenAmountContract : AbstractOwnedTokenContract<OwnedTokenAmoun
         val contractId = this::class.java.enclosingClass.canonicalName
     }
 
-    override fun groupStates(tx: LedgerTransaction): List<InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>> {
+    override fun groupStates(tx: LedgerTransaction): List<InOutGroup<OwnedTokenAmount<EmbeddableToken>, IssuedToken<EmbeddableToken>>> {
         return tx.groupStates { state -> state.amount.token }
     }
 
     override fun handleIssue(
-            group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>,
-            issueCommand: CommandWithParties<OwnedTokenCommand<*>>
+            group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, IssuedToken<EmbeddableToken>>,
+            issueCommand: CommandWithParties<TokenCommand<*>>
     ) {
         val token = group.groupingKey
         require(group.inputs.isEmpty()) { "When issuing tokens, there cannot be any input states." }
@@ -59,17 +59,17 @@ open class OwnedTokenAmountContract : AbstractOwnedTokenContract<OwnedTokenAmoun
     }
 
     override fun handleMove(
-            group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>,
-            moveCommands: List<CommandWithParties<OwnedTokenCommand<*>>>
+            group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, IssuedToken<EmbeddableToken>>,
+            moveCommands: List<CommandWithParties<TokenCommand<*>>>
     ) {
         val token = group.groupingKey
         // There must be inputs and outputs present.
         require(group.inputs.isNotEmpty()) { "When moving tokens, there must be input states present." }
         require(group.outputs.isNotEmpty()) { "When moving tokens, there must be output states present." }
         // Sum the amount of input and output tokens.
-        val inputAmount: Amount<Issued<EmbeddableToken>> = group.inputs.sumTokens()
+        val inputAmount: Amount<IssuedToken<EmbeddableToken>> = group.inputs.sumTokens()
         require(inputAmount > Amount.zero(token)) { "In move groups there must be an amount of input tokens > ZERO." }
-        val outputAmount: Amount<Issued<EmbeddableToken>> = group.outputs.sumTokens()
+        val outputAmount: Amount<IssuedToken<EmbeddableToken>> = group.outputs.sumTokens()
         require(outputAmount > Amount.zero(token)) { "In move groups there must be an amount of output tokens > ZERO." }
         // Input and output amounts must be equal.
         require(inputAmount == outputAmount) {
@@ -90,8 +90,8 @@ open class OwnedTokenAmountContract : AbstractOwnedTokenContract<OwnedTokenAmoun
     }
 
     override fun handleRedeem(
-            group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, Issued<EmbeddableToken>>,
-            redeemCommand: CommandWithParties<OwnedTokenCommand<*>>
+            group: InOutGroup<OwnedTokenAmount<EmbeddableToken>, IssuedToken<EmbeddableToken>>,
+            redeemCommand: CommandWithParties<TokenCommand<*>>
     ) {
         val token = group.groupingKey
         // There must be inputs and outputs present.

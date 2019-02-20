@@ -2,7 +2,7 @@ package com.r3.corda.sdk.token.workflow
 
 import com.r3.corda.sdk.token.contracts.states.OwnedToken
 import com.r3.corda.sdk.token.contracts.states.OwnedTokenAmount
-import com.r3.corda.sdk.token.contracts.types.Issued
+import com.r3.corda.sdk.token.contracts.types.IssuedToken
 import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.of
@@ -31,7 +31,7 @@ class Examples : LedgerTestWithPersistence() {
     fun `evolvable token definition`() {
         val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(BOB.party))
         val housePointer: TokenPointer<House> = house.toPointer()
-        val houseIssuedByBob: Issued<TokenPointer<House>> = housePointer issuedBy BOB.party
+        val houseIssuedByBob: IssuedToken<TokenPointer<House>> = housePointer issuedBy BOB.party
         val houseIssuedByBobOwnedByAlice: OwnedToken<TokenPointer<House>> = houseIssuedByBob ownedBy ALICE.party
 
         // Now we want to do fractional ownership in this house...

@@ -2,7 +2,6 @@ package com.r3.corda.sdk.token.workflow.utilities
 
 import com.r3.corda.sdk.token.contracts.schemas.PersistentOwnedToken
 import com.r3.corda.sdk.token.contracts.schemas.PersistentOwnedTokenAmount
-import com.r3.corda.sdk.token.contracts.states.AbstractOwnedToken
 import com.r3.corda.sdk.token.contracts.states.OwnedToken
 import com.r3.corda.sdk.token.contracts.states.OwnedTokenAmount
 import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
@@ -52,11 +51,11 @@ fun getDistributionList(services: ServiceHub, linearId: UniqueIdentifier): List<
 // We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
 internal fun <T : EmbeddableToken> ownedTokenAmountCriteria(embeddableToken: T): QueryCriteria {
     val tokenClass = builder {
-        PersistentOwnedTokenAmount::tokenClass.equal(AbstractOwnedToken.tokenClass(embeddableToken))
+        PersistentOwnedTokenAmount::tokenClass.equal(embeddableToken.tokenClass)
     }
     val tokenClassCriteria = QueryCriteria.VaultCustomQueryCriteria(tokenClass)
     val tokenIdentifier = builder {
-        PersistentOwnedTokenAmount::tokenIdentifier.equal(AbstractOwnedToken.tokenIdentifier(embeddableToken))
+        PersistentOwnedTokenAmount::tokenIdentifier.equal(embeddableToken.tokenIdentifier)
     }
     val tokenIdentifierCriteria = QueryCriteria.VaultCustomQueryCriteria(tokenIdentifier)
     return tokenClassCriteria.and(tokenIdentifierCriteria)
@@ -71,11 +70,11 @@ internal fun sortByStateRefAscending(): Sort {
 // TODO: Merge this code with the code above.
 private fun <T : EmbeddableToken> ownedTokenCriteria(embeddableToken: T): QueryCriteria {
     val tokenClass = builder {
-        PersistentOwnedToken::tokenClass.equal(AbstractOwnedToken.tokenClass(embeddableToken))
+        PersistentOwnedToken::tokenClass.equal(embeddableToken.tokenClass)
     }
     val tokenClassCriteria = QueryCriteria.VaultCustomQueryCriteria(tokenClass)
     val tokenIdentifier = builder {
-        PersistentOwnedToken::tokenIdentifier.equal(AbstractOwnedToken.tokenIdentifier(embeddableToken))
+        PersistentOwnedToken::tokenIdentifier.equal(embeddableToken.tokenIdentifier)
     }
     val tokenIdentifierCriteria = QueryCriteria.VaultCustomQueryCriteria(tokenIdentifier)
     return tokenClassCriteria.and(tokenIdentifierCriteria)
