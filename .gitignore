@@ -55,10 +55,7 @@ lib/dokka.jar
 ## Plugin-specific files:
 
 # IntelliJ
-/out/
-cordapp/out/
-cordapp-contracts-states/out/
-clients/out/
+**/out/*
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
