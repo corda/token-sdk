@@ -1,9 +1,9 @@
 package com.r3.corda.sdk.token.contracts.states
 
-import com.r3.corda.sdk.token.contracts.types.Token
 import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
+import net.corda.core.contracts.TokenizableAssetInfo
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 
@@ -15,7 +15,7 @@ import net.corda.core.identity.Party
  * owns (some amount) of the token. Because the [EvolvableToken] is not inlined into the [OwnedToken] or
  * [OwnedTokenAmount] state it does not sub-class [EmbeddableToken].
  */
-abstract class EvolvableToken : Token, LinearState {
+abstract class EvolvableToken : LinearState, TokenizableAssetInfo {
     /**
      * The [Party]s which create and maintain this token definition. It probably _is_ the issuer of the token but
      * may not necessarily be. For example, a reference data maintainer may create an [EvolvableToken] for some stock,

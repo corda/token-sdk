@@ -2,7 +2,7 @@ package com.r3.corda.sdk.token.contracts.utilities
 
 import com.r3.corda.sdk.token.contracts.states.OwnedTokenAmount
 import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
-import com.r3.corda.sdk.token.contracts.types.Issued
+import com.r3.corda.sdk.token.contracts.types.IssuedToken
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Amount.Companion.sumOrNull
 import net.corda.core.contracts.Amount.Companion.sumOrThrow
@@ -21,32 +21,32 @@ inline fun <reified T : ContractState> LedgerTransaction.singleOutput() = output
  * Sums the issued token amounts in the list of owned token amounts. Note that all tokens must have the same issuer.
  * If not then filter by issuer before using this function.
  */
-inline fun <reified T : EmbeddableToken> Iterable<OwnedTokenAmount<T>>.sumTokens(): Amount<Issued<T>> {
+inline fun <reified T : EmbeddableToken> Iterable<OwnedTokenAmount<T>>.sumTokens(): Amount<IssuedToken<T>> {
     return map { it.amount }.sumOrThrow()
 }
 
 /** Sums the owned token amounts states in the list, returning null if there are none. */
-inline fun <reified T : EmbeddableToken> Iterable<OwnedTokenAmount<T>>.sumTokensOrNull(): Amount<Issued<T>>? {
+inline fun <reified T : EmbeddableToken> Iterable<OwnedTokenAmount<T>>.sumTokensOrNull(): Amount<IssuedToken<T>>? {
     return map { it.amount }.sumOrNull()
 }
 
 /** Sums the cash states in the list, returning zero of the given currency+issuer if there are none. */
-inline fun <reified T : EmbeddableToken> Iterable<OwnedTokenAmount<T>>.sumTokensOrZero(token: Issued<T>): Amount<Issued<T>> {
+inline fun <reified T : EmbeddableToken> Iterable<OwnedTokenAmount<T>>.sumTokensOrZero(token: IssuedToken<T>): Amount<IssuedToken<T>> {
     return map { it.amount }.sumOrZero(token)
 }
 
 /** Sums the token amounts in the list of state and refs. */
-inline fun <reified T : EmbeddableToken> Iterable<StateAndRef<OwnedTokenAmount<T>>>.sumTokenStateAndRefs(): Amount<Issued<T>> {
+inline fun <reified T : EmbeddableToken> Iterable<StateAndRef<OwnedTokenAmount<T>>>.sumTokenStateAndRefs(): Amount<IssuedToken<T>> {
     return map { it.state.data.amount }.sumOrThrow()
 }
 
 /** Sums the owned token amount state and refs in the list, returning null if there are none. */
-inline fun <reified T : EmbeddableToken> Iterable<StateAndRef<OwnedTokenAmount<T>>>.sumTokenStateAndRefsOrNull(): Amount<Issued<T>>? {
+inline fun <reified T : EmbeddableToken> Iterable<StateAndRef<OwnedTokenAmount<T>>>.sumTokenStateAndRefsOrNull(): Amount<IssuedToken<T>>? {
     return map { it.state.data.amount }.sumOrNull()
 }
 
 /** Sums the owned token amounts state and refs in the list, returning zero of the given currency+issuer if there are none. */
-inline fun <reified T : EmbeddableToken> Iterable<StateAndRef<OwnedTokenAmount<T>>>.sumTokenStateAndRefsOrZero(token: Issued<T>): Amount<Issued<T>> {
+inline fun <reified T : EmbeddableToken> Iterable<StateAndRef<OwnedTokenAmount<T>>>.sumTokenStateAndRefsOrZero(token: IssuedToken<T>): Amount<IssuedToken<T>> {
     return map { it.state.data.amount }.sumOrZero(token)
 }
 

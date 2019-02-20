@@ -1,6 +1,12 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run Flow Tests" type="JUnit" factoryName="JUnit">
-    <module name="net.corda.token.workflow.test" />
+  <configuration default="false" name="Run Money Tests" type="JUnit" factoryName="JUnit">
+    <module name="net.corda.token.money.test" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="com.template.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
     <option name="ALTERNATIVE_JRE_PATH" value="1.8.0 (201)" />
     <option name="PACKAGE_NAME" value="com.r3.corda.sdk.token" />
     <option name="MAIN_CLASS_NAME" value="" />

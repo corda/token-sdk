@@ -1,10 +1,10 @@
 package com.r3.corda.sdk.token.workflow.selection
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.sdk.token.contracts.commands.Move
+import com.r3.corda.sdk.token.contracts.commands.MoveTokenCommand
 import com.r3.corda.sdk.token.contracts.states.OwnedTokenAmount
 import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
-import com.r3.corda.sdk.token.contracts.types.Issued
+import com.r3.corda.sdk.token.contracts.types.IssuedToken
 import com.r3.corda.sdk.token.contracts.utilities.sumOrThrow
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import com.r3.corda.sdk.token.workflow.types.PartyAndAmount
@@ -163,7 +163,7 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
         // multiple output states, due to the need to keep states separated by issuer. We start by figuring out
         // how much we've gathered for each issuer: this map will keep track of how much we've used from each
         // as we work our way through the payments.
-        val tokensGroupedByIssuer: Map<Issued<T>, List<StateAndRef<OwnedTokenAmount<T>>>> = acceptableStates.groupBy { it.state.data.amount.token }
+        val tokensGroupedByIssuer: Map<IssuedToken<T>, List<StateAndRef<OwnedTokenAmount<T>>>> = acceptableStates.groupBy { it.state.data.amount.token }
         val remainingTokensFromEachIssuer = tokensGroupedByIssuer.mapValues { (_, value) ->
             value.map { (state) -> state.data.amount }.sumOrThrow()
         }.toList().toMutableList()
@@ -207,7 +207,7 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
         // Create a move command for each group.
         tokensGroupedByIssuer.map { (key, value) ->
             val keys = value.map { it.state.data.owner.owningKey }
-            builder.addCommand(Move(key), keys)
+            builder.addCommand(MoveTokenCommand(key), keys)
         }
 
         for (state in acceptableStates) builder.addInputState(state)

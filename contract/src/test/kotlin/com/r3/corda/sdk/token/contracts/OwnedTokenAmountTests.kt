@@ -3,9 +3,9 @@ package com.r3.corda.sdk.token.contracts
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
-import com.r3.corda.sdk.token.contracts.commands.Issue
-import com.r3.corda.sdk.token.contracts.commands.Move
-import com.r3.corda.sdk.token.contracts.commands.Redeem
+import com.r3.corda.sdk.token.contracts.commands.IssueTokenCommand
+import com.r3.corda.sdk.token.contracts.commands.MoveTokenCommand
+import com.r3.corda.sdk.token.contracts.commands.RedeemTokenCommand
 import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.of
 import com.r3.corda.sdk.token.contracts.utilities.ownedBy
@@ -72,12 +72,12 @@ class OwnedTokenAmountTests {
             }
             // Signed by a party other than the issuer.
             tweak {
-                command(BOB.publicKey, Issue(issuedToken))
+                command(BOB.publicKey, IssueTokenCommand(issuedToken))
                 this `fails with` "The issuer must be the only signing party when an amount of tokens are issued."
             }
             // Non issuer signature present.
             tweak {
-                command(listOf(BOB.publicKey, BOB.publicKey), Issue(issuedToken))
+                command(listOf(BOB.publicKey, BOB.publicKey), IssueTokenCommand(issuedToken))
                 this `fails with` "The issuer must be the only signing party when an amount of tokens are issued."
             }
             // With an incorrect command.
@@ -87,43 +87,43 @@ class OwnedTokenAmountTests {
             }
             // With different command types for one group.
             tweak {
-                command(ISSUER.publicKey, Issue(issuedToken))
-                command(ISSUER.publicKey, Move(issuedToken))
-                this `fails with` "There must be exactly one OwnedTokenCommand type per group! For example: You cannot " +
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
+                command(ISSUER.publicKey, MoveTokenCommand(issuedToken))
+                this `fails with` "There must be exactly one TokenCommand type per group! For example: You cannot " +
                         "map an Issue AND a Move command to one group of tokens in a transaction."
             }
             // Includes a group with no assigned command.
             tweak {
                 output(OwnedTokenAmountContract.contractId, 10.USD issuedBy ISSUER.party ownedBy ALICE.party)
-                command(ISSUER.publicKey, Issue(issuedToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
                 this `fails with` "There is a token group with no assigned command!"
             }
             // With a zero amount in another group.
             tweak {
                 val otherToken = USD issuedBy ISSUER.party
                 output(OwnedTokenAmountContract.contractId, 0 of otherToken ownedBy ALICE.party)
-                command(ISSUER.publicKey, Issue(issuedToken))
-                command(ISSUER.publicKey, Issue(otherToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
+                command(ISSUER.publicKey, IssueTokenCommand(otherToken))
                 this `fails with` "When issuing tokens an amount > ZERO must be issued."
             }
             // With some input states.
             tweak {
                 input(OwnedTokenAmountContract.contractId, 10 of issuedToken ownedBy ALICE.party)
-                command(ISSUER.publicKey, Issue(issuedToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
                 this `fails with` "When issuing tokens, there cannot be any input states."
             }
             // Includes a zero output.
             tweak {
                 output(OwnedTokenAmountContract.contractId, 0 of issuedToken ownedBy ALICE.party)
-                command(ISSUER.publicKey, Issue(issuedToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
                 this `fails with` "You cannot issue tokens with a zero amount."
             }
             // Includes another token type and a matching command.
             tweak {
                 val otherToken = USD issuedBy ISSUER.party
                 output(OwnedTokenAmountContract.contractId, 10 of otherToken ownedBy ALICE.party)
-                command(ISSUER.publicKey, Issue(issuedToken))
-                command(ISSUER.publicKey, Issue(otherToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
+                command(ISSUER.publicKey, IssueTokenCommand(otherToken))
                 verifies()
             }
             // Includes more output states of the same token type.
@@ -131,20 +131,20 @@ class OwnedTokenAmountTests {
                 output(OwnedTokenAmountContract.contractId, 10 of issuedToken ownedBy ALICE.party)
                 output(OwnedTokenAmountContract.contractId, 100 of issuedToken ownedBy ALICE.party)
                 output(OwnedTokenAmountContract.contractId, 1000 of issuedToken ownedBy ALICE.party)
-                command(ISSUER.publicKey, Issue(issuedToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
                 verifies()
             }
             // Includes the same token issued by a different issuer.
             // You wouldn't usually do this but it is possible.
             tweak {
                 output(OwnedTokenAmountContract.contractId, 1.GBP issuedBy BOB.party ownedBy ALICE.party)
-                command(ISSUER.publicKey, Issue(issuedToken))
-                command(BOB.publicKey, Issue(GBP issuedBy BOB.party))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
+                command(BOB.publicKey, IssueTokenCommand(GBP issuedBy BOB.party))
                 verifies()
             }
             // With the correct command and signed by the issuer.
             tweak {
-                command(ISSUER.publicKey, Issue(issuedToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
                 verifies()
             }
         }
@@ -160,34 +160,34 @@ class OwnedTokenAmountTests {
 
             // Add the move command, signed by ALICE.
             tweak {
-                command(ALICE.publicKey, Move(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 verifies()
             }
 
             // Move coupled with an issue.
             tweak {
                 output(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
-                command(BOB.publicKey, Issue(USD issuedBy BOB.party))
+                command(BOB.publicKey, IssueTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
-                command(ALICE.publicKey, Move(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 verifies()
             }
 
             // Input missing.
             tweak {
                 output(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy BOB.party)
-                command(ALICE.publicKey, Move(USD issuedBy BOB.party))
+                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
-                command(ALICE.publicKey, Move(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 this `fails with` "When moving tokens, there must be input states present."
             }
 
             // Output missing.
             tweak {
                 input(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
-                command(ALICE.publicKey, Move(USD issuedBy BOB.party))
+                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
-                command(ALICE.publicKey, Move(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 this `fails with` "When moving tokens, there must be output states present."
             }
 
@@ -196,9 +196,9 @@ class OwnedTokenAmountTests {
                 input(OwnedTokenAmountContract.contractId, 0.USD issuedBy BOB.party ownedBy ALICE.party)
                 input(OwnedTokenAmountContract.contractId, 0.USD issuedBy BOB.party ownedBy ALICE.party)
                 output(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy BOB.party)
-                command(ALICE.publicKey, Move(USD issuedBy BOB.party))
+                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
-                command(ALICE.publicKey, Move(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 this `fails with` "In move groups there must be an amount of input tokens > ZERO."
             }
 
@@ -207,9 +207,9 @@ class OwnedTokenAmountTests {
                 input(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
                 output(OwnedTokenAmountContract.contractId, 0.USD issuedBy BOB.party ownedBy BOB.party)
                 output(OwnedTokenAmountContract.contractId, 0.USD issuedBy BOB.party ownedBy BOB.party)
-                command(ALICE.publicKey, Move(USD issuedBy BOB.party))
+                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
-                command(ALICE.publicKey, Move(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 this `fails with` "In move groups there must be an amount of output tokens > ZERO."
             }
 
@@ -217,9 +217,9 @@ class OwnedTokenAmountTests {
             tweak {
                 input(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
                 output(OwnedTokenAmountContract.contractId, 11.USD issuedBy BOB.party ownedBy BOB.party)
-                command(ALICE.publicKey, Move(USD issuedBy BOB.party))
+                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
-                command(ALICE.publicKey, Move(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 this `fails with` "In move groups the amount of input tokens MUST EQUAL the amount of output tokens. " +
                         "In other words, you cannot create or destroy value when moving tokens."
             }
@@ -228,9 +228,9 @@ class OwnedTokenAmountTests {
                 input(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
                 output(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy BOB.party)
                 output(OwnedTokenAmountContract.contractId, 0.USD issuedBy BOB.party ownedBy BOB.party)
-                command(ALICE.publicKey, Move(USD issuedBy BOB.party))
+                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
-                command(ALICE.publicKey, Move(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 this `fails with` "You cannot create output token amounts with a ZERO amount."
             }
 
@@ -238,15 +238,15 @@ class OwnedTokenAmountTests {
             tweak {
                 input(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
                 output(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy BOB.party)
-                command(ALICE.publicKey, Move(USD issuedBy BOB.party))
+                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
-                command(ALICE.publicKey, Move(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 verifies()
             }
 
             // Wrong public key.
             tweak {
-                command(BOB.publicKey, Move(issuedToken))
+                command(BOB.publicKey, MoveTokenCommand(issuedToken))
                 this `fails with` "There are required signers missing or some of the specified signers are not " +
                         "required. A transaction to move owned token amounts must be signed by ONLY ALL the owners " +
                         "of ALL the input owned token amounts."
@@ -254,7 +254,7 @@ class OwnedTokenAmountTests {
 
             // Includes an incorrect public with the correct key still being present.
             tweak {
-                command(listOf(BOB.publicKey, ALICE.publicKey), Move(issuedToken))
+                command(listOf(BOB.publicKey, ALICE.publicKey), MoveTokenCommand(issuedToken))
                 this `fails with` "There are required signers missing or some of the specified signers are not " +
                         "required. A transaction to move owned token amounts must be signed by ONLY ALL the owners " +
                         "of ALL the input owned token amounts."
@@ -272,7 +272,7 @@ class OwnedTokenAmountTests {
 
             // Add the redeem command, signed by the ISSUER.
             tweak {
-                command(ISSUER.publicKey, Redeem(issuedToken))
+                command(ISSUER.publicKey, RedeemTokenCommand(issuedToken))
                 verifies()
             }
 
