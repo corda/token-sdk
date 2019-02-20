@@ -6,8 +6,8 @@ import net.corda.core.contracts.CommandData
 
 /**
  * [TokenCommands] are linked to groups of input and output tokens, usually by the embeddable token type or some
- * [Issued] token type. This needs to be done because if a transaction contains more than one type of token, we need to
- * be able to attribute the correct command to each group. The most simple way to do this is including an [Issued]
+ * [IssuedToken] token type. This needs to be done because if a transaction contains more than one type of token, we need to
+ * be able to attribute the correct command to each group. The most simple way to do this is including an [IssuedToken]
  * [EmbeddableToken] in the command.
  */
 interface TokenCommand<T : EmbeddableToken> : CommandData {
