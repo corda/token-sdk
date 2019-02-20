@@ -8,6 +8,7 @@ buildscript {
         quasar_version = '0.7.10'
         slf4j_version = '1.7.25'
         log4j_version = '2.9.1'
+        jackson_version = '2.9.0'
     }
 
     repositories {
@@ -23,7 +24,6 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "net.corda.plugins:cordapp:$corda_gradle_plugins_version"
-        classpath "net.corda.plugins:cordformation:$corda_gradle_plugins_version"
         classpath "net.corda.plugins:quasar-utils:$corda_gradle_plugins_version"
         classpath "org.jetbrains.kotlin:kotlin-noarg:$kotlin_version"
     }
@@ -37,39 +37,5 @@ allprojects {
         maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-dev' }
         maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda/' }
         maven { url 'https://jitpack.io' }
-    }
-}
-
-task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
-    directory "./build/nodes"
-    node {
-        name "O=Notary,L=London,C=GB"
-        notary = [validating : false]
-        p2pPort 10002
-        rpcSettings {
-            address("localhost:10003")
-            adminAddress("localhost:10043")
-        }
-        cordapps = []
-    }
-    node {
-        name "O=PartyA,L=London,C=GB"
-        p2pPort 10005
-        rpcSettings {
-            address("localhost:10006")
-            adminAddress("localhost:10046")
-        }
-        cordapps = []
-        rpcUsers = [[ user: "user1", "password": "test", "permissions": ["ALL"]]]
-    }
-    node {
-        name "O=PartyB,L=New York,C=US"
-        p2pPort 10008
-        rpcSettings {
-            address("localhost:10009")
-            adminAddress("localhost:10049")
-        }
-        cordapps = []
-        rpcUsers = [[ user: "user1", "password": "test", "permissions": ["ALL"]]]
     }
 }

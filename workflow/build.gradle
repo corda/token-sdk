@@ -2,7 +2,6 @@ apply plugin: 'kotlin'
 apply plugin: 'kotlin-jpa'
 apply plugin: 'maven'
 apply plugin: 'net.corda.plugins.cordapp'
-apply plugin: 'net.corda.plugins.cordformation'
 apply plugin: 'net.corda.plugins.quasar-utils'
 
 cordapp {
@@ -64,7 +63,7 @@ dependencies {
 
     // CorDapp dependencies.
     cordapp project(":contract")
-    cordapp project(":plugins:money")
+    cordapp project(":modules:money")
 }
 
 task integrationTest(type: Test, dependsOn: []) {
@@ -84,7 +83,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 configure(install.repositories.mavenInstaller) {
     pom.project {
         groupId 'com.r3.corda.sdk.token'
-        artifactId 'workflow'
+        artifactId 'token-sdk-workflow'
         inceptionYear '2019'
         packaging 'jar'
         licenses {

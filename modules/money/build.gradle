@@ -1,7 +1,6 @@
 apply plugin: 'kotlin'
 apply plugin: 'maven'
 apply plugin: 'net.corda.plugins.cordapp'
-apply plugin: 'net.corda.plugins.cordformation'
 
 cordapp {
     targetPlatformVersion 4
@@ -38,7 +37,9 @@ dependencies {
     // Corda dependencies.
     cordaCompile "$corda_release_group:corda-core:$corda_release_version"
     cordaRuntime "$corda_release_group:corda:$corda_release_version"
-    cordaCompile "$corda_release_group:corda-node-api:$corda_release_version"
+
+    // Jackson annotations. Keep in sync with Corda Jackson version.
+    compile "com.fasterxml.jackson.core:jackson-annotations:$jackson_version"
 
     // Logging.
     cordaCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
@@ -65,7 +66,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 configure(install.repositories.mavenInstaller) {
     pom.project {
         groupId 'com.r3.corda.sdk.token.plugins'
-        artifactId 'money'
+        artifactId 'token-sdk-money'
         inceptionYear '2019'
         packaging 'jar'
         licenses {
