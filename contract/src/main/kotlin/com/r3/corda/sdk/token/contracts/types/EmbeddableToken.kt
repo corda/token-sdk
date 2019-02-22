@@ -2,16 +2,12 @@ package com.r3.corda.sdk.token.contracts.types
 
 import com.r3.corda.sdk.token.contracts.states.EvolvableToken
 import net.corda.core.contracts.LinearPointer
-import net.corda.core.serialization.CordaSerializable
 import java.math.BigDecimal
 
 /**
  * [EmbeddableToken]s are [Token]s which can be composed into an [OwnedToken] or an [OwnedTokenAmount]. They are almost
  * always wrapped with an [IssuedToken] class.
- *
- * TODO: [EmbeddableToken] should be ready to be replaced with Token now.
  */
-@CordaSerializable
 sealed class EmbeddableToken : Token
 
 /**
