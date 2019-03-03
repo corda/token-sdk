@@ -44,8 +44,8 @@ With the binaries installed to your local maven repository, you can add
 the token SDK as a dependency to your CorDapp. Add the following lines
 to the `build.gradle` file for your CorDapp:
 
-    compile "com.r3.corda.sdk.token:contract:0.1"
-    compile "com.r3.corda.sdk.token:workflow:0.1"
+    compile "com.r3.corda.sdk.token:token-sdk-contract:0.1"
+    compile "com.r3.corda.sdk.token:token-sdk-workflow:0.1"
 
 for `FiatCurrency` and `DigitalCurrency` definitions add:
 
