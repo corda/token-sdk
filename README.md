@@ -49,7 +49,7 @@ to the `build.gradle` file for your CorDapp:
 
 for `FiatCurrency` and `DigitalCurrency` definitions add:
 
-    compile "com.r3.corda.sdk.token.plugins:money:0.1"
+    compile "com.r3.corda.sdk.token.plugins:token-sdk-money:0.1"
 
 Alternatively, you can use the following bootstrapped token SDK template:
 
