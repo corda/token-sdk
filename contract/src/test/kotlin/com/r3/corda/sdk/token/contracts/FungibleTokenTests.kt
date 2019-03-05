@@ -6,9 +6,9 @@ import com.nhaarman.mockito_kotlin.whenever
 import com.r3.corda.sdk.token.contracts.commands.IssueTokenCommand
 import com.r3.corda.sdk.token.contracts.commands.MoveTokenCommand
 import com.r3.corda.sdk.token.contracts.commands.RedeemTokenCommand
+import com.r3.corda.sdk.token.contracts.utilities.heldBy
 import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.of
-import com.r3.corda.sdk.token.contracts.utilities.ownedBy
 import com.r3.corda.sdk.token.money.GBP
 import com.r3.corda.sdk.token.money.USD
 import net.corda.core.contracts.TypeOnlyCommandData
@@ -27,7 +27,7 @@ import net.corda.testing.node.transaction
 import org.junit.Rule
 import org.junit.Test
 
-class OwnedTokenAmountTests {
+class FungibleTokenTests {
 
     private companion object {
         val NOTARY = TestIdentity(DUMMY_NOTARY_NAME, 20)
@@ -48,24 +48,24 @@ class OwnedTokenAmountTests {
                 doReturn(BOB.party).whenever(it).partyFromKey(BOB.publicKey)
                 doReturn(ISSUER.party).whenever(it).partyFromKey(ISSUER.publicKey)
             },
-            networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = listOf(NotaryInfo(NOTARY.party, false)))
+            networkParameters = testNetworkParameters(
+                    minimumPlatformVersion = 4,
+                    notaries = listOf(NotaryInfo(NOTARY.party, false))
+            )
     )
 
     private fun transaction(script: TransactionDSL<TransactionDSLInterpreter>.() -> EnforceVerifyOrFail) {
-        MockServices(ALICE).transaction(NOTARY.party, script)
+        aliceServices.transaction(NOTARY.party, script)
     }
 
     class WrongCommand : TypeOnlyCommandData()
 
-    /**
-     * This is likely the most common issuance transaction we'll see.
-     */
     @Test
     fun `issue token tests`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
             // Start with only one output.
-            output(OwnedTokenAmountContract.contractId, 10 of issuedToken ownedBy ALICE.party)
+            output(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
             // No command fails.
             tweak {
                 this `fails with` "A transaction must contain at least one command"
@@ -94,50 +94,50 @@ class OwnedTokenAmountTests {
             }
             // Includes a group with no assigned command.
             tweak {
-                output(OwnedTokenAmountContract.contractId, 10.USD issuedBy ISSUER.party ownedBy ALICE.party)
+                output(FungibleTokenContract.contractId, 10.USD issuedBy ISSUER.party heldBy ALICE.party)
                 command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
                 this `fails with` "There is a token group with no assigned command!"
             }
             // With a zero amount in another group.
             tweak {
                 val otherToken = USD issuedBy ISSUER.party
-                output(OwnedTokenAmountContract.contractId, 0 of otherToken ownedBy ALICE.party)
+                output(FungibleTokenContract.contractId, 0 of otherToken heldBy ALICE.party)
                 command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
                 command(ISSUER.publicKey, IssueTokenCommand(otherToken))
                 this `fails with` "When issuing tokens an amount > ZERO must be issued."
             }
             // With some input states.
             tweak {
-                input(OwnedTokenAmountContract.contractId, 10 of issuedToken ownedBy ALICE.party)
+                input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
                 command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
                 this `fails with` "When issuing tokens, there cannot be any input states."
             }
             // Includes a zero output.
             tweak {
-                output(OwnedTokenAmountContract.contractId, 0 of issuedToken ownedBy ALICE.party)
+                output(FungibleTokenContract.contractId, 0 of issuedToken heldBy ALICE.party)
                 command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
                 this `fails with` "You cannot issue tokens with a zero amount."
             }
             // Includes another token type and a matching command.
             tweak {
                 val otherToken = USD issuedBy ISSUER.party
-                output(OwnedTokenAmountContract.contractId, 10 of otherToken ownedBy ALICE.party)
+                output(FungibleTokenContract.contractId, 10 of otherToken heldBy ALICE.party)
                 command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
                 command(ISSUER.publicKey, IssueTokenCommand(otherToken))
                 verifies()
             }
             // Includes more output states of the same token type.
             tweak {
-                output(OwnedTokenAmountContract.contractId, 10 of issuedToken ownedBy ALICE.party)
-                output(OwnedTokenAmountContract.contractId, 100 of issuedToken ownedBy ALICE.party)
-                output(OwnedTokenAmountContract.contractId, 1000 of issuedToken ownedBy ALICE.party)
+                output(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 100 of issuedToken heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 1000 of issuedToken heldBy ALICE.party)
                 command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
                 verifies()
             }
             // Includes the same token issued by a different issuer.
             // You wouldn't usually do this but it is possible.
             tweak {
-                output(OwnedTokenAmountContract.contractId, 1.GBP issuedBy BOB.party ownedBy ALICE.party)
+                output(FungibleTokenContract.contractId, 1.GBP issuedBy BOB.party heldBy ALICE.party)
                 command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
                 command(BOB.publicKey, IssueTokenCommand(GBP issuedBy BOB.party))
                 verifies()
@@ -155,8 +155,8 @@ class OwnedTokenAmountTests {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
             // Start with a basic move which moves 10 tokens in entirety from ALICE to BOB.
-            input(OwnedTokenAmountContract.contractId, 10 of issuedToken ownedBy ALICE.party)
-            output(OwnedTokenAmountContract.contractId, 10 of issuedToken ownedBy BOB.party)
+            input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+            output(FungibleTokenContract.contractId, 10 of issuedToken heldBy BOB.party)
 
             // Add the move command, signed by ALICE.
             tweak {
@@ -166,7 +166,7 @@ class OwnedTokenAmountTests {
 
             // Move coupled with an issue.
             tweak {
-                output(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
+                output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
                 command(BOB.publicKey, IssueTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken))
@@ -175,7 +175,7 @@ class OwnedTokenAmountTests {
 
             // Input missing.
             tweak {
-                output(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy BOB.party)
+                output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy BOB.party)
                 command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken))
@@ -184,7 +184,7 @@ class OwnedTokenAmountTests {
 
             // Output missing.
             tweak {
-                input(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
+                input(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
                 command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken))
@@ -193,9 +193,9 @@ class OwnedTokenAmountTests {
 
             // Inputs sum to zero.
             tweak {
-                input(OwnedTokenAmountContract.contractId, 0.USD issuedBy BOB.party ownedBy ALICE.party)
-                input(OwnedTokenAmountContract.contractId, 0.USD issuedBy BOB.party ownedBy ALICE.party)
-                output(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy BOB.party)
+                input(FungibleTokenContract.contractId, 0.USD issuedBy BOB.party heldBy ALICE.party)
+                input(FungibleTokenContract.contractId, 0.USD issuedBy BOB.party heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy BOB.party)
                 command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken))
@@ -204,9 +204,9 @@ class OwnedTokenAmountTests {
 
             // Outputs sum to zero.
             tweak {
-                input(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
-                output(OwnedTokenAmountContract.contractId, 0.USD issuedBy BOB.party ownedBy BOB.party)
-                output(OwnedTokenAmountContract.contractId, 0.USD issuedBy BOB.party ownedBy BOB.party)
+                input(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 0.USD issuedBy BOB.party heldBy BOB.party)
+                output(FungibleTokenContract.contractId, 0.USD issuedBy BOB.party heldBy BOB.party)
                 command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken))
@@ -215,8 +215,8 @@ class OwnedTokenAmountTests {
 
             // Unbalanced move.
             tweak {
-                input(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
-                output(OwnedTokenAmountContract.contractId, 11.USD issuedBy BOB.party ownedBy BOB.party)
+                input(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 11.USD issuedBy BOB.party heldBy BOB.party)
                 command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken))
@@ -225,9 +225,9 @@ class OwnedTokenAmountTests {
             }
 
             tweak {
-                input(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
-                output(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy BOB.party)
-                output(OwnedTokenAmountContract.contractId, 0.USD issuedBy BOB.party ownedBy BOB.party)
+                input(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy BOB.party)
+                output(FungibleTokenContract.contractId, 0.USD issuedBy BOB.party heldBy BOB.party)
                 command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken))
@@ -236,8 +236,8 @@ class OwnedTokenAmountTests {
 
             // Two moves (two different groups).
             tweak {
-                input(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy ALICE.party)
-                output(OwnedTokenAmountContract.contractId, 10.USD issuedBy BOB.party ownedBy BOB.party)
+                input(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy BOB.party)
                 command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken))
@@ -268,7 +268,7 @@ class OwnedTokenAmountTests {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
             // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
-            input(OwnedTokenAmountContract.contractId, 10 of issuedToken ownedBy ALICE.party)
+            input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
 
             // Add the redeem command, signed by the ISSUER.
             tweak {

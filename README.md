@@ -17,6 +17,9 @@ functionality to:
 The token SDK is intended to replace the "finance module" in the core
 Corda repository.
 
+For more details behind the token SDK's design, see
+[here](design/design.md).
+
 ## Why did you create the token SDK?
 
 The finance module didn't meet the requirements of the increasing
@@ -32,6 +35,8 @@ amount of token projects undertaken on Corda:
 
 ## How to use the SDK?
 
+### Installing the token SDK binaries
+
 The token SDK is in a pre-release state, so currently, there are no
 binaries available. To use the SDK one must built it from source and
 publish binaries to your local maven repository like so:
@@ -40,22 +45,50 @@ publish binaries to your local maven repository like so:
     cd token-sdk
     ./gradlew clean install
 
+### Building your CorDapp
+
 With the binaries installed to your local maven repository, you can add
 the token SDK as a dependency to your CorDapp. Add the following lines
-to the `build.gradle` file for your CorDapp:
+to the `build.gradle` files for your CorDapp. In your contract
+`build.gradle`, add:
 
-    compile "com.r3.corda.sdk.token:contract:0.1"
-    compile "com.r3.corda.sdk.token:workflow:0.1"
+    cordaCompile "com.r3.corda.sdk.token:contract:0.1"
 
-for `FiatCurrency` and `DigitalCurrency` definitions add:
+In your workflow `build.gradle` add:
 
-    compile "com.r3.corda.sdk.token.plugins:money:0.1"
+    cordaCompile "com.r3.corda.sdk.token:workflow:0.1"
+
+For `FiatCurrency` and `DigitalCurrency` definitions add:
+
+    cordaCompile "com.r3.corda.sdk.token.modules:money:0.1"
 
 Alternatively, you can use the following bootstrapped token SDK template:
 
     git clone http://github.com/corda/cordapp-template-kotlin
     cd cordapp-template-kotlin
     git checkout token-template
+
+**Don't** building your CorDapp inside the token-sdk repository, instead
+use the supplied template, above.
+
+### When building transactions
+
+When building your flows, you need to make sure that you add the token
+SDK contract JAR to your transaction builders (and the money JAR if you
+require the money definitions). If you don't then you will likely
+encounter `NoClassDefFound` errors. This is because at this point in time
+there is no support for handling CorDapp dependencies in Corda 4.
+
+The solution is to manually add the contract JAR and the money JAR (if
+you need it), to your transaction builders. This can be done with the
+following code:
+
+    val builder = TransactionBuilder()
+    val contractJarHash = SecureHash.parse("frewfrgregregre")
+    builder.addAttachment(contractJarHash)
+
+When support is added for handling CorDapp dependencies in Corda, then
+you will not need the above lines of code.
 
 ## What is a token?
 

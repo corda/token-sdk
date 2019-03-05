@@ -2,7 +2,7 @@ package com.r3.corda.sdk.token.workflow.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.commands.Create
-import com.r3.corda.sdk.token.contracts.states.EvolvableToken
+import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.TransactionState
@@ -19,9 +19,12 @@ import net.corda.core.utilities.ProgressTracker
  * shell, it is more likely to be used for unit testing or called as an inlined-subflow.
  */
 @StartableByRPC
-class CreateEvolvableToken<T : EvolvableToken>(val transactionState: TransactionState<T>) : FlowLogic<SignedTransaction>() {
+class CreateEvolvableToken<T : EvolvableTokenType>(
+        val transactionState: TransactionState<T>
+) : FlowLogic<SignedTransaction>() {
 
-    constructor(evolvableToken: T, contract: ContractClassName, notary: Party) : this(TransactionState(evolvableToken, contract, notary))
+    constructor(evolvableToken: T, contract: ContractClassName, notary: Party)
+            : this(TransactionState(evolvableToken, contract, notary))
 
     constructor(evolvableToken: T, notary: Party) : this(evolvableToken withNotary notary)
 

@@ -1,9 +1,9 @@
 package com.r3.corda.sdk.token.contracts
 
 import com.r3.corda.sdk.token.contracts.commands.Create
-import com.r3.corda.sdk.token.contracts.commands.EvolvableTokenCommand
+import com.r3.corda.sdk.token.contracts.commands.EvolvableTokenTypeCommand
 import com.r3.corda.sdk.token.contracts.commands.Update
-import com.r3.corda.sdk.token.contracts.states.EvolvableToken
+import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
 import com.r3.corda.sdk.token.contracts.utilities.singleInput
 import com.r3.corda.sdk.token.contracts.utilities.singleOutput
 import net.corda.core.contracts.Contract
@@ -17,7 +17,7 @@ import net.corda.core.transactions.LedgerTransaction
 abstract class EvolvableTokenContract : Contract {
 
     override fun verify(tx: LedgerTransaction) {
-        val command = tx.commands.requireSingleCommand<EvolvableTokenCommand>()
+        val command = tx.commands.requireSingleCommand<EvolvableTokenTypeCommand>()
         when (command.value) {
             is Create -> handleCreate(tx)
             is Update -> handleUpdate(tx)
@@ -33,7 +33,7 @@ abstract class EvolvableTokenContract : Contract {
     private fun handleCreate(tx: LedgerTransaction) {
         require(tx.outputs.size == 1) { "Create evolvable token transactions may only contain one output." }
         require(tx.inputs.isEmpty()) { "Create evolvable token transactions must not contain any inputs." }
-        val token = tx.singleOutput<EvolvableToken>()
+        val token = tx.singleOutput<EvolvableTokenType>()
         val command = tx.commands.requireSingleCommand<Create>()
         val maintainerKeys = token.maintainers.map { it.owningKey }
         require(command.signers.toSet() == maintainerKeys.toSet()) {
@@ -45,8 +45,8 @@ abstract class EvolvableTokenContract : Contract {
     private fun handleUpdate(tx: LedgerTransaction) {
         require(tx.inputs.size == 1) { "Update evolvable token transactions may only contain one input." }
         require(tx.outputs.size == 1) { "Update evolvable token transactions may only contain one output." }
-        val input = tx.singleInput<EvolvableToken>()
-        val output = tx.singleOutput<EvolvableToken>()
+        val input = tx.singleInput<EvolvableTokenType>()
+        val output = tx.singleOutput<EvolvableTokenType>()
         val command = tx.commands.requireSingleCommand<Update>()
         require(input.linearId == output.linearId) { "The linear ID cannot change." }
         val maintainers = output.maintainers + input.maintainers

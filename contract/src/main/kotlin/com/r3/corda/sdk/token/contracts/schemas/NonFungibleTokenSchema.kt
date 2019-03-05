@@ -9,30 +9,26 @@ import javax.persistence.Entity
 import javax.persistence.Index
 import javax.persistence.Table
 
-object OwnedTokenAmountSchema
+object NonFungibleTokenSchema
 
-object OwnedTokenAmountSchemaV1 : MappedSchema(
-        schemaFamily = OwnedTokenAmountSchema.javaClass,
+object NonFungibleTokenSchemaV1 : MappedSchema(
+        schemaFamily = NonFungibleTokenSchema.javaClass,
         version = 1,
-        mappedTypes = listOf(PersistentOwnedTokenAmount::class.java)
+        mappedTypes = listOf(PersistentNonFungibleToken::class.java)
 )
 
 @Entity
-@Table(name = "owned_token_amount", indexes = [
-    Index(name = "amount_idx", columnList = "amount"),
-    Index(name = "owned_token_amount_idx", columnList = "token_class, token_identifier")
+@Table(name = "non_fungible_token", indexes = [
+    Index(name = "owned_token_idx", columnList = "token_class, token_identifier")
 ])
-class PersistentOwnedTokenAmount(
+class PersistentNonFungibleToken(
         @Column(name = "issuer", nullable = false)
         var issuer: Party,
 
-        @Column(name = "owner", nullable = false)
-        var owner: AbstractParty,
+        @Column(name = "holder", nullable = false)
+        var holder: AbstractParty,
 
-        @Column(name = "amount", nullable = false)
-        var amount: Long,
-
-        // The fully qualified class name of the class which implements the token definition.
+        // The fully qualified class name of the class which implements the token tokenType.
         // This is either a fixed token or a evolvable token.
         @Column(name = "token_class", nullable = false)
         var tokenClass: String,

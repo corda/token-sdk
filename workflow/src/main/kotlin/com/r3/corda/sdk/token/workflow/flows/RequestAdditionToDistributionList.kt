@@ -1,7 +1,7 @@
 package com.r3.corda.sdk.token.workflow.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.sdk.token.contracts.states.EvolvableToken
+import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.*
 import net.corda.core.utilities.unwrap
@@ -30,7 +30,7 @@ object RequestAdditionToDistributionList {
 
     @StartableByRPC
     @InitiatingFlow
-    class Initiator(val stateAndRef: StateAndRef<EvolvableToken>) : FlowLogic<Unit>() {
+    class Initiator(val stateAndRef: StateAndRef<EvolvableTokenType>) : FlowLogic<Unit>() {
         @Suspendable
         override fun call() {
             val state = stateAndRef.state.data
@@ -52,7 +52,7 @@ object RequestAdditionToDistributionList {
         @Suspendable
         override fun call() {
             // Receive the stateAndRef that the requesting party wants updates for.
-            val stateAndRef = otherSession.receive<StateAndRef<EvolvableToken>>().unwrap { it }
+            val stateAndRef = otherSession.receive<StateAndRef<EvolvableTokenType>>().unwrap { it }
             val linearId = stateAndRef.state.data.linearId
             logger.info("Receiving request from ${otherSession.counterparty} to be added to the distribution list for $linearId.")
             subFlow(AddPartyToDistributionList(otherSession.counterparty, linearId))

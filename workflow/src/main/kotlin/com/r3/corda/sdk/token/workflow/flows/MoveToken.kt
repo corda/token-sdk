@@ -1,7 +1,8 @@
 package com.r3.corda.sdk.token.workflow.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
+import com.r3.corda.sdk.token.contracts.commands.MoveTokenCommand
+import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import com.r3.corda.sdk.token.workflow.selection.TokenSelection
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokensByToken
@@ -22,7 +23,7 @@ object MoveToken {
 
     @InitiatingFlow
     @StartableByRPC
-    class Initiator<T : EmbeddableToken>(
+    class Initiator<T : TokenType>(
             val ownedToken: T,
             val owner: Party,
             val amount: Amount<T>? = null,
@@ -47,8 +48,9 @@ object MoveToken {
                 val ownedTokenStateAndRef = serviceHub.vaultService.ownedTokensByToken(ownedToken).states.single()
                 val ownedTokenState = ownedTokenStateAndRef.state.data
                 val notary = ownedTokenStateAndRef.state.notary
-                val signingKey = ownedTokenState.owner.owningKey
-                val (command, output) = ownedTokenState.withNewOwner(owningParty)
+                val signingKey = ownedTokenState.holder.owningKey
+                val output = ownedTokenState.withNewHolder(owningParty)
+                val command = MoveTokenCommand(output.token)
                 val utx: TransactionBuilder = TransactionBuilder(notary = notary).apply {
                     addInputState(ownedTokenStateAndRef)
                     addCommand(command, signingKey)
