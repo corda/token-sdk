@@ -1,29 +1,53 @@
-Misc notes:
+# Thoughts and questions
 
-Assets:
+## Thoughts on persisting token data
 
-* All custom tokens should be created as sub-classes of `Token`.
-* Tokens that are intended to be split and merged and that do not evolve
-   should be created as `FixedDefinition`s.
-* Tokens that are intended to be split and merged and that do evolve
-  should be created as `EvolvableDefinition`s.
-* Non fungible tokens should sub-class `Evolvable Token` and be composed
-  within `OwnedToken`.
+### Fixed tokens
 
-Agreements:
+When persisting fixed token definitions we need to include the symbol which can be used to select the correct token from
+the token registry. We don't need to include the default fraction digits as they are included within the fixed
+token definition. All we need is the type and the symbol to create a new instance of the fixed token. NOTE that
+we don't need to define an entity for fixed token definitions as the definition exists in code. The description
+and default fraction digits can evolve and this shouldn't have any impact on the persisted fixed token information
+as long as the type and symbol doesn't change.
 
-* Anything that is not an asset should be a linear state.
+### Evolvable tokens
 
-Keeping mind that:
+Each `EvolvableTokenType` represents only one type of token. This is unlike `FixedTokenType`s which act as registries.
+For pointers we need to list the linearID of the token pointer and the type of the underlying evolvable token. we can
+use this information to create an instance of a token pointer. We must get the linearID first. The assumption is that
+we do not initially know the linear ID, so we must use some other information (the symbol) to query for it. If there
+are duplicates then you can disambiguate via class name.
 
-* Issued tokens are liabilities to issuers.
-* Issued tokens are assets to owners.
-* Issuers / owners should not be hard-coded into tokens. They should be added
-  via the `Issued` class and `OwnedToken` / `OwnedTokenAmount` classes.
-  This means we can use the same token definition across multiple issuers.
+### Implications for token selection
 
-The [Issuer] type is nice because it allows you to strip the issuer and
-then group same the same currencies as fungible, if you'd like to view
+Performing coin selection must be done in two parts, we need to get the linearID first. This can be obtained via
+querying the vault.
+
+Generic queries don't have to be done in two parts.. We can use JPA to join the evolvable token type's entity to the
+owned token amount table.
+
+## How do we handle new token types?
+
+They cannot be added to the fixed token registry unless they are added in a new release of the SDK. Instead, they'll
+have to create their own "one-off" fixed token class. Alternatively, they can use the evolvable token types to create
+their own token types.
+
+## NonFungibleToken
+
+For `NonFungibleToken`s, there should be a 1:1 mapping from `TokenType` to `NonFungibleToken`, this is because the
+token is deemed to be non fungible. However, this might not always be the case, due to error perhaps. Should this be
+checked as the issuer cannot issue more than one claim for the same underlying thing.
+
+## Agreements
+
+Anything that cannot fit in the `FungibleToken` and `NonFungibleToken` definitions should just be created as
+`LinearState`s. Examples are `Obligation` and the ISDA CDM work.
+
+## IssuedTokenType
+
+The `IssuedTokenType` type is nice because it allows you to strip the issuer and
+then group same the same tokens as fungible, if you'd like to view
 them that way. A step up from this would be the ability to specify fungibility
 predicates. E.g. "I'll treat all these issuers on my whitelist the same, the
 other ones I won't accept" - we won't do this for now as it's quite a bit
@@ -43,7 +67,7 @@ key can be used as the issuer! Also, if some asset doesn't have an issuer
 then we are saying that it is not a contract but pretty much all things on
 Corda have an issuer, so this probably doesn't hold.
 
-Other areas which need more thought:
+## TODO:
 
  1. Need to develop a nice API for using Token pointers. Currently the API is a bit clunky.
  2. Where does reference data sit? On ledger? In library? In attachments? Where exactly?
@@ -54,25 +78,12 @@ Other areas which need more thought:
  5. Are non fungible things just tokens?
  6. How does all this interact with obligations?
 
-Token selection:
+## Token selection:
 
 * Need to discriminate on issuer, notary, token type
 * Can we do coin selection with a mixture of fixed and evolvable token types?
 
-Package hierarchy
-
-* DDGs
-* Accounts SDK
-    * Tokens SDK
-        * Obligation SDK
-        * Issuer SDK
-        * FMI SDK
-
-TODO
-
-* Read Mike's post on individuals
-
-Options for redemption flow
+## Token redemption flow
 
 Need to bear in mind that the redemption flow will be "augmented" with
 the issuer SDK Stuff. (See cash-issuer) for now. Do we:
@@ -80,4 +91,3 @@ the issuer SDK Stuff. (See cash-issuer) for now. Do we:
 1. Send tokens to the issuer, then the issuer redeems.
 2. Send and redeem at the same time. Here the issuer and the owner must
    sign the redemption transaction. The issuer checks that
-
