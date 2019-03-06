@@ -1,7 +1,7 @@
 package com.r3.corda.sdk.token.workflow
 
-import com.r3.corda.sdk.token.contracts.states.EvolvableToken
-import com.r3.corda.sdk.token.contracts.types.EmbeddableToken
+import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
+import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import com.r3.corda.sdk.token.workflow.flows.CreateEvolvableToken
 import com.r3.corda.sdk.token.workflow.flows.IssueToken
@@ -77,16 +77,16 @@ abstract class MockNetworkTest(val numberOfNodes: Int) {
     }
 
     /** Create an evolvable token. */
-    fun <T : EvolvableToken> StartedMockNode.createEvolvableToken(evolvableToken: T, notary: Party): CordaFuture<SignedTransaction> {
+    fun <T : EvolvableTokenType> StartedMockNode.createEvolvableToken(evolvableToken: T, notary: Party): CordaFuture<SignedTransaction> {
         return transaction { startFlow(CreateEvolvableToken(transactionState = evolvableToken withNotary notary)) }
     }
 
     /** Update an evolvable token. */
-    fun <T : EvolvableToken> StartedMockNode.updateEvolvableToken(old: StateAndRef<T>, new: T): CordaFuture<SignedTransaction> {
+    fun <T : EvolvableTokenType> StartedMockNode.updateEvolvableToken(old: StateAndRef<T>, new: T): CordaFuture<SignedTransaction> {
         return transaction { startFlow(UpdateEvolvableToken(old = old, new = new)) }
     }
 
-    fun <T : EmbeddableToken> StartedMockNode.issueTokens(
+    fun <T : TokenType> StartedMockNode.issueTokens(
             embeddableToken: T,
             owner: StartedMockNode,
             notary: StartedMockNode,
@@ -104,7 +104,7 @@ abstract class MockNetworkTest(val numberOfNodes: Int) {
         }
     }
 
-    fun <T : EmbeddableToken> StartedMockNode.moveTokens(
+    fun <T : TokenType> StartedMockNode.moveTokens(
             embeddableToken: T,
             owner: StartedMockNode,
             amount: Amount<T>? = null,

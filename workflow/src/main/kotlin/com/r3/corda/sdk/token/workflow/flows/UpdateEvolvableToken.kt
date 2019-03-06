@@ -2,7 +2,7 @@ package com.r3.corda.sdk.token.workflow.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.commands.Update
-import com.r3.corda.sdk.token.contracts.states.EvolvableToken
+import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
 import com.r3.corda.sdk.token.workflow.schemas.DistributionRecord
 import com.r3.corda.sdk.token.workflow.utilities.getDistributionList
 import net.corda.core.contracts.StateAndRef
@@ -16,8 +16,8 @@ import net.corda.core.transactions.TransactionBuilder
 @InitiatingFlow
 @StartableByRPC
 class UpdateEvolvableToken(
-        val old: StateAndRef<EvolvableToken>,
-        val new: EvolvableToken
+        val old: StateAndRef<EvolvableTokenType>,
+        val new: EvolvableTokenType
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {

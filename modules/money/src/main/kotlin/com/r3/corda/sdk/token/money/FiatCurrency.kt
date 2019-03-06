@@ -6,18 +6,16 @@ import java.math.BigDecimal
 import java.util.*
 
 /**
- * This is a temporary class for now while we find a better class for FiatCurrency.
- * A wrapper for money as the Java Currency type doesn't implement our interfaces and adds specificity around the
- * money being fiat. Note that fiat money backed stable coins such as Tether could be classed as either a
- * [FiatCurrency] coupled with the Tether issuer party, or a [DigitalCurrency] ("USDT") coupled with the Tether issuer.
- * TODO: Replace with a "better" implementation.
- * TODO: Potentially merge this with DigitalCurrency in the future. All currencies are tokenised on the ledger.
+ * This is a temporary class while we find a better implementation. It's a wrapper for the Java Currency which doesn't
+ * implement the Token SDK interfaces. It also adds specificity around the money, in question, being fiat. Note that
+ * fiat money backed stable coins such as Tether would be classed asa [FiatCurrency].
  */
 class FiatCurrency(private val currency: Currency) : Money() {
-    override val symbol: String get() = currency.currencyCode
+    override val tokenIdentifier: String get() = currency.currencyCode
+    override val tokenClass: String get() = javaClass.canonicalName
     override val description: String get() = currency.displayName
     override val displayTokenSize: BigDecimal get() = BigDecimal.ONE.scaleByPowerOfTen(-currency.defaultFractionDigits)
-    override fun toString(): String = symbol
+    override fun toString(): String = tokenIdentifier
 
     @JsonCreator
     constructor(@JsonProperty("currencyCode") currencyCode: String) : this(Currency.getInstance(currencyCode))

@@ -1,9 +1,9 @@
 package com.r3.corda.sdk.token.workflow
 
-import com.r3.corda.sdk.token.contracts.states.OwnedToken
-import com.r3.corda.sdk.token.contracts.states.OwnedTokenAmount
-import com.r3.corda.sdk.token.contracts.types.FixedToken
-import com.r3.corda.sdk.token.contracts.utilities.sumOrThrow
+import com.r3.corda.sdk.token.contracts.states.FungibleToken
+import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
+import com.r3.corda.sdk.token.contracts.types.FixedTokenType
+import com.r3.corda.sdk.token.contracts.utilities.sumTokensOrThrow
 import com.r3.corda.sdk.token.money.BTC
 import com.r3.corda.sdk.token.money.GBP
 import com.r3.corda.sdk.token.money.USD
@@ -38,9 +38,11 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     private val allTokens = gbpTokens + usdTokens + btcTokens
 
     private data class SomeNonFungibleToken(
-            override val symbol: String = "FOO",
+            override val tokenIdentifier: String = "FOO",
             override val displayTokenSize: BigDecimal = BigDecimal.ONE
-    ) : FixedToken()
+    ) : FixedTokenType() {
+        override val tokenClass: String get() = javaClass.canonicalName
+    }
 
     private val fooToken = SomeNonFungibleToken("FOO")
     private val barToken = SomeNonFungibleToken("BAR")
@@ -65,10 +67,10 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     fun `query for all owned token amounts`() {
         // Query for all tokens and check they are all returned.
         val query = QueryCriteria.FungibleStateQueryCriteria(
-                contractStateTypes = setOf(OwnedTokenAmount::class.java),
+                contractStateTypes = setOf(FungibleToken::class.java),
                 relevancyStatus = Vault.RelevancyStatus.RELEVANT
         )
-        val states = A.services.vaultService.queryBy<OwnedTokenAmount<*>>(query).states
+        val states = A.services.vaultService.queryBy<FungibleToken<*>>(query).states
         assertEquals(allTokens.size, states.size)
     }
 
@@ -76,10 +78,10 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     fun `query for all owned tokens`() {
         // Query for all tokens and check they are all returned.
         val query = QueryCriteria.VaultQueryCriteria(
-                contractStateTypes = setOf(OwnedToken::class.java),
+                contractStateTypes = setOf(NonFungibleToken::class.java),
                 relevancyStatus = Vault.RelevancyStatus.RELEVANT
         )
-        val states = A.services.vaultService.queryBy<OwnedToken<*>>(query).states
+        val states = A.services.vaultService.queryBy<NonFungibleToken<*>>(query).states
         assertEquals(allOtherTokens.size, states.size)
     }
 
@@ -107,7 +109,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     fun `query for sum of an owned token amount`() {
         // Perform a custom query to get the balance for a specific token type.
         val gbpBalance = A.services.vaultService.tokenBalance(GBP)
-        assertEquals(gbpTokens.sumOrThrow(), gbpBalance)
+        assertEquals(gbpTokens.sumTokensOrThrow(), gbpBalance)
     }
 
 }

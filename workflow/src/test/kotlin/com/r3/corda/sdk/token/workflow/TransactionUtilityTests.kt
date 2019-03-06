@@ -17,12 +17,12 @@ class TransactionUtilityTests {
 
     @Test
     fun `sum issued tokens with different issuers`() {
-        val a = 10.GBP issuedBy ISSUER_ONE.party ownedBy ALICE.party
-        val b = 25.GBP issuedBy ISSUER_ONE.party ownedBy ALICE.party
-        val c = 40.GBP issuedBy ISSUER_TWO.party ownedBy ALICE.party
-        val d = 55.GBP issuedBy ISSUER_TWO.party ownedBy ALICE.party
+        val a = 10.GBP issuedBy ISSUER_ONE.party heldBy ALICE.party
+        val b = 25.GBP issuedBy ISSUER_ONE.party heldBy ALICE.party
+        val c = 40.GBP issuedBy ISSUER_TWO.party heldBy ALICE.party
+        val d = 55.GBP issuedBy ISSUER_TWO.party heldBy ALICE.party
         val tokens = listOf(a, b, c, d)
-        val result = tokens.filterTokensByIssuer(ISSUER_ONE.party).sumTokens()
+        val result = tokens.filterTokensByIssuer(ISSUER_ONE.party).sumTokenStatesOrThrow()
         println(result)
         val tokenStateAndRefs = tokens.map {
             StateAndRef(TransactionState(it, notary = NOTARY.party), StateRef(SecureHash.zeroHash, 0))

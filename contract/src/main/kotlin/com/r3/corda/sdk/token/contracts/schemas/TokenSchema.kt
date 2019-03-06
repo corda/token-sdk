@@ -3,7 +3,7 @@ package com.r3.corda.sdk.token.contracts.schemas
 import net.corda.core.schemas.MappedSchema
 
 /**
- * Here, the idea is that we can add schemas for commonly used evolvable token types.
+ * Here, schemas can be added for commonly used [EvolvableTokenType]s.
  */
 object TokenSchema
 
@@ -12,7 +12,3 @@ object TokenSchemaV1 : MappedSchema(
         version = 1,
         mappedTypes = listOf()
 )
-
-
-
-
