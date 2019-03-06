@@ -65,7 +65,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 
 configure(install.repositories.mavenInstaller) {
     pom.project {
-        groupId 'com.r3.corda.sdk.token.plugins'
+        groupId 'com.r3.corda.sdk.token.modules'
         artifactId 'token-sdk-money'
         inceptionYear '2019'
         packaging 'jar'

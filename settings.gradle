@@ -1,5 +1,5 @@
 include 'contract'
 include 'workflow'
 include 'modules:money'
-findProject(':plugins:money')?.name = 'money'
+findProject(':modules:money')?.name = 'money'
 
