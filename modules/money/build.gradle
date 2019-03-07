@@ -1,3 +1,16 @@
+buildscript {
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "net.corda.plugins:cordapp:$corda_gradle_plugins_version"
+        classpath "net.corda.plugins:quasar-utils:$corda_gradle_plugins_version"
+        classpath "org.jetbrains.kotlin:kotlin-noarg:$kotlin_version"
+    }
+}
+
+apply plugin: 'kotlin-jpa'
+apply plugin: 'net.corda.plugins.quasar-utils'
+apply plugin: 'net.corda.plugins.cordapp'
+
 cordapp {
     targetPlatformVersion 4
     minimumPlatformVersion 4
@@ -45,35 +58,4 @@ dependencies {
 
     // CorDapp dependencies.
     cordapp project(":contract")
-}
-
-configure(install.repositories.mavenInstaller) {
-    pom.project {
-        groupId 'com.r3.corda.sdk.token.modules'
-        artifactId 'token-sdk-money'
-        inceptionYear '2019'
-        packaging 'jar'
-        licenses {
-            license {
-                name 'Apache 2.0'
-                url 'https://www.apache.org/licenses/LICENSE-2.0'
-                distribution 'repo'
-            }
-        }
-    }
-}
-
-task sourcesJar(type: Jar, dependsOn:classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn:javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives sourcesJar
-    archives javadocJar
 }
