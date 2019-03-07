@@ -1,7 +1,5 @@
 package com.r3.corda.sdk.token.money
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
 import java.math.BigDecimal
 import java.util.*
 
@@ -15,8 +13,7 @@ data class DigitalCurrency(
     override val displayTokenSize: BigDecimal get() = BigDecimal.ONE.scaleByPowerOfTen(-defaultFractionDigits)
     override fun toString(): String = tokenIdentifier
 
-    @JsonCreator
-    constructor(@JsonProperty("currencyCode") currencyCode: String) : this(
+    constructor(currencyCode: String) : this(
             getInstance(currencyCode).tokenIdentifier,
             getInstance(currencyCode).description,
             getInstance(currencyCode).defaultFractionDigits

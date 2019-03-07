@@ -1,7 +1,5 @@
 package com.r3.corda.sdk.token.money
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.r3.corda.sdk.token.contracts.types.FixedTokenType
 
 /**
@@ -12,11 +10,6 @@ import com.r3.corda.sdk.token.contracts.types.FixedTokenType
  * the SDK can issue [Money] tokens. Going forward, some networks might want to create their own currency definitions as
  * [EvolvableTokenType]s, and of course, they are welcome to do that.
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes(
-        JsonSubTypes.Type(value = FiatCurrency::class, name = "fiat"),
-        JsonSubTypes.Type(value = DigitalCurrency::class, name = "digital")
-)
 abstract class Money : FixedTokenType() {
     abstract val description: String
 }

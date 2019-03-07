@@ -32,9 +32,6 @@ dependencies {
     // Corda dependencies.
     cordaCompile "$corda_release_group:corda-core:$corda_release_version"
 
-    // Jackson annotations. Keep in sync with Corda Jackson version.
-    compile "com.fasterxml.jackson.core:jackson-annotations:$jackson_version"
-
     // Logging.
     testCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
 

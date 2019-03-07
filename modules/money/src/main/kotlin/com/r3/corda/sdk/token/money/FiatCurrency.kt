@@ -1,7 +1,5 @@
 package com.r3.corda.sdk.token.money
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
 import java.math.BigDecimal
 import java.util.*
 
@@ -17,8 +15,7 @@ class FiatCurrency(private val currency: Currency) : Money() {
     override val displayTokenSize: BigDecimal get() = BigDecimal.ONE.scaleByPowerOfTen(-currency.defaultFractionDigits)
     override fun toString(): String = tokenIdentifier
 
-    @JsonCreator
-    constructor(@JsonProperty("currencyCode") currencyCode: String) : this(Currency.getInstance(currencyCode))
+    constructor(currencyCode: ShellCurrency) : this(Currency.getInstance(currencyCode.symbol))
 
     companion object {
         // Uses the java money registry.
