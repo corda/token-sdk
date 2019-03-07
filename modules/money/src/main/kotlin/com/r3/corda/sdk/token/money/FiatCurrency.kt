@@ -15,8 +15,6 @@ class FiatCurrency(private val currency: Currency) : Money() {
     override val displayTokenSize: BigDecimal get() = BigDecimal.ONE.scaleByPowerOfTen(-currency.defaultFractionDigits)
     override fun toString(): String = tokenIdentifier
 
-    constructor(currencyCode: ShellCurrency) : this(Currency.getInstance(currencyCode.symbol))
-
     companion object {
         // Uses the java money registry.
         fun getInstance(currencyCode: String) = FiatCurrency(Currency.getInstance(currencyCode))
