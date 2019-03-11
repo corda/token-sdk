@@ -72,18 +72,21 @@ object IssueToken {
         @Suspendable
         override fun call(): SignedTransaction {
             // This is the identity which will be used to issue tokens.
-            // We also need a session for the other side.
             val me: Party = ourIdentity
-            val ownerSession = initiateFlow(owner)
-
-            // Notify the recipient that we'll be issuing them a tokens and advise them of anything they must do, e.g.
-            // generate a confidential identity for the issuer or sign up for updates for evolvable tokens.
-            ownerSession.send(TokenIssuanceNotification(anonymous = anonymous))
-
+            var ownerSession : FlowSession? = null
             // This is the recipient of the tokens identity.
-            val owningParty: AbstractParty = if (anonymous) {
-                subFlow(RequestConfidentialIdentity.Initiator(ownerSession)).party.anonymise()
-            } else owner
+            val owningParty: AbstractParty
+    
+            if(me != owner) {
+                // We also need a session for the other side.
+                ownerSession = initiateFlow(owner)
+                // Notify the recipient that we'll be issuing them a tokens and advise them of anything they must do, e.g.
+                // generate a confidential identity for the issuer or sign up for updates for evolvable tokens.
+                ownerSession.send(TokenIssuanceNotification(anonymous = anonymous))
+                owningParty = if (anonymous) subFlow(RequestConfidentialIdentity.Initiator(ownerSession)).party.anonymise() else owner
+            } else {
+                owningParty = owner
+            }
 
             // Create the issued token. We add this to the commands for grouping.
             val issuedToken: IssuedTokenType<T> = token issuedBy me
@@ -118,7 +121,11 @@ object IssueToken {
             // Sign the transaction. Only Concrete Parties should be used here.
             val stx: SignedTransaction = serviceHub.signInitialTransaction(utx)
             // No need to pass in a session as there's no counterparty involved.
-            return subFlow(FinalityFlow(transaction = stx, sessions = listOf(ownerSession)))
+            return if(me != owner) {
+                subFlow(FinalityFlow(transaction = stx, sessions = listOf(ownerSession!!)))
+            } else {
+                subFlow(FinalityFlow(transaction = stx, sessions = emptyList()))
+            }
         }
     }
 

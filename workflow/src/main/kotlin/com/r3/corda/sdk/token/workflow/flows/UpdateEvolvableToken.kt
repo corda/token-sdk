@@ -33,7 +33,11 @@ class UpdateEvolvableToken(
         val stx: SignedTransaction = serviceHub.signInitialTransaction(utx)
         // Get the list of parties on the distribution list for this evolvable token.
         val updateSubscribers: List<DistributionRecord> = getDistributionList(serviceHub, new.linearId)
-        val sessions = updateSubscribers.map { initiateFlow(it.party) }
+        // If the token is self-issued, subscribers list will contain ourIdentity.
+        // Remove ourIdentity to avoid initiating a session to itself.
+        val filteredList = updateSubscribers.filter { it.party != ourIdentity }
+    
+        val sessions = filteredList.map { initiateFlow(it.party) }
         // Send to all on the list. This could take a while if there are many subscribers!
         return subFlow(FinalityFlow(transaction = stx, sessions = sessions))
     }
