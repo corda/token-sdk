@@ -180,5 +180,4 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 3) {
         val updatedHouse = houseQuery.single().state.data
         assertEquals(updatedHouse.valuation, proposedToken.valuation)
     }
-    
 }

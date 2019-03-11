@@ -37,8 +37,11 @@ class UpdateEvolvableToken(
         // Remove ourIdentity to avoid initiating a session to itself.
         val filteredList = updateSubscribers.filter { it.party != ourIdentity }
     
-        val sessions = filteredList.map { initiateFlow(it.party) }
-        // Send to all on the list. This could take a while if there are many subscribers!
-        return subFlow(FinalityFlow(transaction = stx, sessions = sessions))
+        return if(filteredList.isNotEmpty()){
+            val sessions = filteredList.map { initiateFlow(it.party) }
+            // Send to all on the list. This could take a while if there are many subscribers!
+            subFlow(FinalityFlow(transaction = stx, sessions = sessions))
+        } else
+            subFlow(FinalityFlow(transaction = stx, sessions = emptyList()))
     }
 }
