@@ -71,7 +71,7 @@ Alternatively, you can use the following bootstrapped token SDK template:
     cd cordapp-template-kotlin
     git checkout token-template
 
-**Don't** building your CorDapp inside the token-sdk repository, instead
+**Don't** build your CorDapp inside the token-sdk repository, instead
 use the supplied template, above.
 
 ### When building transactions
@@ -118,7 +118,7 @@ Do not be confused when a token is used to represent an amount of some
 existing crypto-currecny on Corda; such a token would be classed as a
 *depository receipt* because the underlying value exists off-ledger.
 Indeed, the only case where a token would not be an agreement on a Corda
-ledger would be where the crypti-currency is issued directly onto a
+ledger would be where the crypto-currency is issued directly onto a
 Corda ledger.
 
 ## Release Notes

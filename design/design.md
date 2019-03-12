@@ -24,7 +24,7 @@ The following diagram demonstrates fiat currency as agreements between the centr
 
 The diagram depicts two forms of fiat currency:
 
-* *Central bank reserves* are a liability of central banks. In the past, central bank reserves were backed by physical assets and redeemable on demand but these days this usually not the case; the central bank will mostly hold government bonds, repos and other types of debt on their debt on the asset side of their balance sheet.
+* *Central bank reserves* are a liability of central banks. In the past, central bank reserves were backed by physical assets and redeemable on demand but these days this usually is not the case; the central bank will mostly hold government bonds, repos and other types of debt on their debt on the asset side of their balance sheet.
 * A *commercial bank deposit*, or "cash" as it is known to most people, is a **liability of your bank to deliver a liability of the central bank**.
 
 In summary: fiat currency, in whatever form, is just an accounting entry. This is despite the fact that cash *feels* like an "ownable" thing. Indeed, in Corda to date, cash is modelled as an ownable thing (`OwnableState` / `FungibleAsset`). However, really, it is an agreement between an obligor (the bank), and a beneficiary (the holder of the cash).
@@ -56,14 +56,14 @@ In the case of `Cash`, the only participant should typically be the current `own
 
 **TL;DR The only non-agreements on ledger are ledger native crypto tokens.**
 
-Things in the physical World which are "ownable" (not in the `OwnableState` sense) and have no counter-party are not agreements. These types of things *do not* have issuers. In the digital World, there can exist thinsg which _have_ issuers but are _not_ agreements. Some examples include:
+Things in the physical World which are "ownable" (not in the `OwnableState` sense) and have no counter-party are not agreements. These types of things *do not* have issuers. In the digital World, there can exist things which _have_ issuers but are _not_ agreements. Some examples include:
 
 | Thing                 | Comments                                                     | Has Issuer                | Has owner |
 | --------------------- | ------------------------------------------------------------ | ------------------------- | --------- |
 | Physical commodities  | Commodities are dug out of the ground.                       | No                        | Yes       |
 | Freehold real- estate | Freehold real-estate can be thought of as being owned out-right. Technically speaking, the Crown is the only absolute owner of land in England and Wales. When land/property is bought/sold, titles to the land change hands rather than the land, itself. This is why ownership is ultimately determined by the land registry and not based on a sales contract. | No                        | Yes       |
 | Chattels              | Stuff in your house which is owned out-right. Also, antiques. | No                        | Yes       |
-| Cryptocurrency        | Permissionless, pseudo-anonymous crypto-currencies like Bitcoin whivh have unidentifiable issuers. There is no-one to sue if you lose your coins! | Unidentifiable            | Yes       |
+| Cryptocurrency        | Permissionless, pseudo-anonymous crypto-currencies like Bitcoin which have unidentifiable issuers. There is no-one to sue if you lose your coins! | Unidentifiable            | Yes       |
 | Utility tokens        | Utility tokens which confer no rights to owners              | Yes but has no obligation | Yes       |
 
 To complicate things more, it is worth noting that physical commodities, freehold real-estate and chattels, etc. **cannot exist on Corda in material form**, hence the need for "tokenization"— tokens are created by an issuer to represent claims on themselves to deliver a specific amount of the off-ledger "thing" in return for redemption of the token. In other words, the token is an agreement!
@@ -114,7 +114,7 @@ data class FooState(val ref: StateRef) : ContractState
 * `StaticPointer`s which refer to a specific `StateRef`, or; 
 *  `LinearPointer`s which allow a `ContractState` to "point" to the most up-to-date version of a `LinearState`. Instead of linking to a specific `StateRef`, using a `StaticPointer` a, `LinearPointer` contains the `linearId` of the lineage of `LinearState` to point to. It goes without saying that `LinearPointer`s can only be used with `LinearState`s
 
-State pointing is a useful pattern when one state depends on the contained data within another state and there is an expectation that the state being depended upon will involve independently to the depending state. This might be to divide responsibility for updates or to compartmentalise data for privacy reasons.
+State pointing is a useful pattern when one state depends on the contained data within another state and there is an expectation that the state being depended upon will evolve independently to the depending state. This might be to divide responsibility for updates or to compartmentalise data for privacy reasons.
 
 ```kotlin
 class LinearPointer<T : LinearState>(
@@ -163,9 +163,9 @@ To aid understanding of the (rather complex looking) diagram, it can be split in
 
 #### TokenType
 
-A `TokenType` is an overarching interface for all things related to types fo tokens. 
+A `TokenType` is an overarching interface for all things related to types of tokens. 
 
-As it suggests, `TokenType` refers to a "type of thing" as opposed to the vehicle which is used to assign units of a token to a particular owner. For that we use the  `NonFungibleToken` state for assigning non-fungible tokens to a holder and the `FungibleToken` state for assigning amounts of some fungible token to an holder. 
+As it suggests, `TokenType` refers to a "type of thing" as opposed to the vehicle which is used to assign units of a token to a particular owner. For that we use the  `NonFungibleToken` state for assigning non-fungible tokens to a holder and the `FungibleToken` state for assigning amounts of some fungible token to a holder. 
 
 The interface implements `TokenizableAssetInfo` because in almost all cases, the `TokenType` must define the nominal display unit of a single `TokenType`. For example, JYP has zero fraction digits, whereas most currencies have two fraction digits. Therefore, to be able to reason about amounts of tokens arithmetically, we must define the fraction digits.
 
@@ -340,7 +340,7 @@ val tenQuid = 10.GBP issuedBy ALICE ownedBy BOB
 val oneMillionDollars = 1_000_000.USD issuedBy ZOE ownedBy RICH
 ```
 
-The fungible tokens can used to create transactions:
+The fungible tokens can be used to create transactions:
 
 ```kotlin
 // Couple the dollars with an issuer, in this case ZOE.
@@ -360,7 +360,7 @@ val builder = TransactionBuilder(honestNotary).apply {
 
 #### Stock
 
-Take a stock issued by MEGA CORP. It can be initially issued by MEGA CORP, they may then announce a divided, pay a dividend, perform a share split, etc. This should all be managed inside an `EvolvableTokenType` state. MEGA CORP is at liberty to define which ever properties and methods they deem necessary on the `EvolvableTokenType`. Only MEGA CORP has the capability of updating the `EvolvableTokenType`.
+Take a stock issued by MEGA CORP. It can be initially issued by MEGA CORP, they may then announce a dividend, pay a dividend, perform a share split, etc. This should all be managed inside an `EvolvableTokenType` state. MEGA CORP is at liberty to define whichever properties and methods they deem necessary on the `EvolvableTokenType`. Only MEGA CORP has the capability of updating the `EvolvableTokenType`.
 
 Other parties on the Corda Network that hold MEGA CORP stock, use the `EvolvableTokenType` as reference data. It is likely that MEGA CORP would distribute the `EvolvableTokenType` updates via data distribution groups. Holders of MEGA CORP stock would subscribe to updates to ensure they have the most up-to-date version of the `EvolvableTokenType` which reflects all recent lifecycle events.
 
