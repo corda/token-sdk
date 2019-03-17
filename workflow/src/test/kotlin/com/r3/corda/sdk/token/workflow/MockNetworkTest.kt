@@ -78,7 +78,7 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
 
     /** Check to see if a node recorded a transaction with a particular hash. Return a future signed transaction. */
     fun StartedMockNode.watchForTransaction(txId: SecureHash): CordaFuture<SignedTransaction> {
-        return transaction { services.validatedTransactions.updates.filter { it.id == txId }.toFuture() }
+        return transaction { services.validatedTransactions.trackTransaction(txId) }
     }
 
     fun StartedMockNode.watchForTransaction(tx: SignedTransaction): CordaFuture<SignedTransaction> {
