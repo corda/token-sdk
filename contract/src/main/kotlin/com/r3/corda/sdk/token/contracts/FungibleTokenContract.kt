@@ -21,7 +21,7 @@ import java.security.PublicKey
  * The [FungibleToken] contract sub-classes the [AbstractToken] contract which contains the "verify" method.
  * To add functionality to this contract, developers should:
  * 1. Create their own commands which implement the [TokenCommand] interface.
- * 2. override the [AbstractTokenContract.dispatchOnCommand] method to add support for the new command, remembering
+ * 2. Override the [AbstractTokenContract.dispatchOnCommand] method to add support for the new command, remembering
  *    to call the super method to handle the existing commands.
  * 3. Add a method to handle the new command in the new sub-class contract.
  */
