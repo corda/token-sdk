@@ -6,10 +6,12 @@ import com.r3.corda.sdk.token.money.GBP
 import com.r3.corda.sdk.token.workflow.statesAndContracts.House
 import com.r3.corda.sdk.token.workflow.utilities.getDistributionList
 import com.r3.corda.sdk.token.workflow.utilities.getLinearStateById
+import com.r3.corda.sdk.token.workflow.utilities.tokenBalance
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
+import net.corda.finance.AMOUNT
 import net.corda.testing.node.StartedMockNode
 import org.junit.Before
 import org.junit.Test
@@ -140,5 +142,42 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 3) {
         val issueTokenB = I.issueTokens(housePointer, A, NOTARY, 50 of housePointer).getOrThrow()
         A.watchForTransaction(issueTokenB.id).toCompletableFuture().getOrThrow()
     }
-
+    
+    @Test
+    fun `create evolvable token, then self issue`() {
+        //This is to test the self issue flow, as the counter party session is not created
+        val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(I.legalIdentity()))
+        val createTokenTx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
+        val houseToken: StateAndRef<House> = createTokenTx.singleOutput()
+        val housePointer: TokenPointer<House> = house.toPointer()
+        I.issueTokens(housePointer, I, NOTARY,  1000 of housePointer).getOrThrow()
+        val houseTokenState = I.services.vaultService.queryBy<House>().states.single()
+        assertEquals(houseToken, houseTokenState)
+        val moveTokenTx = I.moveTokens(housePointer, A, 250 of housePointer, anonymous = true).getOrThrow()
+        A.watchForTransaction(moveTokenTx.id).getOrThrow()
+        val issuerTokenBalance = I.services.vaultService.tokenBalance(housePointer)
+        assertEquals(issuerTokenBalance, AMOUNT(750, housePointer))
+        val aPartyTokenBalance = A.services.vaultService.tokenBalance(housePointer)
+        assertEquals(aPartyTokenBalance, AMOUNT(250, housePointer))
+    }
+    
+    @Test
+    fun `create evolvable token, then self issue, move and update`() {
+        //This is to test the self issue flow, as the counter party session is not created
+        val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(I.legalIdentity()))
+        val createTokenTx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
+        val houseToken: StateAndRef<House> = createTokenTx.singleOutput()
+        val housePointer: TokenPointer<House> = house.toPointer()
+        I.issueTokens(housePointer, I, NOTARY,  1000 of housePointer).getOrThrow()
+        val houseTokenState = I.services.vaultService.queryBy<House>().states.single()
+        assertEquals(houseToken, houseTokenState)
+        val moveTokenTx = I.moveTokens(housePointer, A, 250 of housePointer, anonymous = true).getOrThrow()
+        A.watchForTransaction(moveTokenTx.id).getOrThrow()
+        val proposedToken = house.copy(valuation = 950_000.GBP)
+        val updateTx = I.updateEvolvableToken(houseToken, proposedToken).getOrThrow()
+        A.watchForTransaction(updateTx.id).getOrThrow()
+        val houseQuery= A.services.vaultService.queryBy<House>().states
+        val updatedHouse = houseQuery.single().state.data
+        assertEquals(updatedHouse.valuation, proposedToken.valuation)
+    }
 }

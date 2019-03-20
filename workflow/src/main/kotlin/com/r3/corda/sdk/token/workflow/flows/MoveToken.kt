@@ -2,6 +2,7 @@ package com.r3.corda.sdk.token.workflow.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.commands.MoveTokenCommand
+import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import com.r3.corda.sdk.token.workflow.selection.TokenSelection
@@ -40,7 +41,11 @@ object MoveToken {
             val owningParty: AbstractParty = if (anonymous) {
                 subFlow(RequestConfidentialIdentity.Initiator(ownerSession)).party.anonymise()
             } else owner
-
+    
+            if (ownedToken is TokenPointer<*>) {
+                subFlow(AddPartyToDistributionList(owner, ownedToken.pointer.pointer))
+            }
+            
             val (builder, keys) = if (amount == null) {
                 // The assumption here is that there is only one owned token of a particular type at any one time.
                 // Double clarify this in the docs to ensure that it is used properly. Either way, this code likely
