@@ -57,7 +57,7 @@ open class FungibleTokenContract : AbstractTokenContract<FungibleToken<TokenType
             // the line below should never fail on single().
             val issuer = map { it.amount.token.issuer }.toSet().single()
             // Only the issuer should be signing the issuer command.
-            require(issuer.owningKey == issueCommand.signers.single()) {
+            require(issueCommand.signers.singleOrNull { it == issuer.owningKey } != null) {
                 "The issuer must be the only signing party when an amount of tokens are issued."
             }
         }
