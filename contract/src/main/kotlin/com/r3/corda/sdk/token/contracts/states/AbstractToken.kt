@@ -26,4 +26,7 @@ abstract class AbstractToken : ContractState {
 
     /** For creating a copy of an existing [AbstractToken] with a new holder. */
     abstract fun withNewHolder(newHolder: AbstractParty): AbstractToken
+
+    /** Get issuer for the token. */
+    abstract val issuer: AbstractParty // TODO Will issuer always be a well known identity?
 }

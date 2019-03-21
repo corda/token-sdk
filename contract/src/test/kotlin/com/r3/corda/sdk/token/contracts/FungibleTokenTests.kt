@@ -11,6 +11,7 @@ import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.of
 import com.r3.corda.sdk.token.money.GBP
 import com.r3.corda.sdk.token.money.USD
+import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TypeOnlyCommandData
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.node.NotaryInfo
@@ -266,6 +267,7 @@ class FungibleTokenTests {
     @Test
     fun `redeem token tests`() {
         val issuedToken = GBP issuedBy ISSUER.party
+        val otherIssuerToken = GBP issuedBy BOB.party
         transaction {
             // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
             input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
@@ -273,12 +275,93 @@ class FungibleTokenTests {
             // Add the redeem command, signed by the ISSUER.
             tweak {
                 command(ISSUER.publicKey, RedeemTokenCommand(issuedToken))
+                this `fails with` "Contract verification failed: Owners of redeemed states must be the signing parties."
+            }
+            // Add the redeem command, signed by the ISSUER and ALICE - owner. Zero outputs.
+            tweak {
+                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
                 verifies()
             }
 
-            // TODO: Write more test cases.
+            // Add additional input to redeem, by different issuer. Fails because it requires command signed by that issuer.
+            tweak {
+                input(FungibleTokenContract.contractId, 10 of otherIssuerToken heldBy ALICE.party)
+                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(otherIssuerToken))
+                this `fails with` "There is a token group with no assigned command!"
+            }
 
+            // Two redeem groups verify.
+            tweak {
+                input(FungibleTokenContract.contractId, 10 of otherIssuerToken heldBy ALICE.party)
+                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
+                command(listOf(BOB.publicKey, ALICE.publicKey), RedeemTokenCommand(otherIssuerToken))
+                verifies()
+            }
+
+            // Add the redeem command, signed by the ISSUER and ALICE - owner. One output.
+            tweak {
+                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
+                // Return change back to Alice.
+                output(FungibleTokenContract.contractId, 5 of issuedToken heldBy ALICE.party)
+                verifies()
+            }
+
+            // TODO This should fail?
+            // Add the redeem command, signed by the ISSUER and ALICE - owner. One output - but different owner. Fail.
+            tweak {
+                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
+                // Return change back to BOB.
+                output(FungibleTokenContract.contractId, 5 of issuedToken heldBy BOB.party)
+                verifies()
+            }
+
+            // Add the redeem command, signed by the ISSUER and ALICE - owner. Output too big.
+            tweak {
+                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
+                // Return change back to Alice.
+                output(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+                this `fails with` "Change shouldn't exceed amount redeemed."
+            }
+
+            // Add the redeem command, signed by the ISSUER and ALICE - owner. Output is zero.
+            tweak {
+                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
+                // Return change back to Alice.
+                output(FungibleTokenContract.contractId, Amount.zero(issuedToken) heldBy ALICE.party)
+                this `fails with` "In redeem groups there must hold that output token amount, if present, is greater than ZERO."
+            }
+
+            // Add the redeem command, signed by the ISSUER and ALICE - owner. Too many outputs.
+            tweak {
+                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
+                // Return change back to Alice.
+                output(FungibleTokenContract.contractId, 2 of issuedToken heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 2 of issuedToken heldBy ALICE.party)
+                this `fails with` "When redeeming tokens, there must be zero or one output state."
+            }
+
+            // TODO This should fail because there is additional command without inputs/outputs?
+            // Add the redeem command, signed by the ISSUER and ALICE - owner. No input for one group.
+            tweak {
+                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
+                command(listOf(BOB.publicKey, ALICE.publicKey), RedeemTokenCommand(otherIssuerToken))
+                verifies()
+            }
+
+            tweak {
+                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
+                command(listOf(BOB.publicKey, ALICE.publicKey), RedeemTokenCommand(otherIssuerToken))
+                output(FungibleTokenContract.contractId, 2 of otherIssuerToken heldBy ALICE.party)
+                this `fails with` " When redeeming tokens, there must be input states present."
+            }
+
+            // Zero amount input - fail.
+            tweak {
+                input(FungibleTokenContract.contractId, Amount.zero(otherIssuerToken) heldBy ALICE.party)
+                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
+                command(listOf(BOB.publicKey, ALICE.publicKey), RedeemTokenCommand(otherIssuerToken))
+                this `fails with` "When redeeming tokens an amount > ZERO must be redeemed."
+            }
         }
     }
-
 }

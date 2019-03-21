@@ -55,6 +55,8 @@ open class NonFungibleToken<T : TokenType>(
 
     override fun supportedSchemas() = listOf(NonFungibleTokenSchemaV1)
 
+    override val issuer: Party get() = token.issuer
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is NonFungibleToken<*>) return false

@@ -6,6 +6,7 @@ import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import com.r3.corda.sdk.token.workflow.flows.CreateEvolvableToken
 import com.r3.corda.sdk.token.workflow.flows.IssueToken
 import com.r3.corda.sdk.token.workflow.flows.MoveToken
+import com.r3.corda.sdk.token.workflow.flows.RedeemToken
 import com.r3.corda.sdk.token.workflow.flows.UpdateEvolvableToken
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.Amount
@@ -128,6 +129,20 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
             ))
         }
 
+    }
+
+    fun <T : TokenType> StartedMockNode.redeemTokens(
+            token: T,
+            issuer: StartedMockNode,
+            amount: Amount<T>? = null,
+            anonymous: Boolean = true
+    ): CordaFuture<SignedTransaction> {
+        return startFlow(RedeemToken.InitiateRedeem(
+                ownedToken = token,
+                issuer = issuer.legalIdentity(),
+                amount = amount,
+                anonymous = anonymous
+        ))
     }
 
 }
