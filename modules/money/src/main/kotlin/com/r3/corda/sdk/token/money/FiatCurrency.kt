@@ -1,5 +1,6 @@
 package com.r3.corda.sdk.token.money
 
+import jdk.nashorn.internal.parser.TokenType
 import java.math.BigDecimal
 import java.util.*
 
@@ -10,7 +11,7 @@ import java.util.*
  */
 class FiatCurrency(private val currency: Currency) : Money() {
     override val tokenIdentifier: String get() = currency.currencyCode
-    override val tokenClass: String get() = javaClass.canonicalName
+    override val tokenClass: Class<in TokenType> get() = javaClass
     override val description: String get() = currency.displayName
     override val displayTokenSize: BigDecimal get() = BigDecimal.ONE.scaleByPowerOfTen(-currency.defaultFractionDigits)
     override fun toString(): String = tokenIdentifier

@@ -34,5 +34,5 @@ interface TokenType : TokenizableAssetInfo {
      * [tokenIdentifier] is a linearId, which is opaque, the [tokenClass] provides a bit more context on what is being
      * pointed to.
      */
-    val tokenClass: String
+    val tokenClass: Class<*>
 }

@@ -30,7 +30,7 @@ data class TokenPointer<T : EvolvableTokenType>(
     /**
      * The fully qualified class name for the [EvolvableTokenType] being pointed to.
      */
-    override val tokenClass: String get() = pointer.type.canonicalName
+    override val tokenClass: Class<*> get() = pointer.type
 
     override fun toString(): String = "TokenPointer($tokenClass, $tokenIdentifier)"
 }
