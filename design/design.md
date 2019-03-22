@@ -241,7 +241,7 @@ To harness the power of `EvolvableTokenType`s, they cannot be directly embedded 
 data class TokenPointer<T : EvolvableToken>(
         val pointer: LinearPointer<T>,
         override val displayTokenSize: BigDecimal
-) : EmbeddableToken() {
+) : TokenType {
     override fun toString(): String = "Pointer(${pointer.pointer.id}, ${pointer.type.canonicalName})"
 }
 ```

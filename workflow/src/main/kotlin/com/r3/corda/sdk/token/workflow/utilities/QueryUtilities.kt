@@ -49,13 +49,13 @@ fun getDistributionList(services: ServiceHub, linearId: UniqueIdentifier): List<
 
 // Returns all owned token amounts of a specified token.
 // We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
-internal fun <T : TokenType> ownedTokenAmountCriteria(embeddableToken: T): QueryCriteria {
+internal fun <T : TokenType> ownedTokenAmountCriteria(token: T): QueryCriteria {
     val tokenClass = builder {
-        PersistentFungibleToken::tokenClass.equal(embeddableToken.tokenClass)
+        PersistentFungibleToken::tokenClass.equal(token.tokenClass)
     }
     val tokenClassCriteria = QueryCriteria.VaultCustomQueryCriteria(tokenClass)
     val tokenIdentifier = builder {
-        PersistentFungibleToken::tokenIdentifier.equal(embeddableToken.tokenIdentifier)
+        PersistentFungibleToken::tokenIdentifier.equal(token.tokenIdentifier)
     }
     val tokenIdentifierCriteria = QueryCriteria.VaultCustomQueryCriteria(tokenIdentifier)
     return tokenClassCriteria.and(tokenIdentifierCriteria)
@@ -68,13 +68,13 @@ internal fun sortByStateRefAscending(): Sort {
 }
 
 // TODO: Merge this code with the code above.
-private fun <T : TokenType> ownedTokenCriteria(embeddableToken: T): QueryCriteria {
+private fun <T : TokenType> ownedTokenCriteria(token: T): QueryCriteria {
     val tokenClass = builder {
-        PersistentNonFungibleToken::tokenClass.equal(embeddableToken.tokenClass)
+        PersistentNonFungibleToken::tokenClass.equal(token.tokenClass)
     }
     val tokenClassCriteria = QueryCriteria.VaultCustomQueryCriteria(tokenClass)
     val tokenIdentifier = builder {
-        PersistentNonFungibleToken::tokenIdentifier.equal(embeddableToken.tokenIdentifier)
+        PersistentNonFungibleToken::tokenIdentifier.equal(token.tokenIdentifier)
     }
     val tokenIdentifierCriteria = QueryCriteria.VaultCustomQueryCriteria(tokenIdentifier)
     return tokenClassCriteria.and(tokenIdentifierCriteria)
@@ -83,7 +83,7 @@ private fun <T : TokenType> ownedTokenCriteria(embeddableToken: T): QueryCriteri
 // For summing tokens of a specified type.
 // NOTE: Issuer is ignored with this query criteria.
 // NOTE: It only returns relevant states.
-private fun <T : TokenType> sumTokenCriteria(embeddableToken: T): QueryCriteria {
+private fun <T : TokenType> sumTokenCriteria(token: T): QueryCriteria {
     val sum = builder {
         val groups = listOf(PersistentFungibleToken::tokenClass, PersistentFungibleToken::tokenIdentifier)
         PersistentFungibleToken::amount.sum(groupByColumns = groups)
@@ -92,34 +92,34 @@ private fun <T : TokenType> sumTokenCriteria(embeddableToken: T): QueryCriteria 
 }
 
 // Abstracts away the nasty 'otherResults' part of the vault query API.
-private fun <T : TokenType> rowsToAmount(embeddableToken: T, rows: Vault.Page<FungibleToken<T>>): Amount<T> {
+private fun <T : TokenType> rowsToAmount(token: T, rows: Vault.Page<FungibleToken<T>>): Amount<T> {
     return if (rows.otherResults.isEmpty()) {
-        Amount(0L, embeddableToken)
+        Amount(0L, token)
     } else {
         require(rows.otherResults.size == 3) { "Invalid number of rows returned by query." }
         // The class and identifier are also returned in indexes 1 and 2 but we can discard them.
         val quantity = rows.otherResults[0] as Long
-        Amount(quantity, embeddableToken)
+        Amount(quantity, token)
     }
 }
 
 /** General queries. */
 
 // Get all owned token amounts for a specific token, ignoring the issuer.
-fun <T : TokenType> VaultService.ownedTokenAmountsByToken(embeddableToken: T): Vault.Page<FungibleToken<T>> {
-    return queryBy(ownedTokenAmountCriteria(embeddableToken))
+fun <T : TokenType> VaultService.ownedTokenAmountsByToken(token: T): Vault.Page<FungibleToken<T>> {
+    return queryBy(ownedTokenAmountCriteria(token))
 }
 
 // Get all owned tokens for a specific token, ignoring the issuer.
-fun <T : TokenType> VaultService.ownedTokensByToken(embeddableToken: T): Vault.Page<NonFungibleToken<T>> {
-    return queryBy(ownedTokenCriteria(embeddableToken))
+fun <T : TokenType> VaultService.ownedTokensByToken(token: T): Vault.Page<NonFungibleToken<T>> {
+    return queryBy(ownedTokenCriteria(token))
 }
 
 /** TokenType balances. */
 
 // We need to group the sum by the token class and token identifier.
-fun <T : TokenType> VaultService.tokenBalance(embeddableToken: T): Amount<T> {
-    val query = ownedTokenAmountCriteria(embeddableToken).and(sumTokenCriteria(embeddableToken))
+fun <T : TokenType> VaultService.tokenBalance(token: T): Amount<T> {
+    val query = ownedTokenAmountCriteria(token).and(sumTokenCriteria(token))
     val result = queryBy<FungibleToken<T>>(query)
-    return rowsToAmount(embeddableToken, result)
+    return rowsToAmount(token, result)
 }

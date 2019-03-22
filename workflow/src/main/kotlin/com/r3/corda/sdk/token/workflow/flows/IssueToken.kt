@@ -18,6 +18,7 @@ import net.corda.core.node.StatesToRecord
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.unwrap
 
 /**
@@ -28,19 +29,19 @@ import net.corda.core.utilities.unwrap
  * @param owner the party which is the recipient of the token or amount of tokens
  * @param notary the notary which will be used for the owned token state. Currently the same notary must be used for the
  * token and the owned token if it contains an evolvable pointer.
- * @param token the type of token which will be issued. This can either be a [FixedToken] or a [TokenPointer]. Both
- * types are [EmbeddableToken]s as specified by the type parameter [T]. Fixed tokens are token definitions which can be
- * inlined into an owned token state. They are the most straight-forward token type to use. [FixedToken]s are mainly
+ * @param token the type of token which will be issued. This can either be a [FixedTokenType] or a [TokenPointer]. Both
+ * types are [TokenType]s as specified by the type parameter [T]. Fixed tokens are token definitions which can be
+ * inlined into an owned token state. They are the most straight-forward token type to use. [FixedTokenType]s are mainly
  * used for things like [Money] which rarely change, if at all. For other types of token which have properties that are
  * expected to change over time, we use the [TokenPointer]. The [TokenPointer] points to an [EvolvableToken] which is
  * a [LinearState] that contains the details of the token. The token which is provided is not wrapped with an [IssuedTokenType]
  * object, instead, the issuer becomes the party which invokes this flow. This makes sense because it is impossible to
  * have an issuer other than the node which invokes the [IssueToken.Initiator] flow.
  * @param amount the amount of the token to be issued. Note that this can be set to null. If it is set to null then an
- * [OwnedToken] state is issued. This state wraps a [IssuedTokenType] [EmbeddableToken] with an [owner]. The [EmbeddableToken] is
- * non-fungible inside [OwnedToken]s - they cannot be split or merged because there is only ever one of them. However,
+ * [NonFungibleToken] state is issued. This state wraps an [IssuedTokenType] [TokenType] with an [owner]. The [TokenType] is
+ * non-fungible inside [NonFungibleToken]s - they cannot be split or merged because there is only ever one of them. However,
  * if an amount is specified, then that many tokens will be issued using an [FungibleToken] state. Currently, there
- * will be a single [FungibleToken] state issued for the amount of [IssuedTokenType] [EmbeddableToken] specified. Note that
+ * will be a single [FungibleToken] state issued for the amount of [IssuedTokenType] [TokenType] specified. Note that
  * if an amount of ONE is specified and the token has fraction digits set to "0.1" then that ONE token could be split
  * into TEN atomic units of the token. Likewise, if the token has fraction digits set to "0.01", then that ONE token
  * could be split into ONE HUNDRED atomic units of the token.
@@ -69,6 +70,20 @@ object IssueToken {
             val anonymous: Boolean = true
     ) : FlowLogic<SignedTransaction>() {
 
+        companion object {
+            object ISSUANCE_NOTIFICATION : ProgressTracker.Step("Sending issuance notification to counterparty.")
+            object REQUEST_CONF_ID : ProgressTracker.Step("Requesting confidential identity.")
+            object DIST_LIST : ProgressTracker.Step("Adding party to distribution list.")
+            object SIGNING : ProgressTracker.Step("Signing transaction proposal.")
+            object RECORDING : ProgressTracker.Step("Recording signed transaction.") {
+                override fun childProgressTracker() = FinalityFlow.tracker()
+            }
+
+            fun tracker() = ProgressTracker(ISSUANCE_NOTIFICATION, REQUEST_CONF_ID, DIST_LIST, SIGNING, RECORDING)
+        }
+
+        override val progressTracker: ProgressTracker = tracker()
+
         @Suspendable
         override fun call(): SignedTransaction {
             // This is the identity which will be used to issue tokens.
@@ -76,12 +91,14 @@ object IssueToken {
             val me: Party = ourIdentity
             val ownerSession = initiateFlow(owner)
 
+            progressTracker.currentStep = ISSUANCE_NOTIFICATION
             // Notify the recipient that we'll be issuing them a tokens and advise them of anything they must do, e.g.
             // generate a confidential identity for the issuer or sign up for updates for evolvable tokens.
             ownerSession.send(TokenIssuanceNotification(anonymous = anonymous))
 
             // This is the recipient of the tokens identity.
             val owningParty: AbstractParty = if (anonymous) {
+                progressTracker.currentStep = REQUEST_CONF_ID
                 subFlow(RequestConfidentialIdentity.Initiator(ownerSession)).party.anonymise()
             } else owner
 
@@ -106,19 +123,25 @@ object IssueToken {
             // token maintainer, and in turn, the recipients of those tokens from the issuer would sign up to updates
             // from the issuer, this way the token updates proliferate through the network.
             if (token is TokenPointer<*>) {
+                progressTracker.currentStep = DIST_LIST
                 subFlow(AddPartyToDistributionList(owner, token.pointer.pointer))
             }
 
             // Create the transaction.
             val transactionState: TransactionState<AbstractToken> = ownedToken withNotary notary
             val utx: TransactionBuilder = TransactionBuilder(notary = notary).apply {
-                addCommand(data = IssueTokenCommand(issuedToken), keys = me.owningKey)
+                addCommand(data = IssueTokenCommand(issuedToken), keys = listOf(me.owningKey))
                 addOutputState(state = transactionState)
             }
+            progressTracker.currentStep = SIGNING
             // Sign the transaction. Only Concrete Parties should be used here.
             val stx: SignedTransaction = serviceHub.signInitialTransaction(utx)
             // No need to pass in a session as there's no counterparty involved.
-            return subFlow(FinalityFlow(transaction = stx, sessions = listOf(ownerSession)))
+            progressTracker.currentStep = RECORDING
+            return subFlow(FinalityFlow(transaction = stx,
+                    progressTracker = RECORDING.childProgressTracker(),
+                    sessions = listOf(ownerSession)
+            ))
         }
     }
 

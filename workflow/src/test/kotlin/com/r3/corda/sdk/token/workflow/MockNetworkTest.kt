@@ -87,7 +87,7 @@ abstract class MockNetworkTest(val numberOfNodes: Int) {
     }
 
     fun <T : TokenType> StartedMockNode.issueTokens(
-            embeddableToken: T,
+            token: T,
             owner: StartedMockNode,
             notary: StartedMockNode,
             amount: Amount<T>? = null,
@@ -95,7 +95,7 @@ abstract class MockNetworkTest(val numberOfNodes: Int) {
     ): CordaFuture<SignedTransaction> {
         return transaction {
             startFlow(IssueToken.Initiator(
-                    token = embeddableToken,
+                    token = token,
                     owner = owner.legalIdentity(),
                     notary = notary.legalIdentity(),
                     amount = amount,
@@ -105,14 +105,14 @@ abstract class MockNetworkTest(val numberOfNodes: Int) {
     }
 
     fun <T : TokenType> StartedMockNode.moveTokens(
-            embeddableToken: T,
+            token: T,
             owner: StartedMockNode,
             amount: Amount<T>? = null,
             anonymous: Boolean = true
     ): CordaFuture<SignedTransaction> {
         return transaction {
             startFlow(MoveToken.Initiator(
-                    ownedToken = embeddableToken,
+                    ownedToken = token,
                     owner = owner.legalIdentity(),
                     amount = amount,
                     anonymous = anonymous

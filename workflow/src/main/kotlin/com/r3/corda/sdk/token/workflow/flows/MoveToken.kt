@@ -75,10 +75,10 @@ object MoveToken {
         override fun call(): SignedTransaction {
             // Receive a move notification from the issuer. It tells us if we need to sign up for token updates or
             // generate a confidential identity.
-            val issuanceNotification = otherSession.receive<TokenMoveNotification>().unwrap { it }
+            val moveNotification = otherSession.receive<TokenMoveNotification>().unwrap { it }
 
             // Generate and send over a new confidential identity, if necessary.
-            if (issuanceNotification.anonymous) {
+            if (moveNotification.anonymous) {
                 subFlow(RequestConfidentialIdentity.Responder(otherSession))
             }
 
