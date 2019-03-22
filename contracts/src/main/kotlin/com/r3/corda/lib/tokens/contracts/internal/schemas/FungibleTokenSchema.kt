@@ -35,7 +35,7 @@ class PersistentFungibleToken(
         // The fully qualified class name of the class which implements the token tokenType.
         // This is either a fixed token or a evolvable token.
         @Column(name = "token_class", nullable = false)
-        var tokenClass: String,
+        var tokenClass: Class<*>,
 
         // This can either be a symbol or a linearID depending on whether the token is evolvable or fixed.
         // Not all tokens will have identifiers if there is only one instance for a token class, for example.
