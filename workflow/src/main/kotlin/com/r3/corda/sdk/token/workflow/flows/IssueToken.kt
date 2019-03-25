@@ -73,20 +73,20 @@ object IssueToken {
         override fun call(): SignedTransaction {
             // This is the identity which will be used to issue tokens.
             val me: Party = ourIdentity
-            var ownerSession : FlowSession? = null
-            // This is the recipient of the tokens identity.
-            val owningParty: AbstractParty
     
-            if(me != owner) {
-                // We also need a session for the other side.
-                ownerSession = initiateFlow(owner)
+            // We also need a session for the other side.
+            var ownerSession : FlowSession? = if(me != owner) {
                 // Notify the recipient that we'll be issuing them a tokens and advise them of anything they must do, e.g.
                 // generate a confidential identity for the issuer or sign up for updates for evolvable tokens.
-                ownerSession.send(TokenIssuanceNotification(anonymous = anonymous))
-                owningParty = if (anonymous) subFlow(RequestConfidentialIdentity.Initiator(ownerSession)).party.anonymise() else owner
-            } else {
-                owningParty = owner
-            }
+                val session = initiateFlow(owner)
+                session.send(TokenIssuanceNotification(anonymous = anonymous))
+                session
+            } else  null
+    
+            // This is the recipient of the tokens identity.
+            val owningParty: AbstractParty = if(ownerSession != null )
+                subFlow(RequestConfidentialIdentity.Initiator(ownerSession)).party.anonymise()
+            else owner
 
             // Create the issued token. We add this to the commands for grouping.
             val issuedToken: IssuedTokenType<T> = token issuedBy me
