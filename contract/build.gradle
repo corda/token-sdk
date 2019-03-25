@@ -7,7 +7,6 @@ buildscript {
     }
 }
 
-
 apply plugin: 'kotlin-jpa'
 apply plugin: 'net.corda.plugins.cordapp'
 
@@ -54,4 +53,8 @@ cordapp {
     signing {
         enabled false
     }
+}
+
+jar {
+    baseName 'tokens-contract'
 }

@@ -9,20 +9,6 @@ buildscript {
 
 apply plugin: 'net.corda.plugins.cordapp'
 
-cordapp {
-    targetPlatformVersion 4
-    minimumPlatformVersion 4
-    contract {
-        name "Token SDK money definitions"
-        vendor "R3"
-        licence "Apache 2"
-        versionId 1
-    }
-    signing {
-        enabled false
-    }
-}
-
 sourceSets {
     main {
         resources {
@@ -53,4 +39,22 @@ dependencies {
 
     // CorDapp dependencies.
     cordapp project(":contract")
+}
+
+cordapp {
+    targetPlatformVersion 4
+    minimumPlatformVersion 4
+    contract {
+        name "Token SDK money definitions"
+        vendor "R3"
+        licence "Apache 2"
+        versionId 1
+    }
+    signing {
+        enabled false
+    }
+}
+
+jar {
+    baseName 'tokens-money'
 }

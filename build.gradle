@@ -37,7 +37,7 @@ plugins {
 
 allprojects {
     version "1.0-SNAPSHOT"
-    group "com.r3.tokens-sdk"
+    group "com.r3.corda.lib"
 
     configurations.all {
         resolutionStrategy {
@@ -88,17 +88,19 @@ subprojects {
 
 def publishProjects = subprojects
 
-configure(publishProjects) { subproject ->
+configure(publishProjects) { subProject ->
+
+    println subProject
     apply plugin: 'kotlin'
     apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.artifactory'
 
-    task sourceJar(type: Jar, dependsOn: subproject.classes) {
+    task sourceJar(type: Jar, dependsOn: subProject.classes) {
         classifier = 'sources'
         from sourceSets.main.allSource
     }
 
-    task javadocJar(type: Jar, dependsOn: subproject.javadoc) {
+    task javadocJar(type: Jar, dependsOn: subProject.javadoc) {
         classifier = 'javadoc'
         from javadoc.destinationDir
     }
@@ -107,16 +109,17 @@ configure(publishProjects) { subproject ->
 
     publishing {
         publications {
-            create(subproject.name, MavenPublication) {
+            create(subProject.name, MavenPublication) {
+
                 from components.java
 
-                groupId subproject.group
-                artifactId subproject.name
+                groupId subProject.group
+                artifactId subProject.tasks.getByName("jar").baseName
                 artifact tasks.sourceJar
                 artifact tasks.javadocJar
 
                 pom {
-                    description = subproject.description
+                    description = subProject.description
                 }
             }
         }
@@ -128,7 +131,7 @@ artifactory {
     publish {
         contextUrl = 'https://ci-artifactory.corda.r3cev.com/artifactory'
         repository {
-            repoKey = 'corda-tokens-dev'
+            repoKey = 'corda-lib-dev'
             username = System.getenv('CORDA_ARTIFACTORY_USERNAME') ?: System.getProperty('corda.artifactory.username')
             password = System.getenv('CORDA_ARTIFACTORY_PASSWORD') ?: System.getProperty('corda.artifactory.password')
         }
