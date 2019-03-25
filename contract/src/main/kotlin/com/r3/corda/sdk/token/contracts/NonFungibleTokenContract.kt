@@ -5,6 +5,7 @@ import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
 import com.r3.corda.sdk.token.contracts.types.IssuedTokenType
 import com.r3.corda.sdk.token.contracts.types.TokenType
 import net.corda.core.contracts.CommandWithParties
+import net.corda.core.internal.WaitForStateConsumption.Companion.logger
 import net.corda.core.transactions.LedgerTransaction
 
 /**
@@ -51,13 +52,13 @@ class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken<TokenTyp
         require(group.inputs.isNotEmpty()) { "When moving a token, there must be one input state present." }
         require(group.outputs.isNotEmpty()) { "When moving a token, there must be one output state present." }
         // Sum the amount of input and output tokens.
-        require(group.inputs.single() == group.outputs.single()) {
+        require(group.inputs.single().token == group.outputs.single().token) {
             "When moving a token, there must be an input and corresponding output for that token."
         }
         // There should only be one move command with one signature.
         // TODO: Split this check out so that we ensure there is only one command, THEN one signer.
-        require(token.issuer.owningKey == moveCommands.single().signers.single()) {
-            "The issuer must be the only signing party when a token is issued."
+        require(group.inputs.single().holder.owningKey == moveCommands.single().signers.single()) {
+            "The current holder must be the only signing party when a nonfungible (discrete) token is moved."
         }
     }
 
