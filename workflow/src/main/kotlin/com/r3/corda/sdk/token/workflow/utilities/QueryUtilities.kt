@@ -10,6 +10,7 @@ import net.corda.core.contracts.Amount
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.identity.Party
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.VaultService
@@ -47,6 +48,15 @@ fun getDistributionList(services: ServiceHub, linearId: UniqueIdentifier): List<
 // TODO: Add queries for getting the balance of all tokens, not just relevant ones.
 // TODO: Allow discrimination by issuer or a set of issuers.
 
+// Returns all owned token amounts of a specified token with given issuer.
+// We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
+internal fun <T: TokenType> tokenAmountWithIssuerCriteria(token: T, issuer: Party): QueryCriteria {
+    val issuerCriteria = QueryCriteria.VaultCustomQueryCriteria(builder {
+        PersistentFungibleToken::issuer.equal(issuer)
+    })
+    return ownedTokenAmountCriteria(token).and(issuerCriteria)
+}
+
 // Returns all owned token amounts of a specified token.
 // We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
 internal fun <T : TokenType> ownedTokenAmountCriteria(token: T): QueryCriteria {
@@ -83,7 +93,7 @@ private fun <T : TokenType> ownedTokenCriteria(token: T): QueryCriteria {
 // For summing tokens of a specified type.
 // NOTE: Issuer is ignored with this query criteria.
 // NOTE: It only returns relevant states.
-private fun <T : TokenType> sumTokenCriteria(token: T): QueryCriteria {
+private fun sumTokenCriteria(): QueryCriteria {
     val sum = builder {
         val groups = listOf(PersistentFungibleToken::tokenClass, PersistentFungibleToken::tokenIdentifier)
         PersistentFungibleToken::amount.sum(groupByColumns = groups)
@@ -119,7 +129,26 @@ fun <T : TokenType> VaultService.ownedTokensByToken(token: T): Vault.Page<NonFun
 
 // We need to group the sum by the token class and token identifier.
 fun <T : TokenType> VaultService.tokenBalance(token: T): Amount<T> {
-    val query = ownedTokenAmountCriteria(token).and(sumTokenCriteria(token))
+    val query = ownedTokenAmountCriteria(token).and(sumTokenCriteria())
     val result = queryBy<FungibleToken<T>>(query)
     return rowsToAmount(token, result)
+}
+
+// We need to group the sum by the token class and token identifier takes issuer into consideration.
+fun <T : TokenType> VaultService.tokenBalanceForIssuer(token: T, issuer: Party): Amount<T> {
+    val query = tokenAmountWithIssuerCriteria(token, issuer).and(sumTokenCriteria())
+    val result = queryBy<FungibleToken<T>>(query)
+    return rowsToAmount(token, result)
+}
+
+// TODO Add function to return balances grouped by issuers?
+
+/* Queries with criteria. Eg. with issuer etc. */
+
+// Get NonFungibleToken with issuer.
+fun <T : TokenType> VaultService.ownedTokensByTokenIssuer(token: T, issuer: Party): Vault.Page<NonFungibleToken<T>> {
+    val issuerCriteria = QueryCriteria.VaultCustomQueryCriteria(builder {
+        PersistentNonFungibleToken::issuer.equal(issuer)
+    })
+    return queryBy(ownedTokenCriteria(token).and(issuerCriteria))
 }

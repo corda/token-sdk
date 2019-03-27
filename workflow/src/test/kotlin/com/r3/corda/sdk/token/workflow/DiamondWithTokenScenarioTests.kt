@@ -49,7 +49,7 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
         // Denise issues the token to Alice
         val diamondPointer = publishedDiamond.state.data.toPointer<DiamondCertificate.State>()
         val issueTokenTx = denise.issueTokens(
-                embeddableToken = diamondPointer,
+                token = diamondPointer,
                 owner = alice,
                 notary = NOTARY,
                 anonymous = true

@@ -129,16 +129,21 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
     fun <T : TokenType> generateMove(
             builder: TransactionBuilder,
             amount: Amount<T>,
-            recipient: AbstractParty
+            recipient: AbstractParty,
+            queryCriteria: QueryCriteria? = null
     ): Pair<TransactionBuilder, List<PublicKey>> {
-        return generateMove(builder, listOf(PartyAndAmount(recipient, amount)))
+        return generateMove(builder, listOf(PartyAndAmount(recipient, amount)), queryCriteria)
     }
 
-    /** Mutates builder. */
+    /** Mutates builder.
+     * If query criteria is not specified then only owned token amounts are used. Use [QueryUtilities.tokenAmountWithIssuerCriteria]
+     * to specify issuer.
+     */
     @Suspendable
     fun <T : TokenType> generateMove(
             builder: TransactionBuilder,
-            partyAndAmounts: List<PartyAndAmount<T>>
+            partyAndAmounts: List<PartyAndAmount<T>>,
+            queryCriteria: QueryCriteria? = null
     ): Pair<TransactionBuilder, List<PublicKey>> {
         // Grab some tokens from the vault and soft-lock.
         // Only supports moves of the same token instance currently.
@@ -146,8 +151,11 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
         // The way to do this will be to perform a query for each token type. If there are multiple token types then
         // just do all the below however many times is necessary.
         val totalRequired = partyAndAmounts.map { it.amount }.sumOrThrow()
-        val acceptableStates = attemptSpend(totalRequired, builder.lockId)
-
+        val additionalCriteria = queryCriteria ?: ownedTokenAmountCriteria(totalRequired.token)
+        val acceptableStates = attemptSpend(totalRequired, builder.lockId, additionalCriteria)
+        require(acceptableStates.isNotEmpty()) {
+            "No states matching given criteria to generate move."
+        }
         // Provide a key to send any change to. Currently token selection is done only for the node operator.
         // TODO: Generalise this so it can be done for any "account".
         val nodeIdentity = services.myInfo.legalIdentitiesAndCerts.first()
