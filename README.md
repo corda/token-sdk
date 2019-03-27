@@ -4,6 +4,8 @@
 
 # Corda Token SDK
 
+### !!! REMEMBER: THIS PROJECT IS OPEN SOURCE - THAT MEANS YOU CAN SUBMIT PULL REQUESTS TO ADD THE FUNCTIONALITY YOU NEED IF IT IS NOT CURRNETLY AVAILABLE. !!!
+
 ## What is the token SDK?
 
 The token SDK is a set of libraries which provide CorDapp developers
