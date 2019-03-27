@@ -3,6 +3,7 @@ package com.r3.corda.sdk.token.workflow
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
 import com.r3.corda.sdk.token.contracts.types.FixedTokenType
+import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.sumTokensOrThrow
 import com.r3.corda.sdk.token.money.BTC
 import com.r3.corda.sdk.token.money.GBP
@@ -10,6 +11,7 @@ import com.r3.corda.sdk.token.money.USD
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountsByToken
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokensByToken
 import com.r3.corda.sdk.token.workflow.utilities.tokenBalance
+import com.r3.corda.sdk.token.workflow.utilities.tokenBalanceForIssuer
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.queryBy
 import net.corda.core.node.services.vault.QueryCriteria
@@ -24,11 +26,13 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
 
     lateinit var A: StartedMockNode
     lateinit var I: StartedMockNode
+    lateinit var I2: StartedMockNode
 
     @Before
     override fun initialiseNodes() {
         A = nodes[0]
-        I = nodes[2]
+        I = nodes[1]
+        I2 = nodes[2]
     }
 
     // List of tokens to create for the tests.
@@ -112,4 +116,13 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
         assertEquals(gbpTokens.sumTokensOrThrow(), gbpBalance)
     }
 
+    @Test
+    fun `query for sum of an owned token amount by issuer`() {
+        I2.issueTokens(GBP, A, NOTARY, 13.GBP).getOrThrow()
+        // Perform a custom query to get the balance for a specific token type.
+        val gbpBalanceI = A.services.vaultService.tokenBalanceForIssuer(GBP, I.legalIdentity())
+        val gbpBalanceI2 = A.services.vaultService.tokenBalanceForIssuer(GBP, I2.legalIdentity())
+        assertEquals(gbpTokens.sumTokensOrThrow(), gbpBalanceI)
+        assertEquals(13.GBP, gbpBalanceI2)
+    }
 }
