@@ -7,8 +7,8 @@ import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
 import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.workflow.selection.TokenSelection
 import com.r3.corda.sdk.token.workflow.selection.generateExitNonFungible
-import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountWithIssuerCriteria
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokensByTokenIssuer
+import com.r3.corda.sdk.token.workflow.utilities.tokenAmountWithIssuerCriteria
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.CollectSignaturesFlow
@@ -84,7 +84,7 @@ object RedeemToken {
                 ownedTokenStateAndRef
             } else {
                 val tokenSelection = TokenSelection(serviceHub)
-                val queryCriteria = ownedTokenAmountWithIssuerCriteria(amount.token, issuer)
+                val queryCriteria = tokenAmountWithIssuerCriteria(amount.token, issuer)
                 val fungibleStates = tokenSelection.attemptSpend(amount, TransactionBuilder().lockId, queryCriteria) // TODO We shouldn't expose lockId in this function
                 checkSameNotary(fungibleStates)
                 fungibleStates

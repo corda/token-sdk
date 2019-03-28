@@ -3,21 +3,17 @@ package com.r3.corda.sdk.token.workflow
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
 import com.r3.corda.sdk.token.contracts.types.FixedTokenType
-import com.r3.corda.sdk.token.contracts.types.IssuedTokenType
 import com.r3.corda.sdk.token.contracts.utilities.issuedBy
-import com.r3.corda.sdk.token.contracts.utilities.of
 import com.r3.corda.sdk.token.contracts.utilities.sumTokensOrThrow
 import com.r3.corda.sdk.token.money.BTC
-import com.r3.corda.sdk.token.money.FiatCurrency
 import com.r3.corda.sdk.token.money.GBP
 import com.r3.corda.sdk.token.money.USD
-import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountWithIssuerCriteria
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountsByToken
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokensByToken
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokensByTokenIssuer
+import com.r3.corda.sdk.token.workflow.utilities.tokenAmountWithIssuerCriteria
 import com.r3.corda.sdk.token.workflow.utilities.tokenBalance
 import com.r3.corda.sdk.token.workflow.utilities.tokenBalanceForIssuer
-import net.corda.core.contracts.Amount
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.queryBy
 import net.corda.core.node.services.vault.QueryCriteria
@@ -42,7 +38,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     }
 
     // List of tokens to create for the tests.
-    private val gbpTokens = listOf(100.GBP, 50.GBP, 25.GBP, 13.GBP)
+    private val gbpTokens = listOf(100.GBP, 50.GBP, 25.GBP)
     private val usdTokens = listOf(200.USD, 100.USD)
     private val btcTokens = listOf(500.BTC)
     private val allTokens = gbpTokens + usdTokens + btcTokens
@@ -68,7 +64,6 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
         I.issueTokens(USD, A, NOTARY, 200.USD).getOrThrow()
         I.issueTokens(USD, A, NOTARY, 100.USD).getOrThrow()
         I.issueTokens(BTC, A, NOTARY, 500.BTC).getOrThrow()
-        I2.issueTokens(GBP, A, NOTARY, 13.GBP)
         // Non-fungible tokens.
         I.issueTokens(fooToken, A, NOTARY)
         I.issueTokens(barToken, A, NOTARY)
@@ -134,13 +129,16 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
         assertEquals(gbpTokens.sumTokensOrThrow(), gbpBalanceI)
         assertEquals(13.GBP, gbpBalanceI2)
     }
+
     @Test
     fun `query owned token amounts with given issuer`() {
         // Fungible
-        val issuerCriteria = ownedTokenAmountWithIssuerCriteria(GBP, I2.legalIdentity())
+        val issueTx = I2.issueTokens(GBP, A, NOTARY, 13.GBP).getOrThrow()
+        A.watchForTransaction(issueTx.id).getOrThrow()
+        val issuerCriteria = tokenAmountWithIssuerCriteria(GBP, I2.legalIdentity())
         val gbpI2 = A.services.vaultService.queryBy<FungibleToken<*>>(issuerCriteria).states
         assertEquals(1, gbpI2.size)
-        val gbp = gbpI2.first().state.data.amount// as Amount<IssuedTokenType<FiatCurrency>>
+        val gbp = gbpI2.first().state.data.amount
         assertEquals(13.GBP issuedBy I2.legalIdentity(), gbp)
     }
 
