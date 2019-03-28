@@ -250,7 +250,7 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
         // Choose states to cover amount - return ones used, and change output
         val changeOutput = change(exitStates, amount, changeOwner)
         val moveKey = firstState.holder.owningKey
-        val issuerKey = firstState.issuer.owningKey
+        val issuerKey = firstState.amount.token.issuer.owningKey
         val redeemCommand = RedeemTokenCommand(firstState.amount.token)
         builder.apply {
             exitStates.forEach { addInputState(it) }
@@ -261,7 +261,7 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
 
     private fun <T : TokenType> change(exitStates: List<StateAndRef<FungibleToken<T>>>, amount: Amount<T>, changeOwner: AbstractParty): FungibleToken<T>? {
         val assetsSum = exitStates.sumTokenStateAndRefs()
-        val difference = assetsSum - amount.issuedBy(exitStates.first().state.data.issuer)
+        val difference = assetsSum - amount.issuedBy(exitStates.first().state.data.amount.token.issuer)
         check(difference.quantity >= 0) {
             "Sum of exit states should be qual or greater than the amount to exit."
         }

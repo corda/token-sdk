@@ -36,7 +36,7 @@ fun <T: TokenType> generateMoveNonFungible(vaultService: VaultService, ownedToke
 // All check should be performed before.
 fun <T: TokenType> generateExitNonFungible(txBuilder: TransactionBuilder, moveStateAndRef: StateAndRef<NonFungibleToken<T>>) {
     val nonFungibleToken = moveStateAndRef.state.data // TODO What if redeeming many non-fungible assets.
-    val issuerKey = nonFungibleToken.issuer.owningKey
+    val issuerKey = nonFungibleToken.token.issuer.owningKey
     val moveKey = nonFungibleToken.holder.owningKey
     val redeemCommand = RedeemTokenCommand(nonFungibleToken.token)
     txBuilder.apply {

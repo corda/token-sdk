@@ -277,6 +277,11 @@ class FungibleTokenTests {
                 command(ISSUER.publicKey, RedeemTokenCommand(issuedToken))
                 this `fails with` "Contract verification failed: Owners of redeemed states must be the signing parties."
             }
+            // Add the redeem command, signed by the holder but not issuer.
+            tweak {
+                command(ALICE.publicKey, RedeemTokenCommand(issuedToken))
+                this `fails with` "Contract verification failed: The issuer must be the signing party when an amount of tokens are redeemed."
+            }
             // Add the redeem command, signed by the ISSUER and ALICE - owner. Zero outputs.
             tweak {
                 command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
@@ -306,8 +311,7 @@ class FungibleTokenTests {
                 verifies()
             }
 
-            // TODO This should fail?
-            // Add the redeem command, signed by the ISSUER and ALICE - owner. One output - but different owner. Fail.
+            // Add the redeem command, signed by the ISSUER and ALICE - owner. One output - but different owner, can happen with anonymous keys.
             tweak {
                 command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
                 // Return change back to BOB.

@@ -33,7 +33,6 @@ data class IssueTokenCommand<T : TokenType>(override val token: IssuedTokenType<
  * @property token the group of [IssuedTokenType]s this command should be tied to.
  * @param T the [TokenType].
  */
-// TODO I find this surprising that this command takes IssuedTokenType<T> as argument, when the only thing it needs is type.
 data class MoveTokenCommand<T : TokenType>(override val token: IssuedTokenType<T>) : TokenCommand<T>
 
 /**

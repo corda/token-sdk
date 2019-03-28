@@ -76,13 +76,14 @@ object RedeemToken {
 
             progressTracker.currentStep = SELECTING_STATES
             val exitStateAndRefs = if (amount == null) {
-                // TODO We should be able to figure out the issuer based on the issuer of this token.
+                // NonFungibleToken path.
                 val ownedTokenStateAndRef = serviceHub.vaultService.ownedTokensByTokenIssuer(ownedToken, issuer).states
                 check(ownedTokenStateAndRef.size == 1) {
                     "Exactly one owned token of a particular type $ownedToken should be in the vault at any one time."
                 }
                 ownedTokenStateAndRef
             } else {
+                // FungibleToken path.
                 val tokenSelection = TokenSelection(serviceHub)
                 val queryCriteria = tokenAmountWithIssuerCriteria(amount.token, issuer)
                 val fungibleStates = tokenSelection.attemptSpend(amount, TransactionBuilder().lockId, queryCriteria) // TODO We shouldn't expose lockId in this function
@@ -123,7 +124,7 @@ object RedeemToken {
             }
             checkSameIssuer(stateAndRefsToRedeem, ourIdentity)
             checkSameNotary(stateAndRefsToRedeem)
-            checkOwner(serviceHub.identityService, stateAndRefsToRedeem)
+            checkOwner(serviceHub.identityService, stateAndRefsToRedeem, otherSession.counterparty)
             val notary = stateAndRefsToRedeem.first().state.notary
             val txBuilder = TransactionBuilder(notary = notary)
             if (redeemNotification.amount == null) {
@@ -151,22 +152,32 @@ object RedeemToken {
     // were issued by this issuer.
     @Suspendable
     private fun checkSameIssuer(stateAndRefs: List<StateAndRef<AbstractToken>>, issuer: Party? = null) {
-        val issuerToCheck = issuer ?: stateAndRefs.first().state.data.issuer
-        check(stateAndRefs.all { it.state.data.issuer == issuerToCheck }) {
+        val issuerToCheck = issuer ?: stateAndRefs.first().state.data.issuer()
+        check(stateAndRefs.all { it.state.data.issuer() == issuerToCheck }) {
             "Tokens with different issuers."
+        }
+    }
+
+    @Suspendable
+    private fun AbstractToken.issuer(): Party? {
+        return when (this) {
+            is FungibleToken<*> -> amount.token.issuer
+            is NonFungibleToken<*> -> token.issuer
+            else -> null
         }
     }
 
     // Check if owner of the states is well known. Check if states come from the same owner.
     @Suspendable
-    private fun checkOwner(identityService: IdentityService, stateAndRefs: List<StateAndRef<AbstractToken>>) {
+    private fun checkOwner(identityService: IdentityService, stateAndRefs: List<StateAndRef<AbstractToken>>, counterparty: Party) {
+        // TODO What if the issuer doesn't have confidential identities, do sync identities flow
+        // TODO Add some tests for that
         val owners = stateAndRefs.map { identityService.wellKnownPartyFromAnonymous(it.state.data.holder) }
         check(owners.all { it != null }) {
             "Received states with owner that we don't know about."
         }
-        // TODO Think of this situation, what if owner has multiple keys? For now not supported.
-        check(owners.toSet().size == 1) {
-            "Received states that come from different owners"
+        check(owners.all { it == counterparty }) {
+            "Received states that don't come from counterparty that initiated the flow."
         }
     }
 }

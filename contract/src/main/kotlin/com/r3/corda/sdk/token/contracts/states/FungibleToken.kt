@@ -56,8 +56,6 @@ open class FungibleToken<T : TokenType>(
 
     override fun supportedSchemas() = listOf(FungibleTokenSchemaV1)
 
-    override val issuer: Party get() = amount.token.issuer
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is FungibleToken<*>) return false
