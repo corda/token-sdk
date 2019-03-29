@@ -19,6 +19,10 @@
 * Addition of contracts for `FungibleToken` and `NonFungibleToken` which govern how fungible and non fungible tokens can be issued, moved and redeemed.
 * Addition of commands for performing transactions on fungible and non fungible tokens.
 
+**Schemas**
+
+* Addition of object relational mappers for `NonFungibleToken` and `FungibleToken` so that they can be queried from the vault by the following properties: issuer, holder, amount (for fungible tokens) and token type.
+
 **Utilities**
 
 * Addition of kotlin utilities for creating amounts of a `TokenType` or `IssuedTokenType` using the following syntax: `10.TOKEN_TYPE` or `10 of tokenType`.
@@ -27,6 +31,13 @@
 * Addition of kotlin utilities to create a `NonFungibleToken` or `FungibleToken` from an `IssuedTokenType` and a `Party` using the following syntax: `issuedTokenType ownedBy party`
 * Addition of kotlin utilities to assign a notary to a `NonFungibleToken` or `FungibleToken` using the following syntax: `tokens withNotary notary`
 * Addition of utilities for summing lists of `FungibleToken`s.
+
+### Money
+
+* Addition of an abstract `Money` class, that sub-classes `FixedTokenType`, from which all money-like token types should derive.
+* Addition of a `FiatCurrency` class which is a wrapper around `java.util.Currency`. 
+* Addition of a `DigitalCurrency` class which behaves similarly to `FiatCurrency`, it's registry has been populated with the following digital currencies: Bitcoin, Ethereum, Ripple and Dogecoin.
+* Addition of utilities for creating amounts of `Money` using the following syntax `10.GBP`.
 
 ## vNext
 
