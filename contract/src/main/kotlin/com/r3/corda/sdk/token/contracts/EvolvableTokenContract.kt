@@ -31,14 +31,29 @@ abstract class EvolvableTokenContract : Contract {
     abstract fun additionalUpdateChecks(tx: LedgerTransaction)
 
     private fun handleCreate(tx: LedgerTransaction) {
-        require(tx.outputs.size == 1) { "Create evolvable token transactions may only contain one output." }
-        require(tx.inputs.isEmpty()) { "Create evolvable token transactions must not contain any inputs." }
-        val token = tx.singleOutput<EvolvableTokenType>()
+        // Check commands
         val command = tx.commands.requireSingleCommand<Create>()
-        val maintainerKeys = token.maintainers.map { it.owningKey }
-        require(command.signers.toSet() == maintainerKeys.toSet()) {
-            "The token maintainers only must sign the create evolvable token transaction."
+
+        // Check inputs
+        require(tx.inputs.isEmpty()) { "Create evolvable token transactions must not contain any inputs." }
+
+        // Check outputs
+        require(tx.outputs.size == 1) { "Create evolvable token transactions must contain exactly one output." }
+        val token = tx.singleOutput<EvolvableTokenType>()
+        require(token.participants.toSet().containsAll(token.maintainers.toSet())) {
+            "All evolvable token maintainers must also be participants."
         }
+
+        // Check signatures
+        val maintainerKeys = token.maintainers.map { it.owningKey }
+        require(command.signers.containsAll(maintainerKeys.toSet())) {
+            "All evolvable token maintainers must sign the create evolvable token transaction."
+        }
+        require(command.signers.toSet() == maintainerKeys.toSet()) {
+            "Only evolvable token maintainers may sign the create evolvable token transaction."
+        }
+
+        // Perform additional checks as implemented by subclasses
         additionalCreateChecks(tx)
     }
 
@@ -52,6 +67,9 @@ abstract class EvolvableTokenContract : Contract {
         val maintainers = output.maintainers + input.maintainers
         require(command.signers.toSet() == maintainers.map { it.owningKey }.toSet()) {
             "The old and new maintainers all must sign the update evolvable token transaction."
+        }
+        require(output.participants.toSet().containsAll(output.maintainers.toSet())) {
+            "All token maintainers must also be participants."
         }
         additionalUpdateChecks(tx)
     }
