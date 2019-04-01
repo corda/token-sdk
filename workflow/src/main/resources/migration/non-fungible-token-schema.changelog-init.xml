@@ -1,0 +1,31 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd" >
+    <changeSet author="R3.Corda" id="create_non_fungible_token_table_id">
+        <createTable tableName="non_fungible_token">
+            <column name="output_index" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transaction_id" type="NVARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="holder" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="issuer" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="token_class" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="token_identifier" type="NVARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="R3.Corda" id="non_fungible_token_pkey_id">
+        <addPrimaryKey columnNames="output_index, transaction_id" constraintName="non_fungible_token_pkey" tableName="non_fungible_token"/>
+    </changeSet>
+    <changeSet author="R3.Corda" id="owned_token_idx_id">
+        <createIndex indexName="owned_token_idx" tableName="non_fungible_token">
+            <column name="token_class, token_identifier"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
