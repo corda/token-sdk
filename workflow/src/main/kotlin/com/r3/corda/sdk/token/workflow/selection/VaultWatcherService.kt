@@ -11,13 +11,16 @@ import net.corda.core.node.services.Vault
 import net.corda.core.node.services.vault.DEFAULT_PAGE_NUM
 import net.corda.core.node.services.vault.PageSpecification
 import net.corda.core.utilities.contextLogger
+import rx.Observable
+import java.lang.RuntimeException
 import java.security.PublicKey
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.Executors
+import java.util.function.Predicate
 
 @CordaService
-class VaultWatcherService(val appServiceHub: AppServiceHub) {
+class VaultWatcherService(appServiceHub: AppServiceHub? = null) {
 
     companion object {
         val LOG = contextLogger()
@@ -31,20 +34,22 @@ class VaultWatcherService(val appServiceHub: AppServiceHub) {
     //will be used to stop adding and removing AtomicMarkableReference for every single consume / add event.
 
     init {
-        val pageSize = 1000
-        var currentPage = DEFAULT_PAGE_NUM;
-        var (existingStates, observable) = appServiceHub.vaultService.trackBy(FungibleToken::class.java, PageSpecification(pageNumber = currentPage, pageSize = pageSize))
-        val listOfThings = mutableListOf<StateAndRef<FungibleToken<TokenType>>>()
-        while (existingStates.states.isNotEmpty()) {
-            listOfThings.addAll(existingStates.states as Iterable<StateAndRef<FungibleToken<TokenType>>>)
-            existingStates = appServiceHub.vaultService.queryBy(FungibleToken::class.java, PageSpecification(pageNumber = ++currentPage, pageSize = pageSize))
-        }
+        if (appServiceHub != null) {
+            val pageSize = 1000
+            var currentPage = DEFAULT_PAGE_NUM;
+            var (existingStates, observable) = appServiceHub.vaultService.trackBy(FungibleToken::class.java, PageSpecification(pageNumber = currentPage, pageSize = pageSize))
+            val listOfThings = mutableListOf<StateAndRef<FungibleToken<TokenType>>>()
+            while (existingStates.states.isNotEmpty()) {
+                listOfThings.addAll(existingStates.states as Iterable<StateAndRef<FungibleToken<TokenType>>>)
+                existingStates = appServiceHub.vaultService.queryBy(FungibleToken::class.java, PageSpecification(pageNumber = ++currentPage, pageSize = pageSize))
+            }
 
-        listOfThings.forEach(::addTokenToCache)
-        observable.doOnNext(::onVaultUpdate)
+            listOfThings.forEach(::addTokenToCache)
+            (observable as Observable<Vault.Update<FungibleToken<TokenType>>>).doOnNext(::onVaultUpdate)
+        }
     }
 
-    fun onVaultUpdate(t: Vault.Update<FungibleToken<*>>) {
+    fun onVaultUpdate(t: Vault.Update<FungibleToken<TokenType>>) {
         t.consumed.forEach(::removeTokenFromCache)
         t.produced.forEach(::addTokenToCache)
     }
@@ -57,7 +62,7 @@ class VaultWatcherService(val appServiceHub: AppServiceHub) {
         }
     }
 
-    fun addTokenToCache(stateAndRef: StateAndRef<FungibleToken<*>>) {
+    fun addTokenToCache(stateAndRef: StateAndRef<FungibleToken<out TokenType>>) {
         val token = stateAndRef.state.data
         val (owner, type, typeId) = processToken(token)
         val tokensForTypeInfo = getTokenSet(owner, type, typeId)
@@ -67,29 +72,40 @@ class VaultWatcherService(val appServiceHub: AppServiceHub) {
         }
     }
 
+    fun unlockToken(stateAndRef: StateAndRef<FungibleToken<TokenType>>){
+        val token = stateAndRef.state.data
+        val (owner, type, typeId) = processToken(token)
+        val tokensForTypeInfo = getTokenSet(owner, type, typeId)
+        tokensForTypeInfo.replace(stateAndRef, true, false)
+    }
+
     fun selectTokens(
             owner: PublicKey,
-            amountRequested: Amount<IssuedTokenType<*>>
-    ) {
+            amountRequested: Amount<IssuedTokenType<TokenType>>,
+            predicate: Predicate<StateAndRef<FungibleToken<TokenType>>>? = null
+    ): MutableList<StateAndRef<FungibleToken<TokenType>>> {
         val set = getTokenSet(owner, amountRequested.token.tokenType.tokenClass, amountRequested.token.tokenType.tokenIdentifier)
-        val lockedTokens = mutableListOf<StateAndRef<FungibleToken<*>>>()
-        var amountLocked = amountRequested.copy(quantity = 0)
+        val lockedTokens = mutableListOf<StateAndRef<FungibleToken< TokenType>>>()
+        var amountLocked: Amount<IssuedTokenType<TokenType>> = amountRequested.copy(quantity = 0)
         for (tokenStateAndRef in set.keys) {
-            val token = tokenStateAndRef.state.data
-            val existingMark = set.computeIfPresent(tokenStateAndRef) { _, _ ->
-                true
-            }
-            if (existingMark == false) {
-                //TOKEN was unlocked, but now is locked
-                lockedTokens.add(tokenStateAndRef)
-            } else if (existingMark == null) {
-                //TOKEN was removed before we could lock it
-            }
-            amountLocked += token.amount
-            if (amountLocked >= amountRequested) {
-                break
+            //does the token satisfy the (optional) predicate?
+            if (predicate?.test(tokenStateAndRef) != false) {
+                //if so, race to lock the token, expected oldValue = false
+                if (set.replace(tokenStateAndRef, false, true)) {
+                    //we won the race to lock this token
+                    lockedTokens.add(tokenStateAndRef)
+                    val token = tokenStateAndRef.state.data
+                    amountLocked += token.amount
+                    if (amountLocked >= amountRequested) {
+                        break
+                    }
+                }
             }
         }
+        if (amountLocked < amountRequested) {
+            throw InsufficientBalanceException("Could not find enough tokens to satisfy token request")
+        }
+        return lockedTokens
 
     }
 
@@ -115,3 +131,5 @@ class VaultWatcherService(val appServiceHub: AppServiceHub) {
     }
 }
 
+
+class InsufficientBalanceException(message: String) : RuntimeException(message)
