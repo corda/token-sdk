@@ -1,6 +1,5 @@
-package com.r3.corda.sdk.token.contracts.samples
+package com.r3.corda.sdk.token.contracts
 
-import com.r3.corda.sdk.token.contracts.EvolvableTokenContract
 import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.UniqueIdentifier
