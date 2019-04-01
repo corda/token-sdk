@@ -5,7 +5,6 @@ import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
 import com.r3.corda.sdk.token.contracts.commands.Create
 import com.r3.corda.sdk.token.contracts.commands.Update
-import com.r3.corda.sdk.token.contracts.samples.TestEvolvableTokenContract
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.node.NotaryInfo
