@@ -18,6 +18,10 @@ import java.time.Duration
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 
+/**
+ * This test suite is intended to test and demonstrate common scenarios for working with evolvable token types and
+ * non-fungible (discrete) holdable tokens.
+ */
 class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of Corda (GIC)", "Denise", "Alice", "Bob", "Charles") {
 
     lateinit var gic: StartedMockNode
@@ -35,19 +39,32 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
         charles = nodesByName.getValue("Charles")
     }
 
+    /**
+     * This scenario creates a new evolvable token type and issues holdable tokens. It is intended to demonstrate a
+     * fairly typical use case for creating evolvable token types and for issuing discrete (non-fungible) holdable tokens.
+     *
+     * 1. GIC creates (publishes) the diamond grading report
+     * 2. Denise (the diamond dealer) issues a holdable, discrete (non-fungible) token to Alice
+     * 3. Alice transfers the discrete token to Bob
+     * 4. Bob transfers the discrete token to Charles
+     * 5. Charles redeems the holdable token with Denise (perhaps Denise buys back the diamond and plans to issue a new
+     *    holdable token as replacement)
+     *
+     * TODO Implement step 5
+     */
     @Test
-    fun `happy path`() {
+    fun `lifecycle example`() {
         // STEP 01: GIC publishes the diamond certificate
         // GIC publishes and shares with Denise
-        val diamond = DiamondCertificate.State("1.0", DiamondCertificate.ColorScale.D, DiamondCertificate.ClarityScale.FL, DiamondCertificate.CutScale.EXCELLENT, gic.legalIdentity(), denise.legalIdentity())
+        val diamond = DiamondGradingReport.State("1.0", DiamondGradingReport.ColorScale.A, DiamondGradingReport.ClarityScale.A, DiamondGradingReport.CutScale.A, gic.legalIdentity(), denise.legalIdentity())
         val publishDiamondTx = gic.createEvolvableToken(diamond, NOTARY.legalIdentity()).getOrThrow()
-        val publishedDiamond = publishDiamondTx.singleOutput<DiamondCertificate.State>()
+        val publishedDiamond = publishDiamondTx.singleOutput<DiamondGradingReport.State>()
         assertEquals(diamond, publishedDiamond.state.data, "Original diamond did not match the published diamond.")
         denise.watchForTransaction(publishDiamondTx).getOrThrow(Duration.ofSeconds(5))
 
         // STEP 02: Denise creates ownership token
         // Denise issues the token to Alice
-        val diamondPointer = publishedDiamond.state.data.toPointer<DiamondCertificate.State>()
+        val diamondPointer = publishedDiamond.state.data.toPointer<DiamondGradingReport.State>()
         val issueTokenTx = denise.issueTokens(
                 token = diamondPointer,
                 owner = alice,
@@ -74,17 +91,85 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
         assertFails { alice.watchForTransaction(moveTokenToCharlesTx.id).getOrThrow(Duration.ofSeconds(3)) }
     }
 
-    @Test @Ignore
+    /**
+     * This scenario creates a multiple evolvable token types in a single transaction.
+     *
+     * 1. GIC creates (publishes) 3 diamond grading reports
+     */
+    @Test
+    @Ignore
+    fun `create multiple grading reports`() {
+
+    }
+
+    /**
+     * This scenario creates a multiple evolvable token types in a single transaction, and then issues multiple holding
+     * tokens.
+     *
+     * 1. GIC creates (publishes) 3 diamond grading reports
+     * 2. Denise (the diamond dealer) issues 2 holdable tokens to self (perhaps as inventory)
+     */
+    @Test
+    @Ignore
+    fun `issue multiple grading report tokens`() {
+
+    }
+
+    /**
+     * This scenario creates a new evolvable token type and issues holdable tokens to self.
+     *
+     * 1. GIC creates (publishes) the diamond grading report
+     * 2. Denise (the diamond dealer) issues a holdable, discrete (non-fungible) token to herself (perhaps as inventory)
+     */
+    @Test
+    @Ignore
+    fun `issue a grading report token to self`() {
+
+    }
+
+    /**
+     * This scenario creates a new evolvable token type, moves it around, and then issues an update. In this case, only
+     * the current holder (not past holders) should receive an update.
+     *
+     * 1. GIC creates (publishes) the diamond grading report
+     * 2. Denise (the diamond dealer) issues a holdable, discrete (non-fungible) token to Alice
+     * 3. Alice transfers the discrete token to Bob
+     * 4. GIC updates (amends) the grading report
+     */
+    @Test
+    @Ignore
+    fun `update a grading report and inform token holders`() {
+
+    }
+
+    /**
+     * This scenario tests that the token issuer cannot issue two holdable tokens. In practice, this may be challenging
+     * to enforce.
+     *
+     * 1. GIC creates (publishes) the diamond grading report
+     * 2. Denise (the diamond dealer) issues a holdable, discrete (non-fungible) token to Alice
+     * 3. Denise then issues a new holdable, discrete (non-fungible) token to Bob
+     */
+    @Test
+    @Ignore
     fun `denise cannot issue multiple ownership tokens`() {
         // STEP 01: GIC publishes the certificate
 
         // STEP 02: Denise issues an ownership token
 
         // STEP 03: Denise issues another ownership token
-        // Expect to fail here!
     }
 
-    @Test @Ignore
+    /**
+     * This scenario tests that a token holder should not (really) issue a new holdable token. However, in practice this
+     * may be challenging to enforce; rather, participants should consider if they trust the token issuer.
+     *
+     * 1. GIC creates (publishes) the diamond grading report
+     * 2. Denise (the diamond dealer) issues a holdable, discrete (non-fungible) token to Alice
+     * 3. Alice then issues a new holdable, discrete (non-fungible) token to Bob
+     */
+    @Test
+    @Ignore
     fun `alice cannot issue a new ownership token`() {
         // STEP 01: GIC publishes the certificate
 
@@ -93,22 +178,25 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
         // STEP 03: Denise transfers ownership to Alice
 
         // STEP 04: Alice issues another ownership token
-        // Expect to fail here!
     }
 
-    class DiamondCertificate : EvolvableTokenContract(), Contract {
+    /**
+     * The [DiamondGradingReport] is inspired by the grading reports issued by the Gemological Institute of America
+     * (GIA). For more excellent information on diamond grading, please see the (GIA's website)[http://www.gia.edu].
+     */
+    class DiamondGradingReport : EvolvableTokenContract(), Contract {
 
         override fun additionalCreateChecks(tx: LedgerTransaction) {
+            val outputDiamond = tx.outputsOfType<State>().first()
             requireThat {
-                val outputDiamond = tx.outputsOfType<State>().first()
                 "Diamond's carat weight must be greater than 0 (zero)" using (outputDiamond.caratWeight > BigDecimal.ZERO)
             }
         }
 
         override fun additionalUpdateChecks(tx: LedgerTransaction) {
+            val inDiamond = tx.outputsOfType<State>().first()
+            val outDiamond = tx.outputsOfType<State>().first()
             requireThat {
-                val inDiamond = tx.outputsOfType<State>().first()
-                val outDiamond = tx.outputsOfType<State>().first()
                 "Diamond's carat weight may not be changed" using (inDiamond.caratWeight == outDiamond.caratWeight)
                 "Diamond's color may not be changed" using (inDiamond.color == outDiamond.color)
                 "Diamond's clarity may not be changed" using (inDiamond.clarity == outDiamond.clarity)
@@ -117,13 +205,13 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
         }
 
         @CordaSerializable
-        enum class ColorScale { D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z }
+        enum class ColorScale { A, B, C, D, E, F }
 
         @CordaSerializable
-        enum class ClarityScale { FL, IF, VVS1, VVS2, VS1, VS2, SI1, SI2, I1, I2, I3 }
+        enum class ClarityScale { A, B, C, D, E, F }
 
         @CordaSerializable
-        enum class CutScale { EXCELLENT, VERY_GOOD, GOOD, FAIR, POOR }
+        enum class CutScale { A, B, C, D, E, F }
 
         data class State(
                 val caratWeight: BigDecimal,
