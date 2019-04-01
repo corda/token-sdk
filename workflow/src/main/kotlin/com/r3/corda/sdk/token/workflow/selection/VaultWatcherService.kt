@@ -31,7 +31,7 @@ class VaultWatcherService(val appServiceHub: AppServiceHub) {
     //will be used to stop adding and removing AtomicMarkableReference for every single consume / add event.
 
     init {
-        val pageSize = 1000;
+        val pageSize = 1000
         var currentPage = DEFAULT_PAGE_NUM;
         var (existingStates, observable) = appServiceHub.vaultService.trackBy(FungibleToken::class.java, PageSpecification(pageNumber = currentPage, pageSize = pageSize))
         val listOfThings = mutableListOf<StateAndRef<FungibleToken<TokenType>>>()
@@ -41,13 +41,15 @@ class VaultWatcherService(val appServiceHub: AppServiceHub) {
         }
 
         listOfThings.forEach(::addTokenToCache)
-        observable.doOnNext { t: Vault.Update<FungibleToken<*>> ->
-            t.consumed.forEach(::removeTokenFromCache)
-            t.produced.forEach(::addTokenToCache)
-        }
+        observable.doOnNext(::onVaultUpdate)
     }
 
-    private fun removeTokenFromCache(it: StateAndRef<FungibleToken<*>>) {
+    fun onVaultUpdate(t: Vault.Update<FungibleToken<*>>) {
+        t.consumed.forEach(::removeTokenFromCache)
+        t.produced.forEach(::addTokenToCache)
+    }
+
+    fun removeTokenFromCache(it: StateAndRef<FungibleToken<*>>) {
         val (owner, type, typeId) = processToken(it.state.data)
         val tokenSet = getTokenSet(owner, type, typeId)
         if (tokenSet.remove(it) != true) {
@@ -55,7 +57,7 @@ class VaultWatcherService(val appServiceHub: AppServiceHub) {
         }
     }
 
-    private fun addTokenToCache(stateAndRef: StateAndRef<FungibleToken<*>>) {
+    fun addTokenToCache(stateAndRef: StateAndRef<FungibleToken<*>>) {
         val token = stateAndRef.state.data
         val (owner, type, typeId) = processToken(token)
         val tokensForTypeInfo = getTokenSet(owner, type, typeId)
@@ -66,8 +68,8 @@ class VaultWatcherService(val appServiceHub: AppServiceHub) {
     }
 
     fun selectTokens(
-        owner: PublicKey,
-        amountRequested: Amount<IssuedTokenType<*>>
+            owner: PublicKey,
+            amountRequested: Amount<IssuedTokenType<*>>
     ) {
         val set = getTokenSet(owner, amountRequested.token.tokenType.tokenClass, amountRequested.token.tokenType.tokenIdentifier)
         val lockedTokens = mutableListOf<StateAndRef<FungibleToken<*>>>()
@@ -77,14 +79,14 @@ class VaultWatcherService(val appServiceHub: AppServiceHub) {
             val existingMark = set.computeIfPresent(tokenStateAndRef) { _, _ ->
                 true
             }
-            if (existingMark == false){
+            if (existingMark == false) {
                 //TOKEN was unlocked, but now is locked
                 lockedTokens.add(tokenStateAndRef)
-            }else if (existingMark == null){
+            } else if (existingMark == null) {
                 //TOKEN was removed before we could lock it
             }
             amountLocked += token.amount
-            if (amountLocked >= amountRequested){
+            if (amountLocked >= amountRequested) {
                 break
             }
         }
@@ -99,9 +101,9 @@ class VaultWatcherService(val appServiceHub: AppServiceHub) {
     }
 
     private fun getTokenSet(
-        owner: PublicKey,
-        type: Class<*>,
-        typeId: String
+            owner: PublicKey,
+            type: Class<*>,
+            typeId: String
     ): ConcurrentMap<StateAndRef<FungibleToken<TokenType>>, Boolean> {
         return cache.computeIfAbsent(owner) {
             ConcurrentHashMap()
