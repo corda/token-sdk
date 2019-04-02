@@ -1,5 +1,5 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
-<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd" >
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd" >
     <changeSet author="R3.Corda" id="create_fungible_token_table_id">
         <createTable tableName="fungible_token">
             <column name="output_index" type="INTEGER">
@@ -35,7 +35,8 @@
     </changeSet>
     <changeSet author="R3.Corda" id="owned_token_amount_idx_id">
         <createIndex indexName="owned_token_amount_idx" tableName="fungible_token">
-            <column name="token_class, token_identifier"/>
+            <column name="token_class"/>
+            <column name="token_identifier"/>
         </createIndex>
     </changeSet>
 </databaseChangeLog>
