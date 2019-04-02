@@ -72,41 +72,41 @@ class VaultWatcherService(appServiceHub: AppServiceHub? = null) {
         }
     }
 
-    fun unlockToken(stateAndRef: StateAndRef<FungibleToken<TokenType>>){
+    fun unlockToken(stateAndRef: StateAndRef<FungibleToken<TokenType>>) {
         val token = stateAndRef.state.data
         val (owner, type, typeId) = processToken(token)
         val tokensForTypeInfo = getTokenSet(owner, type, typeId)
         tokensForTypeInfo.replace(stateAndRef, true, false)
     }
 
-    fun selectTokens(
+    inline fun <T : TokenType> selectTokens(
             owner: PublicKey,
-            amountRequested: Amount<IssuedTokenType<TokenType>>,
-            predicate: Predicate<StateAndRef<FungibleToken<TokenType>>>? = null
-    ): MutableList<StateAndRef<FungibleToken<TokenType>>> {
+            amountRequested: Amount<IssuedTokenType<T>>,
+            predicate: ((StateAndRef<FungibleToken<TokenType>>) -> Boolean) = { true },
+            allowSubSelect: Boolean = false
+    ): List<StateAndRef<FungibleToken<T>>> {
         val set = getTokenSet(owner, amountRequested.token.tokenType.tokenClass, amountRequested.token.tokenType.tokenIdentifier)
-        val lockedTokens = mutableListOf<StateAndRef<FungibleToken< TokenType>>>()
-        var amountLocked: Amount<IssuedTokenType<TokenType>> = amountRequested.copy(quantity = 0)
+        val lockedTokens = mutableListOf<StateAndRef<FungibleToken<TokenType>>>()
+        var amountLocked: Amount<IssuedTokenType<T>> = amountRequested.copy(quantity = 0)
         for (tokenStateAndRef in set.keys) {
             //does the token satisfy the (optional) predicate?
-            if (predicate?.test(tokenStateAndRef) != false) {
+            if (predicate.invoke(tokenStateAndRef)) {
                 //if so, race to lock the token, expected oldValue = false
                 if (set.replace(tokenStateAndRef, false, true)) {
                     //we won the race to lock this token
                     lockedTokens.add(tokenStateAndRef)
                     val token = tokenStateAndRef.state.data
-                    amountLocked += token.amount
+                    amountLocked += token.amount as Amount<IssuedTokenType<T>>
                     if (amountLocked >= amountRequested) {
                         break
                     }
                 }
             }
         }
-        if (amountLocked < amountRequested) {
+        if (!allowSubSelect && amountLocked < amountRequested) {
             throw InsufficientBalanceException("Could not find enough tokens to satisfy token request")
         }
-        return lockedTokens
-
+        return lockedTokens as List<StateAndRef<FungibleToken<T>>>
     }
 
     private fun processToken(token: FungibleToken<*>): Triple<PublicKey, Class<*>, String> {
@@ -116,7 +116,7 @@ class VaultWatcherService(appServiceHub: AppServiceHub? = null) {
         return Triple(owner, type, typeId)
     }
 
-    private fun getTokenSet(
+    fun getTokenSet(
             owner: PublicKey,
             type: Class<*>,
             typeId: String
