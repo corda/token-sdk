@@ -107,8 +107,14 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         }.hasMessageContaining("Exactly one owned token of a particular type $fooToken should be in the vault at any one time.")
     }
 
-    //TODO
     @Test
-    fun `different notaries for fungible tokens`() {
+    fun `redeem states with confidential identities not known to issuer`() {
+        val issueTokenTx = I.issueTokens(GBP, A, NOTARY, 100.GBP).getOrThrow()
+        A.watchForTransaction(issueTokenTx.id).getOrThrow()
+        // Check to see that A was added to I's distribution list.
+        val moveTokenTx = A.moveTokens(GBP, B, 50.GBP, anonymous = true).getOrThrow()
+        B.watchForTransaction(moveTokenTx.id).getOrThrow()
+        val redeemTx = B.redeemTokens(GBP, I, 30.GBP, anonymous = true).getOrThrow()
+        B.watchForTransaction(redeemTx.id).getOrThrow()
     }
 }

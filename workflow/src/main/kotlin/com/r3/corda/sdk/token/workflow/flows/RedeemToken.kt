@@ -1,6 +1,7 @@
 package com.r3.corda.sdk.token.workflow.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.sdk.token.contracts.commands.MoveTokenCommand
 import com.r3.corda.sdk.token.contracts.states.AbstractToken
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
@@ -9,7 +10,9 @@ import com.r3.corda.sdk.token.workflow.selection.TokenSelection
 import com.r3.corda.sdk.token.workflow.selection.generateExitNonFungible
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokensByTokenIssuer
 import com.r3.corda.sdk.token.workflow.utilities.tokenAmountWithIssuerCriteria
+import net.corda.confidential.IdentitySyncFlow
 import net.corda.core.contracts.Amount
+import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.CollectSignaturesFlow
 import net.corda.core.flows.FinalityFlow
@@ -51,10 +54,11 @@ object RedeemToken {
             object CONF_ID : ProgressTracker.Step("Requesting confidential identity.")
             object SELECTING_STATES : ProgressTracker.Step("Selecting states to redeem.")
             object SEND_STATE_REF : ProgressTracker.Step("Sending states to the issuer for redeeming.")
+            object SYNC_IDS : ProgressTracker.Step("Synchronising confidential identities.")
             object SIGNING_TX : ProgressTracker.Step("Signing transaction")
             object FINALISING_TX : ProgressTracker.Step("Finalising transaction")
 
-            fun tracker() = ProgressTracker(REDEEM_NOTIFICATION, CONF_ID, SELECTING_STATES, SEND_STATE_REF, SIGNING_TX, FINALISING_TX)
+            fun tracker() = ProgressTracker(REDEEM_NOTIFICATION, CONF_ID, SELECTING_STATES, SEND_STATE_REF, SYNC_IDS, SIGNING_TX, FINALISING_TX)
         }
 
         override val progressTracker: ProgressTracker = tracker()
@@ -75,7 +79,7 @@ object RedeemToken {
             }
 
             progressTracker.currentStep = SELECTING_STATES
-            val exitStateAndRefs = if (amount == null) {
+            val exitStateAndRefs: List<StateAndRef<AbstractToken>> = if (amount == null) {
                 // NonFungibleToken path.
                 val ownedTokenStateAndRef = serviceHub.vaultService.ownedTokensByTokenIssuer(ownedToken, issuer).states
                 check(ownedTokenStateAndRef.size == 1) {
@@ -92,7 +96,13 @@ object RedeemToken {
             }
             progressTracker.currentStep = SEND_STATE_REF
             subFlow(SendStateAndRefFlow(issuerSession, exitStateAndRefs))
-
+            progressTracker.currentStep = SYNC_IDS
+            // TODO This is very weird way of syncing identities.
+            //  I feel like we need some better API to do that, because in this case we just need input identities, not full wire tx (btw it's not sent anywhere nor it verifies).
+            val firstState = exitStateAndRefs.first().state
+            val notary = firstState.notary
+            val fakeWireTx = TransactionBuilder(notary = notary).withItems(*exitStateAndRefs.toTypedArray()).addCommand(DummyCommand(), ourIdentity.owningKey).toWireTransaction(serviceHub)
+            subFlow(IdentitySyncFlow.Send(issuerSession, fakeWireTx))
             progressTracker.currentStep = SIGNING_TX
             subFlow(object : SignTransactionFlow(issuerSession) {
                 // TODO Add some additional checks.
@@ -103,6 +113,9 @@ object RedeemToken {
             return subFlow(ReceiveFinalityFlow(otherSideSession = issuerSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
         }
     }
+
+    //TODO Another nasty hack because identity sync flow has api that is useless in our case.
+    private class DummyCommand : CommandData
 
     // Called on Issuer side.
     @InitiatedBy(InitiateRedeem::class)
@@ -119,6 +132,8 @@ object RedeemToken {
             } else otherSession.counterparty
 
             val stateAndRefsToRedeem = subFlow(ReceiveStateAndRefFlow<AbstractToken>(otherSession))
+            // Synchronise identities.
+            subFlow(IdentitySyncFlow.Receive(otherSession))
             check(stateAndRefsToRedeem.isNotEmpty()) {
                 "Received empty list of states to redeem."
             }
@@ -132,7 +147,6 @@ object RedeemToken {
             } else {
                 TokenSelection(serviceHub).generateExit(txBuilder, stateAndRefsToRedeem as List<StateAndRef<FungibleToken<T>>>, redeemNotification.amount, otherIdentity)
             }
-            // TODO Does it make sense for the issuer to use confidential identities?
             val partialStx = serviceHub.signInitialTransaction(txBuilder, ourIdentity.owningKey)
             val stx = subFlow(CollectSignaturesFlow(partialStx, listOf(otherSession)))
             return subFlow(FinalityFlow(transaction = stx, sessions = listOf(otherSession)))
@@ -170,7 +184,6 @@ object RedeemToken {
     // Check if owner of the states is well known. Check if states come from the same owner.
     @Suspendable
     private fun checkOwner(identityService: IdentityService, stateAndRefs: List<StateAndRef<AbstractToken>>, counterparty: Party) {
-        // TODO What if the issuer doesn't have confidential identities, do sync identities flow
         // TODO Add some tests for that
         val owners = stateAndRefs.map { identityService.wellKnownPartyFromAnonymous(it.state.data.holder) }
         check(owners.all { it != null }) {
