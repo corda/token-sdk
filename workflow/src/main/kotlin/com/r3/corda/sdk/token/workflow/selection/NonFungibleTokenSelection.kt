@@ -13,7 +13,7 @@ import net.corda.core.node.services.VaultService
 import net.corda.core.transactions.TransactionBuilder
 import java.security.PublicKey
 
-// TODO utilities for move/redeem for non-fungible tokens
+// TODO Have utilities for move/redeem for non-fungible tokens.
 @Suspendable
 fun <T: TokenType> generateMoveNonFungible(vaultService: VaultService, ownedToken: T, owningParty: AbstractParty): Pair<TransactionBuilder, List<PublicKey>> {
     // The assumption here is that there is only one owned token of a particular type at any one time.

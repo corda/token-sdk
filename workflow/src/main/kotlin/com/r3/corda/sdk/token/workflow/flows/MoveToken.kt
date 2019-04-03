@@ -20,7 +20,6 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.unwrap
 
-// TODO Think how to better handle fungible and non fungible flows.
 object MoveToken {
 
     @CordaSerializable

@@ -238,7 +238,6 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
     }
 
     // Modifies builder in place. All checks for exit states should have been done before.
-    // TODO Refactor - it shares code with non-fungible
     @Suspendable
     fun <T : TokenType> generateExit(
             builder: TransactionBuilder,

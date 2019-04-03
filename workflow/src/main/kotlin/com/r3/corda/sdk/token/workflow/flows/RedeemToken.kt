@@ -39,7 +39,6 @@ object RedeemToken {
     @CordaSerializable
     data class TokenRedeemNotification<T : TokenType>(val anonymous: Boolean, val amount: Amount<T>?)
 
-    // TODO later split it into non fungible or fungible
     // Called on owner side.
     @InitiatingFlow
     @StartableByRPC
@@ -181,10 +180,9 @@ object RedeemToken {
         }
     }
 
-    // Check if owner of the states is well known. Check if states come from the same owner.
+    // Check if owner of the states is well known. Check if states come from the same owner. Should be called after synchronising identities step.
     @Suspendable
     private fun checkOwner(identityService: IdentityService, stateAndRefs: List<StateAndRef<AbstractToken>>, counterparty: Party) {
-        // TODO Add some tests for that
         val owners = stateAndRefs.map { identityService.wellKnownPartyFromAnonymous(it.state.data.holder) }
         check(owners.all { it != null }) {
             "Received states with owner that we don't know about."
