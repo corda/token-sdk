@@ -3,6 +3,7 @@ package com.r3.corda.sdk.token.workflow.selection
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.types.IssuedTokenType
 import com.r3.corda.sdk.token.contracts.types.TokenType
+import com.r3.corda.sdk.token.workflow.selection.VaultWatcherService.Companion.LOG
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.node.AppServiceHub
@@ -14,27 +15,22 @@ import net.corda.core.utilities.contextLogger
 import rx.Observable
 import java.lang.RuntimeException
 import java.security.PublicKey
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentMap
-import java.util.concurrent.Executors
-import java.util.function.Predicate
+import java.time.Duration
+import java.util.concurrent.*
+
+val unlocker: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
 @CordaService
-class VaultWatcherService(appServiceHub: AppServiceHub? = null) {
+class VaultWatcherService(vaultObserver: VaultObserver? = null) {
+
+    val cache: ConcurrentMap<PublicKey, ConcurrentMap<Class<*>, ConcurrentMap<String, ConcurrentMap<StateAndRef<FungibleToken<TokenType>>, Boolean>>>> = ConcurrentHashMap()
+
+    constructor(appServiceHub: AppServiceHub) : this(getObservableFromAppServiceHub(appServiceHub))
 
     companion object {
         val LOG = contextLogger()
-    }
 
-    private val unlocker = Executors.newSingleThreadScheduledExecutor()
-
-    //owner -> tokenClass -> tokenIdentifier -> List
-    private val cache: ConcurrentMap<PublicKey, ConcurrentMap<Class<*>, ConcurrentMap<String, ConcurrentMap<StateAndRef<FungibleToken<TokenType>>, Boolean>>>> = ConcurrentHashMap()
-
-    //will be used to stop adding and removing AtomicMarkableReference for every single consume / add event.
-
-    init {
-        if (appServiceHub != null) {
+        private fun getObservableFromAppServiceHub(appServiceHub: AppServiceHub): VaultObserver {
             val pageSize = 1000
             var currentPage = DEFAULT_PAGE_NUM;
             var (existingStates, observable) = appServiceHub.vaultService.trackBy(FungibleToken::class.java, PageSpecification(pageNumber = currentPage, pageSize = pageSize))
@@ -43,13 +39,21 @@ class VaultWatcherService(appServiceHub: AppServiceHub? = null) {
                 listOfThings.addAll(existingStates.states as Iterable<StateAndRef<FungibleToken<TokenType>>>)
                 existingStates = appServiceHub.vaultService.queryBy(FungibleToken::class.java, PageSpecification(pageNumber = ++currentPage, pageSize = pageSize))
             }
-
-            listOfThings.forEach(::addTokenToCache)
-            (observable as Observable<Vault.Update<FungibleToken<TokenType>>>).doOnNext(::onVaultUpdate)
+            return VaultObserver(listOfThings, observable)
         }
+
     }
 
-    fun onVaultUpdate(t: Vault.Update<FungibleToken<TokenType>>) {
+
+    //owner -> tokenClass -> tokenIdentifier -> List
+
+
+    init {
+        vaultObserver?.initialValues?.forEach(::addTokenToCache)
+        vaultObserver?.source?.subscribe(::onVaultUpdate)
+    }
+
+    fun onVaultUpdate(t: Vault.Update<FungibleToken<out TokenType>>) {
         t.consumed.forEach(::removeTokenFromCache)
         t.produced.forEach(::addTokenToCache)
     }
@@ -83,7 +87,8 @@ class VaultWatcherService(appServiceHub: AppServiceHub? = null) {
             owner: PublicKey,
             amountRequested: Amount<IssuedTokenType<T>>,
             predicate: ((StateAndRef<FungibleToken<TokenType>>) -> Boolean) = { true },
-            allowSubSelect: Boolean = false
+            allowSubSelect: Boolean = false,
+            autoUnlockDelay: Duration = Duration.ofMinutes(5)
     ): List<StateAndRef<FungibleToken<T>>> {
         val set = getTokenSet(owner, amountRequested.token.tokenType.tokenClass, amountRequested.token.tokenType.tokenIdentifier)
         val lockedTokens = mutableListOf<StateAndRef<FungibleToken<TokenType>>>()
@@ -106,6 +111,11 @@ class VaultWatcherService(appServiceHub: AppServiceHub? = null) {
         if (!allowSubSelect && amountLocked < amountRequested) {
             throw InsufficientBalanceException("Could not find enough tokens to satisfy token request")
         }
+
+        unlocker.schedule({
+            lockedTokens.forEach { unlockToken(it) }
+        }, autoUnlockDelay.toMillis(), TimeUnit.MILLISECONDS)
+
         return lockedTokens as List<StateAndRef<FungibleToken<T>>>
     }
 
@@ -129,7 +139,10 @@ class VaultWatcherService(appServiceHub: AppServiceHub? = null) {
             ConcurrentHashMap()
         }
     }
+
 }
+
+data class VaultObserver(val initialValues: List<StateAndRef<FungibleToken<TokenType>>>, val source: Observable<Vault.Update<FungibleToken<out TokenType>>>)
 
 
 class InsufficientBalanceException(message: String) : RuntimeException(message)
