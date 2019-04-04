@@ -47,10 +47,11 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
      * 2. Denise (the diamond dealer) issues a holdable, discrete (non-fungible) token to Alice
      * 3. Alice transfers the discrete token to Bob
      * 4. Bob transfers the discrete token to Charles
-     * 5. Charles redeems the holdable token with Denise (perhaps Denise buys back the diamond and plans to issue a new
+     * 5. GIC amends (updates) the grading report
+     * 6. Charles redeems the holdable token with Denise (perhaps Denise buys back the diamond and plans to issue a new
      *    holdable token as replacement)
      *
-     * TODO Implement step 5
+     * TODO Implement step 6
      */
     @Test
     fun `lifecycle example`() {
@@ -89,10 +90,22 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
         assertFails { gic.watchForTransaction(moveTokenToCharlesTx.id).getOrThrow(Duration.ofSeconds(3)) }
         assertFails { denise.watchForTransaction(moveTokenToCharlesTx.id).getOrThrow(Duration.ofSeconds(3)) }
         assertFails { alice.watchForTransaction(moveTokenToCharlesTx.id).getOrThrow(Duration.ofSeconds(3)) }
+
+        // STEP 05: GIC amends (updates) the grading report
+        // This should be reflected to the report participants
+        val updatedDiamond = publishedDiamond.state.data.copy(color = DiamondGradingReport.ColorScale.B)
+        val updateDiamondTx = gic.updateEvolvableToken(publishedDiamond, updatedDiamond).getOrThrow(Duration.ofSeconds(5))
+        denise.watchForTransaction(updateDiamondTx).getOrThrow(Duration.ofSeconds(5))
+        charles.watchForTransaction(updateDiamondTx).getOrThrow(Duration.ofSeconds(5))
+        assertFails { alice.watchForTransaction(updateDiamondTx).getOrThrow(Duration.ofSeconds(3)) }
+        assertFails { bob.watchForTransaction(updateDiamondTx).getOrThrow(Duration.ofSeconds(3)) }
+
+        // STEP 06: Charles redeems the token with Denise
+        // This should exit the holdable token
     }
 
     /**
-     * This scenario creates a multiple evolvable token types in a single transaction.
+     * This scenario creates multiple evolvable token types in a single transaction.
      *
      * 1. GIC creates (publishes) 3 diamond grading reports
      */
