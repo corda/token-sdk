@@ -15,7 +15,6 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
-import net.corda.core.toFuture
 import net.corda.core.transactions.SignedTransaction
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.internal.chooseIdentity
@@ -23,7 +22,6 @@ import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
 import org.junit.After
 import org.junit.Before
-import java.util.concurrent.TimeUnit
 
 abstract class MockNetworkTest(val names: List<CordaX500Name>) {
 
@@ -92,7 +90,7 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
 
     /** Update an evolvable token. */
     fun <T : EvolvableTokenType> StartedMockNode.updateEvolvableToken(old: StateAndRef<T>, new: T): CordaFuture<SignedTransaction> {
-        return transaction { startFlow(UpdateEvolvableToken(old = old, new = new)) }
+        return transaction { startFlow(UpdateEvolvableToken.Initiator(old = old, new = new)) }
     }
 
     fun <T : TokenType> StartedMockNode.issueTokens(
