@@ -23,7 +23,7 @@ import net.corda.core.utilities.unwrap
 object CreateEvolvableToken {
 
     @CordaSerializable
-    data class EvolvableTokenCreationNotification(val sign: Boolean = false)
+    data class EvolvableTokenCreationNotification(val signatureRequired: Boolean = false)
 
     @InitiatingFlow
     @StartableByRPC
@@ -57,7 +57,6 @@ object CreateEvolvableToken {
         @Suspendable
         override fun call(): SignedTransaction {
             // Create a transaction which updates the ledger with the new evolvable token.
-            // Note that initially it is not shared with anyone.
             progressTracker.currentStep = CREATING
             val evolvableToken = transactionState.data
             val signingKeys = evolvableToken.maintainers.map { it.owningKey }
@@ -74,7 +73,7 @@ object CreateEvolvableToken {
             progressTracker.currentStep = COLLECTING
             val maintainers = evolvableToken.maintainers.toSet().minus(this.ourIdentity)
             val maintainerSessions = maintainers.map { initiateFlow(it) }
-            maintainerSessions.forEach { it.send(EvolvableTokenCreationNotification(sign = true)) }
+            maintainerSessions.forEach { it.send(EvolvableTokenCreationNotification(signatureRequired = true)) }
             val tx = subFlow(CollectSignaturesFlow(
                     partiallySignedTx = stx,
                     sessionsToCollectFrom = maintainerSessions,
@@ -87,7 +86,7 @@ object CreateEvolvableToken {
                     .minus(this.ourIdentity)
                     .minus(evolvableToken.maintainers)
             val participantSessions = participants.map { initiateFlow( serviceHub.identityService.wellKnownPartyFromAnonymous(it)!! ) }
-            participantSessions.forEach { it.send(EvolvableTokenCreationNotification(sign = false)) }
+            participantSessions.forEach { it.send(EvolvableTokenCreationNotification(signatureRequired = false)) }
             return subFlow(FinalityFlow(
                     transaction = tx,
                     sessions = (maintainerSessions + participantSessions),
@@ -104,7 +103,7 @@ object CreateEvolvableToken {
             val notification = otherSession.receive<EvolvableTokenCreationNotification>().unwrap { it }
 
             // Sign the transaction proposal, if required
-            if (notification.sign) {
+            if (notification.signatureRequired) {
                 val signTransactionFlow = object : SignTransactionFlow(otherSession) {
                     override fun checkTransaction(stx: SignedTransaction) = requireThat {
                         // TODO
