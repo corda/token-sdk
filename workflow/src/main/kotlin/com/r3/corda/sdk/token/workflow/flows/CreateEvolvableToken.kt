@@ -8,6 +8,7 @@ import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.TransactionState
 import net.corda.core.contracts.requireThat
 import net.corda.core.flows.*
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.StatesToRecord
 import net.corda.core.serialization.CordaSerializable
@@ -58,8 +59,7 @@ object CreateEvolvableToken {
         override fun call(): SignedTransaction {
             // Create a transaction which updates the ledger with the new evolvable token.
             progressTracker.currentStep = CREATING
-            val evolvableToken = transactionState.data
-            val signingKeys = evolvableToken.maintainers.map { it.owningKey }
+            val signingKeys = maintainers().map { it.owningKey }
             val utx: TransactionBuilder = TransactionBuilder().apply {
                 addCommand(data = Create(), keys = signingKeys)
                 addOutputState(state = transactionState)
@@ -71,8 +71,7 @@ object CreateEvolvableToken {
 
             // Gather signatures from other maintainers
             progressTracker.currentStep = COLLECTING
-            val maintainers = evolvableToken.maintainers.toSet().minus(this.ourIdentity)
-            val maintainerSessions = maintainers.map { initiateFlow(it) }
+            val maintainerSessions = otherMaintainers().map { initiateFlow(it) }
             maintainerSessions.forEach { it.send(EvolvableTokenCreationNotification(signatureRequired = true)) }
             val tx = subFlow(CollectSignaturesFlow(
                     partiallySignedTx = stx,
@@ -82,16 +81,33 @@ object CreateEvolvableToken {
 
             // Finalise with all participants
             progressTracker.currentStep = RECORDING
-            val participants = evolvableToken.participants.toSet()
-                    .minus(this.ourIdentity)
-                    .minus(evolvableToken.maintainers)
-            val participantSessions = participants.map { initiateFlow( serviceHub.identityService.wellKnownPartyFromAnonymous(it)!! ) }
-            participantSessions.forEach { it.send(EvolvableTokenCreationNotification(signatureRequired = false)) }
+            val observerSessions = wellKnownObservers().map { initiateFlow(it) }
+            observerSessions.forEach { it.send(EvolvableTokenCreationNotification(signatureRequired = false)) }
             return subFlow(FinalityFlow(
                     transaction = tx,
-                    sessions = (maintainerSessions + participantSessions),
+                    sessions = (maintainerSessions + observerSessions),
                     progressTracker = RECORDING.childProgressTracker()
             ))
+        }
+
+        private fun maintainers(): Set<Party> {
+            return transactionState.data.maintainers.toSet()
+        }
+
+        private fun otherMaintainers(): Set<Party> {
+            return maintainers().minus(this.ourIdentity)
+        }
+
+        private fun participants(): Set<AbstractParty> {
+            return transactionState.data.participants.toSet()
+        }
+
+        private fun observers(): Set<AbstractParty> {
+            return participants().minus(maintainers()).minus(this.ourIdentity)
+        }
+
+        private fun wellKnownObservers(): List<Party> {
+            return observers().map { serviceHub.identityService.wellKnownPartyFromAnonymous(it)!! }
         }
     }
 
