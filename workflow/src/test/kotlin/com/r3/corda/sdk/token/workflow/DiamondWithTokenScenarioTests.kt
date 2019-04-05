@@ -22,13 +22,13 @@ import kotlin.test.assertFails
  * This test suite is intended to test and demonstrate common scenarios for working with evolvable token types and
  * non-fungible (discrete) holdable tokens.
  */
-class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of Corda (GIC)", "Denise", "Alice", "Bob", "Charles") {
+class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of Corda (GIC)", "Denise", "Alice", "Bob", "Charlie") {
 
     lateinit var gic: StartedMockNode
     lateinit var denise: StartedMockNode
     lateinit var alice: StartedMockNode
     lateinit var bob: StartedMockNode
-    lateinit var charles: StartedMockNode
+    lateinit var charlie: StartedMockNode
 
     @Before
     override fun initialiseNodes() {
@@ -36,7 +36,7 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
         denise = nodesByName.getValue("Denise")
         alice = nodesByName.getValue("Alice")
         bob = nodesByName.getValue("Bob")
-        charles = nodesByName.getValue("Charles")
+        charlie = nodesByName.getValue("Charlie")
     }
 
     /**
@@ -85,8 +85,8 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
 
         // STEP 04: Bob transfers ownership to Charles
         // Continuing the chain of sale
-        val moveTokenToCharlesTx = bob.moveTokens(diamondPointer, charles, anonymous = true).getOrThrow(Duration.ofSeconds(5))
-        charles.watchForTransaction(moveTokenToCharlesTx.id).getOrThrow(Duration.ofSeconds(5))
+        val moveTokenToCharlesTx = bob.moveTokens(diamondPointer, charlie, anonymous = true).getOrThrow(Duration.ofSeconds(5))
+        charlie.watchForTransaction(moveTokenToCharlesTx.id).getOrThrow(Duration.ofSeconds(5))
         assertFails { gic.watchForTransaction(moveTokenToCharlesTx.id).getOrThrow(Duration.ofSeconds(3)) }
         assertFails { denise.watchForTransaction(moveTokenToCharlesTx.id).getOrThrow(Duration.ofSeconds(3)) }
         assertFails { alice.watchForTransaction(moveTokenToCharlesTx.id).getOrThrow(Duration.ofSeconds(3)) }
@@ -96,7 +96,7 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
         val updatedDiamond = publishedDiamond.state.data.copy(color = DiamondGradingReport.ColorScale.B)
         val updateDiamondTx = gic.updateEvolvableToken(publishedDiamond, updatedDiamond).getOrThrow(Duration.ofSeconds(5))
         denise.watchForTransaction(updateDiamondTx).getOrThrow(Duration.ofSeconds(5))
-        charles.watchForTransaction(updateDiamondTx).getOrThrow(Duration.ofSeconds(5))
+        charlie.watchForTransaction(updateDiamondTx).getOrThrow(Duration.ofSeconds(5))
         assertFails { alice.watchForTransaction(updateDiamondTx).getOrThrow(Duration.ofSeconds(3)) }
         assertFails { bob.watchForTransaction(updateDiamondTx).getOrThrow(Duration.ofSeconds(3)) }
 
