@@ -78,7 +78,7 @@ object UpdateEvolvableToken {
                     progressTracker = COLLECTING.childProgressTracker()
             ))
 
-            // Distribute to all observes, including maintainers, participants, and subscribers (via distribution list)
+            // Distribute to all observers, including maintainers, participants, and subscribers (via distribution list)
             progressTracker.currentStep = RECORDING
             val observerSessions = wellKnownObservers().map { initiateFlow(it) }
             observerSessions.forEach { it.send(EvolvableTokenUpdateNotification(signatureRequired = false)) }
