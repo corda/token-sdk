@@ -16,12 +16,17 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.utilities.getOrThrow
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.internal.chooseIdentity
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
 import org.junit.After
 import org.junit.Before
+import java.time.Duration
+import java.util.concurrent.TimeoutException
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 abstract class MockNetworkTest(val names: List<CordaX500Name>) {
 
@@ -81,6 +86,30 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
 
     fun StartedMockNode.watchForTransaction(tx: SignedTransaction): CordaFuture<SignedTransaction> {
         return watchForTransaction(tx.id)
+    }
+
+    fun assertRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode, timeout: Long = 2) {
+        nodes.map {
+            it.watchForTransaction(txId)
+        }.map {
+            assertEquals(txId, it.getOrThrow(Duration.ofSeconds(timeout)).id)
+        }
+    }
+
+    fun assertRecordsTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode, timeout: Long = 2) {
+        assertRecordsTransaction(tx.id, *nodes, timeout = timeout)
+    }
+
+    fun assertNotRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode, timeout: Long = 2) {
+        nodes.map {
+            it.watchForTransaction(txId)
+        }.map {
+            assertFailsWith<TimeoutException> { it.getOrThrow(Duration.ofSeconds(timeout)) }
+        }
+    }
+
+    fun assertNotRecordsTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode, timeout: Long = 2) {
+        assertNotRecordsTransaction(tx.id, *nodes, timeout = timeout)
     }
 
     /** Create an evolvable token. */

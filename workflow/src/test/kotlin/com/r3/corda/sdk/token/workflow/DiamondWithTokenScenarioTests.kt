@@ -16,7 +16,6 @@ import org.junit.Test
 import java.math.BigDecimal
 import java.time.Duration
 import kotlin.test.assertEquals
-import kotlin.test.assertFails
 
 /**
  * This test suite is intended to test and demonstrate common scenarios for working with evolvable token types and
@@ -73,33 +72,28 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
                 anonymous = true
         ).getOrThrow()
         // GIC should *not* receive a copy of this issuance
-        alice.watchForTransaction(issueTokenTx).getOrThrow(Duration.ofSeconds(5))
-        assertFails { gic.watchForTransaction(issueTokenTx.id).getOrThrow(Duration.ofSeconds(3)) }
+        assertRecordsTransaction(issueTokenTx, alice)
+        assertNotRecordsTransaction(issueTokenTx, gic)
 
         // STEP 03: Alice transfers ownership to Bob
         // Continuing the chain of sale
         val moveTokenToBobTx = alice.moveTokens(diamondPointer, bob, anonymous = true).getOrThrow(Duration.ofSeconds(5))
-        bob.watchForTransaction(moveTokenToBobTx.id).getOrThrow(Duration.ofSeconds(5))
-        assertFails { gic.watchForTransaction(moveTokenToBobTx.id).getOrThrow(Duration.ofSeconds(3)) }
-        assertFails { denise.watchForTransaction(moveTokenToBobTx.id).getOrThrow(Duration.ofSeconds(3)) }
+        assertRecordsTransaction(moveTokenToBobTx, alice, bob)
+        assertNotRecordsTransaction(moveTokenToBobTx, gic, denise)
 
         // STEP 04: Bob transfers ownership to Charles
         // Continuing the chain of sale
-        val moveTokenToCharlesTx = bob.moveTokens(diamondPointer, charlie, anonymous = true).getOrThrow(Duration.ofSeconds(5))
-        charlie.watchForTransaction(moveTokenToCharlesTx.id).getOrThrow(Duration.ofSeconds(5))
-        assertFails { gic.watchForTransaction(moveTokenToCharlesTx.id).getOrThrow(Duration.ofSeconds(3)) }
-        assertFails { denise.watchForTransaction(moveTokenToCharlesTx.id).getOrThrow(Duration.ofSeconds(3)) }
-        assertFails { alice.watchForTransaction(moveTokenToCharlesTx.id).getOrThrow(Duration.ofSeconds(3)) }
+        val moveTokenToCharlieTx = bob.moveTokens(diamondPointer, charlie, anonymous = true).getOrThrow(Duration.ofSeconds(5))
+        assertRecordsTransaction(moveTokenToCharlieTx, bob, charlie)
+        assertNotRecordsTransaction(moveTokenToCharlieTx, gic, denise, alice)
 
         // STEP 05: GIC amends (updates) the grading report
         // This should be reflected to the report participants
         val updatedDiamond = publishedDiamond.state.data.copy(color = DiamondGradingReport.ColorScale.B)
         val updateDiamondTx = gic.updateEvolvableToken(publishedDiamond, updatedDiamond).getOrThrow(Duration.ofSeconds(5))
-        denise.watchForTransaction(updateDiamondTx).getOrThrow(Duration.ofSeconds(5))
         // TODO Use a distribution group / subscription to inform Charlie of a change
-        // charlie.watchForTransaction(updateDiamondTx).getOrThrow(Duration.ofSeconds(5))
-        assertFails { alice.watchForTransaction(updateDiamondTx).getOrThrow(Duration.ofSeconds(3)) }
-        assertFails { bob.watchForTransaction(updateDiamondTx).getOrThrow(Duration.ofSeconds(3)) }
+        assertRecordsTransaction(updateDiamondTx, gic, denise) // Should include Charlie
+        assertNotRecordsTransaction(updateDiamondTx, alice, bob)
 
         // STEP 06: Charles redeems the token with Denise
         // This should exit the holdable token
