@@ -29,8 +29,8 @@ object UpdateEvolvableToken {
     @InitiatingFlow
     @StartableByRPC
     class Initiator(
-            val old: StateAndRef<EvolvableTokenType>,
-            val new: EvolvableTokenType
+            val oldStateAndRef: StateAndRef<EvolvableTokenType>,
+            val newState: EvolvableTokenType
     ) : FlowLogic<SignedTransaction>() {
 
         companion object {
@@ -58,10 +58,10 @@ object UpdateEvolvableToken {
             // TODO Should this be both old and new maintainer lists?
             progressTracker.currentStep = CREATING
             val signingKeys = maintainers().map { it.owningKey }
-            val utx: TransactionBuilder = TransactionBuilder(notary = old.state.notary).apply {
+            val utx: TransactionBuilder = TransactionBuilder(notary = oldStateAndRef.state.notary).apply {
                 addCommand(data = Update(), keys = signingKeys)
-                addInputState(old)
-                addOutputState(state = new, contract = old.state.contract)
+                addInputState(oldStateAndRef)
+                addOutputState(state = newState, contract = oldStateAndRef.state.contract)
             }
 
             // Sign the transaction proposal (creating a partially signed transaction, or ptx)
@@ -85,8 +85,10 @@ object UpdateEvolvableToken {
             return subFlow(FinalityFlow(transaction = stx, sessions = observerSessions))
         }
 
+        private val oldState get() = oldStateAndRef.state.data
+
         private fun maintainers(): Set<Party> {
-            return (old.state.data.maintainers + new.maintainers).toSet()
+            return (oldState.maintainers + newState.maintainers).toSet()
         }
 
         private fun otherMaintainers(): Set<Party> {
@@ -94,15 +96,11 @@ object UpdateEvolvableToken {
         }
 
         private fun participants(): Set<AbstractParty> {
-            return (old.state.data.participants + new.participants).toSet()
-        }
-
-        private fun otherParticipants(): Set<AbstractParty> {
-            return participants().minus(this.ourIdentity)
+            return (oldState.participants + newState.participants).toSet()
         }
 
         private fun subscribers(): Set<Party> {
-            return getDistributionList(serviceHub, new.linearId).map { it.party }.toSet()
+            return getDistributionList(serviceHub, newState.linearId).map { it.party }.toSet()
         }
 
         private fun observers(): Set<AbstractParty> {
