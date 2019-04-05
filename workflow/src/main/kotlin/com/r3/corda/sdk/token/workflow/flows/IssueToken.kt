@@ -138,9 +138,12 @@ object IssueToken {
             val stx: SignedTransaction = serviceHub.signInitialTransaction(utx)
             // No need to pass in a session as there's no counterparty involved.
             progressTracker.currentStep = RECORDING
+            // Can issue to yourself, but finality flow doesn't take a session then.
+            // TODO Changes will be required when we let anonymous identities be passed as owner.
+            val sessions = if (me == owner) emptyList() else listOf(ownerSession)
             return subFlow(FinalityFlow(transaction = stx,
                     progressTracker = RECORDING.childProgressTracker(),
-                    sessions = listOf(ownerSession)
+                    sessions = sessions
             ))
         }
     }
