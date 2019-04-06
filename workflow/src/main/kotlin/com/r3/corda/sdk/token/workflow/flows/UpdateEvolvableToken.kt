@@ -1,7 +1,6 @@
 package com.r3.corda.sdk.token.workflow.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.sdk.token.contracts.commands.Update
 import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
 import com.r3.corda.sdk.token.workflow.utilities.getDistributionList
 import net.corda.core.contracts.StateAndRef
@@ -57,12 +56,19 @@ object UpdateEvolvableToken {
             // The parties listed as maintainers in the old state should be the signers.
             // TODO Should this be both old and new maintainer lists?
             progressTracker.currentStep = CREATING
-            val signingKeys = maintainers().map { it.owningKey }
-            val utx: TransactionBuilder = TransactionBuilder(notary = oldStateAndRef.state.notary).apply {
-                addCommand(data = Update(), keys = signingKeys)
-                addInputState(oldStateAndRef)
-                addOutputState(state = newState, contract = oldStateAndRef.state.contract)
-            }
+//            val signingKeys = maintainers().map { it.owningKey }
+//            val utx: TransactionBuilder = TransactionBuilder(notary = oldStateAndRef.state.notary).apply {
+//                addCommand(data = Update(), keys = signingKeys)
+//                addInputState(oldStateAndRef)
+//                addOutputState(state = newState, contract = oldStateAndRef.state.contract)
+//            }
+            val utx = subFlow(
+                    AddUpdateEvolvableToken(
+                            TransactionBuilder(notary = oldStateAndRef.state.notary),
+                            oldStateAndRef,
+                            newState
+                    )
+            )
 
             // Sign the transaction proposal (creating a partially signed transaction, or ptx)
             progressTracker.currentStep = SIGNING
