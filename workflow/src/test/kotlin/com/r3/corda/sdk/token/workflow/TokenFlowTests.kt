@@ -6,6 +6,8 @@ import com.r3.corda.sdk.token.money.GBP
 import com.r3.corda.sdk.token.workflow.statesAndContracts.House
 import com.r3.corda.sdk.token.workflow.utilities.getDistributionList
 import com.r3.corda.sdk.token.workflow.utilities.getLinearStateById
+import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountsByToken
+import com.r3.corda.sdk.token.workflow.utilities.tokenBalance
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.node.services.queryBy
@@ -48,6 +50,14 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 3) {
         val updateTx = I.updateEvolvableToken(oldToken, proposedToken).getOrThrow()
         val newToken = updateTx.singleOutput<House>()
         assertEquals(proposedToken, newToken.state.data)
+    }
+
+    @Test
+    fun `issue token to yourself`() {
+        val issueTokenTx = I.issueTokens(GBP, I, NOTARY, 100.GBP).getOrThrow()
+        I.watchForTransaction(issueTokenTx.id).getOrThrow()
+        val gbp = I.services.vaultService.tokenBalance(GBP)
+        assertEquals(100.GBP, gbp)
     }
 
     @Test
