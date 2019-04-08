@@ -11,7 +11,13 @@ import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionState
-import net.corda.core.flows.*
+import net.corda.core.flows.FinalityFlow
+import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.FlowSession
+import net.corda.core.flows.InitiatedBy
+import net.corda.core.flows.InitiatingFlow
+import net.corda.core.flows.ReceiveFinalityFlow
+import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.StatesToRecord
@@ -149,9 +155,9 @@ object IssueToken {
     }
 
     @InitiatedBy(Initiator::class)
-    class Responder(val otherSession: FlowSession) : FlowLogic<SignedTransaction>() {
+    class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
         @Suspendable
-        override fun call(): SignedTransaction {
+        override fun call(): Unit {
             // Receive an issuance notification from the issuer. It tells us if we need to sign up for token updates or
             // generate a confidential identity.
             val issuanceNotification = otherSession.receive<TokenIssuanceNotification>().unwrap { it }
@@ -161,9 +167,11 @@ object IssueToken {
                 subFlow(RequestConfidentialIdentity.Responder(otherSession))
             }
 
-            // Resolve the issuance transaction.
-            return subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
+            // We must do this check because FinalityFlow does not send locally and we want to be able to issue to ourselves.
+            if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
+                // Resolve the issuance transaction.
+                subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
+            }
         }
     }
-
 }
