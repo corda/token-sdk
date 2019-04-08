@@ -10,7 +10,7 @@ data class DigitalCurrency(
     override val description: String,
     private val defaultFractionDigits: Int = 0
 ) : Money() {
-    override val tokenClass: Class<in TokenType> get() = javaClass
+    override val tokenClass: Class<TokenType> get() = javaClass
     override val displayTokenSize: BigDecimal get() = BigDecimal.ONE.scaleByPowerOfTen(-defaultFractionDigits)
     override fun toString(): String = tokenIdentifier
 
