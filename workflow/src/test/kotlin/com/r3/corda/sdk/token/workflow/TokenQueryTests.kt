@@ -122,7 +122,8 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
 
     @Test
     fun `query for sum of an owned token amount by issuer`() {
-        I2.issueTokens(GBP, A, NOTARY, 13.GBP).getOrThrow()
+        val issueTx = I2.issueTokens(GBP, A, NOTARY, 13.GBP).getOrThrow()
+        A.watchForTransaction(issueTx.id).getOrThrow()
         // Perform a custom query to get the balance for a specific token type.
         val gbpBalanceI = A.services.vaultService.tokenBalanceForIssuer(GBP, I.legalIdentity())
         val gbpBalanceI2 = A.services.vaultService.tokenBalanceForIssuer(GBP, I2.legalIdentity())
