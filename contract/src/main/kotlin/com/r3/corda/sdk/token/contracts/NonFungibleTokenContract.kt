@@ -5,7 +5,6 @@ import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
 import com.r3.corda.sdk.token.contracts.types.IssuedTokenType
 import com.r3.corda.sdk.token.contracts.types.TokenType
 import net.corda.core.contracts.CommandWithParties
-import net.corda.core.internal.WaitForStateConsumption.Companion.logger
 import net.corda.core.transactions.LedgerTransaction
 
 /**
@@ -70,12 +69,16 @@ class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken<TokenTyp
         require(group.outputs.isEmpty()) { "When redeeming an owned token, there must be no output." }
         require(group.inputs.size == 1) { "When redeeming an owned token, there must be only one input." }
         val ownedToken = group.inputs.single()
-        // Only the issuer should be signing the redeem command.
+        // Only the issuer and holders should be signing the redeem command.
         // There will only ever be one issuer as the issuer forms part of the grouping key.
         val issuerKey = ownedToken.token.issuer.owningKey
-        val signer = redeemCommand.signers.single()
-        require(issuerKey == signer) {
-            "The issuer must be the only signing party when an amount of tokens are redeemed."
+        val holdersKeys = group.inputs.map { it.holder.owningKey }
+        val signers = redeemCommand.signers
+        require(issuerKey in signers) {
+            "The issuer must be the signing party when an amount of tokens are redeemed."
+        }
+        require(signers.containsAll(holdersKeys)) {
+            "Holders of redeemed states must be the signing parties."
         }
     }
 

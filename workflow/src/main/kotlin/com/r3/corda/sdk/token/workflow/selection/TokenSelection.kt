@@ -2,9 +2,12 @@ package com.r3.corda.sdk.token.workflow.selection
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.commands.MoveTokenCommand
+import com.r3.corda.sdk.token.contracts.commands.RedeemTokenCommand
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.types.IssuedTokenType
 import com.r3.corda.sdk.token.contracts.types.TokenType
+import com.r3.corda.sdk.token.contracts.utilities.issuedBy
+import com.r3.corda.sdk.token.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import com.r3.corda.sdk.token.workflow.types.PartyAndAmount
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountCriteria
@@ -125,6 +128,11 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
         return stateAndRefs.toList()
     }
 
+    /**
+     * Generate move of certain amount of [FungibleToken] T to the [recipient]. This function mutates [builder] provided as parameter.
+     *
+     * @return [TransactionBuilder] and list of all owner keys used in the input states that are going to be moved.
+     */
     @Suspendable
     fun <T : TokenType> generateMove(
             builder: TransactionBuilder,
@@ -135,9 +143,12 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
         return generateMove(builder, listOf(PartyAndAmount(recipient, amount)), queryCriteria)
     }
 
-    /** Mutates builder.
-     * If query criteria is not specified then only owned token amounts are used. Use [QueryUtilities.tokenAmountWithIssuerCriteria]
-     * to specify issuer.
+    /**
+     * Generate move of [FungibleToken] T to parties specified in [PartyAndAmount]. Each party will receive amount defined
+     * by [partyAndAmounts]. If query criteria is not specified then only owned token amounts are used. Use [QueryUtilities.tokenAmountWithIssuerCriteria]
+     * to specify issuer. This function mutates [builder] provided as parameter.
+     *
+     * @return [TransactionBuilder] and list of all owner keys used in the input states that are going to be moved.
      */
     @Suspendable
     fun <T : TokenType> generateMove(
@@ -226,4 +237,37 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
         return Pair(builder, allKeysUsed)
     }
 
+    // Modifies builder in place. All checks for exit states should have been done before.
+    @Suspendable
+    fun <T : TokenType> generateExit(
+            builder: TransactionBuilder,
+            exitStates: List<StateAndRef<FungibleToken<T>>>,
+            amount: Amount<T>,
+            changeOwner: AbstractParty
+    ) {
+        val firstState = exitStates.first().state.data
+        // Choose states to cover amount - return ones used, and change output
+        val changeOutput = change(exitStates, amount, changeOwner)
+        val moveKey = firstState.holder.owningKey
+        val issuerKey = firstState.amount.token.issuer.owningKey
+        val redeemCommand = RedeemTokenCommand(firstState.amount.token)
+        builder.apply {
+            exitStates.forEach { addInputState(it) }
+            if (changeOutput != null) addOutputState(changeOutput)
+            addCommand(redeemCommand, issuerKey, moveKey)
+        }
+    }
+
+    private fun <T : TokenType> change(exitStates: List<StateAndRef<FungibleToken<T>>>, amount: Amount<T>, changeOwner: AbstractParty): FungibleToken<T>? {
+        val assetsSum = exitStates.sumTokenStateAndRefs()
+        val difference = assetsSum - amount.issuedBy(exitStates.first().state.data.amount.token.issuer)
+        check(difference.quantity >= 0) {
+            "Sum of exit states should be qual or greater than the amount to exit."
+        }
+        return if (difference.quantity == 0L) {
+            null
+        } else {
+            FungibleToken(difference, changeOwner)
+        }
+    }
 }

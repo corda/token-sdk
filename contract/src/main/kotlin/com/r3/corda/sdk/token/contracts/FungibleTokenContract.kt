@@ -99,21 +99,39 @@ open class FungibleTokenContract : AbstractTokenContract<FungibleToken<TokenType
             redeemCommand: CommandWithParties<TokenCommand<*>>
     ) {
         val token = group.groupingKey
-        // There must be inputs and outputs present.
-        require(group.outputs.isEmpty()) { "When redeeming tokens, there must be no output states." }
+        // There can be at most one output treated as a change paid back to the owner. Issuer is used to group states, so
+        // it will be the same as one for the input states.
+        require(group.outputs.size <= 1) { "When redeeming tokens, there must be zero or one output state." }
+        if (group.outputs.isNotEmpty()) {
+            require(group.outputs.single().amount > Amount.zero(token)) {
+                "In redeem groups there must hold that output token amount, if present, is greater than ZERO."
+            }
+            // TODO The same owner as owner of inputs?
+        }
         group.inputs.apply {
-            require(isNotEmpty()) { "When redeems tokens, there must be input states present." }
-            // We don't care about the token as the grouping function ensures all the outputs are of the same token.
-            require(sumTokenStatesOrZero(token) > Amount.zero(token)) {
+            // There must be inputs present.
+            require(isNotEmpty()) { "When redeeming tokens, there must be input states present." }
+            // We don't care about the token as the grouping function ensures all the inputs are of the same token.
+            val inputSum = sumTokenStatesOrZero(token)
+            require(inputSum > Amount.zero(token)) {
                 "When redeeming tokens an amount > ZERO must be redeemed."
+            }
+            val outSum = group.outputs.firstOrNull()?.amount ?: Amount.zero(token)
+            // We can't pay back more than redeeming. Additionally, it doesn't make sense to run redeem and pay exact change.
+            require(inputSum > outSum) {
+                "Change shouldn't exceed amount redeemed."
             }
             // There can only be one issuer per group as the issuer is part of the token which is used to group states.
             // If there are multiple issuers for the same tokens then there will be a group for each issued token. So,
             // the line below should never fail on single().
             val issuerKey = group.inputs.map { it.amount.token.issuer }.toSet().single().owningKey
-            val signer = redeemCommand.signers.single()
-            require(issuerKey == signer) {
-                "The issuer must be the only signing party when an amount of tokens are redeemed."
+            val ownersKeys = group.inputs.map { it.holder.owningKey }
+            val signers = redeemCommand.signers
+            require(issuerKey in signers) {
+                "The issuer must be the signing party when an amount of tokens are redeemed."
+            }
+            require(signers.containsAll(ownersKeys)) {
+                "Owners of redeemed states must be the signing parties."
             }
         }
     }
