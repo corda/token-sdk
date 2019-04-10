@@ -29,7 +29,9 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     // Corda dependencies.
-    cordaCompile "$corda_release_group:corda-core:$corda_release_version"
+    cordaCompile ("$corda_release_group:corda-core:$corda_release_version"){
+        changing = true
+    }
 
     // Logging.
     testCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
