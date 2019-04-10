@@ -55,6 +55,36 @@ val Int.JPY: Amount<FiatCurrency> get() = JPY(this)
 val Long.JPY: Amount<FiatCurrency> get() = JPY(this)
 val Double.JPY: Amount<FiatCurrency> get() = JPY(this)
 
+// Canadian Dollar.
+val CAD = FiatCurrency.getInstance("CAD")
+
+fun CAD(amount: Int): Amount<FiatCurrency> = amount(amount, CAD)
+fun CAD(amount: Long): Amount<FiatCurrency> = amount(amount, CAD)
+fun CAD(amount: Double): Amount<FiatCurrency> = amount(amount, CAD)
+val Int.CAD: Amount<FiatCurrency> get() = CAD(this)
+val Long.CAD: Amount<FiatCurrency> get() = CAD(this)
+val Double.CAD: Amount<FiatCurrency> get() = CAD(this)
+
+// Australian Dollar.
+val AUD = FiatCurrency.getInstance("AUD")
+
+fun AUD(amount: Int): Amount<FiatCurrency> = amount(amount, AUD)
+fun AUD(amount: Long): Amount<FiatCurrency> = amount(amount, AUD)
+fun AUD(amount: Double): Amount<FiatCurrency> = amount(amount, AUD)
+val Int.AUD: Amount<FiatCurrency> get() = AUD(this)
+val Long.AUD: Amount<FiatCurrency> get() = AUD(this)
+val Double.AUD: Amount<FiatCurrency> get() = AUD(this)
+
+// New Zealand Dollar.
+val NZD = FiatCurrency.getInstance("NZD")
+
+fun NZD(amount: Int): Amount<FiatCurrency> = amount(amount, NZD)
+fun NZD(amount: Long): Amount<FiatCurrency> = amount(amount, NZD)
+fun NZD(amount: Double): Amount<FiatCurrency> = amount(amount, NZD)
+val Int.NZD: Amount<FiatCurrency> get() = NZD(this)
+val Long.NZD: Amount<FiatCurrency> get() = NZD(this)
+val Double.NZD: Amount<FiatCurrency> get() = NZD(this)
+
 // Bitcoin.
 val BTC = DigitalCurrency.getInstance("BTC")
 
@@ -64,3 +94,12 @@ fun BTC(amount: Double): Amount<DigitalCurrency> = amount(amount, BTC)
 val Int.BTC: Amount<DigitalCurrency> get() = BTC(this)
 val Long.BTC: Amount<DigitalCurrency> get() = BTC(this)
 val Double.BTC: Amount<DigitalCurrency> get() = BTC(this)
+
+val XRP = DigitalCurrency.getInstance("XRP")
+
+fun XRP(amount: Int): Amount<DigitalCurrency> = amount(amount, XRP)
+fun XRP(amount: Long): Amount<DigitalCurrency> = amount(amount, XRP)
+fun XRP(amount: Double): Amount<DigitalCurrency> = amount(amount, XRP)
+val Int.XRP: Amount<DigitalCurrency> get() = XRP(this)
+val Long.XRP: Amount<DigitalCurrency> get() = XRP(this)
+val Double.XRP: Amount<DigitalCurrency> get() = XRP(this)
