@@ -1,10 +1,7 @@
 package com.r3.corda.sdk.token.workflow
 
 import com.r3.corda.sdk.token.contracts.EvolvableTokenContract
-import com.r3.corda.sdk.token.contracts.commands.Create
-import com.r3.corda.sdk.token.contracts.commands.EvolvableTokenTypeCommand
 import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
-import net.corda.core.contracts.Command
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.contracts.requireThat
@@ -13,26 +10,24 @@ import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import java.math.BigDecimal
-import java.security.PublicKey
 import java.time.Duration
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 
-class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charles", "Denise") {
+class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charlie", "Denise") {
 
     lateinit var alice: StartedMockNode
     lateinit var bob: StartedMockNode
-    lateinit var charles: StartedMockNode
+    lateinit var charlie: StartedMockNode
     lateinit var denise: StartedMockNode
 
     @Before
     override fun initialiseNodes() {
         alice = nodesByName.getValue("Alice")
         bob = nodesByName.getValue("Bob")
-        charles = nodesByName.getValue("Charles")
+        charlie = nodesByName.getValue("Charlie")
         denise = nodesByName.getValue("Denise")
     }
 
@@ -90,7 +85,7 @@ class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charles", "De
     @Test
     fun `with 1 maintainer and 1 additional participant`() {
         val maintainers = listOf(alice).map { it.legalIdentity() }
-        val participants = maintainers + listOf(charles).map { it.legalIdentity() }
+        val participants = maintainers + listOf(charlie).map { it.legalIdentity() }
         val token = ThingContract.TokenType(maintainers, participants)
 
         val createTx = alice.createEvolvableToken(token, NOTARY.legalIdentity()).getOrThrow()
@@ -104,7 +99,7 @@ class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charles", "De
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
         alice.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
-        charles.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
+        charlie.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
     }
 
     /**
@@ -114,7 +109,7 @@ class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charles", "De
     @Test
     fun `with 1 maintainer and 2 additional participants`() {
         val maintainers = listOf(alice).map { it.legalIdentity() }
-        val participants = maintainers + listOf(charles, denise).map { it.legalIdentity() }
+        val participants = maintainers + listOf(charlie, denise).map { it.legalIdentity() }
         val token = ThingContract.TokenType(maintainers, participants)
 
         val createTx = alice.createEvolvableToken(token, NOTARY.legalIdentity()).getOrThrow()
@@ -128,7 +123,7 @@ class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charles", "De
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
         alice.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
-        charles.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
+        charlie.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
         denise.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
     }
 
@@ -139,7 +134,7 @@ class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charles", "De
     @Test
     fun `with 2 maintainers and 1 additional participant`() {
         val maintainers = listOf(alice, bob).map { it.legalIdentity() }
-        val participants = maintainers + listOf(charles).map { it.legalIdentity() }
+        val participants = maintainers + listOf(charlie).map { it.legalIdentity() }
         val token = ThingContract.TokenType(maintainers, participants)
 
         val createTx = alice.createEvolvableToken(token, NOTARY.legalIdentity()).getOrThrow()
@@ -154,7 +149,7 @@ class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charles", "De
 
         alice.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
         bob.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
-        charles.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
+        charlie.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
     }
 
     /**
@@ -164,7 +159,7 @@ class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charles", "De
     @Test
     fun `with 2 maintainers and 2 additional participants`() {
         val maintainers = listOf(alice, bob).map { it.legalIdentity() }
-        val participants = maintainers + listOf(charles, denise).map { it.legalIdentity() }
+        val participants = maintainers + listOf(charlie, denise).map { it.legalIdentity() }
         val token = ThingContract.TokenType(maintainers, participants)
 
         val createTx = alice.createEvolvableToken(token, NOTARY.legalIdentity()).getOrThrow()
@@ -179,7 +174,7 @@ class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charles", "De
 
         alice.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
         bob.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
-        charles.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
+        charlie.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
         denise.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
     }
 
@@ -190,7 +185,7 @@ class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charles", "De
     @Test
     fun `fails if participants is not a superset of maintainers`() {
         val maintainers = listOf(alice).map { it.legalIdentity() }
-        val participants = listOf(charles).map { it.legalIdentity() }
+        val participants = listOf(charlie).map { it.legalIdentity() }
         val token = ThingContract.TokenType(maintainers, participants)
 
         assertFails("When creating an evolvable token all maintainers must also be participants.") { alice.createEvolvableToken(token, NOTARY.legalIdentity()).getOrThrow() }

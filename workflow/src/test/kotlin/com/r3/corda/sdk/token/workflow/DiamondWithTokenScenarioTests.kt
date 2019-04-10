@@ -37,9 +37,9 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
      * 1. GIC creates (publishes) the diamond grading report
      * 2. Denise (the diamond dealer) issues a holdable, discrete (non-fungible) token to Alice
      * 3. Alice transfers the discrete token to Bob
-     * 4. Bob transfers the discrete token to Charles
+     * 4. Bob transfers the discrete token to Charlie
      * 5. GIC amends (updates) the grading report
-     * 6. Charles redeems the holdable token with Denise (perhaps Denise buys back the diamond and plans to issue a new
+     * 6. Charlie redeems the holdable token with Denise (perhaps Denise buys back the diamond and plans to issue a new
      *    holdable token as replacement)
      *
      * TODO Implement step 6
@@ -73,7 +73,7 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
         assertRecordsTransaction(moveTokenToBobTx, alice, bob)
         assertNotRecordsTransaction(moveTokenToBobTx, gic, denise)
 
-        // STEP 04: Bob transfers ownership to Charles
+        // STEP 04: Bob transfers ownership to Charlie
         // Continuing the chain of sale
         val moveTokenToCharlieTx = bob.moveTokens(diamondPointer, charlie, anonymous = true).getOrThrow(Duration.ofSeconds(5))
         assertRecordsTransaction(moveTokenToCharlieTx, bob, charlie)
@@ -87,7 +87,7 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
         assertRecordsTransaction(updateDiamondTx, gic, denise) // Should include Charlie
         assertNotRecordsTransaction(updateDiamondTx, alice, bob)
 
-        // STEP 06: Charles redeems the token with Denise
+        // STEP 06: Charlie redeems the token with Denise
         // This should exit the holdable token
     }
 
