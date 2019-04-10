@@ -3,7 +3,6 @@ package com.r3.corda.sdk.token.workflow.selection
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.types.IssuedTokenType
 import com.r3.corda.sdk.token.contracts.types.TokenType
-import com.r3.corda.sdk.token.workflow.selection.VaultWatcherService.Companion.LOG
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.node.AppServiceHub
@@ -23,7 +22,7 @@ val unlocker: ScheduledExecutorService = Executors.newSingleThreadScheduledExecu
 @CordaService
 class VaultWatcherService(vaultObserver: VaultObserver? = null) {
 
-    val cache: ConcurrentMap<PublicKey, ConcurrentMap<Class<*>, ConcurrentMap<String, ConcurrentMap<StateAndRef<FungibleToken<TokenType>>, Boolean>>>> = ConcurrentHashMap()
+    val cache: ConcurrentMap<TokenIndex, TokenBucket> = ConcurrentHashMap()
 
     constructor(appServiceHub: AppServiceHub) : this(getObservableFromAppServiceHub(appServiceHub))
 
@@ -42,45 +41,43 @@ class VaultWatcherService(vaultObserver: VaultObserver? = null) {
             return VaultObserver(listOfThings, observable)
         }
 
+        fun processToken(token: FungibleToken<*>): TokenIndex {
+            val owner = token.holder.owningKey
+            val type = token.amount.token.tokenType.tokenClass
+            val typeId = token.amount.token.tokenType.tokenIdentifier
+            return TokenIndex(owner, type, typeId)
+        }
+
     }
 
 
     //owner -> tokenClass -> tokenIdentifier -> List
-
-
     init {
         vaultObserver?.initialValues?.forEach(::addTokenToCache)
         vaultObserver?.source?.subscribe(::onVaultUpdate)
     }
 
-    fun onVaultUpdate(t: Vault.Update<FungibleToken<out TokenType>>) {
+    private fun onVaultUpdate(t: Vault.Update<FungibleToken<out TokenType>>) {
         t.consumed.forEach(::removeTokenFromCache)
         t.produced.forEach(::addTokenToCache)
     }
 
-    fun removeTokenFromCache(it: StateAndRef<FungibleToken<*>>) {
-        val (owner, type, typeId) = processToken(it.state.data)
-        val tokenSet = getTokenSet(owner, type, typeId)
+    private fun removeTokenFromCache(it: StateAndRef<FungibleToken<*>>) {
+        val idx = processToken(it.state.data)
+        val tokenSet = getTokenBucket(idx)
         if (tokenSet.remove(it) != true) {
             LOG.warn("Received a consumption event for a token ${it.ref} which was either not present in the token cache, or was not locked")
         }
     }
 
-    fun addTokenToCache(stateAndRef: StateAndRef<FungibleToken<out TokenType>>) {
+    private fun addTokenToCache(stateAndRef: StateAndRef<FungibleToken<out TokenType>>) {
         val token = stateAndRef.state.data
         val (owner, type, typeId) = processToken(token)
-        val tokensForTypeInfo = getTokenSet(owner, type, typeId)
+        val tokensForTypeInfo = getTokenBucket(owner, type, typeId)
         val existingMark = tokensForTypeInfo.putIfAbsent(stateAndRef as StateAndRef<FungibleToken<TokenType>>, false)
         existingMark?.let {
             LOG.warn("Attempted to overwrite existing token ${stateAndRef.ref} during cache initialization, this suggests incorrect vault behaviours")
         }
-    }
-
-    fun unlockToken(stateAndRef: StateAndRef<FungibleToken<TokenType>>) {
-        val token = stateAndRef.state.data
-        val (owner, type, typeId) = processToken(token)
-        val tokensForTypeInfo = getTokenSet(owner, type, typeId)
-        tokensForTypeInfo.replace(stateAndRef, true, false)
     }
 
     inline fun <T : TokenType> selectTokens(
@@ -90,7 +87,7 @@ class VaultWatcherService(vaultObserver: VaultObserver? = null) {
             allowSubSelect: Boolean = false,
             autoUnlockDelay: Duration = Duration.ofMinutes(5)
     ): List<StateAndRef<FungibleToken<T>>> {
-        val set = getTokenSet(owner, amountRequested.token.tokenType.tokenClass, amountRequested.token.tokenType.tokenIdentifier)
+        val set = getTokenBucket(owner, amountRequested.token.tokenType.tokenClass, amountRequested.token.tokenType.tokenIdentifier)
         val lockedTokens = mutableListOf<StateAndRef<FungibleToken<TokenType>>>()
         var amountLocked: Amount<IssuedTokenType<T>> = amountRequested.copy(quantity = 0)
         for (tokenStateAndRef in set.keys) {
@@ -113,36 +110,34 @@ class VaultWatcherService(vaultObserver: VaultObserver? = null) {
         }
 
         unlocker.schedule({
-            lockedTokens.forEach { unlockToken(it) }
+            lockedTokens.forEach {
+                val token = it.state.data
+                val idx = processToken(token)
+                val tokensForTypeInfo = getTokenBucket(idx)
+                tokensForTypeInfo.replace(it, true, false)
+            }
         }, autoUnlockDelay.toMillis(), TimeUnit.MILLISECONDS)
 
         return lockedTokens as List<StateAndRef<FungibleToken<T>>>
     }
 
-    private fun processToken(token: FungibleToken<*>): Triple<PublicKey, Class<*>, String> {
-        val owner = token.holder.owningKey
-        val type = token.amount.token.tokenType.tokenClass
-        val typeId = token.amount.token.tokenType.tokenIdentifier
-        return Triple(owner, type, typeId)
+    fun getTokenBucket(idx: PublicKey, tokenClass: Class<*>, tokenIdentifier: String): TokenBucket {
+        return getTokenBucket(TokenIndex(idx, tokenClass, tokenIdentifier))
     }
 
-    fun getTokenSet(
-            owner: PublicKey,
-            type: Class<*>,
-            typeId: String
-    ): ConcurrentMap<StateAndRef<FungibleToken<TokenType>>, Boolean> {
-        return cache.computeIfAbsent(owner) {
-            ConcurrentHashMap()
-        }.computeIfAbsent(type) {
-            ConcurrentHashMap()
-        }.computeIfAbsent(typeId) {
-            ConcurrentHashMap()
+    fun getTokenBucket(idx : TokenIndex): TokenBucket {
+        return cache.computeIfAbsent(idx) {
+            TokenBucket()
         }
     }
 
 }
 
-data class VaultObserver(val initialValues: List<StateAndRef<FungibleToken<TokenType>>>, val source: Observable<Vault.Update<FungibleToken<out TokenType>>>)
+data class VaultObserver(val initialValues: List<StateAndRef<FungibleToken<TokenType>>>,
+                         val source: Observable<Vault.Update<FungibleToken<out TokenType>>>)
 
+class TokenBucket(private val __backingMap: ConcurrentMap<StateAndRef<FungibleToken<TokenType>>, Boolean> = ConcurrentHashMap()) : ConcurrentMap<StateAndRef<FungibleToken<TokenType>>, Boolean> by __backingMap
+
+data class TokenIndex(val owner: PublicKey, val tokenClazz: Class<*>, val tokenIdentifier: String)
 
 class InsufficientBalanceException(message: String) : RuntimeException(message)
