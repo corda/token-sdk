@@ -57,15 +57,15 @@ the token SDK as a dependency to your CorDapp. Add the following lines
 to the `build.gradle` files for your CorDapp. In your contract
 `build.gradle`, add:
 
-    compile "com.r3.corda.sdk.token:token-sdk-contract:0.1"
+    cordaCompile "com.r3.tokens-sdk:contract:1.0-SNAPSHOT"
     
 In your workflow `build.gradle` add:
 
-    compile "com.r3.corda.sdk.token:token-sdk-workflow:0.1"
+    cordaCompile "com.r3.tokens-sdk:workflow:1.0-SNAPSHOT"
 
 For `FiatCurrency` and `DigitalCurrency` definitions add:
 
-    compile "com.r3.corda.sdk.token.plugins:token-sdk-money:0.1"
+    cordaCompile "com.r3.tokens-sdk:money:1.0-SNAPSHOT"
 
 Alternatively, you can use the following bootstrapped token SDK template:
 
