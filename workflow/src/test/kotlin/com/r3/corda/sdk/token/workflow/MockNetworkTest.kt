@@ -1,5 +1,6 @@
 package com.r3.corda.sdk.token.workflow
 
+import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
 import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
@@ -7,6 +8,7 @@ import com.r3.corda.sdk.token.workflow.flows.CreateEvolvableToken
 import com.r3.corda.sdk.token.workflow.flows.IssueToken
 import com.r3.corda.sdk.token.workflow.flows.MoveToken
 import com.r3.corda.sdk.token.workflow.flows.RedeemToken
+import com.r3.corda.sdk.token.workflow.flows.RequestConfidentialIdentity
 import com.r3.corda.sdk.token.workflow.flows.UpdateEvolvableToken
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.Amount
@@ -14,9 +16,12 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.crypto.SecureHash
+import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.FlowSession
+import net.corda.core.flows.InitiatedBy
+import net.corda.core.flows.InitiatingFlow
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
-import net.corda.core.toFuture
 import net.corda.core.transactions.SignedTransaction
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.internal.chooseIdentity
@@ -24,7 +29,6 @@ import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
 import org.junit.After
 import org.junit.Before
-import java.util.concurrent.TimeUnit
 
 abstract class MockNetworkTest(val names: List<CordaX500Name>) {
 
@@ -98,19 +102,27 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
 
     fun <T : TokenType> StartedMockNode.issueTokens(
             token: T,
-            owner: StartedMockNode,
+            issueTo: StartedMockNode,
             notary: StartedMockNode,
             amount: Amount<T>? = null,
             anonymous: Boolean = true
     ): CordaFuture<SignedTransaction> {
         return transaction {
-            startFlow(IssueToken.Initiator(
-                    token = token,
-                    owner = owner.legalIdentity(),
-                    notary = notary.legalIdentity(),
-                    amount = amount,
-                    anonymous = anonymous
-            ))
+            if (anonymous) {
+                startFlow(ConfidentialIssueFlow.Initiator(
+                        token = token,
+                        holder = issueTo.legalIdentity(),
+                        notary = notary.legalIdentity(),
+                        amount = amount
+                ))
+            } else {
+                startFlow(IssueToken.Initiator(
+                        token = token,
+                        issueTo = issueTo.legalIdentity(),
+                        notary = notary.legalIdentity(),
+                        amount = amount
+                ))
+            }
         }
     }
 
@@ -121,12 +133,19 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
             anonymous: Boolean = true
     ): CordaFuture<SignedTransaction> {
         return transaction {
-            startFlow(MoveToken.Initiator(
-                    ownedToken = token,
-                    owner = owner.legalIdentity(),
-                    amount = amount,
-                    anonymous = anonymous
-            ))
+            if (anonymous) {
+                startFlow(ConfidentialMoveFlow.Initiator(
+                        ownedToken = token,
+                        holder = owner.legalIdentity(),
+                        amount = amount
+                ))
+            } else {
+                startFlow(MoveToken.Initiator(
+                        ownedToken = token,
+                        holder = owner.legalIdentity(),
+                        amount = amount
+                ))
+            }
         }
 
     }
@@ -145,4 +164,54 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
         ))
     }
 
+    object ConfidentialIssueFlow {
+        @InitiatingFlow
+        class Initiator<T : TokenType>(
+                val token: T,
+                val holder: Party,
+                val notary: Party,
+                val amount: Amount<T>? = null
+        ) : FlowLogic<SignedTransaction>() {
+            @Suspendable
+            override fun call(): SignedTransaction {
+                val holderSession = initiateFlow(holder)
+                val confidentialHolder = subFlow(RequestConfidentialIdentity.Initiator(holderSession)).party.anonymise()
+                return subFlow(IssueToken.Initiator(token, confidentialHolder, notary, amount, holderSession))
+            }
+        }
+
+        @InitiatedBy(Initiator::class)
+        class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
+            @Suspendable
+            override fun call() {
+                subFlow(RequestConfidentialIdentity.Responder(otherSession))
+                subFlow(IssueToken.Responder(otherSession))
+            }
+        }
+    }
+
+    object ConfidentialMoveFlow {
+        @InitiatingFlow
+        class Initiator<T : TokenType>(
+                val ownedToken: T,
+                val holder: Party,
+                val amount: Amount<T>? = null
+        ) : FlowLogic<SignedTransaction>() {
+            @Suspendable
+            override fun call(): SignedTransaction {
+                val holderSession = initiateFlow(holder)
+                val confidentialHolder = subFlow(RequestConfidentialIdentity.Initiator(holderSession)).party.anonymise()
+                return subFlow(MoveToken.Initiator(ownedToken, confidentialHolder, amount, holderSession))
+            }
+        }
+
+        @InitiatedBy(Initiator::class)
+        class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
+            @Suspendable
+            override fun call() {
+                subFlow(RequestConfidentialIdentity.Responder(otherSession))
+                subFlow(MoveToken.Responder(otherSession))
+            }
+        }
+    }
 }

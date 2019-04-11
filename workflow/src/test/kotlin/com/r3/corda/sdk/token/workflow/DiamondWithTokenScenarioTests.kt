@@ -50,7 +50,7 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
         val diamondPointer = publishedDiamond.state.data.toPointer<DiamondCertificate.State>()
         val issueTokenTx = denise.issueTokens(
                 token = diamondPointer,
-                owner = alice,
+                issueTo = alice,
                 notary = NOTARY,
                 anonymous = true
         ).getOrThrow()

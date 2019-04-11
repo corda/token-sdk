@@ -13,68 +13,64 @@ import net.corda.core.flows.InitiatingFlow
 import net.corda.core.flows.ReceiveFinalityFlow
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.AbstractParty
-import net.corda.core.identity.Party
 import net.corda.core.node.StatesToRecord
-import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
-import net.corda.core.utilities.unwrap
+import net.corda.core.utilities.ProgressTracker
 
 object MoveToken {
-
-    @CordaSerializable
-    data class TokenMoveNotification(val anonymous: Boolean)
 
     @InitiatingFlow
     @StartableByRPC
     class Initiator<T : TokenType>(
             val ownedToken: T,
-            val owner: Party,
+            val holder: AbstractParty,
             val amount: Amount<T>? = null,
-            val anonymous: Boolean = true
+            val session: FlowSession? = null
     ) : FlowLogic<SignedTransaction>() {
-        @Suspendable
-        override fun call(): SignedTransaction {
-            val ownerSession = initiateFlow(owner)
-
-            // Notify the recipient that we'll be sending them tokens and advise them of anything they must do, e.g.
-            // generate a confidential identity for the issuer or sign up for updates for evolvable tokens.
-            ownerSession.send(MoveToken.TokenMoveNotification(anonymous = anonymous))
-
-            val owningParty: AbstractParty = if (anonymous) {
-                subFlow(RequestConfidentialIdentity.Initiator(ownerSession)).party.anonymise()
-            } else owner
-
-            val (builder, keys) = if (amount == null) {
-                generateMoveNonFungible(serviceHub.vaultService, ownedToken, owningParty)
-            } else {
-                val tokenSelection = TokenSelection(serviceHub)
-                tokenSelection.generateMove(TransactionBuilder(), amount, owningParty)
+        companion object {
+            object GENERATE_MOVE : ProgressTracker.Step("Generating tokens move.")
+            object SIGNING : ProgressTracker.Step("Signing transaction proposal.")
+            object RECORDING : ProgressTracker.Step("Recording signed transaction.") {
+                override fun childProgressTracker() = FinalityFlow.tracker()
             }
 
+            fun tracker() = ProgressTracker(GENERATE_MOVE, SIGNING, RECORDING)
+        }
+
+        override val progressTracker: ProgressTracker = tracker()
+
+        @Suspendable
+        override fun call(): SignedTransaction {
+            val holderParty = serviceHub.identityService.wellKnownPartyFromAnonymous(holder)
+                    ?: throw IllegalArgumentException("Called MoveToken flow with anonymous party that node doesn't know about. " +
+                            "Make sure that RequestConfidentialIdentity flow is called before.")
+            val holderSession = if (session == null) initiateFlow(holderParty) else session
+
+            progressTracker.currentStep = GENERATE_MOVE
+            val (builder, keys) = if (amount == null) {
+                generateMoveNonFungible(serviceHub.vaultService, ownedToken, holder)
+            } else {
+                val tokenSelection = TokenSelection(serviceHub)
+                tokenSelection.generateMove(TransactionBuilder(), amount, holder)
+            }
+
+            progressTracker.currentStep = SIGNING
             // WARNING: At present, the recipient will not be signed up to updates from the token maintainer.
             val stx: SignedTransaction = serviceHub.signInitialTransaction(builder, keys)
+            progressTracker.currentStep = RECORDING
             // No need to pass in a session as there's no counterparty involved.
-            return subFlow(FinalityFlow(transaction = stx, sessions = listOf(ownerSession)))
+            return subFlow(FinalityFlow(transaction = stx, sessions = listOf(holderSession)))
         }
     }
 
+    // TODO Don't really need it anymore as it calls only finality flow
     @InitiatedBy(Initiator::class)
     class Responder(val otherSession: FlowSession) : FlowLogic<SignedTransaction>() {
         @Suspendable
         override fun call(): SignedTransaction {
-            // Receive a move notification from the issuer. It tells us if we need to sign up for token updates or
-            // generate a confidential identity.
-            val moveNotification = otherSession.receive<TokenMoveNotification>().unwrap { it }
-
-            // Generate and send over a new confidential identity, if necessary.
-            if (moveNotification.anonymous) {
-                subFlow(RequestConfidentialIdentity.Responder(otherSession))
-            }
-
             // Resolve the issuance transaction.
             return subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
         }
     }
-
 }

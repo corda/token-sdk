@@ -21,18 +21,17 @@ import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.StatesToRecord
-import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
-import net.corda.core.utilities.unwrap
 
 /**
  * This flow takes a bunch of parameters and is used to issue a token or an amount of some token on the ledger to
  * a specified party. Most of the parameters are self explanatory. Most likely, this flow will be used as a sub-flow
  * from another flow which handles the over-arching token issuance process.
  *
- * @param owner the party which is the recipient of the token or amount of tokens
+ * @param issueTo the party which is the recipient of the token or amount of tokens. It can be a Party or an AnonymousParty,
+ *  in the latter case it is important that [RequestConfidentialIdentity] flow was called to generate and record new identities.
  * @param notary the notary which will be used for the owned token state. Currently the same notary must be used for the
  * token and the owned token if it contains an evolvable pointer.
  * @param token the type of token which will be issued. This can either be a [FixedTokenType] or a [TokenPointer]. Both
@@ -51,8 +50,6 @@ import net.corda.core.utilities.unwrap
  * if an amount of ONE is specified and the token has fraction digits set to "0.1" then that ONE token could be split
  * into TEN atomic units of the token. Likewise, if the token has fraction digits set to "0.01", then that ONE token
  * could be split into ONE HUNDRED atomic units of the token.
- * @param anonymous defaults to true. When true, the issuer asks the recipient for a newly generated public key which
- * will be used as the owning key for the tokens.
  *
  * It is likely that this flow will be split up in the future as the process becomes more complex.
  *
@@ -63,29 +60,23 @@ import net.corda.core.utilities.unwrap
  */
 object IssueToken {
 
-    @CordaSerializable
-    data class TokenIssuanceNotification(val anonymous: Boolean)
-
     @InitiatingFlow
     @StartableByRPC
     class Initiator<T : TokenType>(
             val token: T,
-            val owner: Party,
+            val issueTo: AbstractParty,
             val notary: Party,
             val amount: Amount<T>? = null,
-            val anonymous: Boolean = true
+            val session: FlowSession? = null
     ) : FlowLogic<SignedTransaction>() {
-
         companion object {
-            object ISSUANCE_NOTIFICATION : ProgressTracker.Step("Sending issuance notification to counterparty.")
-            object REQUEST_CONF_ID : ProgressTracker.Step("Requesting confidential identity.")
             object DIST_LIST : ProgressTracker.Step("Adding party to distribution list.")
             object SIGNING : ProgressTracker.Step("Signing transaction proposal.")
             object RECORDING : ProgressTracker.Step("Recording signed transaction.") {
                 override fun childProgressTracker() = FinalityFlow.tracker()
             }
 
-            fun tracker() = ProgressTracker(ISSUANCE_NOTIFICATION, REQUEST_CONF_ID, DIST_LIST, SIGNING, RECORDING)
+            fun tracker() = ProgressTracker(DIST_LIST, SIGNING, RECORDING)
         }
 
         override val progressTracker: ProgressTracker = tracker()
@@ -95,27 +86,19 @@ object IssueToken {
             // This is the identity which will be used to issue tokens.
             // We also need a session for the other side.
             val me: Party = ourIdentity
-            val ownerSession = initiateFlow(owner)
-
-            progressTracker.currentStep = ISSUANCE_NOTIFICATION
-            // Notify the recipient that we'll be issuing them a tokens and advise them of anything they must do, e.g.
-            // generate a confidential identity for the issuer or sign up for updates for evolvable tokens.
-            ownerSession.send(TokenIssuanceNotification(anonymous = anonymous))
-
-            // This is the recipient of the tokens identity.
-            val owningParty: AbstractParty = if (anonymous) {
-                progressTracker.currentStep = REQUEST_CONF_ID
-                subFlow(RequestConfidentialIdentity.Initiator(ownerSession)).party.anonymise()
-            } else owner
+            val holderParty = serviceHub.identityService.wellKnownPartyFromAnonymous(issueTo)
+                    ?: throw IllegalArgumentException("Called IssueToken flow with anonymous party that node doesn't know about. " +
+                            "Make sure that RequestConfidentialIdentity flow is called before.")
+            val holderSession = if (session == null) initiateFlow(holderParty) else session
 
             // Create the issued token. We add this to the commands for grouping.
             val issuedToken: IssuedTokenType<T> = token issuedBy me
 
             // Create the token. It's either an NonFungibleToken or FungibleToken.
-            val ownedToken: AbstractToken = if (amount == null) {
-                issuedToken heldBy owningParty
+            val heldToken: AbstractToken = if (amount == null) {
+                issuedToken heldBy issueTo
             } else {
-                amount issuedBy me heldBy owningParty
+                amount issuedBy me heldBy issueTo
             }
 
             // At this point, the issuer signs up the recipient to automatic updates for evolvable tokens. On the other
@@ -130,11 +113,11 @@ object IssueToken {
             // from the issuer, this way the token updates proliferate through the network.
             if (token is TokenPointer<*>) {
                 progressTracker.currentStep = DIST_LIST
-                subFlow(AddPartyToDistributionList(owner, token.pointer.pointer))
+                subFlow(AddPartyToDistributionList(holderParty, token.pointer.pointer))
             }
 
             // Create the transaction.
-            val transactionState: TransactionState<AbstractToken> = ownedToken withNotary notary
+            val transactionState: TransactionState<AbstractToken> = heldToken withNotary notary
             val utx: TransactionBuilder = TransactionBuilder(notary = notary).apply {
                 addCommand(data = IssueTokenCommand(issuedToken), keys = listOf(me.owningKey))
                 addOutputState(state = transactionState)
@@ -145,8 +128,7 @@ object IssueToken {
             // No need to pass in a session as there's no counterparty involved.
             progressTracker.currentStep = RECORDING
             // Can issue to yourself, but finality flow doesn't take a session then.
-            // TODO Changes will be required when we let anonymous identities be passed as owner.
-            val sessions = if (me == owner) emptyList() else listOf(ownerSession)
+            val sessions = if (me == holderParty) emptyList() else listOf(holderSession)
             return subFlow(FinalityFlow(transaction = stx,
                     progressTracker = RECORDING.childProgressTracker(),
                     sessions = sessions
@@ -158,15 +140,6 @@ object IssueToken {
     class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
         @Suspendable
         override fun call(): Unit {
-            // Receive an issuance notification from the issuer. It tells us if we need to sign up for token updates or
-            // generate a confidential identity.
-            val issuanceNotification = otherSession.receive<TokenIssuanceNotification>().unwrap { it }
-
-            // Generate and send over a new confidential identity, if necessary.
-            if (issuanceNotification.anonymous) {
-                subFlow(RequestConfidentialIdentity.Responder(otherSession))
-            }
-
             // We must do this check because FinalityFlow does not send locally and we want to be able to issue to ourselves.
             if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
                 // Resolve the issuance transaction.

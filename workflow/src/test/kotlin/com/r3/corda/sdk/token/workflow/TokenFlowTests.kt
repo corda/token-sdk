@@ -3,16 +3,19 @@ package com.r3.corda.sdk.token.workflow
 import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.contracts.utilities.of
 import com.r3.corda.sdk.token.money.GBP
+import com.r3.corda.sdk.token.workflow.flows.IssueToken
+import com.r3.corda.sdk.token.workflow.flows.MoveToken
 import com.r3.corda.sdk.token.workflow.statesAndContracts.House
 import com.r3.corda.sdk.token.workflow.utilities.getDistributionList
 import com.r3.corda.sdk.token.workflow.utilities.getLinearStateById
-import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountsByToken
 import com.r3.corda.sdk.token.workflow.utilities.tokenBalance
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
+import net.corda.testing.internal.chooseIdentityAndCert
 import net.corda.testing.node.StartedMockNode
+import org.assertj.core.api.Assertions
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -151,4 +154,21 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 3) {
         A.watchForTransaction(issueTokenB.id).toCompletableFuture().getOrThrow()
     }
 
+    @Test
+    fun `issue to unknown anonymous party`() {
+        val confidentialHolder = A.services.keyManagementService.freshKeyAndCert(A.services.myInfo.chooseIdentityAndCert(), false).party.anonymise()
+        Assertions.assertThatThrownBy {
+            I.startFlow(IssueToken.Initiator(GBP, confidentialHolder, NOTARY.legalIdentity(), 100.GBP)).getOrThrow()
+        }.hasMessageContaining("Called IssueToken flow with anonymous party that node doesn't know about. Make sure that RequestConfidentialIdentity flow is called before.")
+    }
+
+    @Test
+    fun `move to unknown anonymous party`() {
+        val issueTokenTx = I.issueTokens(GBP, A, NOTARY, 100.GBP).getOrThrow()
+        A.watchForTransaction(issueTokenTx.id).getOrThrow()
+        val confidentialHolder = B.services.keyManagementService.freshKeyAndCert(B.services.myInfo.chooseIdentityAndCert(), false).party.anonymise()
+        Assertions.assertThatThrownBy {
+            A.startFlow(MoveToken.Initiator(GBP, confidentialHolder, 50.GBP)).getOrThrow()
+        }.hasMessageContaining("Called MoveToken flow with anonymous party that node doesn't know about. Make sure that RequestConfidentialIdentity flow is called before.")
+    }
 }
