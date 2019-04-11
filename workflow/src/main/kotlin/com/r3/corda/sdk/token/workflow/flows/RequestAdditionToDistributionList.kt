@@ -2,6 +2,7 @@ package com.r3.corda.sdk.token.workflow.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
+import com.r3.corda.sdk.token.workflow.utilities.addPartyToDistributionList
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.*
 import net.corda.core.utilities.unwrap
@@ -55,7 +56,7 @@ object RequestAdditionToDistributionList {
             val stateAndRef = otherSession.receive<StateAndRef<EvolvableTokenType>>().unwrap { it }
             val linearId = stateAndRef.state.data.linearId
             logger.info("Receiving request from ${otherSession.counterparty} to be added to the distribution list for $linearId.")
-            subFlow(AddPartyToDistributionList(otherSession.counterparty, linearId))
+            serviceHub.addPartyToDistributionList(otherSession.counterparty, linearId)
             otherSession.send(FlowResult.Success)
         }
     }

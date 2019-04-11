@@ -9,6 +9,7 @@ import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.contracts.utilities.heldBy
 import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
+import com.r3.corda.sdk.token.workflow.utilities.addPartyToDistributionList
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionState
 import net.corda.core.flows.FinalityFlow
@@ -113,7 +114,7 @@ object IssueToken {
             // from the issuer, this way the token updates proliferate through the network.
             if (token is TokenPointer<*>) {
                 progressTracker.currentStep = DIST_LIST
-                subFlow(AddPartyToDistributionList(holderParty, token.pointer.pointer))
+                serviceHub.addPartyToDistributionList(holderParty, token.pointer.pointer)
             }
 
             // Create the transaction.
