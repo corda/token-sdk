@@ -19,6 +19,8 @@ import java.util.concurrent.TimeoutException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
+const val DEFAULT_WATCH_FOR_TRANSACTION_TIMEOUT = 6L
+
 fun StartedMockNode.legalIdentity() = services.myInfo.legalIdentities.first()
 
 /** From a transaction which produces a single output, retrieve that output. */
@@ -36,7 +38,7 @@ fun StartedMockNode.watchForTransaction(tx: SignedTransaction): CordaFuture<Sign
     return watchForTransaction(tx.id)
 }
 
-fun assertRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode, timeout: Long = 2) {
+fun assertRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_TRANSACTION_TIMEOUT) {
     nodes.map {
         it.watchForTransaction(txId)
     }.map {
@@ -44,11 +46,11 @@ fun assertRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode, ti
     }
 }
 
-fun assertRecordsTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode, timeout: Long = 2) {
+fun assertRecordsTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_TRANSACTION_TIMEOUT) {
     assertRecordsTransaction(tx.id, *nodes, timeout = timeout)
 }
 
-fun assertNotRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode, timeout: Long = 2) {
+fun assertNotRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_TRANSACTION_TIMEOUT) {
     nodes.map {
         it.watchForTransaction(txId)
     }.map {
@@ -56,7 +58,7 @@ fun assertNotRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode,
     }
 }
 
-fun assertNotRecordsTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode, timeout: Long = 2) {
+fun assertNotRecordsTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_TRANSACTION_TIMEOUT) {
     assertNotRecordsTransaction(tx.id, *nodes, timeout = timeout)
 }
 

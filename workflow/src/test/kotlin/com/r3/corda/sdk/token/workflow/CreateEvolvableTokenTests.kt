@@ -51,7 +51,7 @@ class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charlie", "De
         val maintainerKeys = maintainers.map{ it.owningKey }.toSet()
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
-        alice.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
+        assertRecordsTransaction(createTx, alice)
     }
 
     /**
@@ -74,8 +74,7 @@ class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charlie", "De
         val maintainerKeys = maintainers.map{ it.owningKey }.toSet()
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
-        alice.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
-        bob.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
+        assertRecordsTransaction(createTx, alice, bob)
     }
 
     /**
@@ -98,8 +97,7 @@ class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charlie", "De
         val maintainerKeys = maintainers.map{ it.owningKey }.toSet()
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
-        alice.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
-        charlie.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
+        assertRecordsTransaction(createTx, alice, charlie)
     }
 
     /**
@@ -122,9 +120,8 @@ class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charlie", "De
         val maintainerKeys = maintainers.map{ it.owningKey }.toSet()
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
-        alice.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
-        charlie.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
-        denise.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
+        // Alice, Charlie, and Denise should record the transaction
+        assertRecordsTransaction(createTx, alice, charlie, denise)
     }
 
     /**
@@ -147,9 +144,8 @@ class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charlie", "De
         val maintainerKeys = maintainers.map{ it.owningKey }.toSet()
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
-        alice.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
-        bob.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
-        charlie.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
+        // Alice, Bob, and Charlie should record the transaction
+        assertRecordsTransaction(createTx, alice, bob, charlie)
     }
 
     /**
@@ -172,10 +168,9 @@ class CreateEvolvableTokenTests : MockNetworkTest("Alice", "Bob", "Charlie", "De
         val maintainerKeys = maintainers.map{ it.owningKey }.toSet()
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
-        alice.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
-        bob.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
-        charlie.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
-        denise.watchForTransaction(createTx).getOrThrow(Duration.ofSeconds(10))
+
+        // Alice, Bob, Charlie, and Denise should record the transaction
+        assertRecordsTransaction(createTx, alice, bob, charlie, denise)
     }
 
     /**
