@@ -40,6 +40,12 @@ open class NonFungibleToken<T : TokenType>(
 
     override val issuedTokenType: IssuedTokenType<T> get() = token
 
+    override val issuedTokenType: IssuedTokenType<T> get() = token
+
+    override val tokenType: T get() = token.tokenType
+
+    override val issuer: Party get() = token.issuer
+
     override fun toString(): String = "$token owned by $holderString"
 
     override fun withNewHolder(newHolder: AbstractParty): NonFungibleToken<T> {
