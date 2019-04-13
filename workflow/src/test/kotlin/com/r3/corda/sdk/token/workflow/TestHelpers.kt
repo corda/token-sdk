@@ -64,7 +64,7 @@ fun assertNotRecordsTransaction(tx: SignedTransaction, vararg nodes: StartedMock
 
 /** Create an evolvable token. */
 fun <T : EvolvableTokenType> StartedMockNode.createEvolvableToken(evolvableToken: T, notary: Party): CordaFuture<SignedTransaction> {
-    return transaction { startFlow(CreateEvolvableToken.Initiator(transactionState = evolvableToken withNotary notary)) }
+    return transaction { startFlow(CreateEvolvableToken(transactionState = evolvableToken withNotary notary)) }
 }
 
 /** Update an evolvable token. */
