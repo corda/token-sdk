@@ -300,6 +300,7 @@ object EvolvableTokenTests {
                 // Note: Due to change in V4, the TransactionBuilder will coalesce commands by CommandData. This means
                 // that multiple commands of the same type are merged with the union of all signers.
                 // This will _not_ error.
+                // TODO Ensure this test passes/fails as expected for the given version of Corda
                 tweak {
                     command(ALICE.publicKey, Create())
                     command(ALICE.publicKey, Create())
@@ -317,6 +318,7 @@ object EvolvableTokenTests {
                 // Note: Due to change in V4, the TransactionBuilder will coalesce commands by CommandData. This means
                 // that multiple commands of the same type are merged with the union of all signers.
                 // This will _not_ error the same way as other multiple commands.
+                // TODO Ensure this test passes/fails as expected for the given version of Corda
                 tweak {
                     command(ALICE.publicKey, Create())
                     command(BOB.publicKey, Create())
@@ -339,6 +341,7 @@ object EvolvableTokenTests {
                 // Note: Due to change in V4, the TransactionBuilder will coalesce commands by CommandData. This means
                 // that multiple commands of the same type are merged with the union of all signers.
                 // This will _not_ error as the result will be one Create command signed by both maintainers.
+                // TODO Ensure this test passes/fails as expected for the given version of Corda
                 tweak {
                     command(ALICE.publicKey, Create())
                     command(BOB.publicKey, Create())
@@ -349,6 +352,7 @@ object EvolvableTokenTests {
                 // Note: Due to change in V4, the TransactionBuilder will coalesce commands by CommandData. This means
                 // that multiple commands of the same type are merged with the union of all signers.
                 // This will _not_ error the same way as other multiple commands.
+                // TODO Ensure this test passes/fails as expected for the given version of Corda
                 tweak {
                     command(ALICE.publicKey, Create())
                     command(BOB.publicKey, Create())
@@ -611,6 +615,7 @@ object EvolvableTokenTests {
                 // Note: Due to change in V4, the TransactionBuilder will coalesce commands by CommandData. This means
                 // that multiple commands of the same type are merged with the union of all signers.
                 // This will _not_ error.
+                // TODO Ensure this test passes/fails as expected for the given version of Corda
                 tweak {
                     command(ALICE.publicKey, Update())
                     command(ALICE.publicKey, Update())
@@ -628,6 +633,7 @@ object EvolvableTokenTests {
                 // Note: Due to change in V4, the TransactionBuilder will coalesce commands by CommandData. This means
                 // that multiple commands of the same type are merged with the union of all signers.
                 // This will _not_ error the same way as other multiple commands.
+                // TODO Ensure this test passes/fails as expected for the given version of Corda
                 tweak {
                     command(ALICE.publicKey, Update())
                     command(BOB.publicKey, Update())
@@ -653,6 +659,7 @@ object EvolvableTokenTests {
                 // Note: Due to change in V4, the TransactionBuilder will coalesce commands by CommandData. This means
                 // that multiple commands of the same type are merged with the union of all signers.
                 // This will _not_ error as the result will be one Create command signed by both maintainers.
+                // TODO Ensure this test passes/fails as expected for the given version of Corda
                 tweak {
                     command(ALICE.publicKey, Update())
                     command(BOB.publicKey, Update())
@@ -663,6 +670,7 @@ object EvolvableTokenTests {
                 // Note: Due to change in V4, the TransactionBuilder will coalesce commands by CommandData. This means
                 // that multiple commands of the same type are merged with the union of all signers.
                 // This will _not_ error the same way as other multiple commands.
+                // TODO Ensure this test passes/fails as expected for the given version of Corda
                 tweak {
                     command(ALICE.publicKey, Update())
                     command(BOB.publicKey, Update())
