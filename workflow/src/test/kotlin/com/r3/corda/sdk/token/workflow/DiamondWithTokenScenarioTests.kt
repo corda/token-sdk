@@ -2,7 +2,7 @@ package com.r3.corda.sdk.token.workflow
 
 import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
 import com.r3.corda.sdk.token.contracts.types.TokenPointer
-import com.r3.corda.sdk.token.workflow.statesAndContracts.DiamondGradingReport
+import com.r3.corda.sdk.token.workflow.states.DiamondGradingReport
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
 import org.junit.Ignore
@@ -38,15 +38,15 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
     fun `lifecycle example`() {
         // STEP 01: GIC publishes the diamond certificate
         // GIC publishes and shares with Denise
-        val diamond = DiamondGradingReport.State("1.0", DiamondGradingReport.ColorScale.A, DiamondGradingReport.ClarityScale.A, DiamondGradingReport.CutScale.A, gic.legalIdentity(), denise.legalIdentity())
+        val diamond = DiamondGradingReport("1.0", DiamondGradingReport.ColorScale.A, DiamondGradingReport.ClarityScale.A, DiamondGradingReport.CutScale.A, gic.legalIdentity(), denise.legalIdentity())
         val publishDiamondTx = gic.createEvolvableToken(diamond, notary.legalIdentity()).getOrThrow()
-        val publishedDiamond = publishDiamondTx.singleOutput<DiamondGradingReport.State>()
+        val publishedDiamond = publishDiamondTx.singleOutput<DiamondGradingReport>()
         assertEquals(diamond, publishedDiamond.state.data, "Original diamond did not match the published diamond.")
         denise.watchForTransaction(publishDiamondTx).getOrThrow(Duration.ofSeconds(5))
 
         // STEP 02: Denise creates ownership token
         // Denise issues the token to Alice
-        val diamondPointer = publishedDiamond.state.data.toPointer<DiamondGradingReport.State>()
+        val diamondPointer = publishedDiamond.state.data.toPointer<DiamondGradingReport>()
         val issueTokenTx = denise.issueTokens(
                 token = diamondPointer,
                 issueTo = alice,
@@ -79,12 +79,11 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
 
         // STEP 06: Charlie redeems the token with Denise
         // This should exit the holdable token
-        val charlieDiamond = moveTokenToCharlieTx.tx.outputsOfType<NonFungibleToken<TokenPointer<DiamondGradingReport.State>>>().first()
+        val charlieDiamond = moveTokenToCharlieTx.tx.outputsOfType<NonFungibleToken<TokenPointer<DiamondGradingReport>>>().first()
         val redeemDiamondTx = charlie.redeemTokens(charlieDiamond.token.tokenType, denise).getOrThrow(Duration.ofSeconds(5))
         assertRecordsTransaction(redeemDiamondTx, charlie, denise)
-        // assertNotRecordsTransaction(updateDiamondTx, gic)
-        assertNotRecordsTransaction(updateDiamondTx, alice)
-        assertNotRecordsTransaction(updateDiamondTx, bob)
+        assertNotRecordsTransaction(updateDiamondTx, alice, bob)
+        assertNotRecordsTransaction(updateDiamondTx, gic) // TODO Why does GIC (evolvable token maintainer) see a copy of the transaction?
     }
 
     /**
