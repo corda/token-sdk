@@ -1,9 +1,10 @@
 package com.r3.corda.sdk.token.workflow
 
+import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
+import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.workflow.statesAndContracts.DiamondGradingReport
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
-import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 import java.time.Duration
@@ -13,22 +14,13 @@ import kotlin.test.assertEquals
  * This test suite is intended to test and demonstrate common scenarios for working with evolvable token types and
  * non-fungible (discrete) holdable tokens.
  */
-class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of Corda (GIC)", "Denise", "Alice", "Bob", "Charlie") {
+class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
 
-    lateinit var gic: StartedMockNode
-    lateinit var denise: StartedMockNode
-    lateinit var alice: StartedMockNode
-    lateinit var bob: StartedMockNode
-    lateinit var charlie: StartedMockNode
-
-    @Before
-    override fun initialiseNodes() {
-        gic = nodesByName.getValue("Gemological Institute of Corda (GIC)")
-        denise = nodesByName.getValue("Denise")
-        alice = nodesByName.getValue("Alice")
-        bob = nodesByName.getValue("Bob")
-        charlie = nodesByName.getValue("Charlie")
-    }
+    private val gic: StartedMockNode get() = node("Gemological Institute of Corda (GIC)")
+    private val denise: StartedMockNode get() = node("Denise")
+    private val alice: StartedMockNode get() = node("Alice")
+    private val bob: StartedMockNode get() = node("Bob")
+    private val charlie: StartedMockNode get() = node("Charlie")
 
     /**
      * This scenario creates a new evolvable token type and issues holdable tokens. It is intended to demonstrate a
@@ -41,15 +33,13 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
      * 5. GIC amends (updates) the grading report
      * 6. Charlie redeems the holdable token with Denise (perhaps Denise buys back the diamond and plans to issue a new
      *    holdable token as replacement)
-     *
-     * TODO Implement step 6
      */
     @Test
     fun `lifecycle example`() {
         // STEP 01: GIC publishes the diamond certificate
         // GIC publishes and shares with Denise
         val diamond = DiamondGradingReport.State("1.0", DiamondGradingReport.ColorScale.A, DiamondGradingReport.ClarityScale.A, DiamondGradingReport.CutScale.A, gic.legalIdentity(), denise.legalIdentity())
-        val publishDiamondTx = gic.createEvolvableToken(diamond, NOTARY.legalIdentity()).getOrThrow()
+        val publishDiamondTx = gic.createEvolvableToken(diamond, notary.legalIdentity()).getOrThrow()
         val publishedDiamond = publishDiamondTx.singleOutput<DiamondGradingReport.State>()
         assertEquals(diamond, publishedDiamond.state.data, "Original diamond did not match the published diamond.")
         denise.watchForTransaction(publishDiamondTx).getOrThrow(Duration.ofSeconds(5))
@@ -60,7 +50,7 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
         val issueTokenTx = denise.issueTokens(
                 token = diamondPointer,
                 issueTo = alice,
-                notary = NOTARY,
+                notary = notary,
                 anonymous = true
         ).getOrThrow()
         // GIC should *not* receive a copy of this issuance
@@ -84,11 +74,17 @@ class DiamondWithTokenScenarioTests : MockNetworkTest("Gemological Institute of 
         val updatedDiamond = publishedDiamond.state.data.copy(color = DiamondGradingReport.ColorScale.B)
         val updateDiamondTx = gic.updateEvolvableToken(publishedDiamond, updatedDiamond).getOrThrow(Duration.ofSeconds(5))
         // TODO Use a distribution group / subscription to inform Charlie of a change
-        assertRecordsTransaction(updateDiamondTx, gic, denise) // Should include Charlie
+        assertRecordsTransaction(updateDiamondTx, gic, denise) // TODO Should include Charlie
         assertNotRecordsTransaction(updateDiamondTx, alice, bob)
 
         // STEP 06: Charlie redeems the token with Denise
         // This should exit the holdable token
+        val charlieDiamond = moveTokenToCharlieTx.tx.outputsOfType<NonFungibleToken<TokenPointer<DiamondGradingReport.State>>>().first()
+        val redeemDiamondTx = charlie.redeemTokens(charlieDiamond.token.tokenType, denise).getOrThrow(Duration.ofSeconds(5))
+        assertRecordsTransaction(redeemDiamondTx, charlie, denise)
+        // assertNotRecordsTransaction(updateDiamondTx, gic)
+        assertNotRecordsTransaction(updateDiamondTx, alice)
+        assertNotRecordsTransaction(updateDiamondTx, bob)
     }
 
     /**
