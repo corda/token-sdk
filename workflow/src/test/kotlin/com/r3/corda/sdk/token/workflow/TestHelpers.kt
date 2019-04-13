@@ -69,7 +69,7 @@ fun <T : EvolvableTokenType> StartedMockNode.createEvolvableToken(evolvableToken
 
 /** Update an evolvable token. */
 fun <T : EvolvableTokenType> StartedMockNode.updateEvolvableToken(old: StateAndRef<T>, new: T): CordaFuture<SignedTransaction> {
-    return transaction { startFlow(UpdateEvolvableToken.Initiator(oldStateAndRef = old, newState = new)) }
+    return transaction { startFlow(UpdateEvolvableToken(oldStateAndRef = old, newState = new)) }
 }
 
 fun <T : TokenType> StartedMockNode.issueTokens(
