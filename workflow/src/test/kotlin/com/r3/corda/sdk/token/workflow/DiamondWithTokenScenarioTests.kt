@@ -82,8 +82,24 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
         val charlieDiamond = moveTokenToCharlieTx.tx.outputsOfType<NonFungibleToken<TokenPointer<DiamondGradingReport>>>().first()
         val redeemDiamondTx = charlie.redeemTokens(charlieDiamond.token.tokenType, denise).getOrThrow(Duration.ofSeconds(5))
         assertRecordsTransaction(redeemDiamondTx, charlie, denise)
-        assertNotRecordsTransaction(updateDiamondTx, alice, bob)
-        assertNotRecordsTransaction(updateDiamondTx, gic) // TODO Why does GIC (evolvable token maintainer) see a copy of the transaction?
+        assertNotRecordsTransaction(redeemDiamondTx, gic, alice, bob)
+
+        // FINAL POSITIONS
+
+        // GIC, Denise, and Charlie have the latest evolvable token; Alice and Bob do not
+        val newDiamond = updateDiamondTx.singleOutput<DiamondGradingReport>()
+        assertHasStateAndRef(newDiamond, gic, denise) // TODO Should include Charlie
+        assertNotHasStateAndRef(newDiamond, alice, bob)
+
+        // Alice and Bob have an outdated (and unconsumed) evolvable token; GIC, Denise, and Charlie do not
+        val oldDiamond = publishDiamondTx.singleOutput<DiamondGradingReport>()
+        assertHasStateAndRef(oldDiamond, alice, bob)
+        assertNotHasStateAndRef(oldDiamond, gic, denise) // TODO Should include Charlie
+
+        // No one has nonfungible (discrete) tokens
+        assertNotHasStateAndRef(issueTokenTx.singleOutput<NonFungibleToken<TokenPointer<DiamondGradingReport>>>(), gic, denise, alice, bob, charlie)
+        assertNotHasStateAndRef(moveTokenToBobTx.singleOutput<NonFungibleToken<TokenPointer<DiamondGradingReport>>>(), gic, denise, alice, bob, charlie)
+        assertNotHasStateAndRef(moveTokenToCharlieTx.singleOutput<NonFungibleToken<TokenPointer<DiamondGradingReport>>>(), gic, denise, alice, bob, charlie)
     }
 
     /**

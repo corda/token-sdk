@@ -11,6 +11,7 @@ import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
+import net.corda.core.node.services.queryBy
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
@@ -60,6 +61,18 @@ fun assertNotRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode,
 
 fun assertNotRecordsTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_TRANSACTION_TIMEOUT) {
     assertNotRecordsTransaction(tx.id, *nodes, timeout = timeout)
+}
+
+inline fun <reified T : ContractState> assertHasStateAndRef(stateAndRef: StateAndRef<T>, vararg nodes: StartedMockNode) {
+    nodes.forEach {
+        assert(it.services.vaultService.queryBy<T>().states.contains(stateAndRef)) { "Could not find $stateAndRef in ${it.legalIdentity()} vault." }
+    }
+}
+
+inline fun <reified T : ContractState> assertNotHasStateAndRef(stateAndRef: StateAndRef<T>, vararg nodes: StartedMockNode) {
+    nodes.forEach {
+        assert(!it.services.vaultService.queryBy<T>().states.contains(stateAndRef)) { "Found $stateAndRef in ${it.legalIdentity()} vault." }
+    }
 }
 
 /** Create an evolvable token. */
