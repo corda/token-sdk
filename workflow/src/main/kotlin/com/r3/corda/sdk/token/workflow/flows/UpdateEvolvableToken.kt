@@ -76,7 +76,11 @@ class UpdateEvolvableToken(
         progressTracker.currentStep = RECORDING
         val observerSessions = wellKnownObservers().map { initiateFlow(it) }
         observerSessions.forEach { it.send(Notification(signatureRequired = false)) }
-        return subFlow(FinalityFlow(transaction = stx, sessions = observerSessions))
+        return subFlow(FinalityFlow(
+                transaction = stx,
+                sessions = (otherMaintainerSessions + observerSessions),
+                progressTracker = RECORDING.childProgressTracker()
+        ))
     }
 
     private val oldState get() = oldStateAndRef.state.data

@@ -62,21 +62,21 @@ class CreateEvolvableToken<T : EvolvableTokenType>(
 
         // Gather signatures from other maintainers
         progressTracker.currentStep = COLLECTING
-        val maintainerSessions = otherMaintainers().map { initiateFlow(it) }
-        maintainerSessions.forEach { it.send(Notification(signatureRequired = true)) }
+        val otherMaintainerSessions = otherMaintainers().map { initiateFlow(it) }
+        otherMaintainerSessions.forEach { it.send(Notification(signatureRequired = true)) }
         val tx = subFlow(CollectSignaturesFlow(
                 partiallySignedTx = stx,
-                sessionsToCollectFrom = maintainerSessions,
+                sessionsToCollectFrom = otherMaintainerSessions,
                 progressTracker = COLLECTING.childProgressTracker()
         ))
 
-        // Finalise with all participants
+        // Finalise with all participants, including maintainers, participants, and subscribers (via distribution list)
         progressTracker.currentStep = RECORDING
         val observerSessions = wellKnownObservers().map { initiateFlow(it) }
         observerSessions.forEach { it.send(Notification(signatureRequired = false)) }
         return subFlow(FinalityFlow(
                 transaction = tx,
-                sessions = (maintainerSessions + observerSessions),
+                sessions = (otherMaintainerSessions + observerSessions),
                 progressTracker = RECORDING.childProgressTracker()
         ))
     }
