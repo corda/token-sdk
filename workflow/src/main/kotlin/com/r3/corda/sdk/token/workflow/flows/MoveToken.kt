@@ -59,18 +59,20 @@ object MoveToken {
             // WARNING: At present, the recipient will not be signed up to updates from the token maintainer.
             val stx: SignedTransaction = serviceHub.signInitialTransaction(builder, keys)
             progressTracker.currentStep = RECORDING
-            // No need to pass in a session as there's no counterparty involved.
-            return subFlow(FinalityFlow(transaction = stx, sessions = listOf(holderSession)))
+            val sessions = if (ourIdentity == holderParty) emptyList() else listOf(holderSession)
+            return subFlow(FinalityFlow(transaction = stx, sessions = sessions))
         }
     }
 
     // TODO Don't really need it anymore as it calls only finality flow
     @InitiatedBy(Initiator::class)
-    class Responder(val otherSession: FlowSession) : FlowLogic<SignedTransaction>() {
+    class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
         @Suspendable
-        override fun call(): SignedTransaction {
+        override fun call(): Unit {
             // Resolve the issuance transaction.
-            return subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
+            if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
+                subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
+            }
         }
     }
 }
