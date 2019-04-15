@@ -1,6 +1,7 @@
 package com.r3.corda.sdk.token.workflow
 
 import net.corda.core.identity.CordaX500Name
+import net.corda.core.identity.Party
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
@@ -39,6 +40,14 @@ abstract class JITMockNetworkTests(val names: List<CordaX500Name> = emptyList())
         return nodes.getOrPut(name) { network.createPartyNode(name) }
     }
 
+    fun identity(organisation: String, locality: String = DEFAULT_LOCALITY, country: String = DEFAULT_COUNTRY): Party {
+        return identity(CordaX500Name(organisation, locality, country))
+    }
+
+    fun identity(name: CordaX500Name): Party {
+        return nodes.getOrPut(name) { network.createPartyNode(name) }.legalIdentity()
+    }
+
     @Before
     fun startNetwork() {
         network.startNodes()
@@ -56,5 +65,7 @@ abstract class JITMockNetworkTests(val names: List<CordaX500Name> = emptyList())
     }
 
     protected val notary: StartedMockNode get() = network.defaultNotaryNode
+
+    protected val notaryIdentity: Party get() = notary.legalIdentity()
 
 }
