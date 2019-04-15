@@ -1,16 +1,11 @@
 package com.r3.corda.sdk.token.workflow
 
-import com.r3.corda.sdk.token.contracts.EvolvableTokenContract
 import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
-import net.corda.core.contracts.Contract
-import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.contracts.requireThat
-import net.corda.core.identity.Party
-import net.corda.core.transactions.LedgerTransaction
+import com.r3.corda.sdk.token.workflow.factories.TestEvolvableTokenTypeFactory
+import com.r3.corda.sdk.token.workflow.states.TestEvolvableTokenType
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
 import org.junit.Test
-import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 
@@ -22,23 +17,26 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
     private val denise: StartedMockNode get() = node("Denise")
 
     /**
+     * Helper factory for assembling [EvolvableTokenType]s reliably.
+     */
+    private val factory = TestEvolvableTokenTypeFactory(this, "Alice", "Bob", "Charlie", "Denise")
+
+    /**
      * An evolvable token should be creatable with just a maintainer.
      * Maintainers is equal to participants.
      */
     @Test
     fun `with 1 maintainer`() {
-        val maintainers = listOf(alice).map { it.legalIdentity() }
-        val participants = maintainers
-        val token = ThingContract.TokenType(maintainers, participants)
+        val token = factory.withOneMaintainer()
 
-        val createTx = alice.createEvolvableToken(token, notary.legalIdentity()).getOrThrow()
-        val createdToken = createTx.singleOutput<ThingContract.TokenType>()
+        val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
+        val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
         // Expect proposed and created tokens to match
         assertEquals(token, createdToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one create command with maintainer signature
-        val maintainerKeys = maintainers.map { it.owningKey }.toSet()
+        val maintainerKeys = token.maintainers.map { it.owningKey }.toSet()
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
         // Only Alice should record the transaction
@@ -51,18 +49,16 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      */
     @Test
     fun `with 2 maintainers`() {
-        val maintainers = listOf(alice, bob).map { it.legalIdentity() }
-        val participants = maintainers
-        val token = ThingContract.TokenType(maintainers, participants)
+        val token = factory.withTwoMaintainers()
 
-        val createTx = alice.createEvolvableToken(token, notary.legalIdentity()).getOrThrow()
-        val createdToken = createTx.singleOutput<ThingContract.TokenType>()
+        val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
+        val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
         // Expect proposed and created tokens to match
         assertEquals(token, createdToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one create command with maintainer signature
-        val maintainerKeys = maintainers.map { it.owningKey }.toSet()
+        val maintainerKeys = token.maintainers.map { it.owningKey }.toSet()
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
         // Alice and Bob should record the transaction
@@ -75,18 +71,16 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      */
     @Test
     fun `with 1 maintainer and 1 additional participant`() {
-        val maintainers = listOf(alice).map { it.legalIdentity() }
-        val participants = maintainers + listOf(charlie).map { it.legalIdentity() }
-        val token = ThingContract.TokenType(maintainers, participants)
+        val token = factory.withOneMaintainerAndOneObserver()
 
-        val createTx = alice.createEvolvableToken(token, notary.legalIdentity()).getOrThrow()
-        val createdToken = createTx.singleOutput<ThingContract.TokenType>()
+        val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
+        val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
         // Expect proposed and created tokens to match
         assertEquals(token, createdToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one create command with maintainer signature
-        val maintainerKeys = maintainers.map { it.owningKey }.toSet()
+        val maintainerKeys = token.maintainers.map { it.owningKey }.toSet()
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
         // Alice and Charlie should record the transaction
@@ -99,18 +93,16 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      */
     @Test
     fun `with 1 maintainer and 2 additional participants`() {
-        val maintainers = listOf(alice).map { it.legalIdentity() }
-        val participants = maintainers + listOf(charlie, denise).map { it.legalIdentity() }
-        val token = ThingContract.TokenType(maintainers, participants)
+        val token = factory.withOneMaintainerAndTwoObservers()
 
-        val createTx = alice.createEvolvableToken(token, notary.legalIdentity()).getOrThrow()
-        val createdToken = createTx.singleOutput<ThingContract.TokenType>()
+        val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
+        val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
         // Expect proposed and created tokens to match
         assertEquals(token, createdToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one create command with maintainer signature
-        val maintainerKeys = maintainers.map { it.owningKey }.toSet()
+        val maintainerKeys = token.maintainers.map { it.owningKey }.toSet()
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
         // Alice, Charlie, and Denise should record the transaction
@@ -123,18 +115,16 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      */
     @Test
     fun `with 2 maintainers and 1 additional participant`() {
-        val maintainers = listOf(alice, bob).map { it.legalIdentity() }
-        val participants = maintainers + listOf(charlie).map { it.legalIdentity() }
-        val token = ThingContract.TokenType(maintainers, participants)
+        val token = factory.withTwoMaintainersAndOneObserver()
 
-        val createTx = alice.createEvolvableToken(token, notary.legalIdentity()).getOrThrow()
-        val createdToken = createTx.singleOutput<ThingContract.TokenType>()
+        val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
+        val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
         // Expect proposed and created tokens to match
         assertEquals(token, createdToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one create command with maintainer signature
-        val maintainerKeys = maintainers.map { it.owningKey }.toSet()
+        val maintainerKeys = token.maintainers.map { it.owningKey }.toSet()
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
         // Alice, Bob, and Charlie should record the transaction
@@ -147,18 +137,16 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      */
     @Test
     fun `with 2 maintainers and 2 additional participants`() {
-        val maintainers = listOf(alice, bob).map { it.legalIdentity() }
-        val participants = maintainers + listOf(charlie, denise).map { it.legalIdentity() }
-        val token = ThingContract.TokenType(maintainers, participants)
+        val token = factory.withTwoMaintainersAndTwoObservers()
 
-        val createTx = alice.createEvolvableToken(token, notary.legalIdentity()).getOrThrow()
-        val createdToken = createTx.singleOutput<ThingContract.TokenType>()
+        val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
+        val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
         // Expect proposed and created tokens to match
         assertEquals(token, createdToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one create command with maintainer signature
-        val maintainerKeys = maintainers.map { it.owningKey }.toSet()
+        val maintainerKeys = token.maintainers.map { it.owningKey }.toSet()
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
         // Alice, Bob, Charlie, and Denise should record the transaction
@@ -171,36 +159,10 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      */
     @Test
     fun `fails if participants is not a superset of maintainers`() {
-        val maintainers = listOf(alice).map { it.legalIdentity() }
-        val participants = listOf(charlie).map { it.legalIdentity() }
-        val token = ThingContract.TokenType(maintainers, participants)
+        val token = factory.withDifferingMaintainersAndParticipants()
 
         assertFails("When creating an evolvable token all maintainers must also be participants.") {
-            alice.createEvolvableToken(token, notary.legalIdentity()).getOrThrow()
+            alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         }
     }
-
-    class ThingContract : EvolvableTokenContract(), Contract {
-
-        override fun additionalCreateChecks(tx: LedgerTransaction) {
-            requireThat {
-                // No additional checks
-            }
-        }
-
-        override fun additionalUpdateChecks(tx: LedgerTransaction) {
-            requireThat {
-                // No additional checks
-            }
-        }
-
-        data class TokenType(
-                override val maintainers: List<Party>,
-                override val participants: List<Party>,
-                override val linearId: UniqueIdentifier = UniqueIdentifier()
-        ) : EvolvableTokenType() {
-            override val displayTokenSize: BigDecimal = BigDecimal.ZERO
-        }
-    }
-
 }
