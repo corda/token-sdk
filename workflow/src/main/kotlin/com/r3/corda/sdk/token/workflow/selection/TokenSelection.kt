@@ -188,10 +188,10 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
             // TODO This approach is clearly taken from core. Revisit it.
             services.keyManagementService.freshKeyAndCert(nodeIdentity, revocationEnabled = false).party.anonymise()
         } else {
-            // Check that this identity belongs to the node that called generateMove
+            // Check that this identity belongs to the node that called generateMove.
             val ownerId = services.identityService.wellKnownPartyFromAnonymous(changeOwner)
-            check(ownerId != null && !services.myInfo.isLegalIdentity(ownerId)) {
-                "Owner of the change: $changeOwner is the identity that belongs to the node."
+            check(ownerId != null && services.myInfo.isLegalIdentity(ownerId)) {
+                "Owner of the change: $changeOwner is not the identity that belongs to the node."
             }
             changeOwner
         }
