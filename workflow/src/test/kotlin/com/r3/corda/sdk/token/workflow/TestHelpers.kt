@@ -1,17 +1,13 @@
 package com.r3.corda.sdk.token.workflow
 
-import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
-import com.r3.corda.sdk.token.contracts.types.TokenType
-import com.r3.corda.sdk.token.contracts.utilities.withNotary
-import com.r3.corda.sdk.token.workflow.flows.*
 import net.corda.core.concurrent.CordaFuture
-import net.corda.core.contracts.Amount
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.crypto.SecureHash
-import net.corda.core.identity.Party
+import net.corda.core.node.services.Vault
 import net.corda.core.node.services.queryBy
+import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
@@ -20,7 +16,8 @@ import java.util.concurrent.TimeoutException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-const val DEFAULT_WATCH_FOR_TRANSACTION_TIMEOUT = 6L
+const val DEFAULT_WATCH_FOR_RECORDS_TRANSACTION_TIMEOUT = 10L
+const val DEFAULT_WATCH_FOR_NOT_RECORDS_TRANSACTION_TIMEOUT = 5L
 
 fun StartedMockNode.legalIdentity() = services.myInfo.legalIdentities.first()
 
@@ -39,7 +36,7 @@ fun StartedMockNode.watchForTransaction(tx: SignedTransaction): CordaFuture<Sign
     return watchForTransaction(tx.id)
 }
 
-fun assertRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_TRANSACTION_TIMEOUT) {
+fun assertRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_RECORDS_TRANSACTION_TIMEOUT) {
     nodes.map {
         it.watchForTransaction(txId)
     }.map {
@@ -47,11 +44,11 @@ fun assertRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode, ti
     }
 }
 
-fun assertRecordsTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_TRANSACTION_TIMEOUT) {
+fun assertRecordsTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_RECORDS_TRANSACTION_TIMEOUT) {
     assertRecordsTransaction(tx.id, *nodes, timeout = timeout)
 }
 
-fun assertNotRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_TRANSACTION_TIMEOUT) {
+fun assertNotRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_NOT_RECORDS_TRANSACTION_TIMEOUT) {
     nodes.map {
         it.watchForTransaction(txId)
     }.map {
@@ -59,18 +56,20 @@ fun assertNotRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode,
     }
 }
 
-fun assertNotRecordsTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_TRANSACTION_TIMEOUT) {
+fun assertNotRecordsTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_NOT_RECORDS_TRANSACTION_TIMEOUT) {
     assertNotRecordsTransaction(tx.id, *nodes, timeout = timeout)
 }
 
-inline fun <reified T : ContractState> assertHasStateAndRef(stateAndRef: StateAndRef<T>, vararg nodes: StartedMockNode) {
+inline fun <reified T : ContractState> assertHasStateAndRef(stateAndRef: StateAndRef<T>, vararg nodes: StartedMockNode, stateStatus: Vault.StateStatus = Vault.StateStatus.UNCONSUMED) {
+    val criteria = QueryCriteria.VaultQueryCriteria(stateStatus)
     nodes.forEach {
-        assert(it.services.vaultService.queryBy<T>().states.contains(stateAndRef)) { "Could not find $stateAndRef in ${it.legalIdentity()} vault." }
+        assert(it.services.vaultService.queryBy<T>(criteria).states.contains(stateAndRef)) { "Could not find $stateAndRef in ${it.legalIdentity()} vault." }
     }
 }
 
-inline fun <reified T : ContractState> assertNotHasStateAndRef(stateAndRef: StateAndRef<T>, vararg nodes: StartedMockNode) {
+inline fun <reified T : ContractState> assertNotHasStateAndRef(stateAndRef: StateAndRef<T>, vararg nodes: StartedMockNode, stateStatus: Vault.StateStatus = Vault.StateStatus.UNCONSUMED) {
+    val criteria = QueryCriteria.VaultQueryCriteria(stateStatus)
     nodes.forEach {
-        assert(!it.services.vaultService.queryBy<T>().states.contains(stateAndRef)) { "Found $stateAndRef in ${it.legalIdentity()} vault." }
+        assert(!it.services.vaultService.queryBy<T>(criteria).states.contains(stateAndRef)) { "Found $stateAndRef in ${it.legalIdentity()} vault." }
     }
 }
