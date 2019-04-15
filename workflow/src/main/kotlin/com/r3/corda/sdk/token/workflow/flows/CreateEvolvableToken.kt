@@ -3,6 +3,7 @@ package com.r3.corda.sdk.token.workflow.flows
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
+import com.r3.corda.sdk.token.workflow.utilities.addCreateEvolvableToken
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.TransactionState
 import net.corda.core.flows.*
@@ -53,7 +54,7 @@ class CreateEvolvableToken<T : EvolvableTokenType>(
     override fun call(): SignedTransaction {
         // Create a transaction which updates the ledger with the new evolvable token.
         progressTracker.currentStep = CREATING
-        val utx = subFlow(AddCreateEvolvableToken(TransactionBuilder(), transactionState))
+        val utx = addCreateEvolvableToken(TransactionBuilder(), transactionState)
 
         // Sign the transaction proposal
         progressTracker.currentStep = SIGNING
