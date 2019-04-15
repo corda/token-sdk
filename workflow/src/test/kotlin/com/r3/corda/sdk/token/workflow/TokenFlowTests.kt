@@ -171,4 +171,13 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 3) {
             A.startFlow(MoveToken.Initiator(GBP, confidentialHolder, 50.GBP)).getOrThrow()
         }.hasMessageContaining("Called MoveToken flow with anonymous party that node doesn't know about. Make sure that RequestConfidentialIdentity flow is called before.")
     }
+
+    @Test
+    fun `move to anonymous party on the same node`() {
+        val issueTokenTx = I.issueTokens(GBP, A, NOTARY, 100.GBP).getOrThrow()
+        A.watchForTransaction(issueTokenTx.id).getOrThrow()
+        val confidentialHolder = A.services.keyManagementService.freshKeyAndCert(A.services.myInfo.chooseIdentityAndCert(), false).party.anonymise()
+        val moveTokenTx = A.startFlow(MoveToken.Initiator(GBP, confidentialHolder, 50.GBP)).getOrThrow()
+        A.watchForTransaction(moveTokenTx.id).getOrThrow()
+    }
 }

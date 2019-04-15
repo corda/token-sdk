@@ -126,7 +126,6 @@ object IssueToken {
             progressTracker.currentStep = SIGNING
             // Sign the transaction. Only Concrete Parties should be used here.
             val stx: SignedTransaction = serviceHub.signInitialTransaction(utx)
-            // No need to pass in a session as there's no counterparty involved.
             progressTracker.currentStep = RECORDING
             // Can issue to yourself, but finality flow doesn't take a session then.
             val sessions = if (me == holderParty) emptyList() else listOf(holderSession)
