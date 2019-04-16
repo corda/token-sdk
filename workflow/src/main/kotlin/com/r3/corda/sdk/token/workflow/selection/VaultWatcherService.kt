@@ -24,7 +24,7 @@ val UNLOCKER: ScheduledExecutorService = Executors.newSingleThreadScheduledExecu
 const val PLACE_HOLDER: String = "THIS_IS_A_PLACE_HOLDER"
 
 @CordaService
-class VaultWatcherService(val vaultObserver: VaultObserver? = null) : SingletonSerializeAsToken() {
+class VaultWatcherService(vaultObserver: VaultObserver? = null) : SingletonSerializeAsToken() {
 
     enum class IndexingType {
         EXTERNAL_ID, PUBLIC_KEY
@@ -124,7 +124,7 @@ class VaultWatcherService(val vaultObserver: VaultObserver? = null) : SingletonS
     }
 
     @Suspendable
-    inline fun <T : TokenType> selectTokens(
+    fun <T : TokenType> selectTokens(
             owner: Any,
             amountRequested: Amount<IssuedTokenType<T>>,
             predicate: ((StateAndRef<FungibleToken<TokenType>>) -> Boolean) = { true },
@@ -154,24 +154,27 @@ class VaultWatcherService(val vaultObserver: VaultObserver? = null) : SingletonS
             throw InsufficientBalanceException("Could not find enough tokens to satisfy token request")
         }
 
-        //there is no way to "unlock" tokens from outside of this method
         UNLOCKER.schedule({
             lockedTokens.forEach {
-                val token = it.state.data
-                val idx = processToken(token)
-                val tokensForTypeInfo = getTokenBucket(idx)
-                tokensForTypeInfo.replace(it, selectionId, PLACE_HOLDER)
+                unlockToken(it, selectionId)
             }
         }, autoUnlockDelay.toMillis(), TimeUnit.MILLISECONDS)
 
         return lockedTokens as List<StateAndRef<FungibleToken<T>>>
     }
 
-    fun getTokenBucket(idx: Any, tokenClass: Class<*>, tokenIdentifier: String): TokenBucket {
+    fun unlockToken(it: StateAndRef<FungibleToken<TokenType>>, selectionId: String) {
+        val token = it.state.data
+        val idx = processToken(token)
+        val tokensForTypeInfo = getTokenBucket(idx)
+        tokensForTypeInfo.replace(it, selectionId, PLACE_HOLDER)
+    }
+
+    private fun getTokenBucket(idx: Any, tokenClass: Class<*>, tokenIdentifier: String): TokenBucket {
         return getTokenBucket(TokenIndex(idx, tokenClass, tokenIdentifier))
     }
 
-    fun getTokenBucket(idx: TokenIndex): TokenBucket {
+    private fun getTokenBucket(idx: TokenIndex): TokenBucket {
         return cache.computeIfAbsent(idx) {
             TokenBucket()
         }
