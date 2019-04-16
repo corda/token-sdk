@@ -1,7 +1,7 @@
 buildscript {
     ext {
         corda_release_group = 'net.corda'
-        corda_release_version = '4.0'
+        corda_release_version = '5.0-SNAPSHOT'
         corda_gradle_plugins_version = '4.0.42'
         aetherVersion = '1.0.0.v20140518'
         mavenVersion = '3.1.0'
@@ -66,6 +66,8 @@ subprojects {
         mavenCentral()
         mavenLocal()
         maven { url 'https://jitpack.io' }
+        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda' }
+        // TODO: Remove this when we depend on Corda 4.1.
         maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-dev" }
         maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-releases" }
     }
