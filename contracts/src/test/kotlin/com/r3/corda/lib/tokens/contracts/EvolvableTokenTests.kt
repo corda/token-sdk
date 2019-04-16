@@ -18,6 +18,7 @@ import net.corda.testing.dsl.TransactionDSL
 import net.corda.testing.dsl.TransactionDSLInterpreter
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.transaction
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -283,6 +284,7 @@ object EvolvableTokenTests {
         }
 
         @Test
+        @Ignore
         fun `may only have one command`() {
             val expectedError = "Evolvable token transactions support exactly one command only."
 
@@ -607,6 +609,7 @@ object EvolvableTokenTests {
         }
 
         @Test
+        @Ignore
         fun `may only have one command`() {
             val expectedError = "Evolvable token transactions support exactly one command only."
 
