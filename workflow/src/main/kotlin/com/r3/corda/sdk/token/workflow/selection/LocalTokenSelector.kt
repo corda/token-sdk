@@ -15,9 +15,9 @@ import java.time.Duration
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 
-class LocalTokenSelector(val vaultObserver: VaultWatcherService) : SerializeAsToken {
+class LocalTokenSelector(private val vaultObserver: VaultWatcherService, state: Pair<List<StateAndRef<FungibleToken<TokenType>>>, String>? = null) : SerializeAsToken {
 
-    private val mostRecentlyLocked = AtomicReference<Pair<List<StateAndRef<FungibleToken<TokenType>>>, String>>()
+    private val mostRecentlyLocked = AtomicReference<Pair<List<StateAndRef<FungibleToken<TokenType>>>, String>>(state)
 
     @Suspendable
     fun <T : TokenType> selectTokens(
@@ -37,6 +37,15 @@ class LocalTokenSelector(val vaultObserver: VaultWatcherService) : SerializeAsTo
         }
     }
 
+    @Suspendable
+    fun rollback() {
+        val lockedStates = mostRecentlyLocked.get()
+        lockedStates?.first?.forEach {
+            vaultObserver.unlockToken(it, lockedStates.second)
+        }
+        mostRecentlyLocked.set(null)
+    }
+
 
     override fun toToken(context: SerializeAsTokenContext): SerializationToken {
         val lockedStateAndRefs = mostRecentlyLocked.get() ?: listOf<StateAndRef<FungibleToken<TokenType>>>() to ""
@@ -47,7 +56,7 @@ class LocalTokenSelector(val vaultObserver: VaultWatcherService) : SerializeAsTo
         override fun fromToken(context: SerializeAsTokenContext): LocalTokenSelector {
             val watcherService = context.serviceHub.cordaService(VaultWatcherService::class.java)
             watcherService.lockTokensExternal(lockedStateAndRefs, knownSelectionId = selectionId)
-            return LocalTokenSelector(watcherService)
+            return LocalTokenSelector(watcherService, lockedStateAndRefs to selectionId)
         }
     }
 }
