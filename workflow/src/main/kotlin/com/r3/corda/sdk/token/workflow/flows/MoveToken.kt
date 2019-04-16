@@ -52,7 +52,8 @@ object MoveToken {
                 generateMoveNonFungible(serviceHub.vaultService, ownedToken, holder)
             } else {
                 val tokenSelection = TokenSelection(serviceHub)
-                tokenSelection.generateMove(TransactionBuilder(), amount, holder)
+                val txBuilder = TransactionBuilder().addAttachment(ownedToken.getAttachmentIdForGenericParam())
+                tokenSelection.generateMove(txBuilder, amount, holder)
             }
 
             progressTracker.currentStep = SIGNING

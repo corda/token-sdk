@@ -122,6 +122,9 @@ object IssueToken {
             val utx: TransactionBuilder = TransactionBuilder(notary = notary).apply {
                 addCommand(data = IssueTokenCommand(issuedToken), keys = listOf(me.owningKey))
                 addOutputState(state = transactionState)
+            }.let { utx ->
+                //if we have an amount, we must attach the external jar which provides the token type
+                amount?.getAttachmentIdForGenericParam()?.let { utx.addAttachment(it) } ?: utx
             }
             progressTracker.currentStep = SIGNING
             // Sign the transaction. Only Concrete Parties should be used here.

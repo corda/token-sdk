@@ -99,7 +99,7 @@ object RedeemToken {
             //  I feel like we need some better API to do that, because in this case we just need input identities, not full wire tx (btw it's not sent anywhere nor it verifies).
             val firstState = exitStateAndRefs.first().state
             val notary = firstState.notary
-            val fakeWireTx = TransactionBuilder(notary = notary).withItems(*exitStateAndRefs.toTypedArray()).addCommand(DummyCommand(), ourIdentity.owningKey).toWireTransaction(serviceHub)
+            val fakeWireTx = TransactionBuilder(notary = notary).withItems(*exitStateAndRefs.toTypedArray()).addCommand(DummyCommand(), ourIdentity.owningKey).addAttachment(ownedToken.getAttachmentIdForGenericParam()).toWireTransaction(serviceHub)
             subFlow(IdentitySyncFlow.Send(issuerSession, fakeWireTx))
             progressTracker.currentStep = SIGNING_TX
             subFlow(object : SignTransactionFlow(issuerSession) {
@@ -139,7 +139,11 @@ object RedeemToken {
             checkSameNotary(stateAndRefsToRedeem)
             checkOwner(serviceHub.identityService, stateAndRefsToRedeem, otherSession.counterparty)
             val notary = stateAndRefsToRedeem.first().state.notary
-            val txBuilder = TransactionBuilder(notary = notary)
+            val txBuilder = TransactionBuilder(notary = notary).apply {
+                if (redeemNotification.amount != null){
+                    addAttachment(redeemNotification.amount.getAttachmentIdForGenericParam())
+                }
+            }
             if (redeemNotification.amount == null) {
                 generateExitNonFungible(txBuilder, stateAndRefsToRedeem.first() as StateAndRef<NonFungibleToken<T>>)
             } else {

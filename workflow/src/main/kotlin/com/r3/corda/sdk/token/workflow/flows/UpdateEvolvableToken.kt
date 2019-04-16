@@ -56,7 +56,9 @@ class UpdateEvolvableToken(
                 TransactionBuilder(notary = oldStateAndRef.state.notary),
                 oldStateAndRef,
                 newState
-        )
+        ).apply {
+            addAttachment(newState.getAttachmentIdForGenericParam())
+        }
 
         // Sign the transaction proposal (creating a partially signed transaction, or ptx)
         progressTracker.currentStep = SIGNING

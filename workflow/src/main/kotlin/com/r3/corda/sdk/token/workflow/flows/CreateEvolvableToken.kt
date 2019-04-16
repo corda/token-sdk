@@ -54,7 +54,8 @@ class CreateEvolvableToken<T : EvolvableTokenType>(
     override fun call(): SignedTransaction {
         // Create a transaction which updates the ledger with the new evolvable token.
         progressTracker.currentStep = CREATING
-        val utx = addCreateEvolvableToken(TransactionBuilder(), transactionState)
+        val transactionBuilder = TransactionBuilder().addAttachment(transactionState.data.getAttachmentIdForGenericParam())
+        val utx = addCreateEvolvableToken(transactionBuilder, transactionState)
 
         // Sign the transaction proposal
         progressTracker.currentStep = SIGNING
