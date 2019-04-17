@@ -67,6 +67,14 @@ For `FiatCurrency` and `DigitalCurrency` definitions add:
 
     compile "com.r3.corda.sdk.token.plugins:token-sdk-money:0.1"
 
+In the root `build.gradle` file you will need to add the dependencies:
+
+    cordapp "com.r3.tokens-sdk:contract:1.0-SNAPSHOT"
+    cordapp "com.r3.tokens-sdk:workflow:1.0-SNAPSHOT"
+    cordapp "com.r3.tokens-sdk:money:1.0-SNAPSHOT"
+
+These should also be added to the `deployNodes` task if applicable to your CorDapp.
+
 Alternatively, you can use the following bootstrapped token SDK template:
 
     git clone http://github.com/corda/cordapp-template-kotlin
