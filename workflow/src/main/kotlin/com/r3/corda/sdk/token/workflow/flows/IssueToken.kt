@@ -108,7 +108,7 @@ object IssueToken {
             // from the issuer, this way the token updates proliferate through the network.
             if (token is TokenPointer<*>) {
                 progressTracker.currentStep = DIST_LIST
-                serviceHub.addPartyToDistributionList(holderParty, token.pointer.pointer)
+                addPartyToDistributionList(serviceHub, holderParty, token.pointer.pointer)
             }
 
             // Create the transaction.
