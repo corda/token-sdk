@@ -1,6 +1,7 @@
 package com.r3.corda.sdk.token.workflow.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.workflow.selection.TokenSelection
 import com.r3.corda.sdk.token.workflow.selection.generateMoveNonFungible
@@ -63,11 +64,15 @@ object MoveToken {
             val stx: SignedTransaction = serviceHub.signInitialTransaction(builder, keys)
             progressTracker.currentStep = RECORDING
             val sessions = if (ourIdentity == holderParty) emptyList() else listOf(holderSession)
-            return subFlow(FinalityFlow(transaction = stx, sessions = sessions))
+            val finalTx = subFlow(FinalityFlow(transaction = stx, sessions = sessions))
+            // If it's TokenPointer, then update the distribution lists for token maintainers
+            if(ownedToken is TokenPointer<*>) {
+                subFlow(UpdateDistributionList.Initiator(ownedToken, ourIdentity, holderParty))
+            }
+            return finalTx
         }
     }
 
-    // TODO Don't really need it anymore as it calls only finality flow
     @InitiatedBy(Initiator::class)
     class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
         @Suspendable

@@ -8,6 +8,7 @@ import net.corda.core.node.ServiceHub
 /**
  * Utility function to persist a new entity pertaining to a distribution record.
  * TODO: Add some error handling.
+ * TODO: Don't duplicate pairs of linearId and party.
  */
 fun ServiceHub.addPartyToDistributionList(party: Party, linearId: UniqueIdentifier) {
     // Create an persist a new entity.

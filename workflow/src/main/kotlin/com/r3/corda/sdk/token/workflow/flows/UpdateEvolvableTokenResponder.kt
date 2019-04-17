@@ -25,6 +25,6 @@ class UpdateEvolvableTokenResponder(val otherSession: FlowSession) : FlowLogic<S
         }
 
         // Resolve the creation transaction.
-        return subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
+        return subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ALL_VISIBLE))
     }
 }
