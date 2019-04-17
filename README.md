@@ -74,7 +74,13 @@ file:
     cordapp "com.r3.tokens-sdk:workflow:1.0-SNAPSHOT"
     cordapp "com.r3.tokens-sdk:money:1.0-SNAPSHOT"
 
-These should also be added to the `deployNodes` task if applicable to your CorDapp. See the [kotlin token-template](https://github.com/corda/cordapp-template-kotlin/blob/token-template/build.gradle)
+These should also be added to the `deployNodes` task with the following syntax:
+
+    cordapp("com.r3.tokens-sdk:contract:1.0-SNAPSHOT")
+    cordapp("com.r3.tokens-sdk:workflow:1.0-SNAPSHOT")
+    cordapp("com.r3.tokens-sdk:money:1.0-SNAPSHOT")
+
+See the [kotlin token-template](https://github.com/corda/cordapp-template-kotlin/blob/token-template/build.gradle)
 for an example.
 
 Alternatively, you can use the following bootstrapped token SDK template:
