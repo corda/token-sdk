@@ -16,7 +16,7 @@ cordapp {
     targetPlatformVersion 4
     minimumPlatformVersion 4
     workflow {
-        name "Token SDK Workflows"
+        name "Token SDK Totally-External Cordapp"
         vendor "R3"
         licence "Apache 2"
         versionId 1
@@ -25,32 +25,6 @@ cordapp {
         enabled false
     }
 }
-
-sourceSets {
-    main {
-        resources {
-            srcDir rootProject.file("config/dev")
-        }
-    }
-    test {
-        resources {
-            srcDir rootProject.file("config/test")
-        }
-    }
-    integrationTest {
-        kotlin {
-            compileClasspath += main.output + test.output
-            runtimeClasspath += main.output + test.output
-            srcDir file('src/integrationTest/kotlin')
-        }
-    }
-}
-
-configurations {
-    integrationTestCompile.extendsFrom testCompile
-    integrationTestRuntime.extendsFrom testRuntime
-}
-
 
 dependencies {
     // Kotlin.
@@ -73,10 +47,6 @@ dependencies {
     // CorDapp dependencies.
     contractCordapp project(":contract")
     contractCordapp project(":modules:money")
+    cordapp project(":workflow")
 
-}
-
-task integrationTest(type: Test, dependsOn: []) {
-    testClassesDirs = sourceSets.integrationTest.output.classesDirs
-    classpath = sourceSets.integrationTest.runtimeClasspath
 }

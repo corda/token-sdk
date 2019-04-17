@@ -1,5 +1,6 @@
 package com.r3.corda.sdk.token.workflow.flows
 
+import co.paralleluniverse.fibers.Fiber
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.commands.IssueTokenCommand
 import com.r3.corda.sdk.token.contracts.states.AbstractToken
@@ -84,6 +85,7 @@ object IssueToken {
 
         @Suspendable
         override fun call(): SignedTransaction {
+            println("#######:::: " + FlowLogic.currentTopLevel?.javaClass?.name)
             // This is the identity which will be used to issue tokens.
             // We also need a session for the other side.
             val me: Party = ourIdentity
