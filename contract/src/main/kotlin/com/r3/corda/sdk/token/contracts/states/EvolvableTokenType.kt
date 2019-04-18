@@ -9,6 +9,8 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 
 /**
+ * [EvolvableTokenType]s are for storing token reference data that we expect to change over time.
+ *
  * [EvolvableTokenType]s _are_ state objects because the expectation is that they will evolve over time. Of course
  * in-lining a [LinearState] directly into the [NonFungibleToken] or [FungibleToken] state doesn't make much sense, as
  * you would have to perform a state update to change the token type. It makes more sense to include a pointer to the

@@ -3,7 +3,6 @@ package com.r3.corda.sdk.token.contracts
 import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.contracts.requireThat
 import net.corda.core.identity.Party
 import net.corda.core.transactions.LedgerTransaction
 import java.math.BigDecimal
@@ -14,17 +13,9 @@ class TestEvolvableTokenContract : EvolvableTokenContract(), Contract {
         val ID: String = this::class.java.enclosingClass.canonicalName
     }
 
-    override fun additionalCreateChecks(tx: LedgerTransaction) {
-        requireThat {
-            // No additional checks
-        }
-    }
+    override fun additionalCreateChecks(tx: LedgerTransaction) = Unit
 
-    override fun additionalUpdateChecks(tx: LedgerTransaction) {
-        requireThat {
-            // No additional checks
-        }
-    }
+    override fun additionalUpdateChecks(tx: LedgerTransaction) = Unit
 
     data class TestEvolvableTokenType(
             override val maintainers: List<Party>,

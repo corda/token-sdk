@@ -40,9 +40,9 @@ internal infix fun <T : TokenType> IssuedTokenType<T>._heldBy(owner: AbstractPar
 // --------------------------
 
 /** Adds a notary [Party] to an [AbstractToken], by wrapping it in a [TransactionState]. */
-infix fun <T : AbstractToken> T.withNotary(notary: Party): TransactionState<T> = _withNotary(notary)
+infix fun <T : AbstractToken<*>> T.withNotary(notary: Party): TransactionState<T> = _withNotary(notary)
 
-internal infix fun <T : AbstractToken> T._withNotary(notary: Party): TransactionState<T> {
+internal infix fun <T : AbstractToken<*>> T._withNotary(notary: Party): TransactionState<T> {
     return TransactionState(data = this, notary = notary)
 }
 

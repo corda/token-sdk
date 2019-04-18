@@ -7,9 +7,9 @@ import net.corda.core.contracts.TokenizableAssetInfo
 import net.corda.core.serialization.CordaSerializable
 
 /**
- * Represents a token which can be embedded within an [NonFungibleToken] or [FungibleToken] state. This interface is
- * implemented by [FixedTokenType] and [TokenPointer]. Note that [EvolvableTokenType] does NOT implement
- * this interface, as it represented by proxy through the [TokenPointer].
+ * Represents a token type or definition which can be embedded within an [NonFungibleToken] or [FungibleToken] state.
+ * This interface is implemented by [FixedTokenType] and [TokenPointer]. Note that [EvolvableTokenType] does NOT
+ * implement this interface, as it represented by proxy through the [TokenPointer].
  *
  * Just a quick level-set on terminology here. [TokenType] refers to a "type of thing" as opposed to the vehicle
  * which is used to represent the agreement between an issuer and the holder of tokens. For that we use the

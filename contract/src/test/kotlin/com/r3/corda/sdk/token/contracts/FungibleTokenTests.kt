@@ -84,7 +84,7 @@ class FungibleTokenTests {
             // With an incorrect command.
             tweak {
                 command(BOB.publicKey, WrongCommand())
-                this `fails with` "There must be at least one owned token command this transaction."
+                this `fails with` "There must be at least one token command in this transaction."
             }
             // With different command types for one group.
             tweak {
@@ -249,16 +249,16 @@ class FungibleTokenTests {
             tweak {
                 command(BOB.publicKey, MoveTokenCommand(issuedToken))
                 this `fails with` "There are required signers missing or some of the specified signers are not " +
-                        "required. A transaction to move owned token amounts must be signed by ONLY ALL the owners " +
-                        "of ALL the input owned token amounts."
+                        "required. A transaction to move token amounts must be signed by ONLY ALL the owners " +
+                        "of ALL the input token amounts."
             }
 
             // Includes an incorrect public with the correct key still being present.
             tweak {
                 command(listOf(BOB.publicKey, ALICE.publicKey), MoveTokenCommand(issuedToken))
                 this `fails with` "There are required signers missing or some of the specified signers are not " +
-                        "required. A transaction to move owned token amounts must be signed by ONLY ALL the owners " +
-                        "of ALL the input owned token amounts."
+                        "required. A transaction to move token amounts must be signed by ONLY ALL the owners " +
+                        "of ALL the input token amounts."
             }
 
         }
@@ -332,7 +332,7 @@ class FungibleTokenTests {
                 command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
                 // Return change back to Alice.
                 output(FungibleTokenContract.contractId, Amount.zero(issuedToken) heldBy ALICE.party)
-                this `fails with` "In redeem groups there must hold that output token amount, if present, is greater than ZERO."
+                this `fails with` "If there is an output, it must have a value greater than zero."
             }
 
             // Add the redeem command, signed by the ISSUER and ALICE - owner. Too many outputs.
