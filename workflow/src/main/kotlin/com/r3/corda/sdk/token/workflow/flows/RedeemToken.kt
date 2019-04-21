@@ -13,17 +13,7 @@ import net.corda.confidential.IdentitySyncFlow
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.flows.CollectSignaturesFlow
-import net.corda.core.flows.FinalityFlow
-import net.corda.core.flows.FlowLogic
-import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatedBy
-import net.corda.core.flows.InitiatingFlow
-import net.corda.core.flows.ReceiveFinalityFlow
-import net.corda.core.flows.ReceiveStateAndRefFlow
-import net.corda.core.flows.SendStateAndRefFlow
-import net.corda.core.flows.SignTransactionFlow
-import net.corda.core.flows.StartableByRPC
+import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.node.StatesToRecord
 import net.corda.core.node.services.IdentityService
@@ -39,9 +29,7 @@ object RedeemToken {
     data class TokenRedeemNotification<T : TokenType>(val anonymous: Boolean, val amount: Amount<T>?)
 
     // Called on owner side.
-    @InitiatingFlow
-    @StartableByRPC
-    class InitiateRedeem<T : TokenType>(
+    abstract class Primary<T : TokenType>(
             val ownedToken: T,
             val issuer: Party,
             val amount: Amount<T>? = null,
@@ -53,17 +41,20 @@ object RedeemToken {
             object SELECTING_STATES : ProgressTracker.Step("Selecting states to redeem.")
             object SEND_STATE_REF : ProgressTracker.Step("Sending states to the issuer for redeeming.")
             object SYNC_IDS : ProgressTracker.Step("Synchronising confidential identities.")
+            object EXTRA_FLOW : ProgressTracker.Step("Starting extra flow")
             object SIGNING_TX : ProgressTracker.Step("Signing transaction")
             object FINALISING_TX : ProgressTracker.Step("Finalising transaction")
 
-            fun tracker() = ProgressTracker(REDEEM_NOTIFICATION, CONF_ID, SELECTING_STATES, SEND_STATE_REF, SYNC_IDS, SIGNING_TX, FINALISING_TX)
+            fun tracker() = ProgressTracker(REDEEM_NOTIFICATION, CONF_ID, SELECTING_STATES, SEND_STATE_REF, SYNC_IDS, EXTRA_FLOW, SIGNING_TX, FINALISING_TX)
         }
 
         override val progressTracker: ProgressTracker = tracker()
 
         @Suspendable
-        override fun call(): SignedTransaction {
-            val issuerSession = initiateFlow(issuer)
+        abstract fun extraFlow(issuerSession: FlowSession): Unit
+
+        @Suspendable
+        open fun redeemFlow(issuerSession: FlowSession) {
 
             progressTracker.currentStep = REDEEM_NOTIFICATION
             // Notify the recipient that we'll be sending them tokens for redeeming and advise them of anything they must do, e.g.
@@ -101,9 +92,20 @@ object RedeemToken {
             val notary = firstState.notary
             val fakeWireTx = TransactionBuilder(notary = notary).withItems(*exitStateAndRefs.toTypedArray()).addCommand(DummyCommand(), ourIdentity.owningKey).toWireTransaction(serviceHub)
             subFlow(IdentitySyncFlow.Send(issuerSession, fakeWireTx))
+        }
+
+        @Suspendable
+        override fun call(): SignedTransaction {
+
+            val issuerSession = initiateFlow(issuer)
+
+            redeemFlow(issuerSession)
+
+            progressTracker.currentStep = EXTRA_FLOW
+            extraFlow(issuerSession)
+
             progressTracker.currentStep = SIGNING_TX
             subFlow(object : SignTransactionFlow(issuerSession) {
-                // TODO Add some additional checks.
                 override fun checkTransaction(stx: SignedTransaction) = Unit
             })
 
@@ -116,10 +118,10 @@ object RedeemToken {
     private class DummyCommand : CommandData
 
     // Called on Issuer side.
-    @InitiatedBy(InitiateRedeem::class)
-    class IssuerResponder<T : TokenType>(val otherSession: FlowSession) : FlowLogic<SignedTransaction>() {
+    abstract class Secondary<T : TokenType>(val otherSession: FlowSession) : FlowLogic<SignedTransaction>() {
+
         @Suspendable
-        override fun call(): SignedTransaction {
+        open fun redeem(): TransactionBuilder {
             // Receive a redeem notification from the party. It tells us if we need to sign up for token updates or
             // generate a confidential identity.
             val redeemNotification = otherSession.receive<TokenRedeemNotification<T>>().unwrap { it }
@@ -132,20 +134,37 @@ object RedeemToken {
             val stateAndRefsToRedeem = subFlow(ReceiveStateAndRefFlow<AbstractToken>(otherSession))
             // Synchronise identities.
             subFlow(IdentitySyncFlow.Receive(otherSession))
+
+            val notary = stateAndRefsToRedeem.first().state.notary
+            val builder = TransactionBuilder(notary = notary)
+
             check(stateAndRefsToRedeem.isNotEmpty()) {
                 "Received empty list of states to redeem."
             }
+
             checkSameIssuer(stateAndRefsToRedeem, ourIdentity)
             checkSameNotary(stateAndRefsToRedeem)
             checkOwner(serviceHub.identityService, stateAndRefsToRedeem, otherSession.counterparty)
-            val notary = stateAndRefsToRedeem.first().state.notary
-            val txBuilder = TransactionBuilder(notary = notary)
+
             if (redeemNotification.amount == null) {
-                generateExitNonFungible(txBuilder, stateAndRefsToRedeem.first() as StateAndRef<NonFungibleToken<T>>)
+                generateExitNonFungible(builder, stateAndRefsToRedeem.first() as StateAndRef<NonFungibleToken<T>>)
             } else {
-                TokenSelection(serviceHub).generateExit(txBuilder, stateAndRefsToRedeem as List<StateAndRef<FungibleToken<T>>>, redeemNotification.amount, otherIdentity)
+                TokenSelection(serviceHub).generateExit(builder, stateAndRefsToRedeem as List<StateAndRef<FungibleToken<T>>>, redeemNotification.amount, otherIdentity)
             }
-            val partialStx = serviceHub.signInitialTransaction(txBuilder, ourIdentity.owningKey)
+
+            return builder
+        }
+
+        @Suspendable
+        abstract fun extraFlow(builder: TransactionBuilder): Unit
+
+        @Suspendable
+        override fun call(): SignedTransaction {
+
+            val builder = redeem()
+            extraFlow(builder)
+
+            val partialStx = serviceHub.signInitialTransaction(builder, ourIdentity.owningKey)
             val stx = subFlow(CollectSignaturesFlow(partialStx, listOf(otherSession)))
             return subFlow(FinalityFlow(transaction = stx, sessions = listOf(otherSession)))
         }
@@ -189,5 +208,23 @@ object RedeemToken {
         check(owners.all { it == counterparty }) {
             "Received states that don't come from counterparty that initiated the flow."
         }
+    }
+
+    // Called on owner side.
+    @InitiatingFlow
+    @StartableByRPC
+    class InitiateRedeem<T : TokenType>(
+            ownedToken: T,
+            issuer: Party,
+            amount: Amount<T>? = null,
+            anonymous: Boolean = true
+    ) : Primary<T>(ownedToken, issuer, amount, anonymous) {
+        override fun extraFlow(issuerSession: FlowSession) {}
+    }
+
+    // Called on Issuer side.
+    @InitiatedBy(InitiateRedeem::class)
+    class IssuerResponder<T : TokenType>(otherSession: FlowSession) : Secondary<T>(otherSession) {
+        override fun extraFlow(builder: TransactionBuilder) {}
     }
 }
