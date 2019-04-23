@@ -47,7 +47,11 @@ object ConfidentialMoveFlow {
         override fun call(): SignedTransaction {
             val holderSession = initiateFlow(holder)
             val confidentialHolder = subFlow(RequestConfidentialIdentity.Initiator(holderSession)).party.anonymise()
-            return subFlow(MoveToken.Initiator(ownedToken, confidentialHolder, amount, holderSession))
+            return if (amount == null) {
+                subFlow(MoveTokenNonFungible(ownedToken, holder, holderSession))
+            } else {
+                subFlow(MoveTokenFungible(amount, confidentialHolder, holderSession))
+            }
         }
     }
 

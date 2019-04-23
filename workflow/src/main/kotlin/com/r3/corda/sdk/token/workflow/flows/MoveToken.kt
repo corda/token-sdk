@@ -4,6 +4,8 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.workflow.selection.TokenSelection
 import com.r3.corda.sdk.token.workflow.selection.generateMoveNonFungible
+import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountCriteria
+import com.r3.corda.sdk.token.workflow.utilities.tokenAmountWithIssuerCriteria
 import net.corda.core.contracts.Amount
 import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
@@ -13,19 +15,21 @@ import net.corda.core.flows.InitiatingFlow
 import net.corda.core.flows.ReceiveFinalityFlow
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.Party
 import net.corda.core.node.StatesToRecord
+import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
+import java.security.PublicKey
+import javax.management.Query
 
 object MoveToken {
 
     @InitiatingFlow
     @StartableByRPC
-    class Initiator<T : TokenType>(
-            val ownedToken: T,
+    abstract class Initiator<T : TokenType>(
             val holder: AbstractParty,
-            val amount: Amount<T>? = null,
             val session: FlowSession? = null
     ) : FlowLogic<SignedTransaction>() {
         companion object {
@@ -41,6 +45,9 @@ object MoveToken {
         override val progressTracker: ProgressTracker = tracker()
 
         @Suspendable
+        abstract fun generateMove(): Pair<TransactionBuilder, List<PublicKey>>
+
+        @Suspendable
         override fun call(): SignedTransaction {
             val holderParty = serviceHub.identityService.wellKnownPartyFromAnonymous(holder)
                     ?: throw IllegalArgumentException("Called MoveToken flow with anonymous party that node doesn't know about. " +
@@ -48,12 +55,8 @@ object MoveToken {
             val holderSession = if (session == null) initiateFlow(holderParty) else session
 
             progressTracker.currentStep = GENERATE_MOVE
-            val (builder, keys) = if (amount == null) {
-                generateMoveNonFungible(serviceHub.vaultService, ownedToken, holder)
-            } else {
-                val tokenSelection = TokenSelection(serviceHub)
-                tokenSelection.generateMove(TransactionBuilder(), amount, holder)
-            }
+
+            val (builder, keys) = generateMove()
 
             progressTracker.currentStep = SIGNING
             // WARNING: At present, the recipient will not be signed up to updates from the token maintainer.
@@ -74,5 +77,26 @@ object MoveToken {
                 subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
             }
         }
+    }
+}
+
+class MoveTokenNonFungible<T: TokenType>(
+        val ownedToken: T,
+        holder: AbstractParty,
+        session: FlowSession? = null
+): MoveToken.Initiator<T>(holder, session) {
+    override fun generateMove(): Pair<TransactionBuilder, List<PublicKey>> {
+        return generateMoveNonFungible(serviceHub.vaultService, ownedToken, holder)
+    }
+}
+
+open class MoveTokenFungible<T: TokenType>(
+        val amount: Amount<T>,
+        holder: AbstractParty,
+        session: FlowSession? = null
+): MoveToken.Initiator<T>(holder, session) {
+    override fun generateMove(): Pair<TransactionBuilder, List<PublicKey>> {
+        val tokenSelection = TokenSelection(serviceHub)
+        return tokenSelection.generateMove(TransactionBuilder(), amount, holder)
     }
 }

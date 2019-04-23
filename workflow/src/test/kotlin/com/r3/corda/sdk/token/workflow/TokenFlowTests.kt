@@ -1,23 +1,36 @@
 package com.r3.corda.sdk.token.workflow
 
 import com.r3.corda.sdk.token.contracts.types.TokenPointer
+import com.r3.corda.sdk.token.contracts.types.TokenType
+import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.of
+import com.r3.corda.sdk.token.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.sdk.token.money.GBP
+import com.r3.corda.sdk.token.money.USD
 import com.r3.corda.sdk.token.workflow.flows.IssueToken
-import com.r3.corda.sdk.token.workflow.flows.MoveToken
+import com.r3.corda.sdk.token.workflow.flows.MoveTokenFungible
+import com.r3.corda.sdk.token.workflow.selection.TokenSelection
 import com.r3.corda.sdk.token.workflow.statesAndContracts.House
 import com.r3.corda.sdk.token.workflow.utilities.getDistributionList
 import com.r3.corda.sdk.token.workflow.utilities.getLinearStateById
+import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountsByToken
+import com.r3.corda.sdk.token.workflow.utilities.tokenAmountWithIssuerCriteria
 import com.r3.corda.sdk.token.workflow.utilities.tokenBalance
+import net.corda.core.contracts.Amount
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
+import net.corda.core.flows.FlowSession
+import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.Party
 import net.corda.core.node.services.queryBy
+import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.internal.chooseIdentityAndCert
 import net.corda.testing.node.StartedMockNode
 import org.assertj.core.api.Assertions
 import org.junit.Before
 import org.junit.Test
+import java.security.PublicKey
 import kotlin.test.assertEquals
 
 class TokenFlowTests : MockNetworkTest(numberOfNodes = 3) {
@@ -168,7 +181,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 3) {
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
         val confidentialHolder = B.services.keyManagementService.freshKeyAndCert(B.services.myInfo.chooseIdentityAndCert(), false).party.anonymise()
         Assertions.assertThatThrownBy {
-            A.startFlow(MoveToken.Initiator(GBP, confidentialHolder, 50.GBP)).getOrThrow()
+            A.startFlow(MoveTokenFungible(50.GBP, confidentialHolder)).getOrThrow()
         }.hasMessageContaining("Called MoveToken flow with anonymous party that node doesn't know about. Make sure that RequestConfidentialIdentity flow is called before.")
     }
 
@@ -177,7 +190,37 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 3) {
         val issueTokenTx = I.issueTokens(GBP, A, NOTARY, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
         val confidentialHolder = A.services.keyManagementService.freshKeyAndCert(A.services.myInfo.chooseIdentityAndCert(), false).party.anonymise()
-        val moveTokenTx = A.startFlow(MoveToken.Initiator(GBP, confidentialHolder, 50.GBP)).getOrThrow()
+        val moveTokenTx = A.startFlow(MoveTokenFungible(50.GBP, confidentialHolder)).getOrThrow()
         A.watchForTransaction(moveTokenTx.id).getOrThrow()
+    }
+
+    private class MyMove<T : TokenType>(
+            amount: Amount<T>,
+            holder: AbstractParty,
+            val changeOwner: AbstractParty,
+            val issuer: Party,
+            session: FlowSession? = null
+    ) : MoveTokenFungible<T>(amount, holder, session) {
+        override fun generateMove(): Pair<TransactionBuilder, List<PublicKey>> {
+            val tokenSelection = TokenSelection(serviceHub)
+            return tokenSelection.generateMove(TransactionBuilder(), amount, holder, tokenAmountWithIssuerCriteria(amount.token, issuer), changeOwner)
+        }
+    }
+
+    @Test
+    fun `provide custom generateMove function`() {
+        val issueTokenTxI = I.issueTokens(GBP, A, NOTARY, 100.GBP).getOrThrow()
+        A.watchForTransaction(issueTokenTxI.id).getOrThrow()
+        val issueTokenTxB = B.issueTokens(USD, A, NOTARY, 100.USD).getOrThrow()
+        A.watchForTransaction(issueTokenTxB.id).getOrThrow()
+        val changeHolder = A.services.keyManagementService.freshKeyAndCert(A.services.myInfo.chooseIdentityAndCert(), false).party.anonymise()
+        // Move from A to B but only I as issuer, change owner - us - assert in transaction that we used external identity
+        val moveTx = A.startFlow(MyMove(13.GBP, B.legalIdentity(), changeHolder, I.legalIdentity())).getOrThrow()
+        A.watchForTransaction(moveTx.id).getOrThrow()
+        B.watchForTransaction(moveTx.id).getOrThrow()
+        val moneyA = A.services.vaultService.ownedTokenAmountsByToken(GBP).states.sumTokenStateAndRefs()
+        Assertions.assertThat(moneyA).isEqualTo(87.GBP issuedBy I.legalIdentity())
+        val moneyB = B.services.vaultService.ownedTokenAmountsByToken(GBP).states.sumTokenStateAndRefs()
+        Assertions.assertThat(moneyB).isEqualTo(13.GBP issuedBy I.legalIdentity())
     }
 }
