@@ -61,7 +61,6 @@ fun <T : TokenType> StartedMockNode.moveTokens(
                     amount = amount
             ))
         } else {
-            //TODO change that
             if (amount == null) {
                 startFlow(MoveTokenNonFungible(token, owner.legalIdentity()))
             } else {

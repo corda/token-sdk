@@ -36,7 +36,6 @@ object ConfidentialIssueFlow {
     }
 }
 
-// TODO change that
 object ConfidentialMoveFlow {
     @InitiatingFlow
     class Initiator<T : TokenType>(
