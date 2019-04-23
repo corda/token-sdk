@@ -26,7 +26,7 @@ fun <T : TokenType> StartedMockNode.issueTokens(
         issueTo: StartedMockNode,
         notary: StartedMockNode,
         amount: Amount<T>? = null,
-        anonymous: Boolean = true
+        anonymous: Boolean = false
 ): CordaFuture<SignedTransaction> {
     return transaction {
         if (anonymous) {
@@ -51,7 +51,7 @@ fun <T : TokenType> StartedMockNode.moveTokens(
         token: T,
         owner: StartedMockNode,
         amount: Amount<T>? = null,
-        anonymous: Boolean = true
+        anonymous: Boolean = false
 ): CordaFuture<SignedTransaction> {
     return transaction {
         if (anonymous) {
@@ -82,5 +82,54 @@ fun <T : TokenType> StartedMockNode.redeemTokens(
             issuer = issuer.legalIdentity(),
             amount = amount,
             anonymous = anonymous
+    ))
+}
+
+fun <T : TokenType> StartedMockNode.issueTokensWithTradeConditions(
+        token: T,
+        issueTo: StartedMockNode,
+        notary: StartedMockNode,
+        amount: Amount<T>? = null,
+        conditions: String
+): CordaFuture<SignedTransaction> {
+    return transaction {
+        startFlow(IssueTokenWithTradeConditions.Initiator(
+                token = token,
+                issueTo = issueTo.legalIdentity(),
+                notary = notary.legalIdentity(),
+                amount = amount,
+                conditions = conditions
+        ))
+    }
+}
+
+fun <T : TokenType> StartedMockNode.moveTokensWithTradeConditions(
+        token: T,
+        issueTo: StartedMockNode,
+        amount: Amount<T>? = null,
+        conditions: String
+): CordaFuture<SignedTransaction> {
+    return transaction {
+        startFlow(MoveTokenWithTradeConditions.Initiator(
+                token = token,
+                issueTo = issueTo.legalIdentity(),
+                amount = amount,
+                conditions = conditions
+        ))
+    }
+}
+
+fun <T : TokenType> StartedMockNode.redeemTokensWithTradeConditions(
+        token: T,
+        issuer: StartedMockNode,
+        amount: Amount<T>? = null,
+        conditions: String
+): CordaFuture<SignedTransaction> {
+    return startFlow(RedeemTokenWithTradeConditions.InitiateRedeem(
+            ownedToken = token,
+            issuer = issuer.legalIdentity(),
+            amount = amount,
+            anonymous = false,
+            conditions = conditions
     ))
 }

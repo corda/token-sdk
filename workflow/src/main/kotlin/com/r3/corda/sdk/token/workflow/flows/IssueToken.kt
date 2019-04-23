@@ -12,19 +12,15 @@ import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import com.r3.corda.sdk.token.workflow.utilities.addPartyToDistributionList
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionState
-import net.corda.core.flows.FinalityFlow
-import net.corda.core.flows.FlowLogic
-import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatedBy
-import net.corda.core.flows.InitiatingFlow
-import net.corda.core.flows.ReceiveFinalityFlow
-import net.corda.core.flows.StartableByRPC
+import net.corda.core.contracts.requireThat
+import net.corda.core.flows.*
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.StatesToRecord
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
+import java.security.PublicKey
 
 /**
  * This flow takes a bunch of parameters and is used to issue a token or an amount of some token on the ledger to
@@ -61,9 +57,7 @@ import net.corda.core.utilities.ProgressTracker
  */
 object IssueToken {
 
-    @InitiatingFlow
-    @StartableByRPC
-    class Initiator<T : TokenType>(
+    abstract class Primary<T : TokenType>(
             val token: T,
             val issueTo: AbstractParty,
             val notary: Party,
@@ -72,26 +66,27 @@ object IssueToken {
     ) : FlowLogic<SignedTransaction>() {
         companion object {
             object DIST_LIST : ProgressTracker.Step("Adding party to distribution list.")
+            object EXTRA_FLOW : ProgressTracker.Step("Starting extra flow")
             object SIGNING : ProgressTracker.Step("Signing transaction proposal.")
             object RECORDING : ProgressTracker.Step("Recording signed transaction.") {
                 override fun childProgressTracker() = FinalityFlow.tracker()
             }
 
-            fun tracker() = ProgressTracker(DIST_LIST, SIGNING, RECORDING)
+            fun tracker() = ProgressTracker(DIST_LIST, EXTRA_FLOW, SIGNING, RECORDING)
         }
 
         override val progressTracker: ProgressTracker = tracker()
 
         @Suspendable
-        override fun call(): SignedTransaction {
-            // This is the identity which will be used to issue tokens.
-            // We also need a session for the other side.
-            val me: Party = ourIdentity
-            val holderParty = serviceHub.identityService.wellKnownPartyFromAnonymous(issueTo)
-                    ?: throw IllegalArgumentException("Called IssueToken flow with anonymous party that node doesn't know about. " +
-                            "Make sure that RequestConfidentialIdentity flow is called before.")
-            val holderSession = if (session == null) initiateFlow(holderParty) else session
+        abstract fun transactionExtra(me: Party,
+                                      holderParty: Party,
+                                      holderSession: FlowSession,
+                                      builder: TransactionBuilder): List<PublicKey>
 
+        open fun issue(me: Party,
+                       holderParty: Party,
+                       holderSession: FlowSession,
+                       builder: TransactionBuilder): Unit {
             // Create the issued token. We add this to the commands for grouping.
             val issuedToken: IssuedTokenType<T> = token issuedBy me
 
@@ -119,16 +114,43 @@ object IssueToken {
 
             // Create the transaction.
             val transactionState: TransactionState<AbstractToken> = heldToken withNotary notary
-            val utx: TransactionBuilder = TransactionBuilder(notary = notary).apply {
+
+            builder.apply {
                 addCommand(data = IssueTokenCommand(issuedToken), keys = listOf(me.owningKey))
                 addOutputState(state = transactionState)
             }
+        }
+
+        @Suspendable
+        override fun call(): SignedTransaction {
+            // This is the identity which will be used to issue tokens.
+            // We also need a session for the other side.
+            val me: Party = ourIdentity
+            val holderParty = serviceHub.identityService.wellKnownPartyFromAnonymous(issueTo)
+                    ?: throw IllegalArgumentException("Called IssueToken flow with anonymous party that node doesn't know about. " +
+                            "Make sure that RequestConfidentialIdentity flow is called before.")
+            val holderSession = if (session == null) initiateFlow(holderParty) else session
+
+            val builder = TransactionBuilder(notary = notary)
+            issue(me, holderParty, holderSession, builder)
+
+            progressTracker.currentStep = EXTRA_FLOW
+            val extraKeys = transactionExtra(me, holderParty, holderSession, builder)
+
             progressTracker.currentStep = SIGNING
             // Sign the transaction. Only Concrete Parties should be used here.
-            val stx: SignedTransaction = serviceHub.signInitialTransaction(utx)
+            val ptx: SignedTransaction = serviceHub.signInitialTransaction(builder, listOf(me.owningKey))
             progressTracker.currentStep = RECORDING
             // Can issue to yourself, but finality flow doesn't take a session then.
             val sessions = if (me == holderParty) emptyList() else listOf(holderSession)
+
+            val stx = ptx +
+                    if (!serviceHub.myInfo.isLegalIdentity(holderSession.counterparty)) {
+                        subFlow(CollectSignatureFlow(ptx, holderSession, extraKeys))
+                    } else {
+                        listOf()
+                    }
+
             return subFlow(FinalityFlow(transaction = stx,
                     progressTracker = RECORDING.childProgressTracker(),
                     sessions = sessions
@@ -136,15 +158,52 @@ object IssueToken {
         }
     }
 
-    @InitiatedBy(Initiator::class)
-    class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
+    abstract class Secondary(val otherSession: FlowSession) : FlowLogic<Unit>() {
+
+        @Suspendable
+        abstract fun checkTransaction(stx: SignedTransaction)
+
         @Suspendable
         override fun call(): Unit {
             // We must do this check because FinalityFlow does not send locally and we want to be able to issue to ourselves.
             if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
+
+                val signTransactionFlow = object : SignTransactionFlow(otherSession) {
+                    override fun checkTransaction(stx: SignedTransaction) = this@Secondary.checkTransaction(stx)
+                }
+
+                val txId = subFlow(signTransactionFlow).id
+
                 // Resolve the issuance transaction.
-                subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
+                subFlow(ReceiveFinalityFlow(otherSideSession = otherSession,
+                        statesToRecord = StatesToRecord.ONLY_RELEVANT, expectedTxId = txId))
             }
         }
+    }
+
+    @InitiatingFlow
+    @StartableByRPC
+    class Initiator<T : TokenType>(
+            token: T,
+            issueTo: AbstractParty,
+            notary: Party,
+            amount: Amount<T>? = null,
+            session: FlowSession? = null
+    ) : Primary<T>(token, issueTo, notary, amount, session) {
+
+        @Suspendable
+        override fun transactionExtra(me: Party,
+                                      holderParty: Party,
+                                      holderSession: FlowSession,
+                                      builder: TransactionBuilder): List<PublicKey> {
+            return listOf()
+        }
+    }
+
+    @InitiatedBy(Initiator::class)
+    class Responder(otherSession: FlowSession) : Secondary(otherSession) {
+
+        @Suspendable
+        override fun checkTransaction(stx: SignedTransaction) = requireThat { }
     }
 }
