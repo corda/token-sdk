@@ -49,6 +49,12 @@ allprojects {
             force "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
         }
     }
+
+    configurations.all {
+        resolutionStrategy {
+            cacheChangingModulesFor 0, 'seconds'
+        }
+    }
 }
 
 subprojects {
