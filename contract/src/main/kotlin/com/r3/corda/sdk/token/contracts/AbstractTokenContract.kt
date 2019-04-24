@@ -24,26 +24,41 @@ import net.corda.core.transactions.LedgerTransaction.InOutGroup
  */
 abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Contract {
 
-    /** This method can be overridden to handle additional command types. */
-    open fun dispatchOnCommand(matchedCommands: List<CommandWithParties<TokenCommand<T>>>, group: InOutGroup<U, IssuedTokenType<T>>) {
-        when (matchedCommands.single().value) {
+    /**
+     * This method can be overridden to handle additional command types. The assumption here is that only the command
+     * inputs and outputs are required to verify issuances, moves and redemptions. Attachments and the the timestamp
+     * are not provided.
+     */
+    open fun dispatchOnCommand(commands: List<CommandWithParties<TokenCommand<T>>>, inputs: List<U>, outputs: List<U>) {
+        when (commands.single().value) {
             // Issuances should only contain one issue command.
-            is IssueTokenCommand<*> -> handleIssue(group, matchedCommands.single())
+            is IssueTokenCommand<*> -> verifyIssue(commands.single(), inputs, outputs)
             // Moves may contain more than one move command.
-            is MoveTokenCommand<*> -> handleMove(group, matchedCommands)
+            is MoveTokenCommand<*> -> verifyMove(commands, inputs, outputs)
             // Redeems must only contain one redeem command.
-            is RedeemTokenCommand<*> -> handleRedeem(group, matchedCommands.single())
+            is RedeemTokenCommand<*> -> verifyRedeem(commands.single(), inputs, outputs)
         }
     }
 
-    /** Provide custom logic for handling issuance of a token. */
-    abstract fun handleIssue(group: InOutGroup<U, IssuedTokenType<T>>, issueCommand: CommandWithParties<TokenCommand<T>>)
+    /**
+     * Provide custom logic for handling issuance of a token. With issuances, the assumption is that only one issuer
+     * will be involved in any one issuance, therefore there will only be one [IssueTokenCommand] per group.
+     */
+    abstract fun verifyIssue(issueCommand: CommandWithParties<TokenCommand<T>>, inputs: List<U>, outputs: List<U>)
 
-    /** Provide custom logic for handling the moving of a token. */
-    abstract fun handleMove(group: InOutGroup<U, IssuedTokenType<T>>, moveCommands: List<CommandWithParties<TokenCommand<T>>>)
+    /**
+     * Provide custom logic for handling the moving of a token. More than one move command can e supplied because
+     * multiple parties may need to move the same [IssuedTokenType] in one atomic transaction. Each party adds their
+     * own command with the required public keys for the tokens they are moving.
+     */
+    abstract fun verifyMove(moveCommands: List<CommandWithParties<TokenCommand<T>>>, inputs: List<U>, outputs: List<U>)
 
-    /** Provide custom logic for handling the redemption of a token. */
-    abstract fun handleRedeem(group: InOutGroup<U, IssuedTokenType<T>>, redeemCommand: CommandWithParties<TokenCommand<T>>)
+    /**
+     * Provide custom logic for handling the redemption of a token. There is an assumption in that only one issuer will
+     * be involved in a single redemption transaction, therefore there will only be one [RedeemTokenCommand] per
+     * group of [IssuedTokenType]s.
+     */
+    abstract fun verifyRedeem(redeemCommand: CommandWithParties<TokenCommand<T>>, inputs: List<U>, outputs: List<U>)
 
     /** Necessary for providing a grouping function, which is usually the [IssuedTokenType]. */
     abstract fun groupStates(tx: LedgerTransaction): List<InOutGroup<U, IssuedTokenType<T>>>
@@ -81,7 +96,7 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
                 // Handle each group individually. Although it is possible, there would not usually be a move group and
                 // an issue group in the same transaction. It doesn't make sense for privacy reasons. However, it is
                 // common to see multiple move groups in the same transaction.
-                matchedCommandValues.size == 1 -> dispatchOnCommand(matchedCommands, group)
+                matchedCommandValues.size == 1 -> dispatchOnCommand(matchedCommands, group.inputs, group.outputs)
             }
         }
     }

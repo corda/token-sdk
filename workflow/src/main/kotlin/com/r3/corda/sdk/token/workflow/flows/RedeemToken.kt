@@ -162,18 +162,9 @@ object RedeemToken {
             stateAndRefs: List<StateAndRef<AbstractToken<T>>>,
             issuer: Party? = null
     ) {
-        val issuerToCheck = issuer ?: stateAndRefs.first().state.data.issuer()
-        check(stateAndRefs.all { it.state.data.issuer() == issuerToCheck }) {
+        val issuerToCheck = issuer ?: stateAndRefs.first().state.data.issuer
+        check(stateAndRefs.all { it.state.data.issuer == issuerToCheck }) {
             "Tokens with different issuers."
-        }
-    }
-
-    @Suspendable
-    private fun <T : TokenType> AbstractToken<T>.issuer(): Party? {
-        return when (this) {
-            is FungibleToken<*> -> amount.token.issuer
-            is NonFungibleToken<*> -> token.issuer
-            else -> null
         }
     }
 

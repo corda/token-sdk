@@ -21,13 +21,14 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
         return tx.groupStates { state -> state.token }
     }
 
-    override fun handleIssue(
-            group: InOutGroup<NonFungibleToken<T>, IssuedTokenType<T>>,
-            issueCommand: CommandWithParties<TokenCommand<T>>
+    override fun verifyIssue(
+            issueCommand: CommandWithParties<TokenCommand<T>>,
+            inputs: List<NonFungibleToken<T>>,
+            outputs: List<NonFungibleToken<T>>
     ) {
-        require(group.inputs.isEmpty()) { "When issuing tokens, there cannot be any input states." }
-        require(group.outputs.isNotEmpty()) { "When issuing tokens, there must be output states." }
-        val output = group.outputs.single()
+        require(inputs.isEmpty()) { "When issuing tokens, there cannot be any input states." }
+        require(outputs.isNotEmpty()) { "When issuing tokens, there must be output states." }
+        val output = outputs.single()
         // There can only be one issuer per group as the issuer is part of the token which is used to group states.
         // If there are multiple issuers for the same tokens then there will be a group for each issued token. So,
         // the line below should never fail on single().
@@ -40,16 +41,17 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
     // We cannot have two of the same token; two token states containing the same info because they are linear states.
     // Even if we have two tokens containing the same info, they will have different linear IDs so end up in different
     // groups.
-    override fun handleMove(
-            group: InOutGroup<NonFungibleToken<T>, IssuedTokenType<T>>,
-            moveCommands: List<CommandWithParties<TokenCommand<T>>>
+    override fun verifyMove(
+            moveCommands: List<CommandWithParties<TokenCommand<T>>>,
+            inputs: List<NonFungibleToken<T>>,
+            outputs: List<NonFungibleToken<T>>
     ) {
         // There must be inputs and outputs present.
-        require(group.inputs.isNotEmpty()) { "When moving a token, there must be one input state present." }
-        require(group.outputs.isNotEmpty()) { "When moving a token, there must be one output state present." }
+        require(inputs.isNotEmpty()) { "When moving a token, there must be one input state present." }
+        require(outputs.isNotEmpty()) { "When moving a token, there must be one output state present." }
         // Sum the amount of input and output tokens.
-        val input = group.inputs.single()
-        val output = group.outputs.single()
+        val input = inputs.single()
+        val output = outputs.single()
         require(input.token == output.token) {
             "When moving a token, there must be an input and corresponding output for that token."
         }
@@ -61,18 +63,19 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
         }
     }
 
-    override fun handleRedeem(
-            group: InOutGroup<NonFungibleToken<T>, IssuedTokenType<T>>,
-            redeemCommand: CommandWithParties<TokenCommand<T>>
+    override fun verifyRedeem(
+            redeemCommand: CommandWithParties<TokenCommand<T>>,
+            inputs: List<NonFungibleToken<T>>,
+            outputs: List<NonFungibleToken<T>>
     ) {
         // There must be inputs and outputs present.
-        require(group.outputs.isEmpty()) { "When redeeming an owned token, there must be no output." }
-        require(group.inputs.size == 1) { "When redeeming an owned token, there must be only one input." }
-        val ownedToken = group.inputs.single()
+        require(outputs.isEmpty()) { "When redeeming an owned token, there must be no output." }
+        require(inputs.size == 1) { "When redeeming an owned token, there must be only one input." }
+        val ownedToken = inputs.single()
         // Only the issuer and holders should be signing the redeem command.
         // There will only ever be one issuer as the issuer forms part of the grouping key.
         val issuerKey = ownedToken.token.issuer.owningKey
-        val holdersKeys = group.inputs.map { it.holder.owningKey }
+        val holdersKeys = inputs.map { it.holder.owningKey }
         val signers = redeemCommand.signers
         require(issuerKey in signers) {
             "The issuer must be the signing party when an amount of tokens are redeemed."

@@ -36,13 +36,15 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
         return tx.groupStates { state -> state.issuedTokenType }
     }
 
-    override fun handleIssue(
-            group: InOutGroup<FungibleToken<T>, IssuedTokenType<T>>,
-            issueCommand: CommandWithParties<TokenCommand<T>>
+
+    override fun verifyIssue(
+            issueCommand: CommandWithParties<TokenCommand<T>>,
+            inputs: List<FungibleToken<T>>,
+            outputs: List<FungibleToken<T>>
     ) {
-        val token: IssuedTokenType<T> = group.groupingKey
-        require(group.inputs.isEmpty()) { "When issuing tokens, there cannot be any input states." }
-        group.outputs.apply {
+        val token: IssuedTokenType<T> = issueCommand.value.token
+        require(inputs.isEmpty()) { "When issuing tokens, there cannot be any input states." }
+        outputs.apply {
             require(isNotEmpty()) { "When issuing tokens, there must be output states." }
             // We don't care about the token as the grouping function ensures that all the outputs are of the same
             // token.
@@ -62,29 +64,30 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
         }
     }
 
-    override fun handleMove(
-            group: InOutGroup<FungibleToken<T>, IssuedTokenType<T>>,
-            moveCommands: List<CommandWithParties<TokenCommand<T>>>
+    override fun verifyMove(
+            moveCommands: List<CommandWithParties<TokenCommand<T>>>,
+            inputs: List<FungibleToken<T>>,
+            outputs: List<FungibleToken<T>>
     ) {
-        val token: IssuedTokenType<T> = group.groupingKey
+        val token: IssuedTokenType<T> = moveCommands.single().value.token
         // There must be inputs and outputs present.
-        require(group.inputs.isNotEmpty()) { "When moving tokens, there must be input states present." }
-        require(group.outputs.isNotEmpty()) { "When moving tokens, there must be output states present." }
+        require(inputs.isNotEmpty()) { "When moving tokens, there must be input states present." }
+        require(outputs.isNotEmpty()) { "When moving tokens, there must be output states present." }
         // Sum the amount of input and output tokens.
-        val inputAmount: Amount<IssuedTokenType<T>> = group.inputs.sumTokenStatesOrZero(token)
+        val inputAmount: Amount<IssuedTokenType<T>> = inputs.sumTokenStatesOrZero(token)
         require(inputAmount > Amount.zero(token)) { "In move groups there must be an amount of input tokens > ZERO." }
-        val outputAmount: Amount<IssuedTokenType<T>> = group.outputs.sumTokenStatesOrZero(token)
+        val outputAmount: Amount<IssuedTokenType<T>> = outputs.sumTokenStatesOrZero(token)
         require(outputAmount > Amount.zero(token)) { "In move groups there must be an amount of output tokens > ZERO." }
         // Input and output amounts must be equal.
         require(inputAmount == outputAmount) {
             "In move groups the amount of input tokens MUST EQUAL the amount of output tokens. In other words, you " +
                     "cannot create or destroy value when moving tokens."
         }
-        val hasZeroAmounts = group.outputs.any { it.amount == Amount.zero(token) }
+        val hasZeroAmounts = outputs.any { it.amount == Amount.zero(token) }
         require(hasZeroAmounts.not()) { "You cannot create output token amounts with a ZERO amount." }
         // There can be different owners in each move group. There map be one command for each of the signers publickey
         // or all the public keys might be listed within one command.
-        val inputOwningKeys: Set<PublicKey> = group.inputs.map { it.holder.owningKey }.toSet()
+        val inputOwningKeys: Set<PublicKey> = inputs.map { it.holder.owningKey }.toSet()
         val signers: Set<PublicKey> = moveCommands.flatMap(CommandWithParties<TokenCommand<T>>::signers).toSet()
         require(inputOwningKeys == signers) {
             "There are required signers missing or some of the specified signers are not required. A transaction " +
@@ -92,14 +95,15 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
         }
     }
 
-    override fun handleRedeem(
-            group: InOutGroup<FungibleToken<T>, IssuedTokenType<T>>,
-            redeemCommand: CommandWithParties<TokenCommand<T>>
+    override fun verifyRedeem(
+            redeemCommand: CommandWithParties<TokenCommand<T>>,
+            inputs: List<FungibleToken<T>>,
+            outputs: List<FungibleToken<T>>
     ) {
-        val token = group.groupingKey
+        val token: IssuedTokenType<T> = redeemCommand.value.token
         // There can be at most one output treated as a change paid back to the owner. Issuer is used to group states,
         // so it will be the same as one for the input states.
-        group.outputs.apply {
+        outputs.apply {
             require(size <= 1) { "When redeeming tokens, there must be zero or one output state." }
             if (isNotEmpty()) {
                 val amount = single().amount
@@ -107,7 +111,7 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
             }
             // Outputs can be paid to any anonymous public key, so we cannot compare keys here.
         }
-        group.inputs.apply {
+        inputs.apply {
             // There must be inputs present.
             require(isNotEmpty()) { "When redeeming tokens, there must be input states present." }
             // We don't care about the token as the grouping function ensures all the inputs are of the same token.
@@ -115,15 +119,15 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
             require(inputSum > Amount.zero(token)) {
                 "When redeeming tokens an amount > ZERO must be redeemed."
             }
-            val outSum: Amount<IssuedTokenType<T>> = group.outputs.firstOrNull()?.amount ?: Amount.zero(token)
+            val outSum: Amount<IssuedTokenType<T>> = outputs.firstOrNull()?.amount ?: Amount.zero(token)
             // We can't pay back more than redeeming.
             // Additionally, it doesn't make sense to run redeem and pay exact change.
             require(inputSum > outSum) { "Change shouldn't exceed amount redeemed." }
             // There can only be one issuer per group as the issuer is part of the token which is used to group states.
             // If there are multiple issuers for the same tokens then there will be a group for each issued token. So,
             // the line below should never fail on single().
-            val issuerKey: PublicKey = group.inputs.map(FungibleToken<T>::issuer).toSet().single().owningKey
-            val ownersKeys: List<PublicKey> = group.inputs.map { it.holder.owningKey }
+            val issuerKey: PublicKey = inputs.map(FungibleToken<T>::issuer).toSet().single().owningKey
+            val ownersKeys: List<PublicKey> = inputs.map { it.holder.owningKey }
             val signers = redeemCommand.signers
             require(issuerKey in signers) {
                 "The issuer must be the signing party when an amount of tokens are redeemed."
