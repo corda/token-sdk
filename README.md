@@ -4,7 +4,7 @@
 
 # Corda Token SDK
 
-### !!! REMEMBER: THIS PROJECT IS OPEN SOURCE - THAT MEANS YOU CAN SUBMIT PULL REQUESTS TO ADD THE FUNCTIONALITY YOU NEED IF IT IS NOT CURRNETLY AVAILABLE. !!!
+### !!! REMEMBER: THIS PROJECT IS OPEN SOURCE - THAT MEANS YOU CAN SUBMIT PULL REQUESTS TO ADD THE FUNCTIONALITY YOU NEED IF IT IS NOT CURRENTLY AVAILABLE. !!!
 
 ## What is the token SDK?
 
@@ -57,15 +57,31 @@ the token SDK as a dependency to your CorDapp. Add the following lines
 to the `build.gradle` files for your CorDapp. In your contract
 `build.gradle`, add:
 
-    compile "com.r3.corda.sdk.token:token-sdk-contract:0.1"
+    cordaCompile "com.r3.tokens-sdk:contract:1.0-SNAPSHOT"
     
 In your workflow `build.gradle` add:
 
-    compile "com.r3.corda.sdk.token:token-sdk-workflow:0.1"
+    cordaCompile "com.r3.tokens-sdk:workflow:1.0-SNAPSHOT"
 
 For `FiatCurrency` and `DigitalCurrency` definitions add:
 
-    compile "com.r3.corda.sdk.token.plugins:token-sdk-money:0.1"
+    cordaCompile "com.r3.tokens-sdk:money:1.0-SNAPSHOT"
+
+If you want to use the `deployNodes` task, you will need to add the following dependencies to your root `build.gradle`
+file:
+
+    cordapp "com.r3.tokens-sdk:contract:1.0-SNAPSHOT"
+    cordapp "com.r3.tokens-sdk:workflow:1.0-SNAPSHOT"
+    cordapp "com.r3.tokens-sdk:money:1.0-SNAPSHOT"
+
+These should also be added to the `deployNodes` task with the following syntax:
+
+    cordapp("com.r3.tokens-sdk:contract:1.0-SNAPSHOT")
+    cordapp("com.r3.tokens-sdk:workflow:1.0-SNAPSHOT")
+    cordapp("com.r3.tokens-sdk:money:1.0-SNAPSHOT")
+
+See the [kotlin token-template](https://github.com/corda/cordapp-template-kotlin/blob/token-template/build.gradle)
+for an example.
 
 Alternatively, you can use the following bootstrapped token SDK template:
 
