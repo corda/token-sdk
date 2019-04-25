@@ -29,7 +29,8 @@ object MoveToken {
 
     @InitiatingFlow
     @StartableByRPC
-    abstract class Initiator<T : TokenType>(
+    abstract class Initiator<T: TokenType>(
+            val token: T,
             val holder: AbstractParty,
             val session: FlowSession? = null
     ) : FlowLogic<SignedTransaction>() {
@@ -66,8 +67,8 @@ object MoveToken {
             val sessions = if (ourIdentity == holderParty) emptyList() else listOf(holderSession)
             val finalTx = subFlow(FinalityFlow(transaction = stx, sessions = sessions))
             // If it's TokenPointer, then update the distribution lists for token maintainers
-            if(ownedToken is TokenPointer<*>) {
-                subFlow(UpdateDistributionList.Initiator(ownedToken, ourIdentity, holderParty))
+            if(token is TokenPointer<*>) {
+                subFlow(UpdateDistributionList.Initiator(token, ourIdentity, holderParty))
             }
             return finalTx
         }
@@ -76,7 +77,7 @@ object MoveToken {
     @InitiatedBy(Initiator::class)
     class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
         @Suspendable
-        override fun call(): Unit {
+        override fun call() {
             // Resolve the issuance transaction.
             if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
                 subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
@@ -89,7 +90,8 @@ class MoveTokenNonFungible<T: TokenType>(
         val ownedToken: T,
         holder: AbstractParty,
         session: FlowSession? = null
-): MoveToken.Initiator<T>(holder, session) {
+): MoveToken.Initiator<T>(ownedToken, holder, session) {
+    @Suspendable
     override fun generateMove(): Pair<TransactionBuilder, List<PublicKey>> {
         return generateMoveNonFungible(serviceHub.vaultService, ownedToken, holder)
     }
@@ -99,7 +101,8 @@ open class MoveTokenFungible<T: TokenType>(
         val amount: Amount<T>,
         holder: AbstractParty,
         session: FlowSession? = null
-): MoveToken.Initiator<T>(holder, session) {
+): MoveToken.Initiator<T>(amount.token, holder, session) {
+    @Suspendable
     override fun generateMove(): Pair<TransactionBuilder, List<PublicKey>> {
         val tokenSelection = TokenSelection(serviceHub)
         return tokenSelection.generateMove(TransactionBuilder(), amount, holder)
