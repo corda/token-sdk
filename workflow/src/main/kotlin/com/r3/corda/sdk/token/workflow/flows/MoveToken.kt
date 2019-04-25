@@ -73,7 +73,7 @@ object MoveToken {
     class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
         @Suspendable
         override fun call() {
-            // Resolve the issuance transaction.
+            // Resolve the move transaction.
             if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
                 subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
             }
