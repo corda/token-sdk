@@ -21,13 +21,13 @@ interface AbstractToken<T : TokenType> : ContractState {
     override val participants: List<AbstractParty> get() = listOf(holder)
 
     /** The [TokenType]. */
-    val tokenType: T
+    val tokenType: T get() = issuedTokenType.tokenType
 
     /** The [IssuedTokenType]. */
     val issuedTokenType: IssuedTokenType<T>
 
     /** The issuer [Party]. */
-    val issuer: Party
+    val issuer: Party get() = issuedTokenType.issuer
 
     /** For creating a copy of an existing [AbstractToken] with a new holder. */
     fun withNewHolder(newHolder: AbstractParty): AbstractToken<T>

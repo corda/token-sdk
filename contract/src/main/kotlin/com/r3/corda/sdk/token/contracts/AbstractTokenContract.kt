@@ -26,11 +26,11 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
 
     /**
      * This method can be overridden to handle additional command types. The assumption here is that only the command
-     * inputs and outputs are required to verify issuances, moves and redemptions. Attachments and the the timestamp
+     * inputs and outputs are required to verify issuances, moves and redemptions. Attachments and the timestamp
      * are not provided.
      */
     open fun dispatchOnCommand(commands: List<CommandWithParties<TokenCommand<T>>>, inputs: List<U>, outputs: List<U>) {
-        when (commands.single().value) {
+        when (commands.first().value) {
             // Issuances should only contain one issue command.
             is IssueTokenCommand<*> -> verifyIssue(commands.single(), inputs, outputs)
             // Moves may contain more than one move command.
@@ -47,7 +47,7 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
     abstract fun verifyIssue(issueCommand: CommandWithParties<TokenCommand<T>>, inputs: List<U>, outputs: List<U>)
 
     /**
-     * Provide custom logic for handling the moving of a token. More than one move command can e supplied because
+     * Provide custom logic for handling the moving of a token. More than one move command can be supplied because
      * multiple parties may need to move the same [IssuedTokenType] in one atomic transaction. Each party adds their
      * own command with the required public keys for the tokens they are moving.
      */
