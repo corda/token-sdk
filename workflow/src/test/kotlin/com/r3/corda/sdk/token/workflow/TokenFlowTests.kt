@@ -28,22 +28,25 @@ import net.corda.core.utilities.getOrThrow
 import net.corda.testing.internal.chooseIdentityAndCert
 import net.corda.testing.node.StartedMockNode
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import java.security.PublicKey
 import kotlin.test.assertEquals
 
-class TokenFlowTests : MockNetworkTest(numberOfNodes = 3) {
+class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
 
     lateinit var A: StartedMockNode
     lateinit var B: StartedMockNode
     lateinit var I: StartedMockNode
+    lateinit var I2: StartedMockNode
 
     @Before
     override fun initialiseNodes() {
         A = nodes[0]
         B = nodes[1]
         I = nodes[2]
+        I2 = nodes[3]
     }
 
     @Test
@@ -140,12 +143,12 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 3) {
     fun `create evolvable token, then issue and move`() {
         // Create new token.
         val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
-        val createTokenTx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
+        I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         // Issue amount of the token.
         val housePointer: TokenPointer<House> = house.toPointer()
         val issueTokenTx = I.issueTokens(housePointer, A, NOTARY, 100 of housePointer).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).toCompletableFuture().getOrThrow()
-        val houseQuery = A.transaction { A.services.vaultService.getLinearStateById<LinearState>(housePointer.pointer.pointer) }
+        A.transaction { A.services.vaultService.getLinearStateById<LinearState>(housePointer.pointer.pointer) }
         // Move some of the tokens.
         val moveTokenTx = A.moveTokens(housePointer, B, 50 of housePointer, anonymous = true).getOrThrow()
         B.watchForTransaction(moveTokenTx.id).getOrThrow()
@@ -165,6 +168,41 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 3) {
         // Issue to node B.
         val issueTokenB = I.issueTokens(housePointer, A, NOTARY, 50 of housePointer).getOrThrow()
         A.watchForTransaction(issueTokenB.id).toCompletableFuture().getOrThrow()
+    }
+
+    @Test
+    fun `moving evolvable token updates distribution list`() {
+        //Create evolvable token with 2 maintainers
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity(), I2.legalIdentity()))
+        val housePointer: TokenPointer<House> = house.toPointer()
+        val tx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
+        val token = tx.singleOutput<House>()
+        assertEquals(house, token.state.data)
+        // Issue to node A.
+        val issueTokenA = I.issueTokens(housePointer, A, NOTARY, 50 of housePointer).getOrThrow()
+        A.watchForTransaction(issueTokenA.id).toCompletableFuture().getOrThrow()
+        // Assert that A is on distribution list for both I and I2
+        I.transaction {
+            val distList = getDistributionList(I.services, token.linearId()).map { it.party }.toSet()
+            assertThat(distList).containsExactly(A.legalIdentity())
+        }
+        // TODO Is it a bug or feature?
+//        I2.transaction {
+//            val distList = getDistributionList(I2.services, token.linearId()).map { it.party }.toSet()
+//            assertThat(distList).containsExactly(A.legalIdentity())
+//        }
+        // Move some of the tokens.
+        val moveTokenTx = A.moveTokens(housePointer, B, 50 of housePointer, anonymous = true).getOrThrow()
+        B.watchForTransaction(moveTokenTx.id).getOrThrow()
+        // Assert that both A and B are on distribution list for both I and I2
+        I.transaction {
+            val distList = getDistributionList(I.services, token.linearId()).map { it.party }.toSet()
+            assertThat(distList).containsExactly(A.legalIdentity(), B.legalIdentity())
+        }
+        I2.transaction {
+            val distList = getDistributionList(I2.services, token.linearId()).map { it.party }.toSet()
+            assertThat(distList).contains(B.legalIdentity())
+        }
     }
 
     @Test

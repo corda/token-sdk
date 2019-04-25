@@ -1,11 +1,10 @@
 package com.r3.corda.sdk.token.workflow.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.workflow.selection.TokenSelection
 import com.r3.corda.sdk.token.workflow.selection.generateMoveNonFungible
-import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountCriteria
-import com.r3.corda.sdk.token.workflow.utilities.tokenAmountWithIssuerCriteria
 import net.corda.core.contracts.Amount
 import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
@@ -15,20 +14,18 @@ import net.corda.core.flows.InitiatingFlow
 import net.corda.core.flows.ReceiveFinalityFlow
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.AbstractParty
-import net.corda.core.identity.Party
 import net.corda.core.node.StatesToRecord
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 import java.security.PublicKey
-import javax.management.Query
 
 object MoveToken {
 
     @InitiatingFlow
     @StartableByRPC
     abstract class Initiator<T : TokenType>(
+            val token: T,
             val holder: AbstractParty,
             val session: FlowSession? = null
     ) : FlowLogic<SignedTransaction>() {
@@ -63,16 +60,20 @@ object MoveToken {
             val stx: SignedTransaction = serviceHub.signInitialTransaction(builder, keys)
             progressTracker.currentStep = RECORDING
             val sessions = if (ourIdentity == holderParty) emptyList() else listOf(holderSession)
-            return subFlow(FinalityFlow(transaction = stx, sessions = sessions))
+            val finalTx = subFlow(FinalityFlow(transaction = stx, sessions = sessions))
+            // If it's TokenPointer, then update the distribution lists for token maintainers
+            if (token is TokenPointer<*>) {
+                subFlow(UpdateDistributionList.Initiator(token, ourIdentity, holderParty))
+            }
+            return finalTx
         }
     }
 
-    // TODO Don't really need it anymore as it calls only finality flow
     @InitiatedBy(Initiator::class)
     class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
         @Suspendable
-        override fun call(): Unit {
-            // Resolve the issuance transaction.
+        override fun call() {
+            // Resolve the move transaction.
             if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
                 subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
             }
@@ -80,21 +81,23 @@ object MoveToken {
     }
 }
 
-class MoveTokenNonFungible<T: TokenType>(
+class MoveTokenNonFungible<T : TokenType>(
         val ownedToken: T,
         holder: AbstractParty,
         session: FlowSession? = null
-): MoveToken.Initiator<T>(holder, session) {
+) : MoveToken.Initiator<T>(ownedToken, holder, session) {
+    @Suspendable
     override fun generateMove(): Pair<TransactionBuilder, List<PublicKey>> {
         return generateMoveNonFungible(serviceHub.vaultService, ownedToken, holder)
     }
 }
 
-open class MoveTokenFungible<T: TokenType>(
+open class MoveTokenFungible<T : TokenType>(
         val amount: Amount<T>,
         holder: AbstractParty,
         session: FlowSession? = null
-): MoveToken.Initiator<T>(holder, session) {
+) : MoveToken.Initiator<T>(amount.token, holder, session) {
+    @Suspendable
     override fun generateMove(): Pair<TransactionBuilder, List<PublicKey>> {
         val tokenSelection = TokenSelection(serviceHub)
         return tokenSelection.generateMove(TransactionBuilder(), amount, holder)

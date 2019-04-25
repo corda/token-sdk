@@ -1,5 +1,6 @@
 package com.r3.corda.sdk.token.workflow.utilities
 
+import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.schemas.PersistentFungibleToken
 import com.r3.corda.sdk.token.contracts.schemas.PersistentNonFungibleToken
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
@@ -38,6 +39,21 @@ fun getDistributionList(services: ServiceHub, linearId: UniqueIdentifier): List<
         query.apply {
             val root = from(DistributionRecord::class.java)
             where(criteriaBuilder.equal(root.get<UUID>("linearId"), linearId.id))
+            select(root)
+        }
+        createQuery(query).resultList
+    }
+}
+
+// Gets the distribution record for a particular token and party.
+fun getDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, party: Party): List<DistributionRecord> {
+    return serviceHub.withEntityManager {
+        val query: CriteriaQuery<DistributionRecord> = criteriaBuilder.createQuery(DistributionRecord::class.java)
+        query.apply {
+            val root = from(DistributionRecord::class.java)
+            val linearIdEq = criteriaBuilder.equal(root.get<UUID>("linearId"), linearId.id)
+            val partyEq = criteriaBuilder.equal(root.get<Party>("party"), party)
+            where(criteriaBuilder.and(linearIdEq, partyEq))
             select(root)
         }
         createQuery(query).resultList
