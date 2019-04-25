@@ -8,7 +8,9 @@ import com.r3.corda.sdk.token.contracts.types.IssuedTokenType
 import com.r3.corda.sdk.token.contracts.types.TokenType
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionState
+import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 
 // ------------------------------------------------------
@@ -40,9 +42,9 @@ internal infix fun <T : TokenType> IssuedTokenType<T>._heldBy(owner: AbstractPar
 // --------------------------
 
 /** Adds a notary [Party] to an [AbstractToken], by wrapping it in a [TransactionState]. */
-infix fun <T : AbstractToken> T.withNotary(notary: Party): TransactionState<T> = _withNotary(notary)
+infix fun <T : AbstractToken<*>> T.withNotary(notary: Party): TransactionState<T> = _withNotary(notary)
 
-internal infix fun <T : AbstractToken> T._withNotary(notary: Party): TransactionState<T> {
+internal infix fun <T : AbstractToken<*>> T._withNotary(notary: Party): TransactionState<T> {
     return TransactionState(data = this, notary = notary)
 }
 
@@ -52,3 +54,12 @@ infix fun <T : EvolvableTokenType> T.withNotary(notary: Party): TransactionState
 internal infix fun <T : EvolvableTokenType> T._withNotary(notary: Party): TransactionState<T> {
     return TransactionState(data = this, notary = notary)
 }
+
+/**
+ * Converts [holder] into a more friendly string. It uses only the x500 organisation for [Party] objects and
+ * shortens the public key for [AnonymousParty]s to the first 16 characters.
+ * */
+val AbstractToken<*>.holderString
+    get() = {
+        (holder as? Party)?.name?.organisation ?: holder.owningKey.toStringShort().substring(0, 16)
+    }

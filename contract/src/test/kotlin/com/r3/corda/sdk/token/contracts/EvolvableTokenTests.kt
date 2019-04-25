@@ -304,6 +304,9 @@ object EvolvableTokenTests {
                 tweak {
                     command(ALICE.publicKey, Create())
                     command(ALICE.publicKey, Create())
+                    // V5 behaviour
+//                    failsWith(expectedError)
+                    // V4 behaviour
                     verifies()
                 }
 
@@ -322,7 +325,11 @@ object EvolvableTokenTests {
                 tweak {
                     command(ALICE.publicKey, Create())
                     command(BOB.publicKey, Create())
+                    // V5 behaviour
+//                    failsWith(expectedError)
+                    // V4 behaviour
                     failsWith("Only evolvable token maintainers may sign the create evolvable token transaction.")
+
                 }
 
                 // With 1 create and 1 update command from different maintainers
@@ -345,6 +352,9 @@ object EvolvableTokenTests {
                 tweak {
                     command(ALICE.publicKey, Create())
                     command(BOB.publicKey, Create())
+                    // V5 behaviour
+//                    failsWith(expectedError)
+                    // V4 behaviour
                     verifies()
                 }
 
@@ -357,6 +367,9 @@ object EvolvableTokenTests {
                     command(ALICE.publicKey, Create())
                     command(BOB.publicKey, Create())
                     command(CHARLES.publicKey, Create())
+                    // V5 behaviour
+//                    failsWith(expectedError)
+                    // V4 behaviour
                     failsWith("Only evolvable token maintainers may sign the create evolvable token transaction.")
                 }
             }

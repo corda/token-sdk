@@ -12,13 +12,7 @@ import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import com.r3.corda.sdk.token.workflow.utilities.addPartyToDistributionList
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionState
-import net.corda.core.flows.FinalityFlow
-import net.corda.core.flows.FlowLogic
-import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatedBy
-import net.corda.core.flows.InitiatingFlow
-import net.corda.core.flows.ReceiveFinalityFlow
-import net.corda.core.flows.StartableByRPC
+import net.corda.core.flows.*
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.StatesToRecord
@@ -96,7 +90,7 @@ object IssueToken {
             val issuedToken: IssuedTokenType<T> = token issuedBy me
 
             // Create the token. It's either an NonFungibleToken or FungibleToken.
-            val heldToken: AbstractToken = if (amount == null) {
+            val heldToken: AbstractToken<T> = if (amount == null) {
                 issuedToken heldBy issueTo
             } else {
                 amount issuedBy me heldBy issueTo
@@ -118,7 +112,7 @@ object IssueToken {
             }
 
             // Create the transaction.
-            val transactionState: TransactionState<AbstractToken> = heldToken withNotary notary
+            val transactionState: TransactionState<AbstractToken<T>> = heldToken withNotary notary
             val utx: TransactionBuilder = TransactionBuilder(notary = notary).apply {
                 addCommand(data = IssueTokenCommand(issuedToken), keys = listOf(me.owningKey))
                 addOutputState(state = transactionState)
@@ -139,7 +133,7 @@ object IssueToken {
     @InitiatedBy(Initiator::class)
     class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
         @Suspendable
-        override fun call(): Unit {
+        override fun call() {
             // We must do this check because FinalityFlow does not send locally and we want to be able to issue to ourselves.
             if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
                 // Resolve the issuance transaction.
