@@ -6,6 +6,7 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatedBy
 
+//TODO @InitiatedBy(MakeIssueTokensFlow::class)
 @InitiatedBy(IssueTokensFlow::class)
 class IssueTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable

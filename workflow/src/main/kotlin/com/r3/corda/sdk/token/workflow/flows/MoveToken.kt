@@ -3,6 +3,7 @@ package com.r3.corda.sdk.token.workflow.flows
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.contracts.types.TokenType
+import com.r3.corda.sdk.token.workflow.flows.distribution.UpdateDistributionList
 import com.r3.corda.sdk.token.workflow.selection.TokenSelection
 import com.r3.corda.sdk.token.workflow.selection.generateMoveNonFungible
 import net.corda.core.contracts.Amount
@@ -88,7 +89,7 @@ class MoveTokenNonFungible<T : TokenType>(
 ) : MoveToken.Initiator<T>(ownedToken, holder, session) {
     @Suspendable
     override fun generateMove(): Pair<TransactionBuilder, List<PublicKey>> {
-        return generateMoveNonFungible(serviceHub.vaultService, ownedToken, holder)
+        return generateMoveNonFungible(serviceHub.vaultService, ownedToken, holder, TransactionBuilder())
     }
 }
 

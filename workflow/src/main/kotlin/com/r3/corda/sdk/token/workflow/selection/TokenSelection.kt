@@ -10,6 +10,8 @@ import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import com.r3.corda.sdk.token.workflow.types.PartyAndAmount
+import com.r3.corda.sdk.token.workflow.utilities.addNotaryWithCheck
+import com.r3.corda.sdk.token.workflow.utilities.getPreferredNotary
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountCriteria
 import com.r3.corda.sdk.token.workflow.utilities.sortByStateRefAscending
 import net.corda.core.contracts.Amount
@@ -44,6 +46,9 @@ import java.util.*
  * @param services for performing vault queries.
  */
 class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, private val retrySleep: Int = 100, private val retryCap: Int = 2000) {
+
+    //TODO
+//    val preferredNotary = getPreferredNotary(services)
 
     companion object {
         val logger = contextLogger()
@@ -199,7 +204,7 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
         // Set the transaction notary. Currently, the assumption is that all states are on the same notary.
         // TODO Generalise this to deal with multiple notaries in the future.
         val notary = acceptableStates.map { it.state.notary }.toSet().single()
-        builder.notary = notary
+        addNotaryWithCheck(builder, notary)
 
         // Now calculate the output states. This is complicated by the fact that a single payment may require
         // multiple output states, due to the need to keep states separated by issuer. We start by figuring out

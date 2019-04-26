@@ -12,6 +12,7 @@ import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.ServiceHub
+import net.corda.core.node.services.IdentityService
 import net.corda.core.transactions.LedgerTransaction
 import java.security.PublicKey
 
@@ -66,5 +67,12 @@ fun <T : TokenType> FlowLogic<*>.updateDistributionList(tokens: List<AbstractTok
             addPartyToDistributionList(serviceHub, token.holder.toParty(serviceHub), tokenType.pointer.pointer)
         }
     }
+}
+
+// Extension function that has nicer error message than the default one from [IdentityService::requireWellKnownPartyFromAnonymous].
+fun IdentityService.requireKnownConfidentialIdentity(party: AbstractParty): Party {
+    return wellKnownPartyFromAnonymous(party)
+            ?: throw IllegalArgumentException("Called flow with anonymous party that node doesn't know about. " +
+                    "Make sure that RequestConfidentialIdentity flow is called before.")
 }
 

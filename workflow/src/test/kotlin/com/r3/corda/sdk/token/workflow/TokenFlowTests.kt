@@ -8,7 +8,9 @@ import com.r3.corda.sdk.token.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.sdk.token.money.GBP
 import com.r3.corda.sdk.token.money.USD
 import com.r3.corda.sdk.token.workflow.flows.IssueToken
+import com.r3.corda.sdk.token.workflow.flows.MakeIssueTokenFlow
 import com.r3.corda.sdk.token.workflow.flows.MoveTokenFungible
+import com.r3.corda.sdk.token.workflow.flows.move.MakeMoveTokenFlow
 import com.r3.corda.sdk.token.workflow.selection.TokenSelection
 import com.r3.corda.sdk.token.workflow.statesAndContracts.House
 import com.r3.corda.sdk.token.workflow.utilities.getDistributionList
@@ -210,7 +212,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         val confidentialHolder = A.services.keyManagementService.freshKeyAndCert(A.services.myInfo.chooseIdentityAndCert(), false).party.anonymise()
         Assertions.assertThatThrownBy {
             I.startFlow(IssueToken.Initiator(GBP, confidentialHolder, NOTARY.legalIdentity(), 100.GBP)).getOrThrow()
-        }.hasMessageContaining("Called IssueToken flow with anonymous party that node doesn't know about. Make sure that RequestConfidentialIdentity flow is called before.")
+        }.hasMessageContaining("Called flow with anonymous party that node doesn't know about. Make sure that RequestConfidentialIdentity flow is called before.")
     }
 
     @Test
@@ -260,5 +262,27 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         Assertions.assertThat(moneyA).isEqualTo(87.GBP issuedBy I.legalIdentity())
         val moneyB = B.services.vaultService.ownedTokenAmountsByToken(GBP).states.sumTokenStateAndRefs()
         Assertions.assertThat(moneyB).isEqualTo(13.GBP issuedBy I.legalIdentity())
+    }
+
+    // TODO
+    @Test
+    fun `scratch test`() {
+        val issueTokenTx = I.startFlow(MakeIssueTokenFlow(GBP, 100, I.legalIdentity(), A.legalIdentity(), emptySet())).getOrThrow()
+        println("### ${issueTokenTx.tx}")
+//        val issueTokenTx = I.issueTokens(GBP, I, NOTARY, 100.GBP).getOrThrow()
+        A.watchForTransaction(issueTokenTx.id).getOrThrow()
+        val gbp = A.services.vaultService.tokenBalance(GBP)
+        assertEquals(100.GBP, gbp)
+
+    }
+
+    @Test
+    fun `sth test`() {
+        val issueTokenTx = I.issueTokens(GBP, A, NOTARY, 100.GBP).getOrThrow()
+        A.watchForTransaction(issueTokenTx.id).getOrThrow()
+        // Check to see that A was added to I's distribution list.
+        val moveTokenTx = A.startFlow(MakeMoveTokenFlow(B.legalIdentity(), 50.GBP)).getOrThrow()
+        B.watchForTransaction(moveTokenTx.id).getOrThrow()
+        println(moveTokenTx.tx)
     }
 }

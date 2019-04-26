@@ -10,9 +10,16 @@ import com.r3.corda.sdk.token.contracts.utilities.heldBy
 import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import com.r3.corda.sdk.token.workflow.utilities.addPartyToDistributionList
+import com.r3.corda.sdk.token.workflow.utilities.requireKnownConfidentialIdentity
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionState
-import net.corda.core.flows.*
+import net.corda.core.flows.FinalityFlow
+import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.FlowSession
+import net.corda.core.flows.InitiatedBy
+import net.corda.core.flows.InitiatingFlow
+import net.corda.core.flows.ReceiveFinalityFlow
+import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.StatesToRecord
@@ -81,9 +88,7 @@ object IssueToken {
             // This is the identity which will be used to issue tokens.
             // We also need a session for the other side.
             val me: Party = ourIdentity
-            val holderParty = serviceHub.identityService.wellKnownPartyFromAnonymous(issueTo)
-                    ?: throw IllegalArgumentException("Called IssueToken flow with anonymous party that node doesn't know about. " +
-                            "Make sure that RequestConfidentialIdentity flow is called before.")
+            val holderParty = serviceHub.identityService.requireKnownConfidentialIdentity(issueTo)
             val holderSession = if (session == null) initiateFlow(holderParty) else session
 
             // Create the issued token. We add this to the commands for grouping.

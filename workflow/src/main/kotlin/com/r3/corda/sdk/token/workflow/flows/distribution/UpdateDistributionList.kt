@@ -1,4 +1,4 @@
-package com.r3.corda.sdk.token.workflow.flows
+package com.r3.corda.sdk.token.workflow.flows.distribution
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
@@ -40,7 +40,7 @@ object UpdateDistributionList {
         }
     }
 
-    @InitiatedBy(UpdateDistributionList.Initiator::class)
+    @InitiatedBy(Initiator::class)
     class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
         @Suspendable
         override fun call() {
@@ -56,7 +56,7 @@ object UpdateDistributionList {
             serviceHub.identityService.requireWellKnownPartyFromAnonymous(distListUpdate.newParty)
             if (getDistributionRecord(serviceHub, distListUpdate.linearId, distListUpdate.newParty).isEmpty()) {
                 // Add new party to the dist list for this token.
-                serviceHub.addPartyToDistributionList(distListUpdate.newParty, distListUpdate.linearId)
+                addPartyToDistributionList(serviceHub, distListUpdate.newParty, distListUpdate.linearId)
             }
         }
     }

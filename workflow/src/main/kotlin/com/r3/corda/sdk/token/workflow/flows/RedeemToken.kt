@@ -5,6 +5,8 @@ import com.r3.corda.sdk.token.contracts.states.AbstractToken
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
 import com.r3.corda.sdk.token.contracts.types.TokenType
+import com.r3.corda.sdk.token.workflow.flows.confidential.RequestConfidentialIdentityFlow
+import com.r3.corda.sdk.token.workflow.flows.confidential.RequestConfidentialIdentityFlowHandler
 import com.r3.corda.sdk.token.workflow.selection.TokenSelection
 import com.r3.corda.sdk.token.workflow.selection.generateExitNonFungible
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokensByTokenIssuer

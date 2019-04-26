@@ -23,7 +23,7 @@ import net.corda.core.transactions.TransactionBuilder
  *
  * - No need to pass in any sessions when issuing to self but can pass in observer sessions if needed.
  * - There is an assumption that this flow can only be used by one issuer at a time.
- * - Tokens are issued to well known identities or confidential identities. This flow
+ * - Tokens are issued to well known identities or confidential identities. This flow TODO this flow what
  * - Many tokens can be issued to a single party.
  * - Many tokens can be issued to many parties but usually only one.
  * - Observers can also be specified.
@@ -56,8 +56,6 @@ class IssueTokensFlow<T : TokenType> private constructor(
 
     @Suspendable
     override fun call(): SignedTransaction {
-        // Create new sessions if this is started as a top level flow.
-        val sessions = if (existingSessions.isEmpty()) sessionsForParicipants(tokens, observers) else existingSessions
         // Initialise the transaction builder with a preferred notary or choose a random notary.
         val transactionBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
         // Add all the specified tokens to the transaction. The correct commands and signing keys are also added.
@@ -65,6 +63,9 @@ class IssueTokensFlow<T : TokenType> private constructor(
         // Update the distribution list. This adds all proposed token holders to the distribution list for the token
         // type they are receiving. Observers are not currently added to the distribution list.
         updateDistributionList(tokens)
+
+        // Create new sessions if this is started as a top level flow.
+        val sessions = if (existingSessions.isEmpty()) sessionsForParicipants(tokens, observers) else existingSessions
         // Determine which parties are participants and observers.
         return subFlow(ObserverAwareFinalityFlow(transactionBuilder, sessions))
     }

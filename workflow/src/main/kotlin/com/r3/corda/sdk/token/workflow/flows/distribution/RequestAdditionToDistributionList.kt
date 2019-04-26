@@ -1,4 +1,4 @@
-package com.r3.corda.sdk.token.workflow.flows
+package com.r3.corda.sdk.token.workflow.flows.distribution
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
