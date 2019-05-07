@@ -119,7 +119,7 @@ fun sumTokenCriteria(): QueryCriteria {
 }
 
 // Abstracts away the nasty 'otherResults' part of the vault query API.
-private fun <T : TokenType> rowsToAmount(token: T, rows: Vault.Page<FungibleToken<T>>): Amount<T> {
+fun <T : TokenType> rowsToAmount(token: T, rows: Vault.Page<FungibleToken<T>>): Amount<T> {
     return if (rows.otherResults.isEmpty()) {
         Amount(0L, token)
     } else {
