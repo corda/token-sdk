@@ -6,6 +6,8 @@ import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.workflow.flows.ObserverAwareFinalityFlow
 import com.r3.corda.sdk.token.workflow.flows.distribution.UpdateDistributionList
+import com.r3.corda.sdk.token.workflow.selection.TokenSelection
+import com.r3.corda.sdk.token.workflow.selection.generateMoveNonFungible
 import com.r3.corda.sdk.token.workflow.utilities.getPreferredNotary
 import com.r3.corda.sdk.token.workflow.utilities.requireKnownConfidentialIdentity
 import com.r3.corda.sdk.token.workflow.utilities.sessionsForParicipants
@@ -22,10 +24,12 @@ import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 import java.security.PublicKey
 
+// TODO docs
 // So usage could be for DvP
 // txB = addMove(sth)
 // addMove(txB, anotherSth)
 // subFlow(FinalizeMoveTokenFlow, txB, sessions, observers))
+//TODO the truth is that probably it will be better 
 @InitiatingFlow
 class FinalizeMoveTokensFlow private constructor(
         val transactionBuilder: TransactionBuilder,
@@ -44,8 +48,9 @@ class FinalizeMoveTokensFlow private constructor(
 
     constructor(transactionBuilder: TransactionBuilder) : this(transactionBuilder, emptySet(), emptySet())
 
+    // TODO
     companion object {
-        object RECORDING : ProgressTracker.Step("Recording signed transaction.") {
+        object RECORDING : ProgressTracker.Step("Recording move transaction.") {
             override fun childProgressTracker() = FinalityFlow.tracker()
         }
 
@@ -65,6 +70,7 @@ class FinalizeMoveTokensFlow private constructor(
         // Determine which parties are participants and observers.
         val finalTx = subFlow(ObserverAwareFinalityFlow(transactionBuilder, sessions))
 
+        //TODO this should be move to any finalization - to observer aware?
         // TODO move it to UpdateDistributionList after refactor of that flow!!!
         progressTracker.currentStep = UPDATE_DIST
         for (output in outputs) {
@@ -80,77 +86,31 @@ class FinalizeMoveTokensFlow private constructor(
     }
 }
 
-
-@InitiatingFlow
-abstract class MoveTokensFlow<T : TokenType>(
-        val token: T,
-        val holder: AbstractParty,
-        val session: FlowSession? = null
-) : FlowLogic<SignedTransaction>() {
-    companion object {
-        object GENERATE_MOVE : ProgressTracker.Step("Generating tokens move.")
-        object SIGNING : ProgressTracker.Step("Signing transaction proposal.")
-        object RECORDING : ProgressTracker.Step("Recording signed transaction.") {
-            override fun childProgressTracker() = FinalityFlow.tracker()
-        }
-
-        fun tracker() = ProgressTracker(GENERATE_MOVE, SIGNING, RECORDING)
-    }
-
-    override val progressTracker: ProgressTracker = tracker()
-
-    @Suspendable
-    abstract fun generateMove(): Pair<TransactionBuilder, List<PublicKey>>
-
-    @Suspendable
-    override fun call(): SignedTransaction {
-        // TODO extract into some utils function
-        val holderParty = serviceHub.identityService.requireKnownConfidentialIdentity(holder)
-        val holderSession = if (session == null) initiateFlow(holderParty) else session
-
-        progressTracker.currentStep = GENERATE_MOVE
-
-        val (builder, keys) = generateMove()
-
-        progressTracker.currentStep = SIGNING
-        // WARNING: At present, the recipient will not be signed up to updates from the token maintainer.
-        val stx: SignedTransaction = serviceHub.signInitialTransaction(builder, keys)
-        progressTracker.currentStep = RECORDING
-        val sessions = if (ourIdentity == holderParty) emptyList() else listOf(holderSession)
-        val finalTx = subFlow(FinalityFlow(transaction = stx, sessions = sessions))
-        // If it's TokenPointer, then update the distribution lists for token maintainers
-        if (token is TokenPointer<*>) {
-            subFlow(UpdateDistributionList.Initiator(token, ourIdentity, holderParty))
-        }
-        return finalTx
-    }
-}
-
 // This one is supposed to be called from shell only, it could have been moved to MoveTokenFlow entirely, but... then it's messy because shell shows all the constructors in a list, and some don't make sense.
 @InitiatingFlow
 @StartableByRPC
-class MakeMoveTokenFlow<T : TokenType> private constructor(
-        val holder: AbstractParty, // TODO maybe API from shell that moves to many parties?
-        val tokens: List<T>,
-        val amounts: List<Amount<T>>
+class MakeMoveTokenFlow<T : TokenType>(
+        val partiesAndAmounts: Map<AbstractParty, List<Amount<T>>>,
+        val partiesAndTokens: Map<AbstractParty, List<T>> = emptyMap()
 ) : FlowLogic<SignedTransaction>() {
-    constructor(holder: AbstractParty, token: T) : this(holder, listOf(token), emptyList())
+    constructor(holder: AbstractParty, token: T) : this(emptyMap(), mapOf(holder to listOf(token)))
 
-    constructor(holder: AbstractParty, tokens: List<T>) : this(holder, tokens, emptyList())
+    constructor(holder: AbstractParty, tokens: List<T>) : this(emptyMap(), mapOf(holder to tokens))
 
-    constructor(holder: AbstractParty, amount: Amount<T>) : this(holder, listOf(), listOf(amount))
+    constructor(holder: AbstractParty, amount: Amount<T>) : this(mapOf(holder to listOf(amount)), emptyMap())
 
-    constructor(holder: AbstractParty, amounts: Set<Amount<T>>) : this(holder, listOf(), amounts.toList())
-    // todo add map party -> amount
+    constructor(holder: AbstractParty, amounts: Set<Amount<T>>) : this(mapOf(holder to amounts.toList()), emptyMap())
 
     @Suspendable
     override fun call(): SignedTransaction {
         val transactionBuilder = TransactionBuilder(getPreferredNotary(serviceHub))
-        for (amount in amounts) {
-            addMoveTokens(serviceHub, amount, holder, transactionBuilder)
+        for ((holder, amounts) in partiesAndAmounts) {
+            for (amount in amounts) {
+                addMoveTokens(amount, holder, transactionBuilder)
+            }
         }
-        for (token in tokens) {
-            addMoveTokens(serviceHub, token, holder, transactionBuilder)
+        for ((holder, tokens) in partiesAndTokens) {
+            for (token in tokens) addMoveTokens(token, holder, transactionBuilder)
         }
         return subFlow(FinalizeMoveTokensFlow(transactionBuilder))
     }

@@ -60,13 +60,16 @@ fun FlowLogic<*>.sessionsForParicipants(states: List<ContractState>, otherPartie
     return allParties.map(::initiateFlow).toSet()
 }
 
-fun <T : TokenType> FlowLogic<*>.updateDistributionList(tokens: List<AbstractToken<T>>) {
+fun <T : TokenType> FlowLogic<*>.addToDistributionList(tokens: List<AbstractToken<T>>) {
     tokens.forEach { token ->
         val tokenType = token.tokenType
         if (tokenType is TokenPointer<*>) {
             addPartyToDistributionList(serviceHub, token.holder.toParty(serviceHub), tokenType.pointer.pointer)
         }
     }
+}
+
+fun <T : TokenType> FlowLogic<*>.updateDistributionList(tokens: List<AbstractToken<T>>) {
 }
 
 // Extension function that has nicer error message than the default one from [IdentityService::requireWellKnownPartyFromAnonymous].

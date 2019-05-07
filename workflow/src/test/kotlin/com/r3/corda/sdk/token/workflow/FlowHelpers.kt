@@ -4,6 +4,7 @@ import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
 import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import com.r3.corda.sdk.token.workflow.flows.*
+import com.r3.corda.sdk.token.workflow.flows.issue.ConfidentialIssueTokensFlow
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
@@ -30,6 +31,9 @@ fun <T : TokenType> StartedMockNode.issueTokens(
 ): CordaFuture<SignedTransaction> {
     return transaction {
         if (anonymous) {
+            val tokens = emptyList<>()
+                    startFlow(ConfidentialIssueTokensFlow)
+
             startFlow(ConfidentialIssueFlow.Initiator(
                     token = token,
                     holder = issueTo.legalIdentity(),

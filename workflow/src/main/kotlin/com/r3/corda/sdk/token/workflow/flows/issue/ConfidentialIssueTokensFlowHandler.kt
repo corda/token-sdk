@@ -11,10 +11,7 @@ import net.corda.core.utilities.unwrap
 class ConfidentialIssueTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
-        val action = otherSession.receive<ActionRequest>().unwrap { it }
-        if (action == ActionRequest.ISSUE_NEW_KEY) {
-            subFlow(RequestConfidentialIdentityFlowHandler(otherSession))
-        }
+        subFlow(KerfuffleHandler(otherSession))
         subFlow(IssueTokensFlowHandler(otherSession))
     }
 }

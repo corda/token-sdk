@@ -8,7 +8,7 @@ import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.workflow.flows.ObserverAwareFinalityFlow
 import com.r3.corda.sdk.token.workflow.utilities.getPreferredNotary
 import com.r3.corda.sdk.token.workflow.utilities.sessionsForParicipants
-import com.r3.corda.sdk.token.workflow.utilities.updateDistributionList
+import com.r3.corda.sdk.token.workflow.utilities.addToDistributionList
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatingFlow
@@ -40,6 +40,56 @@ class IssueTokensFlow<T : TokenType> private constructor(
         val existingSessions: Set<FlowSession>,
         val observers: Set<Party>
 ) : FlowLogic<SignedTransaction>() {
+//    // NonFungible
+//    constructor(token: NonFungibleToken<T>, session: FlowSession) : this() {
+//        subFlow = IssueTokensFlow(listOf(token), listOf(session))
+//    }
+//
+//    constructor(token: NonFungibleToken<T>, sessions: List<FlowSession>) : this() {
+//        subFlow = IssueTokensFlow(listOf(token), sessions)
+//    }
+//
+//    constructor(tokenType: T, issuer: Party, holder: AbstractParty, sessions: List<FlowSession>) : this() {
+//        subFlow = IssueTokensFlow(listOf(tokenType issuedBy issuer heldBy holder), sessions)
+//    }
+//
+//    constructor(issuedTokenType: IssuedTokenType<T>, holder: AbstractParty, sessions: List<FlowSession>) : this() {
+//        subFlow = IssueTokensFlow(listOf(issuedTokenType heldBy holder), sessions)
+//    }
+//
+//    constructor(issuedTokenType: IssuedTokenType<T>, sessions: List<FlowSession>) : this() {
+//        subFlow = IssueTokensFlow(listOf(issuedTokenType heldBy issuedTokenType.issuer), sessions)
+//    }
+//
+//    constructor(tokenType: T, issuer: Party, sessions: List<FlowSession>) : this() {
+//        subFlow = IssueTokensFlow(listOf(tokenType issuedBy issuer heldBy issuer), sessions)
+//    }
+//
+//    // Fungible
+//    constructor(tokens: FungibleToken<T>, session: FlowSession) : this() {
+//        subFlow = IssueTokensFlow(listOf(tokens), listOf(session))
+//    }
+//
+//    constructor(tokens: FungibleToken<T>, sessions: List<FlowSession>) : this() {
+//        subFlow = IssueTokensFlow(listOf(tokens), sessions)
+//    }
+//
+//    constructor(tokenType: T, amount: Long, issuer: Party, holder: AbstractParty, sessions: List<FlowSession>) : this() {
+//        subFlow = IssueTokensFlow(listOf(amount of tokenType issuedBy issuer heldBy holder), sessions)
+//    }
+//
+//    constructor(issuedTokenType: IssuedTokenType<T>, amount: Long, holder: AbstractParty, sessions: List<FlowSession>) : this() {
+//        subFlow = IssueTokensFlow(listOf(amount of issuedTokenType heldBy holder), sessions)
+//    }
+//
+//    constructor(issuedTokenType: IssuedTokenType<T>, amount: Long, sessions: List<FlowSession>) : this() {
+//        subFlow = IssueTokensFlow(listOf(amount of issuedTokenType heldBy issuedTokenType.issuer), sessions)
+//    }
+//
+//    constructor(tokenType: T, amount: Long, issuer: Party, sessions: List<FlowSession>) : this() {
+//        subFlow = IssueTokensFlow(listOf(amount of tokenType issuedBy issuer heldBy issuer), sessions)
+//    }
+
 
     /** Standard constructors. */
 
@@ -62,7 +112,7 @@ class IssueTokensFlow<T : TokenType> private constructor(
         addIssueTokens(tokens, transactionBuilder)
         // Update the distribution list. This adds all proposed token holders to the distribution list for the token
         // type they are receiving. Observers are not currently added to the distribution list.
-        updateDistributionList(tokens)
+        addToDistributionList(tokens)
 
         // Create new sessions if this is started as a top level flow.
         val sessions = if (existingSessions.isEmpty()) sessionsForParicipants(tokens, observers) else existingSessions

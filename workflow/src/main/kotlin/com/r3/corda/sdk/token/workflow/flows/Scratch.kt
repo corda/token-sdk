@@ -24,6 +24,7 @@ import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
+//TODO
 open class IssueTokens<T : TokenType>(
         val tokens: Set<AbstractToken<T>>,
         val sessions: Set<FlowSession>
@@ -33,6 +34,7 @@ open class IssueTokens<T : TokenType>(
      * Creates a [TransactionBuilder] with the preferred notary, the requested set of tokens as outputs and adds
      * [IssueTokenCommand]s for each group of states (grouped by [IssuedTokenType].
      */
+    @Suspendable
     fun createIssueTokensTransaction(services: ServiceHub, tokens: Set<AbstractToken<T>>): TransactionBuilder {
         // TODO fix notary choice
         val notary = services.networkMapCache.notaryIdentities.first()
@@ -53,75 +55,6 @@ open class IssueTokens<T : TokenType>(
     }
 }
 
-@InitiatedBy(MakeIssueTokenFlow::class)
-class IssueTokensHandler(val otherSession: FlowSession) : FlowLogic<SignedTransaction>() {
-    override fun call(): SignedTransaction {
-        return subFlow(ReceiveFinalityFlow(otherSideSession = otherSession))
-    }
-}
-
-// TODO have common in primary constructor - subflow?
-// TODO have shell constructors withouth sessions
-@InitiatingFlow
-@StartableByRPC
-class MakeIssueTokenFlow<T : TokenType> private constructor() : FlowLogic<SignedTransaction>() {
-    // NonFungible
-    constructor(token: NonFungibleToken<T>, session: FlowSession): this() {
-        subFlow = IssueTokens(setOf(token), setOf(session))
-    }
-
-    constructor(token: NonFungibleToken<T>, sessions: Set<FlowSession>): this() {
-        subFlow = IssueTokens(setOf(token), sessions)
-    }
-
-    constructor(tokenType: T, issuer: Party, holder: AbstractParty, sessions: Set<FlowSession>): this() {
-        subFlow = IssueTokens(setOf(tokenType issuedBy issuer heldBy holder), sessions)
-    }
-
-    constructor(issuedTokenType: IssuedTokenType<T>, holder: AbstractParty, sessions: Set<FlowSession>): this() {
-        subFlow = IssueTokens(setOf(issuedTokenType heldBy holder), sessions)
-    }
-
-    constructor(issuedTokenType: IssuedTokenType<T>, sessions: Set<FlowSession>): this() {
-        subFlow = IssueTokens(setOf(issuedTokenType heldBy issuedTokenType.issuer), sessions)
-    }
-
-    constructor(tokenType: T, issuer: Party, sessions: Set<FlowSession>): this() {
-        subFlow = IssueTokens(setOf(tokenType issuedBy issuer heldBy issuer), sessions)
-    }
-
-    // Fungible
-    constructor(tokens: FungibleToken<T>, session: FlowSession): this() {
-        subFlow = IssueTokens(setOf(tokens), setOf(session))
-    }
-
-    constructor(tokens: FungibleToken<T>, sessions: Set<FlowSession>): this() {
-        subFlow = IssueTokens(setOf(tokens), sessions)
-    }
-
-    constructor(tokenType: T, amount: Long, issuer: Party, holder: AbstractParty, sessions: Set<FlowSession>): this() {
-        subFlow = IssueTokens(setOf(amount of tokenType issuedBy issuer heldBy holder), sessions)
-    }
-
-    constructor(issuedTokenType: IssuedTokenType<T>, amount: Long, holder: AbstractParty, sessions: Set<FlowSession>): this() {
-        subFlow = IssueTokens(setOf(amount of issuedTokenType heldBy holder), sessions)
-    }
-
-    constructor(issuedTokenType: IssuedTokenType<T>, amount: Long, sessions: Set<FlowSession>): this() {
-        subFlow = IssueTokens(setOf(amount of issuedTokenType heldBy issuedTokenType.issuer), sessions)
-    }
-
-    constructor(tokenType: T, amount: Long, issuer: Party, sessions: Set<FlowSession>): this() {
-        subFlow = IssueTokens(setOf(amount of tokenType issuedBy issuer heldBy issuer), sessions)
-    }
-
-    private lateinit var subFlow: IssueTokens<T>
-
-    @Suspendable
-    override fun call(): SignedTransaction {
-        return subFlow(subFlow)
-    }
-}
 
 /*
 

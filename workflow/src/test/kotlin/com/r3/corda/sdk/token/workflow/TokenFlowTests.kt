@@ -269,11 +269,9 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     fun `scratch test`() {
         val issueTokenTx = I.startFlow(MakeIssueTokenFlow(GBP, 100, I.legalIdentity(), A.legalIdentity(), emptySet())).getOrThrow()
         println("### ${issueTokenTx.tx}")
-//        val issueTokenTx = I.issueTokens(GBP, I, NOTARY, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
         val gbp = A.services.vaultService.tokenBalance(GBP)
         assertEquals(100.GBP, gbp)
-
     }
 
     @Test
