@@ -22,9 +22,9 @@ import net.corda.core.transactions.SignedTransaction
 // Flow startable from shell
 @InitiatingFlow
 @StartableByRPC
-class MakeIssueTokensFlow<T : TokenType> private constructor(val tokens: List<AbstractToken<T>>) : FlowLogic<SignedTransaction>() {
+class MakeIssueTokensFlow<T : TokenType> private constructor(tokens: List<AbstractToken<T>>) : IssueTokensFlow<T>(tokens, emptyList()) {
 
-    // NonFungible
+    // NonFungible tokens constructors.
     constructor(token: NonFungibleToken<T>) : this(listOf(token))
 
     constructor(tokenType: T, issuer: Party, holder: AbstractParty) : this(listOf(tokenType issuedBy issuer heldBy holder))
@@ -35,7 +35,7 @@ class MakeIssueTokensFlow<T : TokenType> private constructor(val tokens: List<Ab
 
     constructor(tokenType: T, issuer: Party) : this(listOf(tokenType issuedBy issuer heldBy issuer))
 
-    // Fungible
+    // Fungible tokens constructors.
     constructor(token: FungibleToken<T>) : this(listOf(token))
 
     constructor(tokenType: T, amount: Long, issuer: Party, holder: AbstractParty) : this(listOf(amount of tokenType issuedBy issuer heldBy holder))
@@ -45,11 +45,6 @@ class MakeIssueTokensFlow<T : TokenType> private constructor(val tokens: List<Ab
     constructor(issuedTokenType: IssuedTokenType<T>, amount: Long) : this(listOf(amount of issuedTokenType heldBy issuedTokenType.issuer))
 
     constructor(tokenType: T, amount: Long, issuer: Party) : this(listOf(amount of tokenType issuedBy issuer heldBy issuer))
-
-    @Suspendable
-    override fun call(): SignedTransaction {
-        return subFlow(IssueTokensFlow(tokens, emptyList()))
-    }
 }
 
 @InitiatedBy(MakeIssueTokensFlow::class)

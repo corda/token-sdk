@@ -5,13 +5,16 @@ import com.r3.corda.sdk.token.contracts.commands.IssueTokenCommand
 import com.r3.corda.sdk.token.contracts.states.AbstractToken
 import com.r3.corda.sdk.token.contracts.types.IssuedTokenType
 import com.r3.corda.sdk.token.contracts.types.TokenType
-import com.r3.corda.sdk.token.workflow.flows.ObserverAwareFinalityFlow
+import com.r3.corda.sdk.token.contracts.utilities.heldBy
+import com.r3.corda.sdk.token.contracts.utilities.issuedBy
+import com.r3.corda.sdk.token.contracts.utilities.of
+import com.r3.corda.sdk.token.workflow.flows.finality.FinalizeTokensTransactionFlow
 import com.r3.corda.sdk.token.workflow.utilities.getPreferredNotary
 import com.r3.corda.sdk.token.workflow.utilities.sessionsForParicipants
-import com.r3.corda.sdk.token.workflow.utilities.addToDistributionList
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatingFlow
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
@@ -34,65 +37,33 @@ import net.corda.core.transactions.TransactionBuilder
  * - This flow handles observers. Observers (via additional flow sessions) store the tx with ALL_VISIBLE.
  * - Can issue different types of token at the same time.
  */
+//TODO add progress tracker
 @InitiatingFlow
-class IssueTokensFlow<T : TokenType> private constructor(
+open class IssueTokensFlow<T : TokenType> private constructor(
         val tokens: List<AbstractToken<T>>,
         val existingSessions: Set<FlowSession>,
         val observers: Set<Party>
 ) : FlowLogic<SignedTransaction>() {
-//    // NonFungible
-//    constructor(token: NonFungibleToken<T>, session: FlowSession) : this() {
-//        subFlow = IssueTokensFlow(listOf(token), listOf(session))
-//    }
-//
-//    constructor(token: NonFungibleToken<T>, sessions: List<FlowSession>) : this() {
-//        subFlow = IssueTokensFlow(listOf(token), sessions)
-//    }
-//
-//    constructor(tokenType: T, issuer: Party, holder: AbstractParty, sessions: List<FlowSession>) : this() {
-//        subFlow = IssueTokensFlow(listOf(tokenType issuedBy issuer heldBy holder), sessions)
-//    }
-//
-//    constructor(issuedTokenType: IssuedTokenType<T>, holder: AbstractParty, sessions: List<FlowSession>) : this() {
-//        subFlow = IssueTokensFlow(listOf(issuedTokenType heldBy holder), sessions)
-//    }
-//
-//    constructor(issuedTokenType: IssuedTokenType<T>, sessions: List<FlowSession>) : this() {
-//        subFlow = IssueTokensFlow(listOf(issuedTokenType heldBy issuedTokenType.issuer), sessions)
-//    }
-//
-//    constructor(tokenType: T, issuer: Party, sessions: List<FlowSession>) : this() {
-//        subFlow = IssueTokensFlow(listOf(tokenType issuedBy issuer heldBy issuer), sessions)
-//    }
-//
-//    // Fungible
-//    constructor(tokens: FungibleToken<T>, session: FlowSession) : this() {
-//        subFlow = IssueTokensFlow(listOf(tokens), listOf(session))
-//    }
-//
-//    constructor(tokens: FungibleToken<T>, sessions: List<FlowSession>) : this() {
-//        subFlow = IssueTokensFlow(listOf(tokens), sessions)
-//    }
-//
-//    constructor(tokenType: T, amount: Long, issuer: Party, holder: AbstractParty, sessions: List<FlowSession>) : this() {
-//        subFlow = IssueTokensFlow(listOf(amount of tokenType issuedBy issuer heldBy holder), sessions)
-//    }
-//
-//    constructor(issuedTokenType: IssuedTokenType<T>, amount: Long, holder: AbstractParty, sessions: List<FlowSession>) : this() {
-//        subFlow = IssueTokensFlow(listOf(amount of issuedTokenType heldBy holder), sessions)
-//    }
-//
-//    constructor(issuedTokenType: IssuedTokenType<T>, amount: Long, sessions: List<FlowSession>) : this() {
-//        subFlow = IssueTokensFlow(listOf(amount of issuedTokenType heldBy issuedTokenType.issuer), sessions)
-//    }
-//
-//    constructor(tokenType: T, amount: Long, issuer: Party, sessions: List<FlowSession>) : this() {
-//        subFlow = IssueTokensFlow(listOf(amount of tokenType issuedBy issuer heldBy issuer), sessions)
-//    }
+    //TODO not sure about these 8 constructors the standard ones are suffcient
+    // NonFungible
+    constructor(tokenType: T, issuer: Party, holder: AbstractParty, sessions: Set<FlowSession>) : this(listOf(tokenType issuedBy issuer heldBy holder), sessions, emptySet())
 
+    constructor(issuedTokenType: IssuedTokenType<T>, holder: AbstractParty, sessions: Set<FlowSession>) : this(listOf(issuedTokenType heldBy holder), sessions, emptySet())
+
+    constructor(issuedTokenType: IssuedTokenType<T>, sessions: Set<FlowSession>) : this(listOf(issuedTokenType heldBy issuedTokenType.issuer), sessions, emptySet())
+
+    constructor(tokenType: T, issuer: Party, sessions: Set<FlowSession>) : this(listOf(tokenType issuedBy issuer heldBy issuer), sessions, emptySet())
+
+    // Fungible
+    constructor(tokenType: T, amount: Long, issuer: Party, holder: AbstractParty, sessions: Set<FlowSession>) : this(listOf(amount of tokenType issuedBy issuer heldBy holder), sessions, emptySet())
+
+    constructor(issuedTokenType: IssuedTokenType<T>, amount: Long, holder: AbstractParty, sessions: Set<FlowSession>) : this(listOf(amount of issuedTokenType heldBy holder), sessions, emptySet())
+
+    constructor(issuedTokenType: IssuedTokenType<T>, amount: Long, sessions: Set<FlowSession>) : this(listOf(amount of issuedTokenType heldBy issuedTokenType.issuer), sessions, emptySet())
+
+    constructor(tokenType: T, amount: Long, issuer: Party, sessions: Set<FlowSession>) : this(listOf(amount of tokenType issuedBy issuer heldBy issuer), sessions, emptySet())
 
     /** Standard constructors. */
-
     constructor(tokens: List<AbstractToken<T>>, observers: Set<Party>) : this(tokens, emptySet(), observers)
 
     constructor(tokens: List<AbstractToken<T>>, sessions: List<FlowSession>)
@@ -103,6 +74,7 @@ class IssueTokensFlow<T : TokenType> private constructor(
             : this(listOf(tokens), sessions.toSet(), emptySet())
 
     constructor(tokens: AbstractToken<T>, observers: Set<Party>) : this(listOf(tokens), emptySet(), observers)
+    constructor(tokens: AbstractToken<T>, observers: Party) : this(listOf(tokens), emptySet(), setOf(observers))
 
     @Suspendable
     override fun call(): SignedTransaction {
@@ -110,13 +82,8 @@ class IssueTokensFlow<T : TokenType> private constructor(
         val transactionBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
         // Add all the specified tokens to the transaction. The correct commands and signing keys are also added.
         addIssueTokens(tokens, transactionBuilder)
-        // Update the distribution list. This adds all proposed token holders to the distribution list for the token
-        // type they are receiving. Observers are not currently added to the distribution list.
-        addToDistributionList(tokens)
-
         // Create new sessions if this is started as a top level flow.
         val sessions = if (existingSessions.isEmpty()) sessionsForParicipants(tokens, observers) else existingSessions
-        // Determine which parties are participants and observers.
-        return subFlow(ObserverAwareFinalityFlow(transactionBuilder, sessions))
+        return subFlow(FinalizeTokensTransactionFlow(transactionBuilder, sessions.toList()))
     }
 }

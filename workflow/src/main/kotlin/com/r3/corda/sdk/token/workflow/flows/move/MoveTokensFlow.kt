@@ -4,15 +4,13 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.AbstractToken
 import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.contracts.types.TokenType
-import com.r3.corda.sdk.token.workflow.flows.ObserverAwareFinalityFlow
 import com.r3.corda.sdk.token.workflow.flows.distribution.UpdateDistributionList
-import com.r3.corda.sdk.token.workflow.selection.TokenSelection
-import com.r3.corda.sdk.token.workflow.selection.generateMoveNonFungible
+import com.r3.corda.sdk.token.workflow.flows.finality.FinalizeTokensTransactionFlow
+import com.r3.corda.sdk.token.workflow.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.sdk.token.workflow.utilities.getPreferredNotary
 import com.r3.corda.sdk.token.workflow.utilities.requireKnownConfidentialIdentity
 import com.r3.corda.sdk.token.workflow.utilities.sessionsForParicipants
 import net.corda.core.contracts.Amount
-import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatingFlow
@@ -21,15 +19,7 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
-import net.corda.core.utilities.ProgressTracker
-import java.security.PublicKey
 
-// TODO docs
-// So usage could be for DvP
-// txB = addMove(sth)
-// addMove(txB, anotherSth)
-// subFlow(FinalizeMoveTokenFlow, txB, sessions, observers))
-//TODO the truth is that probably it will be better 
 @InitiatingFlow
 class FinalizeMoveTokensFlow private constructor(
         val transactionBuilder: TransactionBuilder,
@@ -48,41 +38,12 @@ class FinalizeMoveTokensFlow private constructor(
 
     constructor(transactionBuilder: TransactionBuilder) : this(transactionBuilder, emptySet(), emptySet())
 
-    // TODO
-    companion object {
-        object RECORDING : ProgressTracker.Step("Recording move transaction.") {
-            override fun childProgressTracker() = FinalityFlow.tracker()
-        }
-
-        object UPDATE_DIST : ProgressTracker.Step("Updating distribution list.")
-
-        fun tracker() = ProgressTracker(RECORDING, UPDATE_DIST)
-    }
-
-    override val progressTracker: ProgressTracker = tracker()
-
     @Suspendable
     override fun call(): SignedTransaction {
-        progressTracker.currentStep = RECORDING
         val outputs = transactionBuilder.outputStates().map { it.data }
         // Create new sessions if this is started as a top level flow.
         val sessions = if (existingSessions.isEmpty()) sessionsForParicipants(outputs, observers) else existingSessions
-        // Determine which parties are participants and observers.
-        val finalTx = subFlow(ObserverAwareFinalityFlow(transactionBuilder, sessions))
-
-        //TODO this should be move to any finalization - to observer aware?
-        // TODO move it to UpdateDistributionList after refactor of that flow!!!
-        progressTracker.currentStep = UPDATE_DIST
-        for (output in outputs) {
-            if (output is AbstractToken<*>) {
-                val token = output.tokenType
-                val holderParty = serviceHub.identityService.requireKnownConfidentialIdentity(output.holder) // TODO refactor
-                if (token is TokenPointer<*>) {
-                    subFlow(UpdateDistributionList.Initiator(token, ourIdentity, holderParty))
-                }
-            }
-        }
-        return finalTx
+        return subFlow(FinalizeTokensTransactionFlow(transactionBuilder, sessions.toList()))
     }
 }
 

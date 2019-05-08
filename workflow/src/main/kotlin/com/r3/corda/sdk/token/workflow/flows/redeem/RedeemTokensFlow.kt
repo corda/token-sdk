@@ -1,6 +1,6 @@
 package com.r3.corda.sdk.token.workflow.flows.redeem
 
-import com.r3.corda.sdk.token.workflow.flows.ObserverAwareFinalityFlow
+import com.r3.corda.sdk.token.workflow.flows.finality.ObserverAwareFinalityFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.transactions.SignedTransaction

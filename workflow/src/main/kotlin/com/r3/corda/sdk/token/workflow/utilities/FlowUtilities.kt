@@ -3,6 +3,7 @@ package com.r3.corda.sdk.token.workflow.utilities
 import com.r3.corda.sdk.token.contracts.states.AbstractToken
 import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.contracts.types.TokenType
+import com.r3.corda.sdk.token.workflow.flows.distribution.UpdateDistributionList
 import com.r3.corda.sdk.token.workflow.schemas.DistributionRecord
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.ContractState
@@ -70,6 +71,13 @@ fun <T : TokenType> FlowLogic<*>.addToDistributionList(tokens: List<AbstractToke
 }
 
 fun <T : TokenType> FlowLogic<*>.updateDistributionList(tokens: List<AbstractToken<T>>) {
+    for (token in tokens) {
+        val tokenType = token.tokenType
+        val holderParty = serviceHub.identityService.requireKnownConfidentialIdentity(token.holder)
+        if (tokenType is TokenPointer<*>) {
+            subFlow(UpdateDistributionList.Initiator(tokenType, ourIdentity, holderParty))
+        }
+    }
 }
 
 // Extension function that has nicer error message than the default one from [IdentityService::requireWellKnownPartyFromAnonymous].
