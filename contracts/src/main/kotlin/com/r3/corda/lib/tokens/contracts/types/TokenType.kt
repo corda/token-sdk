@@ -37,7 +37,7 @@ interface TokenType : TokenizableAssetInfo {
      * [TokenType] with a specified [tokenIdentifier], or for [EvolvableTokenType]s, as the [tokenIdentifier] is a
      * linearId, which is opaque, the [tokenClass] provides a bit more context on what is being pointed to.
      */
-    val tokenClass: String get() = javaClass.canonicalName
+    val tokenClass: Class<*> get() = javaClass
 
     /**
      * The number of fractional digits allowable for this token type. Specifying "0" will only allow integer amounts of

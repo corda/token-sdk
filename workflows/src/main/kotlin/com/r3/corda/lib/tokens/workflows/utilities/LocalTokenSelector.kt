@@ -1,16 +1,15 @@
-package com.r3.corda.sdk.token.workflow.selection
+package com.r3.corda.lib.tokens.workflows.utilities
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.sdk.token.contracts.states.FungibleToken
-import com.r3.corda.sdk.token.contracts.types.IssuedTokenType
-import com.r3.corda.sdk.token.contracts.types.TokenType
+import com.r3.corda.lib.tokens.contracts.states.FungibleToken
+import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
+import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowLogic
 import net.corda.core.serialization.SerializationToken
 import net.corda.core.serialization.SerializeAsToken
 import net.corda.core.serialization.SerializeAsTokenContext
-import java.lang.IllegalStateException
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference

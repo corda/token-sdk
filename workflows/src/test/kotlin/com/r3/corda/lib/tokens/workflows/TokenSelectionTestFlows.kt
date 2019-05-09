@@ -1,17 +1,17 @@
-package com.r3.corda.sdk.token.workflow.selection
+package com.r3.corda.lib.tokens.workflows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.sdk.token.contracts.states.FungibleToken
-import com.r3.corda.sdk.token.contracts.types.IssuedTokenType
-import com.r3.corda.sdk.token.contracts.types.TokenType
-import com.r3.corda.sdk.token.money.DigitalCurrency
+import com.r3.corda.lib.tokens.contracts.states.FungibleToken
+import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
+import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.workflows.utilities.LocalTokenSelector
+import com.r3.corda.lib.tokens.workflows.utilities.VaultWatcherService
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowLogic
 import net.corda.core.internal.FlowAsyncOperation
 import net.corda.core.internal.executeAsync
-import net.corda.node.services.statemachine.FlowLogicRefImpl
 import java.security.PublicKey
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
