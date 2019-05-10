@@ -36,11 +36,11 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
     @Before
     fun setUp() {
         // Create some new token amounts.
-        I.issueTokens(GBP, A, NOTARY, 100.GBP).getOrThrow()
-        I.issueTokens(GBP, A, NOTARY, 50.GBP).getOrThrow()
-        J.issueTokens(GBP, A, NOTARY, 25.GBP).getOrThrow()
-        I.issueTokens(USD, A, NOTARY, 200.USD).getOrThrow()
-        J.issueTokens(USD, A, NOTARY, 100.USD).getOrThrow()
+        I.issueTokens(GBP, A, 100.GBP).getOrThrow()
+        I.issueTokens(GBP, A, 50.GBP).getOrThrow()
+        J.issueTokens(GBP, A, 25.GBP).getOrThrow()
+        I.issueTokens(USD, A, 200.USD).getOrThrow()
+        J.issueTokens(USD, A, 100.USD).getOrThrow()
         network.waitQuiescent()
     }
 

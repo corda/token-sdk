@@ -39,7 +39,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
 
     @Test
     fun `redeem fungible happy path`() {
-        val issueTokenTx = I.issueTokens(GBP, A, NOTARY, 100.GBP).getOrThrow()
+        val issueTokenTx = I.issueTokens(GBP, A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
         A.redeemTokens(GBP, I, 100.GBP, true).getOrThrow()
         assertThat(A.services.vaultService.ownedTokenAmountsByToken(GBP).states).isEmpty()
@@ -48,7 +48,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
 
     @Test
     fun `redeem fungible with change`() {
-        val issueTokenTx = I.issueTokens(GBP, A, NOTARY, 100.GBP).getOrThrow()
+        val issueTokenTx = I.issueTokens(GBP, A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
         A.redeemTokens(GBP, I, 80.GBP, true).getOrThrow()
         val ownedStates = A.services.vaultService.ownedTokenAmountsByToken(GBP).states
@@ -59,7 +59,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
 
     @Test
     fun `isufficient balance`() {
-        val issueTokenTx = I.issueTokens(GBP, A, NOTARY, 100.GBP).getOrThrow()
+        val issueTokenTx = I.issueTokens(GBP, A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
         Assertions.assertThatThrownBy {
             A.redeemTokens(GBP, I, 200.GBP, true).getOrThrow()
@@ -68,9 +68,9 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
 
     @Test
     fun `different issuers for fungible tokens`() {
-        val issueTokenTx = I.issueTokens(GBP, A, NOTARY, 100.GBP).getOrThrow()
+        val issueTokenTx = I.issueTokens(GBP, A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
-        val issueTokenTx2 = B.issueTokens(USD, A, NOTARY, 100.USD).getOrThrow()
+        val issueTokenTx2 = B.issueTokens(USD, A, 100.USD).getOrThrow()
         A.watchForTransaction(issueTokenTx2.id).getOrThrow()
         Assertions.assertThatThrownBy {
             A.redeemTokens(USD, I, 100.USD, true).getOrThrow()
@@ -79,7 +79,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
 
     @Test
     fun `redeem non-fungible happy path`() {
-        val issueTokenTx = I.issueTokens(fooToken, A, NOTARY).getOrThrow()
+        val issueTokenTx = I.issueTokens(fooToken, A).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
         assertThat(A.services.vaultService.ownedTokensByToken(fooToken).states).isNotEmpty()
         A.redeemTokens(fooToken, I, null, true).getOrThrow()
@@ -89,7 +89,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
 
     @Test
     fun `redeem tokens from different issuer - non fungible`() {
-        val issueTokenTx = I.issueTokens(fooToken, A, NOTARY).getOrThrow()
+        val issueTokenTx = I.issueTokens(fooToken, A).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
         assertThat(A.services.vaultService.ownedTokensByToken(fooToken).states).isNotEmpty()
         Assertions.assertThatThrownBy {
@@ -99,8 +99,8 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
 
     @Test
     fun `non fungible two same tokens`() {
-        I.issueTokens(fooToken, A, NOTARY).getOrThrow()
-        I.issueTokens(fooToken, A, NOTARY).getOrThrow()
+        I.issueTokens(fooToken, A).getOrThrow()
+        I.issueTokens(fooToken, A).getOrThrow()
         assertThat(A.services.vaultService.ownedTokensByToken(fooToken).states).isNotEmpty()
         Assertions.assertThatThrownBy {
             A.redeemTokens(fooToken, B, null, true).getOrThrow()
@@ -109,7 +109,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
 
     @Test
     fun `redeem states with confidential identities not known to issuer`() {
-        val issueTokenTx = I.issueTokens(GBP, A, NOTARY, 100.GBP).getOrThrow()
+        val issueTokenTx = I.issueTokens(GBP, A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
         // Check to see that A was added to I's distribution list.
         val moveTokenTx = A.moveTokens(GBP, B, 50.GBP, anonymous = true).getOrThrow()

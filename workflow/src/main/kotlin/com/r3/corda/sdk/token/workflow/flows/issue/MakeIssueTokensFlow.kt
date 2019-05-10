@@ -9,6 +9,7 @@ import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.contracts.utilities.heldBy
 import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.of
+import net.corda.core.contracts.Amount
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatedBy
@@ -40,11 +41,17 @@ class MakeIssueTokensFlow<T : TokenType> private constructor(tokens: List<Abstra
 
     constructor(tokenType: T, amount: Long, issuer: Party, holder: AbstractParty) : this(listOf(amount of tokenType issuedBy issuer heldBy holder))
 
+    //TODO not sure if we need this one?
+    constructor(tokenAmount: Amount<T>, issuer: Party, holder: AbstractParty) : this(listOf(tokenAmount issuedBy issuer heldBy holder))
+
     constructor(issuedTokenType: IssuedTokenType<T>, amount: Long, holder: AbstractParty) : this(listOf(amount of issuedTokenType heldBy holder))
 
     constructor(issuedTokenType: IssuedTokenType<T>, amount: Long) : this(listOf(amount of issuedTokenType heldBy issuedTokenType.issuer))
 
     constructor(tokenType: T, amount: Long, issuer: Party) : this(listOf(amount of tokenType issuedBy issuer heldBy issuer))
+
+    //TODO not sure if we need this one?
+    constructor(tokenAmount: Amount<T>, issuer: Party) : this(listOf(tokenAmount issuedBy issuer heldBy issuer))
 }
 
 @InitiatedBy(MakeIssueTokensFlow::class)

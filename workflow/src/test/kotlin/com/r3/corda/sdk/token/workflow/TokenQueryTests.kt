@@ -58,16 +58,16 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     @Before
     fun setUp() {
         // Create some new token amounts.
-        I.issueTokens(GBP, A, NOTARY, 100.GBP).getOrThrow()
-        I.issueTokens(GBP, A, NOTARY, 50.GBP).getOrThrow()
-        I.issueTokens(GBP, A, NOTARY, 25.GBP).getOrThrow()
-        I.issueTokens(USD, A, NOTARY, 200.USD).getOrThrow()
-        I.issueTokens(USD, A, NOTARY, 100.USD).getOrThrow()
-        I.issueTokens(BTC, A, NOTARY, 500.BTC).getOrThrow()
+        I.issueTokens(GBP, A, 100.GBP).getOrThrow()
+        I.issueTokens(GBP, A, 50.GBP).getOrThrow()
+        I.issueTokens(GBP, A, 25.GBP).getOrThrow()
+        I.issueTokens(USD, A, 200.USD).getOrThrow()
+        I.issueTokens(USD, A, 100.USD).getOrThrow()
+        I.issueTokens(BTC, A, 500.BTC).getOrThrow()
         // Non-fungible tokens.
-        I.issueTokens(fooToken, A, NOTARY)
-        I.issueTokens(barToken, A, NOTARY)
-        I2.issueTokens(bazToken, A, NOTARY) // Different issuer.
+        I.issueTokens(fooToken, A)
+        I.issueTokens(barToken, A)
+        I2.issueTokens(bazToken, A) // Different issuer.
         network.waitQuiescent()
     }
 
@@ -122,7 +122,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
 
     @Test
     fun `query for sum of an owned token amount by issuer`() {
-        val issueTx = I2.issueTokens(GBP, A, NOTARY, 13.GBP).getOrThrow()
+        val issueTx = I2.issueTokens(GBP, A, 13.GBP).getOrThrow()
         A.watchForTransaction(issueTx.id).getOrThrow()
         // Perform a custom query to get the balance for a specific token type.
         val gbpBalanceI = A.services.vaultService.tokenBalanceForIssuer(GBP, I.legalIdentity())
@@ -134,7 +134,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     @Test
     fun `query owned token amounts with given issuer`() {
         // Fungible
-        val issueTx = I2.issueTokens(GBP, A, NOTARY, 13.GBP).getOrThrow()
+        val issueTx = I2.issueTokens(GBP, A, 13.GBP).getOrThrow()
         A.watchForTransaction(issueTx.id).getOrThrow()
         val issuerCriteria = tokenAmountWithIssuerCriteria(GBP, I2.legalIdentity())
         val gbpI2 = A.services.vaultService.queryBy<FungibleToken<*>>(issuerCriteria).states

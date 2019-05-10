@@ -6,7 +6,7 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatedBy
 
-@InitiatedBy(FinalizeMoveTokensFlow::class)
+@InitiatedBy(MoveTokensFlow::class)
 class MoveTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {

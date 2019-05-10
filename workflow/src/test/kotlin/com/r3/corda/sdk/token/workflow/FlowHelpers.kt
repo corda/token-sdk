@@ -2,9 +2,16 @@ package com.r3.corda.sdk.token.workflow
 
 import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
 import com.r3.corda.sdk.token.contracts.types.TokenType
+import com.r3.corda.sdk.token.contracts.utilities.heldBy
+import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
-import com.r3.corda.sdk.token.workflow.flows.*
+import com.r3.corda.sdk.token.workflow.flows.CreateEvolvableToken
+import com.r3.corda.sdk.token.workflow.flows.RedeemToken
+import com.r3.corda.sdk.token.workflow.flows.UpdateEvolvableToken
 import com.r3.corda.sdk.token.workflow.flows.issue.ConfidentialIssueTokensFlow
+import com.r3.corda.sdk.token.workflow.flows.issue.MakeIssueTokensFlow
+import com.r3.corda.sdk.token.workflow.flows.move.ConfidentialMoveTokensFlow
+import com.r3.corda.sdk.token.workflow.flows.move.MakeMoveTokenFlow
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
@@ -25,28 +32,22 @@ fun <T : EvolvableTokenType> StartedMockNode.updateEvolvableToken(old: StateAndR
 fun <T : TokenType> StartedMockNode.issueTokens(
         token: T,
         issueTo: StartedMockNode,
-        notary: StartedMockNode,
         amount: Amount<T>? = null,
         anonymous: Boolean = true
 ): CordaFuture<SignedTransaction> {
     return transaction {
         if (anonymous) {
-            val tokens = emptyList<>()
-                    startFlow(ConfidentialIssueTokensFlow)
-
-            startFlow(ConfidentialIssueFlow.Initiator(
-                    token = token,
-                    holder = issueTo.legalIdentity(),
-                    notary = notary.legalIdentity(),
-                    amount = amount
-            ))
+            if (amount == null) {
+                startFlow(ConfidentialIssueTokensFlow(listOf(token issuedBy legalIdentity() heldBy issueTo.legalIdentity()), emptySet()))
+            } else {
+                startFlow(ConfidentialIssueTokensFlow(listOf(amount issuedBy legalIdentity() heldBy issueTo.legalIdentity()), emptySet()))
+            }
         } else {
-            startFlow(IssueToken.Initiator(
-                    token = token,
-                    issueTo = issueTo.legalIdentity(),
-                    notary = notary.legalIdentity(),
-                    amount = amount
-            ))
+            if (amount == null) {
+                startFlow(MakeIssueTokensFlow(token, issueTo.legalIdentity()))
+            } else {
+                startFlow(MakeIssueTokensFlow(amount, issueTo.legalIdentity()))
+            }
         }
     }
 }
@@ -59,16 +60,18 @@ fun <T : TokenType> StartedMockNode.moveTokens(
 ): CordaFuture<SignedTransaction> {
     return transaction {
         if (anonymous) {
-            startFlow(ConfidentialMoveFlow.Initiator(
-                    ownedToken = token,
-                    holder = owner.legalIdentity(),
-                    amount = amount
-            ))
+            if (amount == null) {
+                startFlow(ConfidentialMoveTokensFlow(token, owner.legalIdentity()
+                ))
+            } else {
+                startFlow(ConfidentialMoveTokensFlow(amount, owner.legalIdentity()
+                ))
+            }
         } else {
             if (amount == null) {
-                startFlow(MoveTokenNonFungible(token, owner.legalIdentity()))
+                startFlow(MakeMoveTokenFlow(token, owner.legalIdentity()))
             } else {
-                startFlow(MoveTokenFungible(amount, owner.legalIdentity()))
+                startFlow(MakeMoveTokenFlow(amount, owner.legalIdentity()))
             }
         }
     }

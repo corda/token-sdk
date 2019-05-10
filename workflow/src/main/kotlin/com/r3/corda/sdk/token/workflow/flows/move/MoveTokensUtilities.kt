@@ -9,6 +9,7 @@ import com.r3.corda.sdk.token.workflow.selection.TokenSelection
 import com.r3.corda.sdk.token.workflow.selection.generateMoveNonFungible
 import com.r3.corda.sdk.token.workflow.utilities.getPreferredNotary
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountCriteria
+import com.r3.corda.sdk.token.workflow.utilities.requireKnownConfidentialIdentity
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowLogic
@@ -107,4 +108,24 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         transactionBuilder: TransactionBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
 ): TransactionBuilder {
     return addMoveTokens(serviceHub, token, holder, transactionBuilder)
+}
+
+
+@Suspendable
+internal fun <T : TokenType> FlowLogic<*>.generateMove(partiesAndAmounts: Map<out AbstractParty, List<Amount<T>>>,
+                                                       partiesAndTokens: Map<out AbstractParty, List<T>>,
+                                                       transactionBuilder: TransactionBuilder = TransactionBuilder(getPreferredNotary(serviceHub))): TransactionBuilder {
+    for ((holder, amounts) in partiesAndAmounts) {
+        for (amount in amounts) {
+            addMoveTokens(amount, holder, transactionBuilder)
+        }
+    }
+    for ((holder, tokens) in partiesAndTokens) {
+        for (token in tokens) addMoveTokens(token, holder, transactionBuilder)
+    }
+    (partiesAndAmounts.keys + partiesAndTokens.keys).forEach {
+        // Check that we have all confidential identities.
+        serviceHub.identityService.requireKnownConfidentialIdentity(it)
+    }
+    return transactionBuilder
 }
