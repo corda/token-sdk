@@ -11,7 +11,6 @@ import com.r3.corda.sdk.token.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import com.r3.corda.sdk.token.workflow.types.PartyAndAmount
 import com.r3.corda.sdk.token.workflow.utilities.addNotaryWithCheck
-import com.r3.corda.sdk.token.workflow.utilities.getPreferredNotary
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountCriteria
 import com.r3.corda.sdk.token.workflow.utilities.sortByStateRefAscending
 import net.corda.core.contracts.Amount
@@ -46,9 +45,6 @@ import java.util.*
  * @param services for performing vault queries.
  */
 class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, private val retrySleep: Int = 100, private val retryCap: Int = 2000) {
-
-    //TODO
-//    val preferredNotary = getPreferredNotary(services)
 
     companion object {
         val logger = contextLogger()

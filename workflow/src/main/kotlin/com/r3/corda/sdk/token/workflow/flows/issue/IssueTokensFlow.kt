@@ -44,7 +44,6 @@ open class IssueTokensFlow<T : TokenType> private constructor(
         val existingSessions: Set<FlowSession>,
         val observers: Set<Party>
 ) : FlowLogic<SignedTransaction>() {
-    //TODO not sure about these 8 constructors the standard ones are suffcient
     // NonFungible
     constructor(tokenType: T, issuer: Party, holder: AbstractParty, sessions: Set<FlowSession>) : this(listOf(tokenType issuedBy issuer heldBy holder), sessions, emptySet())
 

@@ -9,7 +9,7 @@ import net.corda.core.internal.randomOrNull
 import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.TransactionBuilder
 
-// TODO getPreferredNotary should be loaded on start?
+// TODO getPreferredNotary should be loaded on start
 /**
  * Gets the preferred notary from the CorDapp config file. Otherwise, the list of notaries from the network map cache
  * is returned. From this list the CorDapp developer can employ their own strategy to choose a notary. for now, the
@@ -19,8 +19,6 @@ import net.corda.core.transactions.TransactionBuilder
  * @param backupSelector a function which selects a notary when the notary property is not set in the CorDapp config.
  * @return the selected notary [Party] object.
  */
-// TODO no suspendable
-// TODO if suspendable then not lambda
 @Suspendable
 fun getPreferredNotary(services: ServiceHub, backupSelector: (ServiceHub) -> Party = firstNotary()): Party {
     val notaryString = try {

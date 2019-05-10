@@ -14,10 +14,7 @@ import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.ProgressTracker
 
-// TODO Add inputs, outputs versions, query criteria (similar to addMove from MoveUtilities).
-//  Annoying thing is that it could be easily done by constructing transaction builder in constructor, but...
-//  serviceHub is not initialized at this point
-//  So I could do that by having TokenSelector interface and then calling it from call(). Quite annoying that checkpointing fails with lambdas.
+// TODO Add inputs, outputs, query criteria (similar to addMove from MoveUtilities).
 @InitiatingFlow
 abstract class MoveTokensFlow<T : TokenType> private constructor(
         val partiesAndAmounts: Map<AbstractParty, List<Amount<T>>>,
@@ -46,7 +43,6 @@ abstract class MoveTokensFlow<T : TokenType> private constructor(
                 partiesAndTokens: Map<AbstractParty, List<T>> = emptyMap(),
                 observer: Party) : this(partiesAndAmounts, partiesAndTokens, emptySet(), setOf(observer))
 
-    //TODO check this case when no observers/sessions passed
     @JvmOverloads
     constructor(partiesAndAmounts: Map<AbstractParty, List<Amount<T>>> = emptyMap(),
                 partiesAndTokens: Map<AbstractParty, List<T>> = emptyMap()) : this(partiesAndAmounts, partiesAndTokens, emptySet(), emptySet())

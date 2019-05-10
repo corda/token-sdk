@@ -10,7 +10,6 @@ import net.corda.core.identity.AbstractParty
  * TODO docs
  * This flow is supposed to be called from shell only.
  */
-@InitiatingFlow
 @StartableByRPC
 class MakeMoveTokenFlow<T : TokenType>(
         partiesAndAmounts: Map<AbstractParty, List<Amount<T>>>,

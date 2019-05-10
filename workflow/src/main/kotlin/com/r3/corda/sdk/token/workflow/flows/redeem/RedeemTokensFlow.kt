@@ -6,12 +6,9 @@ import net.corda.core.flows.FlowSession
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
-// Redeem tokens that take a list of different abstract tokens
-
-
+//TODO will be implemented as other PR
 class MakeRedeemTokenFlow(): FlowLogic<SignedTransaction>() {
-    val sessions = emptySet<FlowSession>() // TODO pass sessions
-    // TODO observers etc
+    val sessions = emptySet<FlowSession>()
     override fun call(): SignedTransaction {
         val txBuilder = subFlow(AddRedeemTokenFlow())
         return subFlow(ObserverAwareFinalityFlow(txBuilder, sessions))

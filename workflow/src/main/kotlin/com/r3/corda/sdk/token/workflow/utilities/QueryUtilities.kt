@@ -75,7 +75,7 @@ fun <T: TokenType> tokenAmountWithIssuerCriteria(token: T, issuer: Party): Query
 
 // Returns all owned token amounts of a specified token.
 // We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
-// TODO should be token amount criteria
+// TODO should be called token amount criteria (there is no owner selection)
 fun <T : TokenType> ownedTokenAmountCriteria(token: T): QueryCriteria {
     val tokenClass = builder {
         PersistentFungibleToken::tokenClass.equal(token.tokenClass)

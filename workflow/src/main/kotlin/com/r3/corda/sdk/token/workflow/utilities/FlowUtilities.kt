@@ -39,14 +39,14 @@ fun LedgerTransaction.ourSigningKeys(services: ServiceHub): List<PublicKey> {
     return services.keyManagementService.filterMyKeys(signingKeys).toList()
 }
 
-fun AbstractParty.toParty(services: ServiceHub) = services.identityService.requireWellKnownPartyFromAnonymous(this)
+fun AbstractParty.toParty(services: ServiceHub) = services.identityService.requireKnownConfidentialIdentity(this)
 
 fun List<AbstractParty>.toWellKnownParties(services: ServiceHub): List<Party> {
-    return map(services.identityService::requireWellKnownPartyFromAnonymous)
+    return map(services.identityService::requireKnownConfidentialIdentity)
 }
 
 // Needs to deal with confidential identities.
-fun requireSessionsForParticipants(participants: List<Party>, sessions: Set<FlowSession>) {
+fun requireSessionsForParticipants(participants: Collection<Party>, sessions: Set<FlowSession>) {
     val sessionParties = sessions.map(FlowSession::counterparty)
     require(sessionParties.containsAll(participants)) {
         val missing = participants - sessionParties

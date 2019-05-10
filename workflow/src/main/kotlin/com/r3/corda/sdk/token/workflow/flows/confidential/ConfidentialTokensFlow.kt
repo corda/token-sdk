@@ -3,11 +3,10 @@ package com.r3.corda.sdk.token.workflow.flows.confidential
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.AbstractToken
 import com.r3.corda.sdk.token.contracts.types.TokenType
+import com.r3.corda.sdk.token.workflow.utilities.sessionsForParicipants
 import net.corda.core.contracts.ContractState
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatedBy
-import net.corda.core.flows.InitiatingFlow
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
@@ -36,7 +35,7 @@ class ConfidentialTokensFlow<T : TokenType>(
     }
 }
 
-@InitiatingFlow
+// These make sense to be called as subflows only
 class AnonymisePartiesFlow(
         val parties: Set<AbstractParty>,
         val sessions: Set<FlowSession>
@@ -60,7 +59,6 @@ class AnonymisePartiesFlow(
     }
 }
 
-@InitiatedBy(AnonymisePartiesFlow::class)
 class AnonymisePartiesFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {

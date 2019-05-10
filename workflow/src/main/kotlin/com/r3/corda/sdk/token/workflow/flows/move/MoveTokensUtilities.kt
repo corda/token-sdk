@@ -44,22 +44,6 @@ fun addMoveTokens(input: StateAndRef<AbstractToken<*>>, output: AbstractToken<*>
     return addMoveTokens(listOf(input), listOf(output), transactionBuilder)
 }
 
-
-// TODO we should have checked before that inputs and outputs holders are well known
-// TODO we should have checked that inputs belong to the same node
-// Functions that use vault to resolve inputs
-
-//fun addMoveTokens(serviceHub: ServiceHub, input: AbstractToken<*>, output: AbstractToken<*>, transactionBuilder: TransactionBuilder): TransactionBuilder {
-//    check(input.holder != output.holder) {
-//        "Holder of the output should be different than holder of the input token when moving tokens."
-//    }
-//    // This is a simple move without change.
-//    check(input == output.withNewHolder(input.holder)) {
-//        "Input and output must be the same token type with the same issuer."
-//    }
-//    return addMoveTokens(serviceHub, listOf(input), listOf(output), transactionBuilder)
-//}
-
 // Based on generateMove.
 @JvmOverloads
 @Suspendable

@@ -21,7 +21,6 @@ import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 
 // Flow startable from shell
-@InitiatingFlow
 @StartableByRPC
 class MakeIssueTokensFlow<T : TokenType> private constructor(tokens: List<AbstractToken<T>>) : IssueTokensFlow<T>(tokens, emptyList()) {
 
@@ -52,12 +51,4 @@ class MakeIssueTokensFlow<T : TokenType> private constructor(tokens: List<Abstra
 
     //TODO not sure if we need this one?
     constructor(tokenAmount: Amount<T>, issuer: Party) : this(listOf(tokenAmount issuedBy issuer heldBy issuer))
-}
-
-@InitiatedBy(MakeIssueTokensFlow::class)
-class MakeIssueTokensHandler(val otherSession: FlowSession) : FlowLogic<SignedTransaction>() {
-    @Suspendable
-    override fun call(): SignedTransaction {
-        return subFlow(ReceiveFinalityFlow(otherSideSession = otherSession))
-    }
 }

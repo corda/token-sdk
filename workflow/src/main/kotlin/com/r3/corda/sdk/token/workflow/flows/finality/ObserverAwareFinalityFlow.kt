@@ -12,6 +12,7 @@ import com.r3.corda.sdk.token.workflow.utilities.requireSessionsForParticipants
 import com.r3.corda.sdk.token.workflow.utilities.sessionsForParicipants
 import com.r3.corda.sdk.token.workflow.utilities.toWellKnownParties
 import com.r3.corda.sdk.token.workflow.utilities.updateDistributionList
+import net.corda.core.contracts.CommandWithParties
 import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
@@ -25,7 +26,6 @@ import net.corda.core.utilities.ProgressTracker
 @CordaSerializable
 enum class TransactionRole { PARTICIPANT, OBSERVER }
 
-@InitiatingFlow
 class ObserverAwareFinalityFlow(
         val transactionBuilder: TransactionBuilder,
         val sessions: Set<FlowSession>
@@ -35,7 +35,7 @@ class ObserverAwareFinalityFlow(
         // Check there is a session for each participant, apart from the node itself.
         val ledgerTransaction = transactionBuilder.toLedgerTransaction(serviceHub)
         val participants = ledgerTransaction.participants
-        val wellKnownParticipants = participants.toWellKnownParties(serviceHub) - ourIdentity
+        val wellKnownParticipants = participants.toWellKnownParties(serviceHub).toSet().minus(ourIdentity)
         requireSessionsForParticipants(wellKnownParticipants, sessions)
         val finalSessions = sessions.filter { it.counterparty != ourIdentity }
         // Notify all session counterparties of their role.
@@ -52,7 +52,6 @@ class ObserverAwareFinalityFlow(
 }
 
 // Observer aware finality flow that also updates the distribution lists accordingly.
-@InitiatingFlow
 class FinalizeTokensTransactionFlow private constructor(
         val transactionBuilder: TransactionBuilder,
         val existingSessions: Set<FlowSession>,

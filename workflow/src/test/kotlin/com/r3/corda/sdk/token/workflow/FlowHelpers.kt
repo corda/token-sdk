@@ -44,9 +44,9 @@ fun <T : TokenType> StartedMockNode.issueTokens(
             }
         } else {
             if (amount == null) {
-                startFlow(MakeIssueTokensFlow(token, issueTo.legalIdentity()))
+                startFlow(MakeIssueTokensFlow(token, legalIdentity(), issueTo.legalIdentity()))
             } else {
-                startFlow(MakeIssueTokensFlow(amount, issueTo.legalIdentity()))
+                startFlow(MakeIssueTokensFlow(amount, legalIdentity(), issueTo.legalIdentity()))
             }
         }
     }
