@@ -69,7 +69,8 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
             inputs: List<FungibleToken<T>>,
             outputs: List<FungibleToken<T>>
     ) {
-        val issuedToken: IssuedTokenType<T> = moveCommands.single().value.token
+        // Commands are grouped by Token Type, so we just need a token reference.
+        val issuedToken: IssuedTokenType<T> = moveCommands.first().value.token
         // There must be inputs and outputs present.
         require(inputs.isNotEmpty()) { "When moving tokens, there must be input states present." }
         require(outputs.isNotEmpty()) { "When moving tokens, there must be output states present." }
