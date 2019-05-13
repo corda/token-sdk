@@ -3,86 +3,113 @@ package com.r3.corda.sdk.token.workflow.flows.issue
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.commands.IssueTokenCommand
 import com.r3.corda.sdk.token.contracts.states.AbstractToken
+import com.r3.corda.sdk.token.contracts.states.FungibleToken
+import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
 import com.r3.corda.sdk.token.contracts.types.IssuedTokenType
 import com.r3.corda.sdk.token.contracts.types.TokenType
-import com.r3.corda.sdk.token.contracts.utilities.heldBy
-import com.r3.corda.sdk.token.contracts.utilities.issuedBy
-import com.r3.corda.sdk.token.contracts.utilities.of
-import com.r3.corda.sdk.token.workflow.flows.finality.FinalizeTokensTransactionFlow
+import com.r3.corda.sdk.token.workflow.flows.finality.ObserverAwareFinalityFlow
+import com.r3.corda.sdk.token.workflow.flows.internal.distribution.UpdateDistributionListFlow
 import com.r3.corda.sdk.token.workflow.utilities.getPreferredNotary
-import com.r3.corda.sdk.token.workflow.utilities.sessionsForParicipants
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatingFlow
-import net.corda.core.identity.AbstractParty
-import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
 /**
- * Creates a [TransactionBuilder] with the preferred notary, the requested set of tokens as outputs and adds
- * [IssueTokenCommand]s for each group of states (grouped by [IssuedTokenType]. This flow can be called as an
- * [InitiatingFlow] or an inlined sub-flow.
+ * Use this flow to issue fungible or non-fungible tokens. It should be called as an in-line sub-flow, therefore you
+ * must have flow participantSessions set up prior to calling this flow. Tokens are gneerally constructed before calling this flow.
+ * However, the flow does offer constructors for issuing single tokens, if given the token type and amount, etc. The
+ * flow works as follows:
  *
- * - No need to pass in any sessions when issuing to self but can pass in observer sessions if needed.
- * - There is an assumption that this flow can only be used by one issuer at a time.
- * - Tokens are issued to well known identities or confidential identities. This flow TODO this flow what
- * - Many tokens can be issued to a single party.
- * - Many tokens can be issued to many parties but usually only one.
- * - Observers can also be specified.
- * - can issue fungible and non fungible tokens at the same time.
- * - tokens can be issued to self or to another party
- * - The notary is selected from a config file or picked at random if no notary preference is available.
- * - This is not an initiating flow. There will also be an initiating version which is startable from the shell.
- * - This flow handles observers. Observers (via additional flow sessions) store the tx with ALL_VISIBLE.
- * - Can issue different types of token at the same time.
+ * 1. Creates a [TransactionBuilder] with the preferred notary, which is set in the token SDK config file.
+ * 2. Adds the requested set of tokensToIssue as outputs to the transaction builder and adds [IssueTokenCommand]s for
+ * each group of states (grouped by [IssuedTokenType].
+ * 3. Finalises the transaction and updates the evolvable token distribution list, if necessary.
+ *
+ * Further points to note:
+ *
+ * 1. If you are issuing to self, there is no need to pass in a flow session.
+ * 2. There is an assumption that this flow can only be used by one issuer at a time.
+ * 3. Tokens can be issued to well known identities or confidential identities. To issue tokens with confidential keys
+ * then use the [ConfidentialIssueTokensFlow].
+ * 4. This flow supports issuing many tokens to a single or multiple parties, of the same or different types.
+ * 5. Transaction observers can be specified.
+ * 6. Observers can also be specified.
+ * 7. This flow supports the issuance of fungible and non fungible tokens in the same transaction.
+ * 8. The notary is selected from a config file or picked at random if no notary preference is available.
+ * 9. This is not an initiating flow. There will also be an initiating version which is startable from the shell.
+ *
+ * @property tokensToIssue a list of tokens to issue. May be fungible or non-fungible.
+ * @property participantSessions a list of flow participantSessions for the transaction participants.
+ * @property observerSessions a list of flow participantSessions for the transaction observers.
  */
-//TODO add progress tracker
-@InitiatingFlow
-open class IssueTokensFlow<T : TokenType> private constructor(
-        val tokens: List<AbstractToken<T>>,
-        val existingSessions: Set<FlowSession>,
-        val observers: Set<Party>
+class IssueTokensFlow<T : TokenType>(
+        val tokensToIssue: List<AbstractToken<T>>,
+        val participantSessions: List<FlowSession>,
+        val observerSessions: List<FlowSession>
 ) : FlowLogic<SignedTransaction>() {
-    // NonFungible
-    constructor(tokenType: T, issuer: Party, holder: AbstractParty, sessions: Set<FlowSession>) : this(listOf(tokenType issuedBy issuer heldBy holder), sessions, emptySet())
 
-    constructor(issuedTokenType: IssuedTokenType<T>, holder: AbstractParty, sessions: Set<FlowSession>) : this(listOf(issuedTokenType heldBy holder), sessions, emptySet())
 
-    constructor(issuedTokenType: IssuedTokenType<T>, sessions: Set<FlowSession>) : this(listOf(issuedTokenType heldBy issuedTokenType.issuer), sessions, emptySet())
+    /** Issue a single [FungibleToken]. */
+    constructor(
+            token: FungibleToken<T>,
+            participantSessions: List<FlowSession>,
+            observerSessions: List<FlowSession>
+    ) : this(listOf(token), participantSessions, observerSessions)
 
-    constructor(tokenType: T, issuer: Party, sessions: Set<FlowSession>) : this(listOf(tokenType issuedBy issuer heldBy issuer), sessions, emptySet())
+    /** Issue a single [NonFungibleToken]. */
+    constructor(
+            token: NonFungibleToken<T>,
+            participantSessions: List<FlowSession>,
+            observerSessions: List<FlowSession>
+    ) : this(listOf(token), participantSessions, observerSessions)
 
-    // Fungible
-    constructor(tokenType: T, amount: Long, issuer: Party, holder: AbstractParty, sessions: Set<FlowSession>) : this(listOf(amount of tokenType issuedBy issuer heldBy holder), sessions, emptySet())
-
-    constructor(issuedTokenType: IssuedTokenType<T>, amount: Long, holder: AbstractParty, sessions: Set<FlowSession>) : this(listOf(amount of issuedTokenType heldBy holder), sessions, emptySet())
-
-    constructor(issuedTokenType: IssuedTokenType<T>, amount: Long, sessions: Set<FlowSession>) : this(listOf(amount of issuedTokenType heldBy issuedTokenType.issuer), sessions, emptySet())
-
-    constructor(tokenType: T, amount: Long, issuer: Party, sessions: Set<FlowSession>) : this(listOf(amount of tokenType issuedBy issuer heldBy issuer), sessions, emptySet())
-
-    /** Standard constructors. */
-    constructor(tokens: List<AbstractToken<T>>, observers: Set<Party>) : this(tokens, emptySet(), observers)
-
-    constructor(tokens: List<AbstractToken<T>>, sessions: List<FlowSession>)
-            : this(tokens, sessions.toSet(), emptySet())
-
-    constructor(tokens: AbstractToken<T>, session: FlowSession) : this(listOf(tokens), setOf(session), emptySet())
-    constructor(tokens: AbstractToken<T>, sessions: List<FlowSession>)
-            : this(listOf(tokens), sessions.toSet(), emptySet())
-
-    constructor(tokens: AbstractToken<T>, observers: Set<Party>) : this(listOf(tokens), emptySet(), observers)
-    constructor(tokens: AbstractToken<T>, observers: Party) : this(listOf(tokens), emptySet(), setOf(observers))
+//    /* Non-fungible token constructors. */
+//
+//    constructor(
+//            tokenType: T,
+//            issuer: Party,
+//            holder: AbstractParty,
+//            participantSessions: Set<FlowSession>
+//    )
+//            : this(listOf(tokenType issuedBy issuer heldBy holder), participantSessions)
+//
+//    constructor(issuedTokenType: IssuedTokenType<T>, holder: AbstractParty, participantSessions: Set<FlowSession>)
+//            : this(listOf(issuedTokenType heldBy holder), participantSessions)
+//
+//    constructor(issuedTokenType: IssuedTokenType<T>, participantSessions: Set<FlowSession>)
+//            : this(listOf(issuedTokenType heldBy issuedTokenType.issuer), participantSessions)
+//
+//    constructor(tokenType: T, issuer: Party, participantSessions: Set<FlowSession>)
+//            : this(listOf(tokenType issuedBy issuer heldBy issuer), participantSessions)
+//
+//    /* Fungible token constructors. */
+//
+//    constructor(tokenType: T, amount: Long, issuer: Party, holder: AbstractParty, participantSessions: Set<FlowSession>)
+//            : this(listOf(amount of tokenType issuedBy issuer heldBy holder), participantSessions)
+//
+//    constructor(issuedTokenType: IssuedTokenType<T>, amount: Long, holder: AbstractParty, participantSessions: Set<FlowSession>)
+//            : this(listOf(amount of issuedTokenType heldBy holder), participantSessions)
+//
+//    constructor(issuedTokenType: IssuedTokenType<T>, amount: Long, participantSessions: Set<FlowSession>)
+//            : this(listOf(amount of issuedTokenType heldBy issuedTokenType.issuer), participantSessions)
+//
+//    constructor(tokenType: T, amount: Long, issuer: Party, participantSessions: Set<FlowSession>)
+//            : this(listOf(amount of tokenType issuedBy issuer heldBy issuer), participantSessions)
+//
+//    /* Standard constructors. */
 
     @Suspendable
     override fun call(): SignedTransaction {
         // Initialise the transaction builder with a preferred notary or choose a random notary.
         val transactionBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
-        // Add all the specified tokens to the transaction. The correct commands and signing keys are also added.
-        addIssueTokens(tokens, transactionBuilder)
-        // Create new sessions if this is started as a top level flow.
-        val sessions = if (existingSessions.isEmpty()) sessionsForParicipants(tokens, observers) else existingSessions
-        return subFlow(FinalizeTokensTransactionFlow(transactionBuilder, sessions.toList()))
+        // Add all the specified tokensToIssue to the transaction. The correct commands and signing keys are also added.
+        addIssueTokens(tokensToIssue, transactionBuilder)
+        // Create new participantSessions if this is started as a top level flow.
+        val signedTransaction = subFlow(ObserverAwareFinalityFlow(transactionBuilder, participantSessions + observerSessions))
+        // Update the distribution list.
+        subFlow(UpdateDistributionListFlow(signedTransaction))
+        // Return the newly created transaction.
+        return signedTransaction
     }
 }

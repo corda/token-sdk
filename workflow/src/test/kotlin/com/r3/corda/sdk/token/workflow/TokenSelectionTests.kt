@@ -2,7 +2,8 @@ package com.r3.corda.sdk.token.workflow
 
 import com.r3.corda.sdk.token.money.GBP
 import com.r3.corda.sdk.token.money.USD
-import com.r3.corda.sdk.token.workflow.selection.TokenSelection
+import com.r3.corda.sdk.token.workflow.flows.internal.selection.TokenSelection
+import com.r3.corda.sdk.token.workflow.flows.move.addMoveTokens
 import com.r3.corda.sdk.token.workflow.types.PartyAndAmount
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.getOrThrow
@@ -29,18 +30,18 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         J = nodes[3]
     }
 
-    // List of tokens to create for the tests.
+    // List of tokensToIssue to create for the tests.
     private val gbpTokens = listOf(100.GBP, 50.GBP, 25.GBP)
     private val usdTokens = listOf(200.USD, 100.USD)
 
     @Before
     fun setUp() {
         // Create some new token amounts.
-        I.issueTokens(GBP, A, 100.GBP).getOrThrow()
-        I.issueTokens(GBP, A, 50.GBP).getOrThrow()
-        J.issueTokens(GBP, A, 25.GBP).getOrThrow()
-        I.issueTokens(USD, A, 200.USD).getOrThrow()
-        J.issueTokens(USD, A, 100.USD).getOrThrow()
+        I.issueFungibleTokens(A, 100.GBP).getOrThrow()
+        I.issueFungibleTokens(A, 50.GBP).getOrThrow()
+        J.issueFungibleTokens(A, 25.GBP).getOrThrow()
+        I.issueFungibleTokens(A, 200.USD).getOrThrow()
+        J.issueFungibleTokens(A, 100.USD).getOrThrow()
         network.waitQuiescent()
     }
 
@@ -70,14 +71,16 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
     @Test
     fun `generate move test`() {
         val tokenSelection = TokenSelection(A.services)
+        val transactionBuilder = TransactionBuilder()
         val moves = listOf(
                 PartyAndAmount(B.legalIdentity(), 140.GBP),
                 PartyAndAmount(I.legalIdentity(), 30.GBP)
         )
-        val (builder, _) = A.transaction {
-            tokenSelection.generateMove(TransactionBuilder(), moves)
+
+        A.transaction {
+            addMoveTokens(transactionBuilder, A.services, moves)
         }
-        println(builder.toWireTransaction(A.services))
+        println(transactionBuilder.toWireTransaction(A.services))
         // Just using this to check and see if the output is as expected.
         // TODO: Assert something...
     }

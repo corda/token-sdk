@@ -3,7 +3,6 @@ package com.r3.corda.sdk.token.workflow.flows.finality
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatedBy
 import net.corda.core.flows.ReceiveFinalityFlow
 import net.corda.core.node.StatesToRecord
 import net.corda.core.utilities.unwrap
@@ -23,9 +22,3 @@ class ObserverAwareFinalityFlowHandler(val otherSession: FlowSession) : FlowLogi
     }
 }
 
-class FinalizeTokensTransactionFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
-    @Suspendable
-    override fun call() {
-        subFlow(ObserverAwareFinalityFlowHandler(otherSession))
-    }
-}

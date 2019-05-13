@@ -32,7 +32,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and created tokens to match
+        // Expect proposed and created tokensToIssue to match
         assertEquals(token, createdToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one create command with maintainer signature
@@ -54,7 +54,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and created tokens to match
+        // Expect proposed and created tokensToIssue to match
         assertEquals(token, createdToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one create command with maintainer signature
@@ -76,7 +76,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and created tokens to match
+        // Expect proposed and created tokensToIssue to match
         assertEquals(token, createdToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one create command with maintainer signature
@@ -98,7 +98,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and created tokens to match
+        // Expect proposed and created tokensToIssue to match
         assertEquals(token, createdToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one create command with maintainer signature
@@ -120,7 +120,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and created tokens to match
+        // Expect proposed and created tokensToIssue to match
         assertEquals(token, createdToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one create command with maintainer signature
@@ -142,7 +142,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and created tokens to match
+        // Expect proposed and created tokensToIssue to match
         assertEquals(token, createdToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one create command with maintainer signature

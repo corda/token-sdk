@@ -1,9 +1,9 @@
 package com.r3.corda.sdk.token.workflow.utilities
 
+import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.AbstractToken
 import com.r3.corda.sdk.token.contracts.types.TokenPointer
-import com.r3.corda.sdk.token.contracts.types.TokenType
-import com.r3.corda.sdk.token.workflow.flows.distribution.UpdateDistributionList
+import com.r3.corda.sdk.token.workflow.flows.internal.distribution.UpdateDistributionListRequestFlow
 import com.r3.corda.sdk.token.workflow.schemas.DistributionRecord
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.ContractState
@@ -21,6 +21,7 @@ import java.security.PublicKey
  * Utility function to persist a new entity pertaining to a distribution record.
  * TODO: Add some error handling.
  */
+@Suspendable
 fun addPartyToDistributionList(services: ServiceHub, party: Party, linearId: UniqueIdentifier) {
     // Create an persist a new entity.
     val distributionRecord = DistributionRecord(linearId.id, party)
@@ -34,19 +35,23 @@ val LedgerTransaction.participants: List<AbstractParty>
         return inputParticipants + outputParticipants
     }
 
+@Suspendable
 fun LedgerTransaction.ourSigningKeys(services: ServiceHub): List<PublicKey> {
     val signingKeys = commands.flatMap(CommandWithParties<*>::signers)
     return services.keyManagementService.filterMyKeys(signingKeys).toList()
 }
 
+@Suspendable
 fun AbstractParty.toParty(services: ServiceHub) = services.identityService.requireKnownConfidentialIdentity(this)
 
+@Suspendable
 fun List<AbstractParty>.toWellKnownParties(services: ServiceHub): List<Party> {
     return map(services.identityService::requireKnownConfidentialIdentity)
 }
 
 // Needs to deal with confidential identities.
-fun requireSessionsForParticipants(participants: Collection<Party>, sessions: Set<FlowSession>) {
+@Suspendable
+fun requireSessionsForParticipants(participants: Collection<Party>, sessions: List<FlowSession>) {
     val sessionParties = sessions.map(FlowSession::counterparty)
     require(sessionParties.containsAll(participants)) {
         val missing = participants - sessionParties
@@ -54,33 +59,37 @@ fun requireSessionsForParticipants(participants: Collection<Party>, sessions: Se
     }
 }
 
-fun FlowLogic<*>.sessionsForParicipants(states: List<ContractState>, otherParties: Iterable<Party>): Set<FlowSession> {
+@Suspendable
+fun FlowLogic<*>.sessionsForParticipants(states: List<ContractState>): List<FlowSession> {
     val stateParties = states.flatMap(ContractState::participants)
-    val wellKnownStateParties = stateParties.toWellKnownParties(serviceHub)
-    val allParties = wellKnownStateParties + otherParties
-    return allParties.map(::initiateFlow).toSet()
+    return sessionsForParties(stateParties)
 }
 
-fun <T : TokenType> FlowLogic<*>.addToDistributionList(tokens: List<AbstractToken<T>>) {
+@Suspendable
+fun FlowLogic<*>.sessionsForParties(parties: List<AbstractParty>): List<FlowSession> {
+    val wellKnownParties = parties.toWellKnownParties(serviceHub)
+    return wellKnownParties.map(::initiateFlow)
+}
+
+@Suspendable
+fun FlowLogic<*>.addToDistributionList(tokens: List<AbstractToken<TokenPointer<*>>>) {
     tokens.forEach { token ->
         val tokenType = token.tokenType
-        if (tokenType is TokenPointer<*>) {
-            addPartyToDistributionList(serviceHub, token.holder.toParty(serviceHub), tokenType.pointer.pointer)
-        }
+        addPartyToDistributionList(serviceHub, token.holder.toParty(serviceHub), tokenType.pointer.pointer)
     }
 }
 
-fun <T : TokenType> FlowLogic<*>.updateDistributionList(tokens: List<AbstractToken<T>>) {
+@Suspendable
+fun FlowLogic<*>.updateDistributionList(tokens: List<AbstractToken<TokenPointer<*>>>) {
     for (token in tokens) {
         val tokenType = token.tokenType
         val holderParty = serviceHub.identityService.requireKnownConfidentialIdentity(token.holder)
-        if (tokenType is TokenPointer<*>) {
-            subFlow(UpdateDistributionList.Initiator(tokenType, ourIdentity, holderParty))
-        }
+        subFlow(UpdateDistributionListRequestFlow(tokenType, ourIdentity, holderParty))
     }
 }
 
 // Extension function that has nicer error message than the default one from [IdentityService::requireWellKnownPartyFromAnonymous].
+@Suspendable
 fun IdentityService.requireKnownConfidentialIdentity(party: AbstractParty): Party {
     return wellKnownPartyFromAnonymous(party)
             ?: throw IllegalArgumentException("Called flow with anonymous party that node doesn't know about. " +

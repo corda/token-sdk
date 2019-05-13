@@ -1,22 +1,19 @@
-package com.r3.corda.sdk.token.workflow.selection
+package com.r3.corda.sdk.token.workflow.flows.internal.selection
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.sdk.token.contracts.commands.MoveTokenCommand
 import com.r3.corda.sdk.token.contracts.commands.RedeemTokenCommand
+import com.r3.corda.sdk.token.contracts.states.AbstractToken
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
-import com.r3.corda.sdk.token.contracts.types.IssuedTokenType
 import com.r3.corda.sdk.token.contracts.types.TokenType
+import com.r3.corda.sdk.token.contracts.utilities.heldBy
 import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.sumTokenStateAndRefs
-import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import com.r3.corda.sdk.token.workflow.types.PartyAndAmount
-import com.r3.corda.sdk.token.workflow.utilities.addNotaryWithCheck
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountCriteria
 import com.r3.corda.sdk.token.workflow.utilities.sortByStateRefAscending
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Amount.Companion.sumOrThrow
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.contracts.TransactionState
 import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.AbstractParty
 import net.corda.core.node.ServiceHub
@@ -28,7 +25,6 @@ import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.contextLogger
 import net.corda.core.utilities.millis
 import net.corda.core.utilities.toNonEmptySet
-import java.security.PublicKey
 import java.util.*
 
 /**
@@ -44,7 +40,12 @@ import java.util.*
  *
  * @param services for performing vault queries.
  */
-class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, private val retrySleep: Int = 100, private val retryCap: Int = 2000) {
+class TokenSelection(
+        val services: ServiceHub,
+        private val maxRetries: Int = 8,
+        private val retrySleep: Int = 100,
+        private val retryCap: Int = 2000
+) {
 
     companion object {
         val logger = contextLogger()
@@ -58,7 +59,7 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
             sorter: Sort,
             stateAndRefs: MutableList<StateAndRef<FungibleToken<T>>>
     ): Boolean {
-        // Didn't need to select any tokens.
+        // Didn't need to select any tokensToIssue.
         if (requiredAmount.quantity == 0L) {
             return false
         }
@@ -85,15 +86,15 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
         }
 
         val claimedAmountWithToken = Amount(claimedAmount, requiredAmount.token)
-        // No tokens available.
+        // No tokensToIssue available.
         if (stateAndRefs.isEmpty()) return false
-        // There were not enough tokens available.
+        // There were not enough tokensToIssue available.
         if (claimedAmountWithToken < requiredAmount) {
             logger.trace("TokenType selection requested $requiredAmount but retrieved $claimedAmountWithToken with state refs: ${stateAndRefs.map { it.ref }}")
             return false
         }
 
-        // We picked enough tokens, so softlock and go.
+        // We picked enough tokensToIssue, so softlock and go.
         logger.trace("TokenType selection for $requiredAmount retrieved ${stateAndRefs.count()} states totalling $claimedAmountWithToken: $stateAndRefs")
         services.vaultService.softLockReserve(lockId, stateAndRefs.map { it.ref }.toNonEmptySet())
         return true
@@ -138,25 +139,7 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
     }
 
     /**
-     * Generate move of certain amount of [FungibleToken] T to the [recipient]. This function mutates [builder] provided as parameter.
-     * If [changeOwner] is provided, then the change outputs (if present) will be returned back to this identity. If not,
-     * then fresh confidential identity for the caller will be created.
-     *
-     * @return [TransactionBuilder] and list of all owner keys used in the input states that are going to be moved.
-     */
-    @Suspendable
-    fun <T : TokenType> generateMove(
-            builder: TransactionBuilder,
-            amount: Amount<T>,
-            recipient: AbstractParty,
-            queryCriteria: QueryCriteria? = null,
-            changeOwner: AbstractParty? = null
-    ): Pair<TransactionBuilder, List<PublicKey>> {
-        return generateMove(builder, listOf(PartyAndAmount(recipient, amount)), queryCriteria, changeOwner)
-    }
-
-    /**
-     * Generate move of [FungibleToken] T to parties specified in [PartyAndAmount]. Each party will receive amount defined
+     * Generate move of [FungibleToken] T to tokenHolders specified in [PartyAndAmount]. Each party will receive amount defined
      * by [partyAndAmounts]. If query criteria is not specified then only owned token amounts are used. Use [QueryUtilities.tokenAmountWithIssuerCriteria]
      * to specify issuer. This function mutates [builder] provided as parameter.
      * If [changeOwner] is provided, then the change outputs (if present) will be returned back to this identity. If not,
@@ -166,19 +149,19 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
      */
     @Suspendable
     fun <T : TokenType> generateMove(
-            builder: TransactionBuilder,
+            lockId: UUID,
             partyAndAmounts: List<PartyAndAmount<T>>,
             queryCriteria: QueryCriteria? = null,
             changeOwner: AbstractParty? = null
-    ): Pair<TransactionBuilder, List<PublicKey>> {
-        // Grab some tokens from the vault and soft-lock.
+    ): Pair<List<StateAndRef<AbstractToken<T>>>, List<AbstractToken<T>>> {
+        // Grab some tokensToIssue from the vault and soft-lock.
         // Only supports moves of the same token instance currently.
         // TODO Support spends for different token types, different instances of the same type.
         // The way to do this will be to perform a query for each token type. If there are multiple token types then
         // just do all the below however many times is necessary.
         val totalRequired = partyAndAmounts.map { it.amount }.sumOrThrow()
         val additionalCriteria = queryCriteria ?: ownedTokenAmountCriteria(totalRequired.token)
-        val acceptableStates = attemptSpend(totalRequired, builder.lockId, additionalCriteria)
+        val acceptableStates = attemptSpend(totalRequired, lockId, additionalCriteria)
         require(acceptableStates.isNotEmpty()) {
             "No states matching given criteria to generate move."
         }
@@ -197,22 +180,21 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
             changeOwner
         }
 
-        // Set the transaction notary. Currently, the assumption is that all states are on the same notary.
-        // TODO Generalise this to deal with multiple notaries in the future.
-        val notary = acceptableStates.map { it.state.notary }.toSet().single()
-        addNotaryWithCheck(builder, notary)
-
         // Now calculate the output states. This is complicated by the fact that a single payment may require
         // multiple output states, due to the need to keep states separated by issuer. We start by figuring out
         // how much we've gathered for each issuer: this map will keep track of how much we've used from each
         // as we work our way through the payments.
-        val tokensGroupedByIssuer: Map<IssuedTokenType<T>, List<StateAndRef<FungibleToken<T>>>> = acceptableStates.groupBy { it.state.data.amount.token }
+        val tokensGroupedByIssuer = acceptableStates.groupBy { it.state.data.amount.token }
         val remainingTokensFromEachIssuer = tokensGroupedByIssuer.mapValues { (_, value) ->
             value.map { (state) -> state.data.amount }.sumOrThrow()
         }.toList().toMutableList()
 
+        // Get the input state notary.
+        // TODO: This assumes there is only ever ONE notary. In the future we need to deal with notary change.
+        val notary = acceptableStates.map { it.state.notary }.toSet().single()
+
         // Calculate the list of output states making sure that the
-        val outputStates = mutableListOf<TransactionState<FungibleToken<T>>>()
+        val outputStates = mutableListOf<FungibleToken<T>>()
         for ((party, paymentAmount) in partyAndAmounts) {
             var remainingToPay = paymentAmount.quantity
             while (remainingToPay > 0) {
@@ -221,20 +203,20 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
                 when {
                     delta > 0 -> {
                         // The states from the current issuer more than covers this payment.
-                        outputStates += FungibleToken(Amount(remainingToPay, token), party) withNotary notary
+                        outputStates += FungibleToken(Amount(remainingToPay, token), party)
                         remainingTokensFromEachIssuer[remainingTokensFromEachIssuer.lastIndex] = Pair(token, Amount(delta, token))
                         remainingToPay = 0
                     }
                     delta == 0L -> {
                         // The states from the current issuer exactly covers this payment.
-                        outputStates += FungibleToken(Amount(remainingToPay, token), party) withNotary notary
+                        outputStates += FungibleToken(Amount(remainingToPay, token), party)
                         remainingTokensFromEachIssuer.removeAt(remainingTokensFromEachIssuer.lastIndex)
                         remainingToPay = 0
                     }
                     delta < 0 -> {
                         // The states from the current issuer don't cover this payment, so we'll have to use >1 output
                         // state to cover this payment.
-                        outputStates += FungibleToken(remainingFromCurrentIssuer, party) withNotary notary
+                        outputStates += FungibleToken(remainingFromCurrentIssuer, party)
                         remainingTokensFromEachIssuer.removeAt(remainingTokensFromEachIssuer.lastIndex)
                         remainingToPay -= remainingFromCurrentIssuer.quantity
                     }
@@ -244,22 +226,10 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
 
         // Generate the change states.
         remainingTokensFromEachIssuer.forEach { (_, amount) ->
-            outputStates += FungibleToken(amount, changeParty) withNotary notary
+            outputStates += FungibleToken(amount, changeParty)
         }
 
-        // Create a move command for each group.
-        tokensGroupedByIssuer.map { (key, value) ->
-            val keys = value.map { it.state.data.holder.owningKey }
-            builder.addCommand(MoveTokenCommand(key), keys)
-        }
-
-        for (state in acceptableStates) builder.addInputState(state)
-        for (state in outputStates) builder.addOutputState(state)
-
-        // What if we already have a move command with the right keys? Filter it out here or in platform code?
-
-        val allKeysUsed = acceptableStates.map { it.state.data.holder.owningKey }
-        return Pair(builder, allKeysUsed)
+        return Pair(acceptableStates, outputStates)
     }
 
     // Modifies builder in place. All checks for exit states should have been done before.
@@ -284,16 +254,20 @@ class TokenSelection(val services: ServiceHub, private val maxRetries: Int = 8, 
         }
     }
 
-    private fun <T : TokenType> change(exitStates: List<StateAndRef<FungibleToken<T>>>, amount: Amount<T>, changeOwner: AbstractParty): FungibleToken<T>? {
+    private fun <T : TokenType> change(
+            exitStates: List<StateAndRef<FungibleToken<T>>>,
+            amount: Amount<T>,
+            changeOwner: AbstractParty
+    ): FungibleToken<T>? {
         val assetsSum = exitStates.sumTokenStateAndRefs()
         val difference = assetsSum - amount.issuedBy(exitStates.first().state.data.amount.token.issuer)
         check(difference.quantity >= 0) {
-            "Sum of exit states should be qual or greater than the amount to exit."
+            "Sum of exit states should be equal or greater than the amount to exit."
         }
         return if (difference.quantity == 0L) {
             null
         } else {
-            FungibleToken(difference, changeOwner)
+            difference heldBy changeOwner
         }
     }
 }

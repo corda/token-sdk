@@ -3,68 +3,48 @@ package com.r3.corda.sdk.token.workflow.flows.confidential
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.AbstractToken
 import com.r3.corda.sdk.token.contracts.types.TokenType
-import com.r3.corda.sdk.token.workflow.utilities.sessionsForParicipants
-import net.corda.core.contracts.ContractState
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AbstractParty
-import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
-import net.corda.core.serialization.CordaSerializable
-import net.corda.core.utilities.unwrap
 
-@CordaSerializable
-enum class ActionRequest { NOTHING, ISSUE_NEW_KEY }
 
+/**
+ * This flow extracts the holders from a list of tokensToIssue to be issued on ledger, then requests each of the holders
+ * generate a new key pair for holding the newly issued asset. The new key pair effectively anonymises them. The
+ * newly generated public keys replace the old, well known, keys.
+ *
+ * The flow notifies prospective token holders that they must generate a new key pair to confidentially hold some
+ * newly issued tokensToIssue. As this is an in-line sub-flow, we must pass it a list of participantSessions, which _may_ contain participantSessions
+ * for observers. As such, we can't assume that all tokenHolders we have participantSessions for will need to generate a new key
+ * pair, so only the session tokenHolders which are also token holders are sent an [ActionRequest.CREATE_NEW_KEY] and
+ * everyone else is sent [ActionRequest.DO_NOTHING].
+ *
+ * This is an in-line flow and use of it should be paired with [ConfidentialTokensFlowHandler].
+ *
+ * @property tokenHolders a list of [AbstractParty]s which will hold tokensToIssue.
+ * @property sessions a list of participantSessions which may contain participantSessions for observers.
+ */
 class ConfidentialTokensFlow<T : TokenType>(
         val tokens: List<AbstractToken<T>>,
-        val sessions: Set<FlowSession>
+        val sessions: List<FlowSession>
 ) : FlowLogic<List<AbstractToken<T>>>() {
     @Suspendable
     override fun call(): List<AbstractToken<T>> {
-        val tokenHolders = tokens.flatMap(ContractState::participants).toSet()
-        val anonymousParties = subFlow(AnonymisePartiesFlow(tokenHolders, sessions))
+        // Some holders might be anonymous already. E.g. if some token selection has been performed and a confidential
+        // change address was requested.
+        val tokensWithWellKnownHolders = tokens.filter { it.holder is Party }
+        val tokensWithAnonymousHolders = tokens - tokensWithWellKnownHolders
+        val wellKnownTokenHolders = tokensWithWellKnownHolders.map(AbstractToken<T>::holder)
+        val anonymousParties = subFlow(AnonymisePartiesFlow(wellKnownTokenHolders, sessions))
         // Replace Party with AnonymousParty.
-        val confidentialTokens = tokens.map { token ->
+        return tokensWithWellKnownHolders.map { token ->
             val holder = token.holder
             val anonymousParty = anonymousParties[holder]
                     ?: throw IllegalStateException("Missing anonymous party for $holder.")
             token.withNewHolder(anonymousParty)
-        }
-        return confidentialTokens
+        } + tokensWithAnonymousHolders
     }
 }
 
-// These make sense to be called as subflows only
-class AnonymisePartiesFlow(
-        val parties: Set<AbstractParty>,
-        val sessions: Set<FlowSession>
-) : FlowLogic<Map<Party, AnonymousParty>>() {
-    @Suspendable
-    override fun call(): Map<Party, AnonymousParty> {
-        // Notify parties of confidential issuance.
-        // Obtain a confidential identity from each holder.
-        val anonymousParties = sessions.mapNotNull { session ->
-            val counterparty = session.counterparty
-            if (counterparty in parties) {
-                session.send(ActionRequest.ISSUE_NEW_KEY)
-                val partyAndCertificate = subFlow(RequestConfidentialIdentityFlow(session))
-                Pair(counterparty, partyAndCertificate.party.anonymise())
-            } else {
-                session.send(ActionRequest.NOTHING)
-                null
-            }
-        }.toMap()
-        return anonymousParties
-    }
-}
 
-class AnonymisePartiesFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
-    @Suspendable
-    override fun call() {
-        val action = otherSession.receive<ActionRequest>().unwrap { it }
-        if (action == ActionRequest.ISSUE_NEW_KEY) {
-            subFlow(RequestConfidentialIdentityFlowHandler(otherSession))
-        }
-    }
-}

@@ -59,13 +59,13 @@ fun getDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, pa
     }
 }
 
-/** Utilities for getting tokens from the vault and performing miscellaneous queries. */
+/** Utilities for getting tokensToIssue from the vault and performing miscellaneous queries. */
 
-// TODO: Add queries for getting the balance of all tokens, not just relevant ones.
+// TODO: Add queries for getting the balance of all tokensToIssue, not just relevant ones.
 // TODO: Allow discrimination by issuer or a set of issuers.
 
 // Returns all owned token amounts of a specified token with given issuer.
-// We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
+// We need to discriminate on the token type as well as the symbol as different tokensToIssue might use the same symbols.
 fun <T: TokenType> tokenAmountWithIssuerCriteria(token: T, issuer: Party): QueryCriteria {
     val issuerCriteria = QueryCriteria.VaultCustomQueryCriteria(builder {
         PersistentFungibleToken::issuer.equal(issuer)
@@ -74,7 +74,7 @@ fun <T: TokenType> tokenAmountWithIssuerCriteria(token: T, issuer: Party): Query
 }
 
 // Returns all owned token amounts of a specified token.
-// We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
+// We need to discriminate on the token type as well as the symbol as different tokensToIssue might use the same symbols.
 // TODO should be called token amount criteria (there is no owner selection)
 fun <T : TokenType> ownedTokenAmountCriteria(token: T): QueryCriteria {
     val tokenClass = builder {
@@ -107,7 +107,7 @@ fun <T : TokenType> ownedTokenCriteria(token: T): QueryCriteria {
     return tokenClassCriteria.and(tokenIdentifierCriteria)
 }
 
-// For summing tokens of a specified type.
+// For summing tokensToIssue of a specified type.
 // NOTE: Issuer is ignored with this query criteria.
 // NOTE: It only returns relevant states.
 fun sumTokenCriteria(): QueryCriteria {
@@ -137,7 +137,7 @@ fun <T : TokenType> VaultService.ownedTokenAmountsByToken(token: T): Vault.Page<
     return queryBy(ownedTokenAmountCriteria(token))
 }
 
-// Get all owned tokens for a specific token, ignoring the issuer.
+// Get all owned tokensToIssue for a specific token, ignoring the issuer.
 fun <T : TokenType> VaultService.ownedTokensByToken(token: T): Vault.Page<NonFungibleToken<T>> {
     return queryBy(ownedTokenCriteria(token))
 }

@@ -1,14 +1,14 @@
-package com.r3.corda.sdk.token.workflow.flows
+package com.r3.corda.sdk.token.workflow.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.AbstractToken
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
 import com.r3.corda.sdk.token.contracts.types.TokenType
-import com.r3.corda.sdk.token.workflow.flows.confidential.RequestConfidentialIdentityFlow
-import com.r3.corda.sdk.token.workflow.flows.confidential.RequestConfidentialIdentityFlowHandler
-import com.r3.corda.sdk.token.workflow.selection.TokenSelection
-import com.r3.corda.sdk.token.workflow.selection.generateExitNonFungible
+import com.r3.corda.sdk.token.workflow.flows.internal.confidential.RequestConfidentialIdentityFlow
+import com.r3.corda.sdk.token.workflow.flows.internal.confidential.RequestConfidentialIdentityFlowHandler
+import com.r3.corda.sdk.token.workflow.flows.internal.selection.TokenSelection
+import com.r3.corda.sdk.token.workflow.flows.internal.selection.generateExitNonFungible
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokensByTokenIssuer
 import com.r3.corda.sdk.token.workflow.utilities.tokenAmountWithIssuerCriteria
 import net.corda.confidential.IdentitySyncFlow
@@ -40,7 +40,7 @@ object RedeemToken {
             val anonymous: Boolean = true
     ) : FlowLogic<SignedTransaction>() {
         companion object {
-            object REDEEM_NOTIFICATION : ProgressTracker.Step("Sending redeem notification to parties.")
+            object REDEEM_NOTIFICATION : ProgressTracker.Step("Sending redeem notification to tokenHolders.")
             object CONF_ID : ProgressTracker.Step("Requesting confidential identity.")
             object SELECTING_STATES : ProgressTracker.Step("Selecting states to redeem.")
             object SEND_STATE_REF : ProgressTracker.Step("Sending states to the issuer for redeeming.")
@@ -58,14 +58,14 @@ object RedeemToken {
             val issuerSession = initiateFlow(issuer)
 
             progressTracker.currentStep = REDEEM_NOTIFICATION
-            // Notify the recipient that we'll be sending them tokens for redeeming and advise them of anything they must do, e.g.
+            // Notify the recipient that we'll be sending them tokensToIssue for redeeming and advise them of anything they must do, e.g.
             // request a confidential identity.
             issuerSession.send(TokenRedeemNotification(anonymous = anonymous, amount = amount))
 
             // Generate and send over a new confidential identity, if necessary.
             if (anonymous) {
                 progressTracker.currentStep = CONF_ID
-                subFlow(RequestConfidentialIdentity.Responder(issuerSession))
+                subFlow(RequestConfidentialIdentityFlowHandler(issuerSession))
             }
 
             progressTracker.currentStep = SELECTING_STATES
@@ -118,7 +118,7 @@ object RedeemToken {
 
             // Request confidential identity, if necessary.
             val otherIdentity = if (redeemNotification.anonymous) {
-                subFlow(RequestConfidentialIdentity.Initiator(otherSession)).party.anonymise()
+                subFlow(RequestConfidentialIdentityFlow(otherSession)).party.anonymise()
             } else otherSession.counterparty
 
             val stateAndRefsToRedeem = subFlow(ReceiveStateAndRefFlow<AbstractToken<T>>(otherSession))
