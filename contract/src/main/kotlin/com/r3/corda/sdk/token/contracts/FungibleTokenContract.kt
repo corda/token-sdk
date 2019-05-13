@@ -86,7 +86,7 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
         }
         val hasZeroAmounts = outputs.any { it.amount == Amount.zero(issuedToken) }
         require(hasZeroAmounts.not()) { "You cannot create output token amounts with a ZERO amount." }
-        // There can be different owners in each move group. There map be one command for each of the signers publickey
+        // There can be different owners in each move group. There may be one command for each of the signers publickey
         // or all the public keys might be listed within one command.
         val inputOwningKeys: Set<PublicKey> = inputs.map { it.holder.owningKey }.toSet()
         val signers: Set<PublicKey> = moveCommands.flatMap(CommandWithParties<TokenCommand<T>>::signers).toSet()
