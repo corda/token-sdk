@@ -59,7 +59,6 @@ internal infix fun <T : EvolvableTokenType> T._withNotary(notary: Party): Transa
  * Converts [holder] into a more friendly string. It uses only the x500 organisation for [Party] objects and
  * shortens the public key for [AnonymousParty]s to the first 16 characters.
  * */
-val AbstractToken<*>.holderString
-    get() = {
+val AbstractToken<*>.holderString: String
+    get() =
         (holder as? Party)?.name?.organisation ?: holder.owningKey.toStringShort().substring(0, 16)
-    }
