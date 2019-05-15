@@ -2,6 +2,7 @@ package com.r3.corda.sdk.token.workflow
 
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
+import net.corda.core.transactions.SignedTransaction
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
@@ -68,4 +69,13 @@ abstract class JITMockNetworkTests(val names: List<CordaX500Name> = emptyList())
 
     protected val notaryIdentity: Party get() = notary.legalIdentity()
 
+    /**
+     * Smart helper for [assertHasTransaction] that passes in the test suite's network.
+     */
+    protected fun assertHasTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode) = assertHasTransaction(tx, network, *nodes)
+
+    /**
+     * Smart helper for [assertNotHasTransaction] that passes in the test suite's network.
+     */
+    protected fun assertNotHasTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode) = assertNotHasTransaction(tx, network, *nodes)
 }
