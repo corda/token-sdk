@@ -3,14 +3,8 @@ package com.r3.corda.sdk.token.workflow
 import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
 import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.workflow.states.DiamondGradingReport
-import net.corda.core.contracts.LinearState
-import net.corda.core.contracts.StateAndRef
-import net.corda.core.node.services.Vault
-import net.corda.core.node.services.queryBy
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
-import org.junit.Ignore
 import org.junit.Test
 import java.time.Duration
 import kotlin.test.assertEquals
@@ -47,7 +41,7 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
         val publishDiamondTx = gic.createEvolvableToken(diamond, notary.legalIdentity()).getOrThrow()
         val publishedDiamond = publishDiamondTx.singleOutput<DiamondGradingReport>()
         assertEquals(diamond, publishedDiamond.state.data, "Original diamond did not match the published diamond.")
-        denise.watchForTransaction(publishDiamondTx).getOrThrow(Duration.ofSeconds(5))
+        assertHasTransaction(publishDiamondTx, gic, denise)
 
         // STEP 02: Denise creates ownership token
         // Denise issues the token to Alice
@@ -57,36 +51,36 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
                 issueTo = alice,
                 notary = notary,
                 anonymous = true
-        ).getOrThrow()
+        ).getOrThrow(Duration.ofSeconds(5))
         // GIC should *not* receive a copy of this issuance
-        assertRecordsTransaction(issueTokenTx, alice)
-        assertNotRecordsTransaction(issueTokenTx, gic)
+        assertHasTransaction(issueTokenTx, alice)
+        assertNotHasTransaction(issueTokenTx, gic)
 
         // STEP 03: Alice transfers ownership to Bob
         // Continuing the chain of sale
         val moveTokenToBobTx = alice.moveTokens(diamondPointer, bob, anonymous = true).getOrThrow(Duration.ofSeconds(5))
-        assertRecordsTransaction(moveTokenToBobTx, alice, bob)
-        assertNotRecordsTransaction(moveTokenToBobTx, gic, denise)
+        assertHasTransaction(moveTokenToBobTx, alice, bob)
+        assertNotHasTransaction(moveTokenToBobTx, gic, denise)
 
         // STEP 04: Bob transfers ownership to Charlie
         // Continuing the chain of sale
         val moveTokenToCharlieTx = bob.moveTokens(diamondPointer, charlie, anonymous = true).getOrThrow(Duration.ofSeconds(5))
-        assertRecordsTransaction(moveTokenToCharlieTx, bob, charlie)
-        assertNotRecordsTransaction(moveTokenToCharlieTx, gic, denise, alice)
+        assertHasTransaction(moveTokenToCharlieTx, bob, charlie)
+        assertNotHasTransaction(moveTokenToCharlieTx, gic, denise, alice)
 
         // STEP 05: GIC amends (updates) the grading report
         // This should be reflected to the report participants
         val updatedDiamond = publishedDiamond.state.data.copy(color = DiamondGradingReport.ColorScale.B)
         val updateDiamondTx = gic.updateEvolvableToken(publishedDiamond, updatedDiamond).getOrThrow(Duration.ofSeconds(5))
-        assertRecordsTransaction(updateDiamondTx, gic, denise, bob, charlie)
-        assertNotRecordsTransaction(updateDiamondTx, alice)
+        assertHasTransaction(updateDiamondTx, gic, denise, bob, charlie)
+        assertNotHasTransaction(updateDiamondTx, alice)
 
         // STEP 06: Charlie redeems the token with Denise
         // This should exit the holdable token
         val charlieDiamond = moveTokenToCharlieTx.tx.outputsOfType<NonFungibleToken<TokenPointer<DiamondGradingReport>>>().first()
         val redeemDiamondTx = charlie.redeemTokens(charlieDiamond.token.tokenType, denise).getOrThrow(Duration.ofSeconds(5))
-        assertRecordsTransaction(redeemDiamondTx, charlie, denise)
-        assertNotRecordsTransaction(redeemDiamondTx, gic, alice, bob)
+        assertHasTransaction(redeemDiamondTx, charlie, denise)
+        assertNotHasTransaction(redeemDiamondTx, gic, alice, bob)
 
         // FINAL POSITIONS
 
@@ -111,11 +105,11 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      *
      * 1. GIC creates (publishes) 3 diamond grading reports
      */
-    @Test
-    @Ignore
-    fun `create multiple grading reports`() {
-
-    }
+    //    @Test
+    //    @Ignore
+    //    fun `create multiple grading reports`() {
+    //
+    //    }
 
     /**
      * This scenario creates a multiple evolvable token types in a single transaction, and then issues multiple holding
@@ -124,11 +118,11 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      * 1. GIC creates (publishes) 3 diamond grading reports
      * 2. Denise (the diamond dealer) issues 2 holdable tokens to self (perhaps as inventory)
      */
-    @Test
-    @Ignore
-    fun `issue multiple grading report tokens`() {
-
-    }
+    //    @Test
+    //    @Ignore
+    //    fun `issue multiple grading report tokens`() {
+    //
+    //    }
 
     /**
      * This scenario creates a new evolvable token type and issues holdable tokens to self.
@@ -136,11 +130,11 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      * 1. GIC creates (publishes) the diamond grading report
      * 2. Denise (the diamond dealer) issues a holdable, discrete (non-fungible) token to herself (perhaps as inventory)
      */
-    @Test
-    @Ignore
-    fun `issue a grading report token to self`() {
-
-    }
+    //    @Test
+    //    @Ignore
+    //    fun `issue a grading report token to self`() {
+    //
+    //    }
 
     /**
      * This scenario creates a new evolvable token type, moves it around, and then issues an update. In this case, only
@@ -151,11 +145,11 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      * 3. Alice transfers the discrete token to Bob
      * 4. GIC updates (amends) the grading report
      */
-    @Test
-    @Ignore
-    fun `update a grading report and inform token holders`() {
-
-    }
+    //    @Test
+    //    @Ignore
+    //    fun `update a grading report and inform token holders`() {
+    //
+    //    }
 
     /**
      * This scenario tests that the token issuer cannot issue two holdable tokens. In practice, this may be challenging
@@ -165,15 +159,15 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      * 2. Denise (the diamond dealer) issues a holdable, discrete (non-fungible) token to Alice
      * 3. Denise then issues a new holdable, discrete (non-fungible) token to Bob
      */
-    @Test
-    @Ignore
-    fun `denise cannot issue multiple ownership tokens`() {
-        // STEP 01: GIC publishes the certificate
-
-        // STEP 02: Denise issues an ownership token
-
-        // STEP 03: Denise issues another ownership token
-    }
+    //    @Test
+    //    @Ignore
+    //    fun `denise cannot issue multiple ownership tokens`() {
+    //        // STEP 01: GIC publishes the certificate
+    //
+    //        // STEP 02: Denise issues an ownership token
+    //
+    //        // STEP 03: Denise issues another ownership token
+    //    }
 
     /**
      * This scenario tests that a token holder should not (really) issue a new holdable token. However, in practice this
@@ -183,16 +177,16 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      * 2. Denise (the diamond dealer) issues a holdable, discrete (non-fungible) token to Alice
      * 3. Alice then issues a new holdable, discrete (non-fungible) token to Bob
      */
-    @Test
-    @Ignore
-    fun `alice cannot issue a new ownership token`() {
-        // STEP 01: GIC publishes the certificate
-
-        // STEP 02: Denise issues an ownership token
-
-        // STEP 03: Denise transfers ownership to Alice
-
-        // STEP 04: Alice issues another ownership token
-    }
+    //    @Test
+    //    @Ignore
+    //    fun `alice cannot issue a new ownership token`() {
+    //        // STEP 01: GIC publishes the certificate
+    //
+    //        // STEP 02: Denise issues an ownership token
+    //
+    //        // STEP 03: Denise transfers ownership to Alice
+    //
+    //        // STEP 04: Alice issues another ownership token
+    //    }
 
 }

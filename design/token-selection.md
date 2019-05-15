@@ -14,7 +14,7 @@ We are proposing a change to the tokens SDK which will;
 
 ## Background
 
-The key motivation driving these changes are customer requirements (SDX).
+The key motivation driving these changes are customer requirements.
 In highly threaded workloads, the existing database backed implementation
 is a bottleneck, and can lead to token exhaustion, where all tokens are
 locked by flows which are not making progress.

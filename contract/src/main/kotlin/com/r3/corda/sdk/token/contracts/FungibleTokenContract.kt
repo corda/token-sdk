@@ -69,7 +69,8 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
             inputs: List<FungibleToken<T>>,
             outputs: List<FungibleToken<T>>
     ) {
-        val issuedToken: IssuedTokenType<T> = moveCommands.single().value.token
+        // Commands are grouped by Token Type, so we just need a token reference.
+        val issuedToken: IssuedTokenType<T> = moveCommands.first().value.token
         // There must be inputs and outputs present.
         require(inputs.isNotEmpty()) { "When moving tokens, there must be input states present." }
         require(outputs.isNotEmpty()) { "When moving tokens, there must be output states present." }
@@ -85,7 +86,7 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
         }
         val hasZeroAmounts = outputs.any { it.amount == Amount.zero(issuedToken) }
         require(hasZeroAmounts.not()) { "You cannot create output token amounts with a ZERO amount." }
-        // There can be different owners in each move group. There map be one command for each of the signers publickey
+        // There can be different owners in each move group. There may be one command for each of the signers publickey
         // or all the public keys might be listed within one command.
         val inputOwningKeys: Set<PublicKey> = inputs.map { it.holder.owningKey }.toSet()
         val signers: Set<PublicKey> = moveCommands.flatMap(CommandWithParties<TokenCommand<T>>::signers).toSet()
