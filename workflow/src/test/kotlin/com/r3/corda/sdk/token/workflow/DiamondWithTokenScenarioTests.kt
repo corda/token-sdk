@@ -105,11 +105,11 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      *
      * 1. GIC creates (publishes) 3 diamond grading reports
      */
-    @Test
-    @Ignore
-    fun `create multiple grading reports`() {
-
-    }
+    //    @Test
+    //    @Ignore
+    //    fun `create multiple grading reports`() {
+    //
+    //    }
 
     /**
      * This scenario creates a multiple evolvable token types in a single transaction, and then issues multiple holding
@@ -118,11 +118,11 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      * 1. GIC creates (publishes) 3 diamond grading reports
      * 2. Denise (the diamond dealer) issues 2 holdable tokens to self (perhaps as inventory)
      */
-    @Test
-    @Ignore
-    fun `issue multiple grading report tokens`() {
-
-    }
+    //    @Test
+    //    @Ignore
+    //    fun `issue multiple grading report tokens`() {
+    //
+    //    }
 
     /**
      * This scenario creates a new evolvable token type and issues holdable tokens to self.
@@ -130,11 +130,11 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      * 1. GIC creates (publishes) the diamond grading report
      * 2. Denise (the diamond dealer) issues a holdable, discrete (non-fungible) token to herself (perhaps as inventory)
      */
-    @Test
-    @Ignore
-    fun `issue a grading report token to self`() {
-
-    }
+    //    @Test
+    //    @Ignore
+    //    fun `issue a grading report token to self`() {
+    //
+    //    }
 
     /**
      * This scenario creates a new evolvable token type, moves it around, and then issues an update. In this case, only
@@ -145,11 +145,11 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      * 3. Alice transfers the discrete token to Bob
      * 4. GIC updates (amends) the grading report
      */
-    @Test
-    @Ignore
-    fun `update a grading report and inform token holders`() {
-
-    }
+    //    @Test
+    //    @Ignore
+    //    fun `update a grading report and inform token holders`() {
+    //
+    //    }
 
     /**
      * This scenario tests that the token issuer cannot issue two holdable tokens. In practice, this may be challenging
@@ -159,15 +159,15 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      * 2. Denise (the diamond dealer) issues a holdable, discrete (non-fungible) token to Alice
      * 3. Denise then issues a new holdable, discrete (non-fungible) token to Bob
      */
-    @Test
-    @Ignore
-    fun `denise cannot issue multiple ownership tokens`() {
-        // STEP 01: GIC publishes the certificate
-
-        // STEP 02: Denise issues an ownership token
-
-        // STEP 03: Denise issues another ownership token
-    }
+    //    @Test
+    //    @Ignore
+    //    fun `denise cannot issue multiple ownership tokens`() {
+    //        // STEP 01: GIC publishes the certificate
+    //
+    //        // STEP 02: Denise issues an ownership token
+    //
+    //        // STEP 03: Denise issues another ownership token
+    //    }
 
     /**
      * This scenario tests that a token holder should not (really) issue a new holdable token. However, in practice this
@@ -177,16 +177,16 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      * 2. Denise (the diamond dealer) issues a holdable, discrete (non-fungible) token to Alice
      * 3. Alice then issues a new holdable, discrete (non-fungible) token to Bob
      */
-    @Test
-    @Ignore
-    fun `alice cannot issue a new ownership token`() {
-        // STEP 01: GIC publishes the certificate
-
-        // STEP 02: Denise issues an ownership token
-
-        // STEP 03: Denise transfers ownership to Alice
-
-        // STEP 04: Alice issues another ownership token
-    }
+    //    @Test
+    //    @Ignore
+    //    fun `alice cannot issue a new ownership token`() {
+    //        // STEP 01: GIC publishes the certificate
+    //
+    //        // STEP 02: Denise issues an ownership token
+    //
+    //        // STEP 03: Denise transfers ownership to Alice
+    //
+    //        // STEP 04: Alice issues another ownership token
+    //    }
 
 }
