@@ -45,7 +45,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(expectedSigningKeys, updateTx.tx.requiredSigningKeys, "Must be signed by all maintainers and the notary")
 
         // Only Alice should record the transaction
-        assertRecordsTransaction(updateTx, alice)
+        assertHasTransaction(updateTx, alice)
     }
 
     /**
@@ -72,7 +72,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(expectedSigningKeys, updateTx.requiredSigningKeys, "Must be signed by all maintainers and the notary")
 
         // Alice and Bob should record the transaction
-        assertRecordsTransaction(updateTx, alice, bob)
+        assertHasTransaction(updateTx, alice, bob)
     }
 
     /**
@@ -99,7 +99,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(expectedSigningKeys, updateTx.requiredSigningKeys, "Must be signed by all maintainers and the notary")
 
         // Alice and Charlie should record the transaction
-        assertRecordsTransaction(updateTx, alice, charlie)
+        assertHasTransaction(updateTx, alice, charlie)
     }
 
     /**
@@ -126,7 +126,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(expectedSigningKeys, updateTx.requiredSigningKeys, "Must be signed by all maintainers and the notary")
 
         // Alice, Charlie, and Denise should record the transaction
-        assertRecordsTransaction(updateTx, alice, charlie, denise)
+        assertHasTransaction(updateTx, alice, charlie, denise)
     }
 
     /**
@@ -153,7 +153,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(expectedSigningKeys, updateTx.requiredSigningKeys, "Must be signed by all maintainers and the notary")
 
         // Alice, Bob, and Charlie should record the transaction
-        assertRecordsTransaction(updateTx, alice, bob, charlie)
+        assertHasTransaction(updateTx, alice, bob, charlie)
     }
 
     /**
@@ -180,7 +180,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(expectedSigningKeys, updateTx.requiredSigningKeys, "Must be signed by all maintainers and the notary")
 
         // Alice, Bob, Charlie, and Denise should record the transaction
-        assertRecordsTransaction(updateTx, alice, bob, charlie, denise)
+        assertHasTransaction(updateTx, alice, bob, charlie, denise)
     }
 
     /**
@@ -226,7 +226,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(expectedSigningKeys, updateTx.requiredSigningKeys, "Must be signed by all maintainers and the notary")
 
         // Alice, Bob, Charlie, and Denise should record the transaction
-        assertRecordsTransaction(updateTx, alice, bob)
+        assertHasTransaction(updateTx, alice, bob)
     }
 
     /**
@@ -253,7 +253,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(expectedSigningKeys, updateTx.requiredSigningKeys, "Must be signed by all maintainers and the notary")
 
         // Alice, Bob, Charlie, and Denise should record the transaction
-        assertRecordsTransaction(updateTx, alice, bob)
+        assertHasTransaction(updateTx, alice, bob)
     }
 
     /**
@@ -280,7 +280,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(expectedSigningKeys, updateTx.requiredSigningKeys, "Must be signed by all maintainers and the notary")
 
         // Alice and Charlie should record the transaction
-        assertRecordsTransaction(updateTx, alice, charlie)
+        assertHasTransaction(updateTx, alice, charlie)
     }
 
     /**
@@ -307,7 +307,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(expectedSigningKeys, updateTx.requiredSigningKeys, "Must be signed by all maintainers and the notary")
 
         // Alice and Charlie should record the transaction
-        assertRecordsTransaction(updateTx, alice, charlie)
+        assertHasTransaction(updateTx, alice, charlie)
     }
 
     /**
@@ -334,7 +334,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(expectedSigningKeys, updateTx.requiredSigningKeys, "Must be signed by all maintainers and the notary")
 
         // Alice, Bob, Charlie, and Denise should record the transaction
-        assertRecordsTransaction(updateTx, alice, denise)
+        assertHasTransaction(updateTx, alice, denise)
     }
 
 

@@ -35,6 +35,8 @@ class FungibleTokenTests {
         val ISSUER = TestIdentity(CordaX500Name("ISSUER", "London", "GB"))
         val ALICE = TestIdentity(CordaX500Name("ALICE", "London", "GB"))
         val BOB = TestIdentity(CordaX500Name("BOB", "London", "GB"))
+        val PETER = TestIdentity(CordaX500Name("PETER", "London", "GB"))
+        val PAUL = TestIdentity(CordaX500Name("PAUL", "London", "GB"))
     }
 
     @Rule
@@ -47,6 +49,8 @@ class FungibleTokenTests {
             identityService = mock<IdentityServiceInternal>().also {
                 doReturn(ALICE.party).whenever(it).partyFromKey(ALICE.publicKey)
                 doReturn(BOB.party).whenever(it).partyFromKey(BOB.publicKey)
+                doReturn(PETER.party).whenever(it).partyFromKey(PETER.publicKey)
+                doReturn(PAUL.party).whenever(it).partyFromKey(PAUL.publicKey)
                 doReturn(ISSUER.party).whenever(it).partyFromKey(ISSUER.publicKey)
             },
             networkParameters = testNetworkParameters(
@@ -242,6 +246,16 @@ class FungibleTokenTests {
                 command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
                 // Command for the move.
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken))
+                verifies()
+            }
+
+            // Two moves (one group).
+            tweak {
+                // Add a basic move from Peter to Paul.
+                input(FungibleTokenContract.contractId, 20 of issuedToken heldBy PETER.party)
+                output(FungibleTokenContract.contractId, 20 of issuedToken heldBy PAUL.party)
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
+                command(PETER.publicKey, MoveTokenCommand(issuedToken))
                 verifies()
             }
 

@@ -40,7 +40,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
         // Only Alice should record the transaction
-        assertRecordsTransaction(createTx, alice)
+        assertHasTransaction(createTx, alice)
     }
 
     /**
@@ -62,7 +62,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
         // Alice and Bob should record the transaction
-        assertRecordsTransaction(createTx, alice, bob)
+        assertHasTransaction(createTx, alice, bob)
     }
 
     /**
@@ -84,7 +84,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
         // Alice and Charlie should record the transaction
-        assertRecordsTransaction(createTx, alice, charlie)
+        assertHasTransaction(createTx, alice, charlie)
     }
 
     /**
@@ -106,7 +106,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
         // Alice, Charlie, and Denise should record the transaction
-        assertRecordsTransaction(createTx, alice, charlie, denise)
+        assertHasTransaction(createTx, alice, charlie, denise)
     }
 
     /**
@@ -128,7 +128,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
         // Alice, Bob, and Charlie should record the transaction
-        assertRecordsTransaction(createTx, alice, bob, charlie)
+        assertHasTransaction(createTx, alice, bob, charlie)
     }
 
     /**
@@ -150,7 +150,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
 
         // Alice, Bob, Charlie, and Denise should record the transaction
-        assertRecordsTransaction(createTx, alice, bob, charlie, denise)
+        assertHasTransaction(createTx, alice, bob, charlie, denise)
     }
 
     /**

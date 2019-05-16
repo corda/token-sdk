@@ -9,19 +9,15 @@ We are proposing a change to the tokens SDK which will;
 * maintain locks on tokens, in-memory - but in a restart safe fashion. 
 * allow a user to group assets by an externalID (aka, accounts), and select across all tokens for a given externalID. 
 
-
-
-
 ## Background
 
-The key motivation driving these changes are customer requirements (SDX).
+The key motivation driving these changes are customer requirements.
 In highly threaded workloads, the existing database backed implementation
 is a bottleneck, and can lead to token exhaustion, where all tokens are
 locked by flows which are not making progress.
 We would like the design review board to review our proposed changes detailed
 in this document and also review a PoC which has been put together
 that implements the changes described in this document.
-
 
 ## Goals
 
@@ -52,7 +48,7 @@ fully resumed all existing flow checkpoints, a double spend error may occur.
 
 1. Tokens must be selectable by “owner”**, as Corda supports multiple owners on each node
 2. Tokens must be selectable by TokenType (FiatCurrency/DigitalAsset.. etc)
-3. Tokens must be selectable by TokenIdenitier (“GBP” / “BTC” .. etc)
+3. Tokens must be selectable by TokenIdentifier (“GBP” / “BTC” .. etc)
 4. Tokens must be lockable to prevent other flows from utilizing the same states
 5. Token selection speed must be improved from current performance. Especially for threaded workloads.
 6. Tokens must be selectable by issuer
@@ -60,7 +56,7 @@ fully resumed all existing flow checkpoints, a double spend error may occur.
 
 ## Design (V1)
 
-For the initial design, we will keep it simple and essentially have a map of maps. SoftLocking will be done by doing an atomic C-A-S on a boolean.
+For the initial design, we will keep it simple and essentially have a map of maps. SoftLocking will be done by doing an atomic C-A-S (compare-and-swap) on a boolean.
 
     private val cache: ConcurrentMap<TokenIndex, TokenBucket> = ConcurrentHashMap()
 
@@ -115,6 +111,16 @@ This allows the node to restart, and repopulate it’s locked token state withou
 5. Flow is loaded from checkpoint
 6. As the LocalTokenSelector is being deserialized from the snapshot, it communicates with the GlobalTokenSelector and notifies which tokens were locked by this flow.
 7. Node has rebuilt its locked states cache.
+
+
+#### Heap Exhaustion
+The current design and implementation assumes that the nodes running will be large in comparison to their token vault data.
+If heap memory is exhausted, an out of memory exception will be thrown. 
+
+Moving forwards, we intend to introduce a LoadingCache backed approach, where only StateRefs will be held in memory, whilst state 
+data will be sourced from the database as required, the size of the cache will be configurable by CorDapp configuration.
+This will reduce the speed of token selection, but with the benefit 
+of allowing potentially much larger vaults to be selected across, as only a preconfigured number of states will be held in memory. 
 
 
 
