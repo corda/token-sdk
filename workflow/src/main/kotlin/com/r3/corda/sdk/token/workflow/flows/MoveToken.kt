@@ -6,13 +6,7 @@ import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.workflow.selection.TokenSelection
 import com.r3.corda.sdk.token.workflow.selection.generateMoveNonFungible
 import net.corda.core.contracts.Amount
-import net.corda.core.flows.FinalityFlow
-import net.corda.core.flows.FlowLogic
-import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatedBy
-import net.corda.core.flows.InitiatingFlow
-import net.corda.core.flows.ReceiveFinalityFlow
-import net.corda.core.flows.StartableByRPC
+import net.corda.core.flows.*
 import net.corda.core.identity.AbstractParty
 import net.corda.core.node.StatesToRecord
 import net.corda.core.transactions.SignedTransaction
@@ -27,7 +21,8 @@ object MoveToken {
     abstract class Initiator<T : TokenType>(
             val token: T,
             val holder: AbstractParty,
-            val session: FlowSession? = null
+            val session: FlowSession? = null,
+            override val progressTracker: ProgressTracker = tracker()
     ) : FlowLogic<SignedTransaction>() {
         companion object {
             object GENERATE_MOVE : ProgressTracker.Step("Generating tokens move.")
@@ -38,8 +33,6 @@ object MoveToken {
 
             fun tracker() = ProgressTracker(GENERATE_MOVE, SIGNING, RECORDING)
         }
-
-        override val progressTracker: ProgressTracker = tracker()
 
         @Suspendable
         abstract fun generateMove(): Pair<TransactionBuilder, List<PublicKey>>
@@ -70,13 +63,26 @@ object MoveToken {
     }
 
     @InitiatedBy(Initiator::class)
-    class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
+    class Responder(
+            val otherSession: FlowSession,
+            override val progressTracker: ProgressTracker = tracker()
+    ) : FlowLogic<Unit>() {
+
+        constructor(otherSession: FlowSession) : this(otherSession, tracker())
+
         @Suspendable
         override fun call() {
             // Resolve the move transaction.
+            progressTracker.currentStep = RECORDING
             if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
                 subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
             }
+        }
+
+        companion object {
+            object RECORDING : ProgressTracker.Step("Recording token movement transaction.")
+
+            fun tracker() = ProgressTracker(RECORDING)
         }
     }
 }
@@ -84,8 +90,9 @@ object MoveToken {
 class MoveTokenNonFungible<T : TokenType>(
         val ownedToken: T,
         holder: AbstractParty,
-        session: FlowSession? = null
-) : MoveToken.Initiator<T>(ownedToken, holder, session) {
+        session: FlowSession? = null,
+        progressTracker: ProgressTracker = tracker()
+) : MoveToken.Initiator<T>(ownedToken, holder, session, progressTracker) {
     @Suspendable
     override fun generateMove(): Pair<TransactionBuilder, List<PublicKey>> {
         return generateMoveNonFungible(serviceHub.vaultService, ownedToken, holder)
@@ -95,8 +102,9 @@ class MoveTokenNonFungible<T : TokenType>(
 open class MoveTokenFungible<T : TokenType>(
         val amount: Amount<T>,
         holder: AbstractParty,
-        session: FlowSession? = null
-) : MoveToken.Initiator<T>(amount.token, holder, session) {
+        session: FlowSession? = null,
+        progressTracker: ProgressTracker = tracker()
+) : MoveToken.Initiator<T>(amount.token, holder, session, progressTracker) {
     @Suspendable
     override fun generateMove(): Pair<TransactionBuilder, List<PublicKey>> {
         val tokenSelection = TokenSelection(serviceHub)

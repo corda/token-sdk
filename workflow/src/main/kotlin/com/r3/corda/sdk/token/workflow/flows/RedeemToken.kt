@@ -43,7 +43,10 @@ object RedeemToken {
             object SELECTING_STATES : ProgressTracker.Step("Selecting states to redeem.")
             object SEND_STATE_REF : ProgressTracker.Step("Sending states to the issuer for redeeming.")
             object SYNC_IDS : ProgressTracker.Step("Synchronising confidential identities.")
-            object SIGNING_TX : ProgressTracker.Step("Signing transaction")
+            object SIGNING_TX : ProgressTracker.Step("Signing transaction") {
+                override fun childProgressTracker() = SignTransactionFlow.tracker()
+            }
+
             object FINALISING_TX : ProgressTracker.Step("Finalising transaction")
 
             fun tracker() = ProgressTracker(REDEEM_NOTIFICATION, CONF_ID, SELECTING_STATES, SEND_STATE_REF, SYNC_IDS, SIGNING_TX, FINALISING_TX)
@@ -92,7 +95,7 @@ object RedeemToken {
             val fakeWireTx = TransactionBuilder(notary = notary).withItems(*exitStateAndRefs.toTypedArray()).addCommand(DummyCommand(), ourIdentity.owningKey).toWireTransaction(serviceHub)
             subFlow(IdentitySyncFlow.Send(issuerSession, fakeWireTx))
             progressTracker.currentStep = SIGNING_TX
-            subFlow(object : SignTransactionFlow(issuerSession) {
+            subFlow(object : SignTransactionFlow(issuerSession, progressTracker = SIGNING_TX.childProgressTracker()) {
                 // TODO Add some additional checks.
                 override fun checkTransaction(stx: SignedTransaction) = Unit
             })
@@ -107,27 +110,71 @@ object RedeemToken {
 
     // Called on Issuer side.
     @InitiatedBy(InitiateRedeem::class)
-    class IssuerResponder<T : TokenType>(val otherSession: FlowSession) : FlowLogic<SignedTransaction>() {
+    class IssuerResponder<T : TokenType>(
+            val otherSession: FlowSession,
+            override val progressTracker: ProgressTracker = tracker()
+    ) : FlowLogic<SignedTransaction>() {
+
+        constructor(otherSession: FlowSession) : this(otherSession, tracker())
+
+        companion object {
+            object PREPARING : ProgressTracker.Step("Preparing for token redemption.")
+
+            object REQUESTING_IDENTITY : ProgressTracker.Step("Sharing a new confidential identity.")
+
+            object RECEIVING_STATES : ProgressTracker.Step("Receiving states to redeem.")
+
+            object SWAPPING_IDENTITIES : ProgressTracker.Step("Synchronising confidential identities.")
+
+            object CHECKING : ProgressTracker.Step("Checking proposed redemption states.")
+
+            object ASSEMBLING : ProgressTracker.Step("Assembling the redemption proposal.")
+
+            object SIGNING : ProgressTracker.Step("Signing transaction")
+
+            object COLLECTING : ProgressTracker.Step("Collecting signatures") {
+                override fun childProgressTracker() = CollectSignaturesFlow.tracker()
+            }
+
+            object FINALISING : ProgressTracker.Step("Finalising transaction") {
+                override fun childProgressTracker() = FinalityFlow.tracker()
+            }
+
+            fun tracker() = ProgressTracker(PREPARING, REQUESTING_IDENTITY, RECEIVING_STATES, SWAPPING_IDENTITIES, CHECKING, ASSEMBLING, SIGNING, COLLECTING, FINALISING)
+        }
+
         @Suspendable
         override fun call(): SignedTransaction {
             // Receive a redeem notification from the party. It tells us if we need to sign up for token updates or
             // generate a confidential identity.
+            progressTracker.currentStep = PREPARING
             val redeemNotification = otherSession.receive<TokenRedeemNotification<T>>().unwrap { it }
 
             // Request confidential identity, if necessary.
             val otherIdentity = if (redeemNotification.anonymous) {
+                progressTracker.currentStep = REQUESTING_IDENTITY
                 subFlow(RequestConfidentialIdentity.Initiator(otherSession)).party.anonymise()
             } else otherSession.counterparty
 
+            // Receive states for redemption
+            progressTracker.currentStep = RECEIVING_STATES
             val stateAndRefsToRedeem = subFlow(ReceiveStateAndRefFlow<AbstractToken<T>>(otherSession))
-            // Synchronise identities.
+
+            // Synchronise identities
+            progressTracker.currentStep = SWAPPING_IDENTITIES
             subFlow(IdentitySyncFlow.Receive(otherSession))
+
+            // Check states for redemption
+            progressTracker.currentStep = CHECKING
             check(stateAndRefsToRedeem.isNotEmpty()) {
                 "Received empty list of states to redeem."
             }
             checkSameIssuer(stateAndRefsToRedeem, ourIdentity)
             checkSameNotary(stateAndRefsToRedeem)
             checkOwner(serviceHub.identityService, stateAndRefsToRedeem, otherSession.counterparty)
+
+            // Assemble transaction proposal
+            progressTracker.currentStep = ASSEMBLING
             val notary = stateAndRefsToRedeem.first().state.notary
             val txBuilder = TransactionBuilder(notary = notary)
             if (redeemNotification.amount == null) {
@@ -140,9 +187,26 @@ object RedeemToken {
                         changeOwner = otherIdentity
                 )
             }
+
+            // Prepare partially signed transaction
+            progressTracker.currentStep = SIGNING
             val partialStx = serviceHub.signInitialTransaction(txBuilder, ourIdentity.owningKey)
-            val stx = subFlow(CollectSignaturesFlow(partialStx, listOf(otherSession)))
-            return subFlow(FinalityFlow(transaction = stx, sessions = listOf(otherSession)))
+
+            // Get signatures
+            progressTracker.currentStep = COLLECTING
+            val stx = subFlow(CollectSignaturesFlow(
+                    partialStx,
+                    listOf(otherSession),
+                    progressTracker = COLLECTING.childProgressTracker()
+            ))
+
+            // Finalise transaction
+            progressTracker.currentStep = FINALISING
+            return subFlow(FinalityFlow(
+                    transaction = stx,
+                    sessions = listOf(otherSession),
+                    progressTracker = FINALISING.childProgressTracker()
+            ))
         }
     }
 
