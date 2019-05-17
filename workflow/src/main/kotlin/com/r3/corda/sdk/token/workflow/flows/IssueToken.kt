@@ -62,7 +62,8 @@ object IssueToken {
             val issueTo: AbstractParty,
             val notary: Party,
             val amount: Amount<T>? = null,
-            val session: FlowSession? = null
+            val session: FlowSession? = null,
+            override val progressTracker: ProgressTracker = tracker()
     ) : FlowLogic<SignedTransaction>() {
         companion object {
             object DIST_LIST : ProgressTracker.Step("Adding party to distribution list.")
@@ -73,8 +74,6 @@ object IssueToken {
 
             fun tracker() = ProgressTracker(DIST_LIST, SIGNING, RECORDING)
         }
-
-        override val progressTracker: ProgressTracker = tracker()
 
         @Suspendable
         override fun call(): SignedTransaction {
@@ -124,17 +123,30 @@ object IssueToken {
             // Can issue to yourself, but finality flow doesn't take a session then.
             val sessions = if (me == holderParty) emptyList() else listOf(holderSession)
             return subFlow(FinalityFlow(transaction = stx,
-                    progressTracker = RECORDING.childProgressTracker(),
-                    sessions = sessions
+                    sessions = sessions,
+                    progressTracker = RECORDING.childProgressTracker()
             ))
         }
     }
 
     @InitiatedBy(Initiator::class)
-    class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
+    class Responder(
+            val otherSession: FlowSession,
+            override val progressTracker: ProgressTracker = tracker()
+    ) : FlowLogic<Unit>() {
+
+        constructor(otherSession: FlowSession) : this(otherSession, tracker())
+
+        companion object {
+            object RECORDING : ProgressTracker.Step("Recording token issuance transaction.")
+
+            fun tracker() = ProgressTracker(RECORDING)
+        }
+
         @Suspendable
         override fun call() {
             // We must do this check because FinalityFlow does not send locally and we want to be able to issue to ourselves.
+            progressTracker.currentStep = RECORDING
             if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
                 // Resolve the issuance transaction.
                 subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))

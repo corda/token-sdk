@@ -25,15 +25,19 @@ class UpdateEvolvableToken(
 
         object SIGNING : ProgressTracker.Step("Signing transaction proposal.")
 
+        object NOTIFYING_MAINTAINERS : ProgressTracker.Step("Notifying all maintainers.")
+
         object COLLECTING : ProgressTracker.Step("Gathering counterparty signatures.") {
             override fun childProgressTracker() = CollectSignaturesFlow.tracker()
         }
+
+        object NOTIFYING_OBSERVERS : ProgressTracker.Step("Notifying all observers.")
 
         object RECORDING : ProgressTracker.Step("Recording signed transaction.") {
             override fun childProgressTracker() = FinalityFlow.tracker()
         }
 
-        fun tracker() = ProgressTracker(CREATING, SIGNING, COLLECTING, RECORDING)
+        fun tracker() = ProgressTracker(CREATING, SIGNING, NOTIFYING_MAINTAINERS, COLLECTING, NOTIFYING_OBSERVERS, RECORDING)
     }
 
     override val progressTracker: ProgressTracker = tracker()
@@ -62,20 +66,26 @@ class UpdateEvolvableToken(
         progressTracker.currentStep = SIGNING
         val ptx: SignedTransaction = serviceHub.signInitialTransaction(utx)
 
-        // Gather signatures from other maintainers
-        progressTracker.currentStep = COLLECTING
+        // Notify maintainers of proposed transaction
+        progressTracker.currentStep = NOTIFYING_MAINTAINERS
         val otherMaintainerSessions = otherMaintainers().map { initiateFlow(it) }
         otherMaintainerSessions.forEach { it.send(Notification(signatureRequired = true)) }
+
+        // Gather signatures from other maintainers
+        progressTracker.currentStep = COLLECTING
         val stx = subFlow(CollectSignaturesFlow(
                 partiallySignedTx = ptx,
                 sessionsToCollectFrom = otherMaintainerSessions,
                 progressTracker = COLLECTING.childProgressTracker()
         ))
 
-        // Distribute to all observers, including maintainers, participants, and subscribers (via distribution list)
-        progressTracker.currentStep = RECORDING
+        // Notify observers (non-maintainers) of proposed transaction
+        progressTracker.currentStep = NOTIFYING_MAINTAINERS
         val observerSessions = wellKnownObservers().map { initiateFlow(it) }
         observerSessions.forEach { it.send(Notification(signatureRequired = false)) }
+
+        // Distribute to all observers, including maintainers, participants, and subscribers (via distribution list)
+        progressTracker.currentStep = RECORDING
         return subFlow(FinalityFlow(
                 transaction = stx,
                 sessions = (otherMaintainerSessions + observerSessions),
