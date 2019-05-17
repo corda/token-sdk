@@ -8,13 +8,13 @@
 
 ## Release Candidate 01
 
-Release candidate 1 is available. Please see branch `releases/RC-01`.
+Release candidate 1 is available. Please see branch `release/1.0-RC01`.
 
 Known issues:
 
 1. Redeem flows still require refactoring.
 2. Some tests are ignored while we investigate why they are failing
-3.
+3. Docs and examples are still to come.
 
 ## What is the token SDK?
 
