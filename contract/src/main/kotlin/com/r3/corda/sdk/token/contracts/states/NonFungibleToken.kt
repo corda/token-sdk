@@ -10,6 +10,8 @@ import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.contracts.utilities.holderString
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.BelongsToContract
+import net.corda.core.contracts.LinearState
+import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
@@ -35,10 +37,15 @@ import net.corda.core.schemas.QueryableState
 @BelongsToContract(NonFungibleTokenContract::class)
 open class NonFungibleToken<T : TokenType>(
         val token: IssuedTokenType<T>,
-        override val holder: AbstractParty
-) : AbstractToken<T>, QueryableState {
+        override val holder: AbstractParty,
+        override val linearId: UniqueIdentifier = UniqueIdentifier()
+) : AbstractToken<T>, QueryableState, LinearState {
 
     override val issuedTokenType: IssuedTokenType<T> get() = token
+
+    override val tokenType: T get() = token.tokenType
+
+    override val issuer: Party get() = token.issuer
 
     override fun toString(): String = "$token owned by $holderString"
 

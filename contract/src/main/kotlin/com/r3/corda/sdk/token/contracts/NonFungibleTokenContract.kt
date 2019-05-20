@@ -18,7 +18,7 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
     }
 
     override fun groupStates(tx: LedgerTransaction): List<InOutGroup<NonFungibleToken<T>, IssuedTokenType<T>>> {
-        return tx.groupStates { state -> state.token }
+        return tx.groupStates { state -> state.issuedTokenType }
     }
 
     override fun verifyIssue(

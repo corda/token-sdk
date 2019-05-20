@@ -1,4 +1,4 @@
-package com.r3.corda.sdk.token.workflow.flows
+package com.r3.corda.sdk.token.workflow.flows.internal.distribution
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
@@ -7,14 +7,16 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.*
 import net.corda.core.utilities.unwrap
 
+// TODO: REMOVE THIS?
+
 /**
  * Simple set of flows for a party to request updates for a particular evolvable token. These flows don't do much
  * checking, the responder always adds a requesting party to the distribution list.
  *
- * As this flow requires a [StateAndRef] in the constructor, it is only intended to be called by parties that have _at
+ * As this flow requires a [StateAndRef] in the constructor, it is only intended to be called by tokenHolders that have _at
  * least_ one version of the evolvable token. This is probably acceptable as when the issuer issues some of the token
  * for the first time to a party, then they will also send along the most current version of the evolvable token as
- * well. This also simplifies the workflow a bit; when tokens are issued, it is expected that the issuer sends along the
+ * well. This also simplifies the workflow a bit; when tokensToIssue are issued, it is expected that the issuer sends along the
  * evolvable token as well and likewise when some amount of token is transferred from one party to another. Once a party
  * has at least one version of the evolvable token, they can request to be automatically updated using this flow going
  * forward.
@@ -56,7 +58,7 @@ object RequestAdditionToDistributionList {
             val stateAndRef = otherSession.receive<StateAndRef<EvolvableTokenType>>().unwrap { it }
             val linearId = stateAndRef.state.data.linearId
             logger.info("Receiving request from ${otherSession.counterparty} to be added to the distribution list for $linearId.")
-            serviceHub.addPartyToDistributionList(otherSession.counterparty, linearId)
+            addPartyToDistributionList(serviceHub, otherSession.counterparty, linearId)
             otherSession.send(FlowResult.Success)
         }
     }

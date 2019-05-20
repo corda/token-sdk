@@ -12,6 +12,7 @@ import net.corda.core.contracts.Amount
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.FungibleState
 import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.schemas.PersistentState
 import net.corda.core.schemas.QueryableState
@@ -37,7 +38,11 @@ open class FungibleToken<T : TokenType>(
         override val holder: AbstractParty
 ) : FungibleState<IssuedTokenType<T>>, AbstractToken<T>, QueryableState {
 
+    override val tokenType: T get() = amount.token.tokenType
+
     override val issuedTokenType: IssuedTokenType<T> get() = amount.token
+
+    override val issuer: Party get() = amount.token.issuer
 
     override fun toString(): String = "$amount owned by $holderString"
 

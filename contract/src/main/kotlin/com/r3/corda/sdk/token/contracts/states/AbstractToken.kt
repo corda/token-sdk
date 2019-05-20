@@ -3,7 +3,9 @@ package com.r3.corda.sdk.token.contracts.states
 import com.r3.corda.sdk.token.contracts.types.IssuedTokenType
 import com.r3.corda.sdk.token.contracts.types.TokenType
 import net.corda.core.contracts.ContractState
+import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 
 /** Contains common [NonFungibleToken] functionality. */

@@ -6,6 +6,16 @@
 
 ### !!! REMEMBER: THIS PROJECT IS OPEN SOURCE - THAT MEANS YOU CAN SUBMIT PULL REQUESTS TO ADD THE FUNCTIONALITY YOU NEED IF IT IS NOT CURRENTLY AVAILABLE. !!!
 
+## Release Candidate 01
+
+Release candidate 1 is available. Please see branch `release/1.0-RC01`.
+
+Known issues:
+
+1. Redeem flows still require refactoring.
+2. Some tests are ignored while we investigate why they are failing
+3. Docs and examples are still to come.
+
 ## What is the token SDK?
 
 The token SDK is a set of libraries which provide CorDapp developers

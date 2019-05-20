@@ -37,7 +37,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and updated tokens to match
+        // Expect proposed and updated tokensToIssue to match
         assertEquals(newToken, updatedToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one update command with maintainer signature
@@ -64,7 +64,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and updated tokens to match
+        // Expect proposed and updated tokensToIssue to match
         assertEquals(newToken, updatedToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one update command with maintainer signature
@@ -91,7 +91,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and updated tokens to match
+        // Expect proposed and updated tokensToIssue to match
         assertEquals(newToken, updatedToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one update command with maintainer signature
@@ -118,7 +118,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and updated tokens to match
+        // Expect proposed and updated tokensToIssue to match
         assertEquals(newToken, updatedToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one update command with maintainer signature
@@ -145,7 +145,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and updated tokens to match
+        // Expect proposed and updated tokensToIssue to match
         assertEquals(newToken, updatedToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one update command with maintainer signature
@@ -172,7 +172,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and updated tokens to match
+        // Expect proposed and updated tokensToIssue to match
         assertEquals(newToken, updatedToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one update command with maintainer signature
@@ -218,7 +218,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and updated tokens to match
+        // Expect proposed and updated tokensToIssue to match
         assertEquals(newToken, updatedToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one update command with maintainer signature
@@ -245,7 +245,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and updated tokens to match
+        // Expect proposed and updated tokensToIssue to match
         assertEquals(newToken, updatedToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one update command with maintainer signature
@@ -272,7 +272,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and updated tokens to match
+        // Expect proposed and updated tokensToIssue to match
         assertEquals(newToken, updatedToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one update command with maintainer signature
@@ -299,7 +299,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and updated tokens to match
+        // Expect proposed and updated tokensToIssue to match
         assertEquals(newToken, updatedToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one update command with maintainer signature
@@ -326,7 +326,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
-        // Expect proposed and updated tokens to match
+        // Expect proposed and updated tokensToIssue to match
         assertEquals(newToken, updatedToken.state.data, "Original token did not match the published token.")
 
         // Expect to have one update command with maintainer signature
