@@ -36,7 +36,7 @@ plugins {
 }
 
 allprojects {
-    version "1.0-RC01"
+    version "1.0-SNAPSHOT"
     group "com.r3.tokens-sdk"
 
     configurations.all {
