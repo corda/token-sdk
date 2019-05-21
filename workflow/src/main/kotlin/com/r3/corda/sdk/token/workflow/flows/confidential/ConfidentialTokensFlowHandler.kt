@@ -6,7 +6,7 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 
 /**
- * Use of this flow should be paied with [ConfidentialTokensFlow]. If asked to do so, this flow begins the generation of
+ * Use of this flow should be paired with [ConfidentialTokensFlow]. If asked to do so, this flow begins the generation of
  * a new key pair by calling [RequestConfidentialIdentityFlowHandler].
  */
 class ConfidentialTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {

@@ -59,7 +59,7 @@ class TokenSelection(
             sorter: Sort,
             stateAndRefs: MutableList<StateAndRef<FungibleToken<T>>>
     ): Boolean {
-        // Didn't need to select any tokensToIssue.
+        // Didn't need to select any tokens.
         if (requiredAmount.quantity == 0L) {
             return false
         }
@@ -86,9 +86,9 @@ class TokenSelection(
         }
 
         val claimedAmountWithToken = Amount(claimedAmount, requiredAmount.token)
-        // No tokensToIssue available.
+        // No tokens available.
         if (stateAndRefs.isEmpty()) return false
-        // There were not enough tokensToIssue available.
+        // There were not enough tokens available.
         if (claimedAmountWithToken < requiredAmount) {
             logger.trace("TokenType selection requested $requiredAmount but retrieved $claimedAmountWithToken with state refs: ${stateAndRefs.map { it.ref }}")
             return false
@@ -154,7 +154,7 @@ class TokenSelection(
             queryCriteria: QueryCriteria? = null,
             changeOwner: AbstractParty? = null
     ): Pair<List<StateAndRef<AbstractToken<T>>>, List<AbstractToken<T>>> {
-        // Grab some tokensToIssue from the vault and soft-lock.
+        // Grab some tokens from the vault and soft-lock.
         // Only supports moves of the same token instance currently.
         // TODO Support spends for different token types, different instances of the same type.
         // The way to do this will be to perform a query for each token type. If there are multiple token types then
@@ -189,9 +189,10 @@ class TokenSelection(
             value.map { (state) -> state.data.amount }.sumOrThrow()
         }.toList().toMutableList()
 
-        // Get the input state notary.
         // TODO: This assumes there is only ever ONE notary. In the future we need to deal with notary change.
-        val notary = acceptableStates.map { it.state.notary }.toSet().single()
+        check(acceptableStates.map { it.state.notary }.toSet().size == 1) {
+            "States selected have different notaries. For now we don't support notary change, it should be performed beforehand."
+        }
 
         // Calculate the list of output states making sure that the
         val outputStates = mutableListOf<FungibleToken<T>>()
