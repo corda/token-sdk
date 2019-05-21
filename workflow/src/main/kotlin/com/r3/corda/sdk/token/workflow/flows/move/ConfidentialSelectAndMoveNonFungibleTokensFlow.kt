@@ -14,7 +14,7 @@ class ConfidentialSelectAndMoveNonFungibleTokensFlow<T : TokenType>(
         val partyAndToken: PartyAndToken<T>,
         val participantSessions: List<FlowSession>,
         val observerSessions: List<FlowSession>,
-        val queryCriteria: QueryCriteria
+        val queryCriteria: QueryCriteria?
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
