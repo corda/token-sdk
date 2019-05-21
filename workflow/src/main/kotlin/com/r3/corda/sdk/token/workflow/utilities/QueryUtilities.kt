@@ -61,7 +61,7 @@ fun getDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, pa
 
 /** Utilities for getting tokens from the vault and performing miscellaneous queries. */
 
-// TODO: Add queries for getting the balance of all tokensToIssue, not just relevant ones.
+// TODO: Add queries for getting the balance of all tokens, not just relevant ones.
 // TODO: Allow discrimination by issuer or a set of issuers.
 
 // Returns all owned token amounts of a specified token with given issuer.

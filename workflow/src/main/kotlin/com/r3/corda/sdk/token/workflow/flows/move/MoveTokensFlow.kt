@@ -23,18 +23,6 @@ class MoveTokensFlow<T : TokenType>(
             observerSessions: List<FlowSession>
     ) : this(listOf(input), listOf(output), participantSessions, observerSessions)
 
-    companion object {
-        object GENERATE : ProgressTracker.Step("Generating tokensToIssue move.")
-        object SIGNING : ProgressTracker.Step("Signing transaction proposal.")
-        object RECORDING : ProgressTracker.Step("Recording signed transaction.") {
-            override fun childProgressTracker() = FinalityFlow.tracker()
-        }
-
-        fun tracker() = ProgressTracker(GENERATE, SIGNING, RECORDING)
-    }
-
-    override val progressTracker: ProgressTracker = tracker()
-
     @Suspendable
     override fun addMove(transactionBuilder: TransactionBuilder) {
         addMoveTokens(transactionBuilder, inputs, outputs)

@@ -37,6 +37,7 @@ class UpdateDistributionListFlow(val signedTransaction: SignedTransaction) : Flo
         val tokensWithTokenPointers: List<AbstractToken<TokenPointer<*>>> = tx.outputs
                 .map(TransactionState<*>::data)
                 .filterIsInstance<AbstractToken<TokenPointer<*>>>()
+                .filter { it.tokenType is TokenPointer<*> } // IntelliJ bug?? Check is not always true!
         // There are no evolvable tokens so we don't need to update any distribution lists. Otherwise, carry on.
         if (tokensWithTokenPointers.isEmpty()) return
         val issueCmds = tx.commands.map(Command<*>::value).filterIsInstance<IssueTokenCommand<TokenPointer<*>>>()

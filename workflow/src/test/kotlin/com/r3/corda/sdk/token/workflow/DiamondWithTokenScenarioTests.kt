@@ -23,8 +23,8 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
     private val charlie: StartedMockNode get() = node("Charlie")
 
     /**
-     * This scenario creates a new evolvable token type and issues holdable tokensToIssue. It is intended to demonstrate a
-     * fairly typical use case for creating evolvable token types and for issuing discrete (non-fungible) holdable tokensToIssue.
+     * This scenario creates a new evolvable token type and issues holdable tokens. It is intended to demonstrate a
+     * fairly typical use case for creating evolvable token types and for issuing discrete (non-fungible) holdable tokens.
      *
      * 1. GIC creates (publishes) the diamond grading report
      * 2. Denise (the diamond dealer) issues a holdable, discrete (non-fungible) token to Alice
@@ -96,7 +96,7 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
         assertHasStateAndRef(oldDiamond, alice)
         assertNotHasStateAndRef(oldDiamond, gic, denise, bob, charlie)
 
-        // No one has nonfungible (discrete) tokensToIssue
+        // No one has nonfungible (discrete) tokens
         assertNotHasStateAndRef(issueTokenTx.singleOutput<NonFungibleToken<TokenPointer<DiamondGradingReport>>>(), gic, denise, alice, bob, charlie)
         assertNotHasStateAndRef(moveTokenToBobTx.singleOutput<NonFungibleToken<TokenPointer<DiamondGradingReport>>>(), gic, denise, alice, bob, charlie)
         assertNotHasStateAndRef(moveTokenToCharlieTx.singleOutput<NonFungibleToken<TokenPointer<DiamondGradingReport>>>(), gic, denise, alice, bob, charlie)
@@ -115,10 +115,10 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
 
     /**
      * This scenario creates a multiple evolvable token types in a single transaction, and then issues multiple holding
-     * tokensToIssue.
+     * tokens.
      *
      * 1. GIC creates (publishes) 3 diamond grading reports
-     * 2. Denise (the diamond dealer) issues 2 holdable tokensToIssue to self (perhaps as inventory)
+     * 2. Denise (the diamond dealer) issues 2 holdable tokens to self (perhaps as inventory)
      */
     //    @Test
     //    @Ignore
@@ -127,7 +127,7 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
     //    }
 
     /**
-     * This scenario creates a new evolvable token type and issues holdable tokensToIssue to self.
+     * This scenario creates a new evolvable token type and issues holdable tokens to self.
      *
      * 1. GIC creates (publishes) the diamond grading report
      * 2. Denise (the diamond dealer) issues a holdable, discrete (non-fungible) token to herself (perhaps as inventory)
@@ -154,7 +154,7 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
     //    }
 
     /**
-     * This scenario tests that the token issuer cannot issue two holdable tokensToIssue. In practice, this may be challenging
+     * This scenario tests that the token issuer cannot issue two holdable tokens. In practice, this may be challenging
      * to enforce.
      *
      * 1. GIC creates (publishes) the diamond grading report
