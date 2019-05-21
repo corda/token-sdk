@@ -70,7 +70,6 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
 
     @Test
     fun `generate move test`() {
-        val tokenSelection = TokenSelection(A.services)
         val transactionBuilder = TransactionBuilder()
         val moves = listOf(
                 PartyAndAmount(B.legalIdentity(), 140.GBP),

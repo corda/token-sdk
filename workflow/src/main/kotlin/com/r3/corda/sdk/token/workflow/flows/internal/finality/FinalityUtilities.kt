@@ -1,4 +1,4 @@
-package com.r3.corda.sdk.token.workflow.flows.finality
+package com.r3.corda.sdk.token.workflow.flows.internal.finality
 
 import net.corda.core.serialization.CordaSerializable
 

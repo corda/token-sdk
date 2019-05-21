@@ -1,6 +1,7 @@
 package com.r3.corda.sdk.token.workflow.flows.finality
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.sdk.token.workflow.flows.internal.finality.TransactionRole
 import com.r3.corda.sdk.token.workflow.utilities.ourSigningKeys
 import com.r3.corda.sdk.token.workflow.utilities.participants
 import com.r3.corda.sdk.token.workflow.utilities.requireSessionsForParticipants
@@ -23,7 +24,7 @@ import net.corda.core.transactions.TransactionBuilder
  * best to split state issuance up for different token holders in separate flow invocations.
  *
  * @property transactionBuilder the transaction builder to finalise
- * @property allSessions a set of sessions for, at least, all the transaction participants and maybe includes observers
+ * @property allSessions a set of sessions for, at least, all the transaction participants and maybe observers
  */
 class ObserverAwareFinalityFlow(
         val transactionBuilder: TransactionBuilder,

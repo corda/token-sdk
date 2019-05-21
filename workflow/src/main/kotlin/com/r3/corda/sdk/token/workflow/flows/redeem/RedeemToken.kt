@@ -58,7 +58,7 @@ object RedeemToken {
             val issuerSession = initiateFlow(issuer)
 
             progressTracker.currentStep = REDEEM_NOTIFICATION
-            // Notify the recipient that we'll be sending them tokensToIssue for redeeming and advise them of anything they must do, e.g.
+            // Notify the recipient that we'll be sending them tokens for redeeming and advise them of anything they must do, e.g.
             // request a confidential identity.
             issuerSession.send(TokenRedeemNotification(anonymous = anonymous, amount = amount))
 

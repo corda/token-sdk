@@ -20,7 +20,7 @@ class ConfidentialIssueTokensFlow<T : TokenType>(
     override fun call(): SignedTransaction {
         // Request new keys pairs from all proposed token holders.
         val confidentialTokens = subFlow(ConfidentialTokensFlow(tokens, participantSessions))
-        // Issue tokensToIssue using the existing participantSessions.
+        // Issue tokens using the existing participantSessions.
         return subFlow(IssueTokensFlow(confidentialTokens, participantSessions, observerSessions))
     }
 }

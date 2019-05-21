@@ -6,7 +6,7 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.serialization.CordaSerializable
 
 /**
- * A simple holder for a (possibly anonymous) [AbstractParty] and a quantity of tokensToIssue.
+ * A simple holder for a (possibly anonymous) [AbstractParty] and a quantity of tokens.
  * Used in [generateMove] to define what [amount] of token [T] [party] should receive.
  */
 @CordaSerializable

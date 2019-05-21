@@ -16,13 +16,13 @@ abstract class AbstractMoveTokensFlow : FlowLogic<SignedTransaction>() {
     abstract val observerSessions: List<FlowSession>
 
     companion object {
-        object GENERATE : ProgressTracker.Step("Generating tokensToIssue move.")
-        object SIGNING : ProgressTracker.Step("Signing transaction proposal.")
+        object GENERATE : ProgressTracker.Step("Generating tokens to move.")
         object RECORDING : ProgressTracker.Step("Recording signed transaction.") {
             override fun childProgressTracker() = FinalityFlow.tracker()
         }
+        object UPDATING : ProgressTracker.Step("Updating data distribution list.")
 
-        fun tracker() = ProgressTracker(GENERATE, SIGNING, RECORDING)
+        fun tracker() = ProgressTracker(GENERATE, RECORDING, UPDATING)
     }
 
     override val progressTracker: ProgressTracker = tracker()
@@ -34,11 +34,14 @@ abstract class AbstractMoveTokensFlow : FlowLogic<SignedTransaction>() {
     override fun call(): SignedTransaction {
         // Initialise the transaction builder with no notary.
         val transactionBuilder = TransactionBuilder()
+        progressTracker.currentStep = GENERATE
         // Add all the specified inputs and outputs to the transaction.
         // The correct commands and signing keys are also added.
         addMove(transactionBuilder)
+        progressTracker.currentStep = RECORDING
         // Create new participantSessions if this is started as a top level flow.
         val signedTransaction = subFlow(ObserverAwareFinalityFlow(transactionBuilder, participantSessions + observerSessions))
+        progressTracker.currentStep = UPDATING
         // Update the distribution list.
         subFlow(UpdateDistributionListFlow(signedTransaction))
         // Return the newly created transaction.

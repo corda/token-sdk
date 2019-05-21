@@ -18,6 +18,9 @@ internal class ConfidentialIdentityRequest
 @CordaSerializable
 internal class Exception(message: String, cause: Throwable? = null) : FlowException(message, cause)
 
+@CordaSerializable
+enum class ActionRequest { DO_NOTHING, CREATE_NEW_KEY }
+
 /**
  * Data class used only in the context of asserting that the owner of the private key for the listed key wants to use it
  * to represent the named entity. This is paired with an X.509 certificate (which asserts the signing identity says
