@@ -132,7 +132,7 @@ class ConfidentialMoveNonFungibleTokens<T : TokenType>(
     override fun call(): SignedTransaction {
         val observerSessions = sessionsForParties(observers)
         val participantSessions = sessionsForParties(listOf(partyAndToken.party))
-        return subFlow(SelectAndMoveNonFungibleTokensFlow(
+        return subFlow(ConfidentialSelectAndMoveNonFungibleTokensFlow(
                 partyAndToken = partyAndToken,
                 participantSessions = participantSessions,
                 observerSessions = observerSessions,

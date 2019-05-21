@@ -47,7 +47,7 @@ fun <T : TokenType> generateMoveNonFungible(
     addNotaryWithCheck(transactionBuilder, notary)
     val signingKey = input.state.data.holder.owningKey
     val command = MoveTokenCommand(output.token)
-    return TransactionBuilder(notary = notary).apply {
+    return transactionBuilder.apply {
         addInputState(input)
         addCommand(command, signingKey)
         addOutputState(state = output withNotary notary)

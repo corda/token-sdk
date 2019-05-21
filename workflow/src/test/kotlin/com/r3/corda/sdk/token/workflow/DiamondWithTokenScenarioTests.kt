@@ -5,7 +5,6 @@ import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.workflow.states.DiamondGradingReport
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
-import org.junit.Ignore
 import org.junit.Test
 import java.time.Duration
 import kotlin.test.assertEquals
@@ -34,9 +33,7 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      * 6. Charlie redeems the holdable token with Denise (perhaps Denise buys back the diamond and plans to issue a new
      *    holdable token as replacement)
      */
-    // TODO: Test ignored for now as it doesn't pass.
     @Test
-    @Ignore
     fun `lifecycle example`() {
         // STEP 01: GIC publishes the diamond certificate
         // GIC publishes and shares with Denise
@@ -49,9 +46,9 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
         // STEP 02: Denise creates ownership token
         // Denise issues the token to Alice
         val diamondPointer = publishedDiamond.state.data.toPointer<DiamondGradingReport>()
-        val issueTokenTx = denise.moveNonFungibleTokens(
+        val issueTokenTx = denise.issueNonFungibleTokens(
                 token = diamondPointer,
-                owner = alice,
+                issueTo = alice,
                 anonymous = true
         ).getOrThrow(Duration.ofSeconds(5))
         // GIC should *not* receive a copy of this issuance
