@@ -92,7 +92,7 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         (1..12).map{ I.issueFungibleTokens(A, 1 of CHF).getOrThrow() }
         val tokenSelection = TokenSelection(A.services)
         A.transaction {
-            val tokens = tokenSelection.attemptSpend(12 of CHF, UUID.randomUUID())
+            val tokens = tokenSelection.attemptSpend(12 of CHF, UUID.randomUUID(), pageSize = 5)
             val value = tokens.fold(0L) { acc, token ->
                 acc + token.state.data.amount.quantity
             }
