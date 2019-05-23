@@ -9,18 +9,20 @@ import net.corda.core.flows.FlowSession
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 
-class MoveTokensFlow<T : TokenType>(
+class MoveTokensFlow<T : TokenType>
+@JvmOverloads
+constructor(
         val inputs: List<StateAndRef<AbstractToken<T>>>,
         val outputs: List<AbstractToken<T>>,
         override val participantSessions: List<FlowSession>,
-        override val observerSessions: List<FlowSession>
+        override val observerSessions: List<FlowSession> = emptyList()
 ) : AbstractMoveTokensFlow() {
-
+    @JvmOverloads
     constructor(
             input: StateAndRef<AbstractToken<T>>,
             output: AbstractToken<T>,
             participantSessions: List<FlowSession>,
-            observerSessions: List<FlowSession>
+            observerSessions: List<FlowSession> = emptyList()
     ) : this(listOf(input), listOf(output), participantSessions, observerSessions)
 
     @Suspendable

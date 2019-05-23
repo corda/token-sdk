@@ -43,25 +43,29 @@ import net.corda.core.transactions.TransactionBuilder
  * @property participantSessions a list of flow participantSessions for the transaction participants.
  * @property observerSessions a list of flow participantSessions for the transaction observers.
  */
-class IssueTokensFlow<T : TokenType>(
+class IssueTokensFlow<T : TokenType>
+@JvmOverloads
+constructor(
         val tokensToIssue: List<AbstractToken<T>>,
         val participantSessions: List<FlowSession>,
-        val observerSessions: List<FlowSession>
+        val observerSessions: List<FlowSession> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
 
 
     /** Issue a single [FungibleToken]. */
+    @JvmOverloads
     constructor(
             token: FungibleToken<T>,
             participantSessions: List<FlowSession>,
-            observerSessions: List<FlowSession>
+            observerSessions: List<FlowSession> = emptyList()
     ) : this(listOf(token), participantSessions, observerSessions)
 
     /** Issue a single [NonFungibleToken]. */
+    @JvmOverloads
     constructor(
             token: NonFungibleToken<T>,
             participantSessions: List<FlowSession>,
-            observerSessions: List<FlowSession>
+            observerSessions: List<FlowSession> = emptyList()
     ) : this(listOf(token), participantSessions, observerSessions)
 
 //    /* Non-fungible token constructors. */

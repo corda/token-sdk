@@ -16,16 +16,18 @@ import net.corda.core.transactions.SignedTransaction
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
-class MoveFungibleTokens<T : TokenType>(
+class MoveFungibleTokens<T : TokenType>
+@JvmOverloads
+constructor(
         val partiesAndAmounts: List<PartyAndAmount<T>>,
-        val observers: List<Party>,
+        val observers: List<Party> = emptyList(),
         val queryCriteria: QueryCriteria? = null,
         val changeHolder: AbstractParty? = null
 ) : FlowLogic<SignedTransaction>() {
-
+    @JvmOverloads
     constructor(
             partyAndAmount: PartyAndAmount<T>,
-            observers: List<Party>,
+            observers: List<Party> = emptyList(),
             queryCriteria: QueryCriteria? = null,
             changeHolder: AbstractParty? = null
     ) : this(listOf(partyAndAmount), observers, queryCriteria, changeHolder)

@@ -1,6 +1,7 @@
 package com.r3.corda.sdk.token.workflow.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.sdk.token.contracts.commands.internal.DummyCommand
 import com.r3.corda.sdk.token.contracts.states.AbstractToken
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
@@ -103,9 +104,6 @@ object RedeemToken {
             return subFlow(ReceiveFinalityFlow(otherSideSession = issuerSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
         }
     }
-
-    //TODO Another nasty hack because identity sync flow has api that is useless in our case.
-    private class DummyCommand : CommandData
 
     // Called on Issuer side.
     @InitiatedBy(InitiateRedeem::class)

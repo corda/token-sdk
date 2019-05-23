@@ -36,42 +36,44 @@ import net.corda.core.transactions.SignedTransaction
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
-class IssueTokens<T : TokenType>(
+class IssueTokens<T : TokenType>
+@JvmOverloads
+constructor(
         val tokensToIssue: List<AbstractToken<T>>,
-        val observers: List<Party>
+        val observers: List<Party> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
 
     /* Fungible token constructors. */
-
+    @JvmOverloads
     constructor(token: FungibleToken<T>, observers: List<Party> = emptyList())
             : this(listOf(token), observers)
-
+    @JvmOverloads
     constructor(tokenType: T, amount: Long, issuer: Party, holder: Party, observers: List<Party> = emptyList())
             : this(listOf(amount of tokenType issuedBy issuer heldBy holder), observers)
-
+    @JvmOverloads
     constructor(issuedTokenType: IssuedTokenType<T>, amount: Long, holder: AbstractParty, observers: List<Party> = emptyList())
             : this(listOf(amount of issuedTokenType heldBy holder), observers)
-
+    @JvmOverloads
     constructor(issuedTokenType: IssuedTokenType<T>, amount: Long, observers: List<Party> = emptyList())
             : this(listOf(amount of issuedTokenType heldBy issuedTokenType.issuer), observers)
-
+    @JvmOverloads
     constructor(tokenType: T, amount: Long, issuer: Party, observers: List<Party> = emptyList())
             : this(listOf(amount of tokenType issuedBy issuer heldBy issuer), observers)
 
     /* Non-fungible token constructors. */
-
+    @JvmOverloads
     constructor(token: NonFungibleToken<T>, observers: List<Party> = emptyList())
             : this(listOf(token), observers)
-
+    @JvmOverloads
     constructor(tokenType: T, issuer: Party, holder: AbstractParty, observers: List<Party> = emptyList())
             : this(listOf(tokenType issuedBy issuer heldBy holder), observers)
-
+    @JvmOverloads
     constructor(issuedTokenType: IssuedTokenType<T>, holder: AbstractParty, observers: List<Party> = emptyList())
             : this(listOf(issuedTokenType heldBy holder), observers)
-
+    @JvmOverloads
     constructor(issuedTokenType: IssuedTokenType<T>, observers: List<Party> = emptyList())
             : this(listOf(issuedTokenType heldBy issuedTokenType.issuer), observers)
-
+    @JvmOverloads
     constructor(tokenType: T, issuer: Party, observers: List<Party> = emptyList())
             : this(listOf(tokenType issuedBy issuer heldBy issuer), observers)
 

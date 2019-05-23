@@ -11,10 +11,12 @@ import net.corda.core.transactions.SignedTransaction
 /**
  * A flow for issuing tokens to confidential keys.
  */
-class ConfidentialIssueTokensFlow<T : TokenType>(
+class ConfidentialIssueTokensFlow<T : TokenType>
+@JvmOverloads
+constructor (
         val tokens: List<AbstractToken<T>>,
         val participantSessions: List<FlowSession>,
-        val observerSessions: List<FlowSession>
+        val observerSessions: List<FlowSession> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {

@@ -12,19 +12,21 @@ import net.corda.core.transactions.TransactionBuilder
  * Call this for one [TokenType] at a time. If you need to do multiple token types in one transaction then create a new
  * flow, calling [addMoveTokens] for each token type.
  */
-class SelectAndMoveFungibleTokensFlow<T : TokenType>(
+class SelectAndMoveFungibleTokensFlow<T : TokenType>
+@JvmOverloads
+constructor(
         val partiesAndAmounts: List<PartyAndAmount<T>>,
         override val participantSessions: List<FlowSession>,
-        override val observerSessions: List<FlowSession>,
+        override val observerSessions: List<FlowSession> = emptyList(),
         val queryCriteria: QueryCriteria?,
         val changeHolder: AbstractParty? = null
 ) : AbstractMoveTokensFlow() {
-
+    @JvmOverloads
     constructor(
             partyAndAmount: PartyAndAmount<T>,
             queryCriteria: QueryCriteria,
             participantSessions: List<FlowSession>,
-            observerSessions: List<FlowSession>,
+            observerSessions: List<FlowSession> = emptyList(),
             changeHolder: AbstractParty?
     ) : this(listOf(partyAndAmount), participantSessions, observerSessions, queryCriteria, changeHolder)
 

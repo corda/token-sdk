@@ -11,19 +11,22 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 
-class ConfidentialSelectAndMoveFungibleTokensFlow<T : TokenType>(
+class ConfidentialSelectAndMoveFungibleTokensFlow<T : TokenType>
+@JvmOverloads
+constructor (
         val partiesAndAmounts: List<PartyAndAmount<T>>,
         val participantSessions: List<FlowSession>,
-        val observerSessions: List<FlowSession>,
+        val observerSessions: List<FlowSession> = emptyList(),
         val queryCriteria: QueryCriteria?,
         val changeHolder: AbstractParty? = null
 ) : FlowLogic<SignedTransaction>() {
 
+    @JvmOverloads
     constructor(
             partyAndAmount: PartyAndAmount<T>,
             queryCriteria: QueryCriteria,
             participantSessions: List<FlowSession>,
-            observerSessions: List<FlowSession>,
+            observerSessions: List<FlowSession> = emptyList(),
             changeHolder: AbstractParty?
     ) : this(listOf(partyAndAmount), participantSessions, observerSessions, queryCriteria, changeHolder)
 
