@@ -5,6 +5,7 @@ import com.r3.corda.sdk.token.contracts.utilities.heldBy
 import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.of
 import com.r3.corda.sdk.token.money.GBP
+import com.r3.corda.sdk.token.workflow.flows.internal.selection.TokenSelection
 import com.r3.corda.sdk.token.workflow.flows.shell.IssueTokens
 import com.r3.corda.sdk.token.workflow.flows.shell.MoveFungibleTokens
 import com.r3.corda.sdk.token.workflow.statesAndContracts.House
@@ -21,6 +22,7 @@ import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
+import java.util.*
 import kotlin.test.assertEquals
 
 class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
@@ -219,5 +221,18 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         val confidentialHolder = A.services.keyManagementService.freshKeyAndCert(A.services.myInfo.chooseIdentityAndCert(), false).party.anonymise()
         val moveTokenTx = A.startFlow(MoveFungibleTokens(50.GBP, confidentialHolder)).getOrThrow()
         A.watchForTransaction(moveTokenTx.id).getOrThrow()
+    }
+
+    // Ben's test.
+    @Test
+    fun `should get different tokens if we select twice`() {
+        (1..2).map { I.issueFungibleTokens(A, 1 of GBP).getOrThrow() }
+        val tokenSelection = TokenSelection(A.services)
+        val lockId = UUID.randomUUID()
+        A.transaction {
+            val token1 = tokenSelection.attemptSpend(1 of GBP, lockId, pageSize = 5)
+            val token2 = tokenSelection.attemptSpend(1 of GBP, lockId, pageSize = 5)
+            assertThat(token1).isNotEqualTo(token2)
+        }
     }
 }
