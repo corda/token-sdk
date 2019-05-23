@@ -10,10 +10,12 @@ import net.corda.core.flows.FlowSession
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 
-class ConfidentialSelectAndMoveNonFungibleTokensFlow<T : TokenType>(
+class ConfidentialSelectAndMoveNonFungibleTokensFlow<T : TokenType>
+@JvmOverloads
+constructor (
         val partyAndToken: PartyAndToken<T>,
         val participantSessions: List<FlowSession>,
-        val observerSessions: List<FlowSession>,
+        val observerSessions: List<FlowSession> = emptyList(),
         val queryCriteria: QueryCriteria?
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable

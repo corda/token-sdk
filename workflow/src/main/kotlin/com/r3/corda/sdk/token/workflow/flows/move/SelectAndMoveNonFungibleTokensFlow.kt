@@ -7,10 +7,12 @@ import net.corda.core.flows.FlowSession
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.TransactionBuilder
 
-class SelectAndMoveNonFungibleTokensFlow<T : TokenType>(
+class SelectAndMoveNonFungibleTokensFlow<T : TokenType>
+@JvmOverloads
+constructor(
         val partyAndToken: PartyAndToken<T>,
         override val participantSessions: List<FlowSession>,
-        override val observerSessions: List<FlowSession>,
+        override val observerSessions: List<FlowSession> = emptyList(),
         val queryCriteria: QueryCriteria?
 ) : AbstractMoveTokensFlow() {
     @Suspendable
