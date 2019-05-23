@@ -156,7 +156,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         A.watchForTransaction(issueTokenA.id).toCompletableFuture().getOrThrow()
         // Issue to node B.
         val issueTokenB = I.issueFungibleTokens(B, 50 of housePointer).getOrThrow()
-        A.watchForTransaction(issueTokenB.id).toCompletableFuture().getOrThrow()
+        B.watchForTransaction(issueTokenB.id).toCompletableFuture().getOrThrow()
     }
 
     @Test
