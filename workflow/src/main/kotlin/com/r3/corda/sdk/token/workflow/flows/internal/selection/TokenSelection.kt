@@ -19,6 +19,8 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.queryBy
+import net.corda.core.node.services.vault.DEFAULT_PAGE_NUM
+import net.corda.core.node.services.vault.PageSpecification
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.node.services.vault.Sort
 import net.corda.core.transactions.TransactionBuilder
@@ -57,7 +59,8 @@ class TokenSelection(
             lockId: UUID,
             additionalCriteria: QueryCriteria,
             sorter: Sort,
-            stateAndRefs: MutableList<StateAndRef<FungibleToken<T>>>
+            stateAndRefs: MutableList<StateAndRef<FungibleToken<T>>>,
+            pageSize: Int = 200
     ): Boolean {
         // Didn't need to select any tokens.
         if (requiredAmount.quantity == 0L) {
@@ -73,17 +76,23 @@ class TokenSelection(
                 status = Vault.StateStatus.UNCONSUMED
         )
 
-        // TODO: Add paging in case there are not enough states in one page to fill the required requiredAmount. E.g. Dust.
-        val results: Vault.Page<FungibleToken<T>> = services.vaultService.queryBy(baseCriteria.and(additionalCriteria), sorter)
-
+        var pageNumber = DEFAULT_PAGE_NUM
         var claimedAmount = 0L
-        for (state in results.states) {
-            stateAndRefs += state
-            claimedAmount += state.state.data.amount.quantity
-            if (claimedAmount >= requiredAmount.quantity) {
-                break
+
+        do {
+            val pageSpec = PageSpecification(pageNumber = pageNumber, pageSize = pageSize)
+            val results: Vault.Page<FungibleToken<T>> = services.vaultService.queryBy(baseCriteria.and(additionalCriteria), pageSpec, sorter)
+
+            for (state in results.states) {
+                stateAndRefs += state
+                claimedAmount += state.state.data.amount.quantity
+                if (claimedAmount >= requiredAmount.quantity) {
+                    break
+                }
             }
-        }
+
+            pageNumber++
+        } while (claimedAmount < requiredAmount.quantity && (pageSpec.pageSize * (pageNumber - 1)) <= results.totalStatesAvailable)
 
         val claimedAmountWithToken = Amount(claimedAmount, requiredAmount.token)
         // No tokens available.
@@ -113,13 +122,14 @@ class TokenSelection(
             requiredAmount: Amount<T>,
             lockId: UUID,
             additionalCriteria: QueryCriteria = ownedTokenAmountCriteria(requiredAmount.token),
-            sorter: Sort = sortByStateRefAscending()
+            sorter: Sort = sortByStateRefAscending(),
+            pageSize: Int = 200
     ): List<StateAndRef<FungibleToken<T>>> {
         val stateAndRefs = mutableListOf<StateAndRef<FungibleToken<T>>>()
         for (retryCount in 1..maxRetries) {
             // TODO: Need to specify exactly why it fails. Locked states or literally _no_ states!
             // No point in retrying if there will never be enough...
-            if (!executeQuery(requiredAmount, lockId, additionalCriteria, sorter, stateAndRefs)) {
+            if (!executeQuery(requiredAmount, lockId, additionalCriteria, sorter, stateAndRefs, pageSize)) {
                 logger.warn("TokenType selection failed on attempt $retryCount.")
                 // TODO: revisit the back off strategy for contended spending.
                 if (retryCount != maxRetries) {

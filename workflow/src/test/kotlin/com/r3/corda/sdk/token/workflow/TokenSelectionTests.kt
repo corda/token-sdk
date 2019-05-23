@@ -1,5 +1,7 @@
 package com.r3.corda.sdk.token.workflow
 
+import com.r3.corda.sdk.token.contracts.utilities.of
+import com.r3.corda.sdk.token.money.CHF
 import com.r3.corda.sdk.token.money.GBP
 import com.r3.corda.sdk.token.money.USD
 import com.r3.corda.sdk.token.workflow.flows.internal.selection.TokenSelection
@@ -8,6 +10,7 @@ import com.r3.corda.sdk.token.workflow.types.PartyAndAmount
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import java.util.*
@@ -82,6 +85,20 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         println(transactionBuilder.toWireTransaction(A.services))
         // Just using this to check and see if the output is as expected.
         // TODO: Assert something...
+    }
+
+    @Test
+    fun `should be able to select tokens if you need more than one page to fulfill`() {
+        (1..12).map{ I.issueFungibleTokens(A, 1 of CHF).getOrThrow() }
+        val tokenSelection = TokenSelection(A.services)
+        A.transaction {
+            val tokens = tokenSelection.attemptSpend(12 of CHF, UUID.randomUUID(), pageSize = 5)
+            val value = tokens.fold(0L) { acc, token ->
+                acc + token.state.data.amount.quantity
+            }
+            Assert.assertEquals("should be 12 tokens", 12, tokens.size)
+            Assert.assertEquals("value should be 1200", 1200L, value)
+        }
     }
 
     // TODO: Test with different notaries.
