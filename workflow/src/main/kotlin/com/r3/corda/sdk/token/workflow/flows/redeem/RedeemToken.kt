@@ -1,11 +1,12 @@
 package com.r3.corda.sdk.token.workflow.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.sdk.token.contracts.commands.internal.DummyCommand
+import com.r3.corda.sdk.token.contracts.commands.RedeemTokenCommand
 import com.r3.corda.sdk.token.contracts.states.AbstractToken
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
 import com.r3.corda.sdk.token.contracts.types.TokenType
+import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.workflow.flows.internal.confidential.RequestConfidentialIdentityFlow
 import com.r3.corda.sdk.token.workflow.flows.internal.confidential.RequestConfidentialIdentityFlowHandler
 import com.r3.corda.sdk.token.workflow.flows.internal.selection.TokenSelection
@@ -14,15 +15,26 @@ import com.r3.corda.sdk.token.workflow.utilities.ownedTokensByTokenIssuer
 import com.r3.corda.sdk.token.workflow.utilities.tokenAmountWithIssuerCriteria
 import net.corda.confidential.IdentitySyncFlow
 import net.corda.core.contracts.Amount
-import net.corda.core.contracts.CommandData
+import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.flows.*
+import net.corda.core.flows.CollectSignaturesFlow
+import net.corda.core.flows.FinalityFlow
+import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.FlowSession
+import net.corda.core.flows.InitiatedBy
+import net.corda.core.flows.InitiatingFlow
+import net.corda.core.flows.ReceiveFinalityFlow
+import net.corda.core.flows.ReceiveStateAndRefFlow
+import net.corda.core.flows.SendStateAndRefFlow
+import net.corda.core.flows.SignTransactionFlow
+import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.Party
 import net.corda.core.node.StatesToRecord
 import net.corda.core.node.services.IdentityService
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.unwrap
 
@@ -90,9 +102,7 @@ object RedeemToken {
             progressTracker.currentStep = SYNC_IDS
             // TODO This is very weird way of syncing identities.
             //  I feel like we need some better API to do that, because in this case we just need input identities, not full wire tx (btw it's not sent anywhere nor it verifies).
-            val firstState = exitStateAndRefs.first().state
-            val notary = firstState.notary
-            val fakeWireTx = TransactionBuilder(notary = notary).withItems(*exitStateAndRefs.toTypedArray()).addCommand(DummyCommand(), ourIdentity.owningKey).toWireTransaction(serviceHub)
+            val fakeWireTx = WireTransaction(exitStateAndRefs.map { it.ref }, emptyList(), emptyList(), listOf(Command(RedeemTokenCommand(ownedToken issuedBy issuer), listOf(issuer.owningKey))), exitStateAndRefs.first().state.notary, null)
             subFlow(IdentitySyncFlow.Send(issuerSession, fakeWireTx))
             progressTracker.currentStep = SIGNING_TX
             subFlow(object : SignTransactionFlow(issuerSession) {
