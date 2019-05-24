@@ -21,6 +21,6 @@ class UpdateDistributionListFlowHandler(val otherSession: FlowSession) : FlowLog
         }
         // Check that receiver is well known party.
         serviceHub.identityService.requireWellKnownPartyFromAnonymous(distListUpdate.receiver)
-        addPartyToDistributionList(serviceHub, distListUpdate.receiver, distListUpdate.linearId)
+        addPartyToDistributionList(distListUpdate.receiver, distListUpdate.linearId)
     }
 }

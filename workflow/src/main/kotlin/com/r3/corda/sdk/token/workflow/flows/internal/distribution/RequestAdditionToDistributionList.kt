@@ -58,7 +58,7 @@ object RequestAdditionToDistributionList {
             val stateAndRef = otherSession.receive<StateAndRef<EvolvableTokenType>>().unwrap { it }
             val linearId = stateAndRef.state.data.linearId
             logger.info("Receiving request from ${otherSession.counterparty} to be added to the distribution list for $linearId.")
-            addPartyToDistributionList(serviceHub, otherSession.counterparty, linearId)
+            addPartyToDistributionList(otherSession.counterparty, linearId)
             otherSession.send(FlowResult.Success)
         }
     }
