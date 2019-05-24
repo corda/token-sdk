@@ -2,7 +2,6 @@ package com.r3.corda.sdk.token.workflow.flows.internal.distribution
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.workflow.utilities.addPartyToDistributionList
-import com.r3.corda.sdk.token.workflow.utilities.getDistributionRecord
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatedBy
@@ -22,9 +21,6 @@ class UpdateDistributionListFlowHandler(val otherSession: FlowSession) : FlowLog
         }
         // Check that receiver is well known party.
         serviceHub.identityService.requireWellKnownPartyFromAnonymous(distListUpdate.receiver)
-        if (getDistributionRecord(serviceHub, distListUpdate.linearId, distListUpdate.receiver).isEmpty()) {
-            // Add new party to the dist list for this token.
-            addPartyToDistributionList(serviceHub, distListUpdate.receiver, distListUpdate.linearId)
-        }
+        addPartyToDistributionList(distListUpdate.receiver, distListUpdate.linearId)
     }
 }

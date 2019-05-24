@@ -157,8 +157,8 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         val issueTokenA = I.issueFungibleTokens(A, 50 of housePointer).getOrThrow()
         A.watchForTransaction(issueTokenA.id).toCompletableFuture().getOrThrow()
         // Issue to node B.
-        val issueTokenB = I.issueFungibleTokens(A, 50 of housePointer).getOrThrow()
-        A.watchForTransaction(issueTokenB.id).toCompletableFuture().getOrThrow()
+        val issueTokenB = I.issueFungibleTokens(B, 50 of housePointer).getOrThrow()
+        B.watchForTransaction(issueTokenB.id).toCompletableFuture().getOrThrow()
     }
 
     @Test
@@ -221,6 +221,22 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         val confidentialHolder = A.services.keyManagementService.freshKeyAndCert(A.services.myInfo.chooseIdentityAndCert(), false).party.anonymise()
         val moveTokenTx = A.startFlow(MoveFungibleTokens(50.GBP, confidentialHolder)).getOrThrow()
         A.watchForTransaction(moveTokenTx.id).getOrThrow()
+    }
+
+
+    @Test
+    fun `create evolvable token, then issue to the same node twice, expecting only one distribution record`() {
+        // Create new token.
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
+        val housePointer: TokenPointer<House> = house.toPointer()
+        // Create evolvable token on ledger.
+        I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
+        // Issue token twice.
+        I.issueFungibleTokens(A, 50 of housePointer).getOrThrow()
+        I.issueFungibleTokens(A, 50 of housePointer).getOrThrow()
+        // Check the distribution list.
+        val distributionList = I.transaction { getDistributionList(I.services, housePointer.pointer.pointer) }
+        assertEquals(distributionList.size, 1)
     }
 
     // Ben's test.

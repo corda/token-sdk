@@ -22,10 +22,16 @@ import java.security.PublicKey
  * TODO: Add some error handling.
  */
 @Suspendable
-fun addPartyToDistributionList(services: ServiceHub, party: Party, linearId: UniqueIdentifier) {
+fun FlowLogic<*>.addPartyToDistributionList(party: Party, linearId: UniqueIdentifier) {
     // Create an persist a new entity.
-    val distributionRecord = DistributionRecord(linearId.id, party)
-    services.withEntityManager { persist(distributionRecord) }
+    val hasRecord = hasDistributionRecord(serviceHub, linearId, party)
+    if (!hasRecord) {
+        val distributionRecord = DistributionRecord(linearId.id, party)
+        serviceHub.withEntityManager { persist(distributionRecord) }
+    } else {
+        logger.info("Already stored a distribution record for $party and $linearId.")
+    }
+
 }
 
 val LedgerTransaction.participants: List<AbstractParty>
@@ -75,7 +81,9 @@ fun FlowLogic<*>.sessionsForParties(parties: List<AbstractParty>): List<FlowSess
 fun FlowLogic<*>.addToDistributionList(tokens: List<AbstractToken<TokenPointer<*>>>) {
     tokens.forEach { token ->
         val tokenType = token.tokenType
-        addPartyToDistributionList(serviceHub, token.holder.toParty(serviceHub), tokenType.pointer.pointer)
+        val pointer = tokenType.pointer.pointer
+        val holder = token.holder.toParty(serviceHub)
+        addPartyToDistributionList(holder, pointer)
     }
 }
 

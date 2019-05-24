@@ -45,7 +45,7 @@ fun getDistributionList(services: ServiceHub, linearId: UniqueIdentifier): List<
 }
 
 // Gets the distribution record for a particular token and party.
-fun getDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, party: Party): List<DistributionRecord> {
+fun getDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, party: Party): DistributionRecord? {
     return serviceHub.withEntityManager {
         val query: CriteriaQuery<DistributionRecord> = criteriaBuilder.createQuery(DistributionRecord::class.java)
         query.apply {
@@ -56,7 +56,11 @@ fun getDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, pa
             select(root)
         }
         createQuery(query).resultList
-    }
+    }.singleOrNull()
+}
+
+fun hasDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, party: Party): Boolean {
+    return getDistributionRecord(serviceHub, linearId, party) != null
 }
 
 /** Utilities for getting tokens from the vault and performing miscellaneous queries. */
