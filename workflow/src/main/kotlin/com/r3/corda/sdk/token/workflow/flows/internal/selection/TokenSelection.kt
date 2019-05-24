@@ -60,7 +60,8 @@ class TokenSelection(
             additionalCriteria: QueryCriteria,
             sorter: Sort,
             stateAndRefs: MutableList<StateAndRef<FungibleToken<T>>>,
-            pageSize: Int = 200
+            pageSize: Int = 200,
+            softLockingType: QueryCriteria.SoftLockingType = QueryCriteria.SoftLockingType.UNLOCKED_ONLY
     ): Boolean {
         // Didn't need to select any tokens.
         if (requiredAmount.quantity == 0L) {
@@ -71,7 +72,7 @@ class TokenSelection(
         // We only want to return RELEVANT states here.
         val baseCriteria = QueryCriteria.VaultQueryCriteria(
                 contractStateTypes = setOf(FungibleToken::class.java),
-                softLockingCondition = QueryCriteria.SoftLockingCondition(QueryCriteria.SoftLockingType.UNLOCKED_AND_SPECIFIED, listOf(lockId)),
+                softLockingCondition = QueryCriteria.SoftLockingCondition(softLockingType, listOf(lockId)),
                 relevancyStatus = Vault.RelevancyStatus.RELEVANT,
                 status = Vault.StateStatus.UNCONSUMED
         )
@@ -114,6 +115,7 @@ class TokenSelection(
      * Attempt spend of [requiredAmount] of [FungibleToken] T. Returns states that cover given amount. Notice that this function
      * doesn't calculate change. If query criteria is not specified then only owned token amounts are used.
      * Use [QueryUtilities.tokenAmountWithIssuerCriteria] to specify issuer.
+     * Calling attemptSpend multiple time with the same lockId will return next unlocked states.
      *
      * @return List of [FungibleToken]s that satisfy the amount to spend, empty list if none found.
      */
