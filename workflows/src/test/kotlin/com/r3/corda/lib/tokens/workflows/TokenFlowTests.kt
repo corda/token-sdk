@@ -64,7 +64,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
 
     @Test
     fun `issue token to yourself`() {
-        val issueTokenTx = I.issueFungibleTokens(I, 100.GBP).getOrThrow()
+        I.issueFungibleTokens(I, 100.GBP).getOrThrow()
         network.waitQuiescent()
         val gbp = I.services.vaultService.tokenBalance(GBP)
         assertEquals(100.GBP, gbp)
@@ -72,7 +72,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
 
     @Test
     fun `issue and move fixed tokens`() {
-        val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
+        I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         network.waitQuiescent()
         //TODO this test is wrong
         // Check to see that A was added to I's distribution list.
@@ -207,7 +207,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
 
     @Test
     fun `move to unknown anonymous party`() {
-        val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
+        I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         network.waitQuiescent()
         val confidentialHolder = B.services.keyManagementService.freshKeyAndCert(B.services.myInfo.chooseIdentityAndCert(), false).party.anonymise()
         Assertions.assertThatThrownBy {
@@ -217,10 +217,10 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
 
     @Test
     fun `move to anonymous party on the same node`() {
-        val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
+        I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         network.waitQuiescent()
         val confidentialHolder = A.services.keyManagementService.freshKeyAndCert(A.services.myInfo.chooseIdentityAndCert(), false).party.anonymise()
-        val moveTokenTx = A.startFlow(MoveFungibleTokens(50.GBP, confidentialHolder)).getOrThrow()
+        A.startFlow(MoveFungibleTokens(50.GBP, confidentialHolder)).getOrThrow()
         network.waitQuiescent()
     }
 
