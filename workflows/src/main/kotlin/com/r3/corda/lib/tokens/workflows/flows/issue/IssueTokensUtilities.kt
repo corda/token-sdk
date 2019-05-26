@@ -17,7 +17,7 @@ import net.corda.core.transactions.TransactionBuilder
 fun addIssueTokens(transactionBuilder: TransactionBuilder, outputs: List<AbstractToken<*>>): TransactionBuilder {
     val outputGroups: Map<IssuedTokenType<TokenType>, List<AbstractToken<*>>> = outputs.groupBy { it.issuedTokenType }
     return transactionBuilder.apply {
-        outputGroups.forEach { issuedTokenType: IssuedTokenType<TokenType>, states: List<AbstractToken<*>> ->
+        outputGroups.forEach { (issuedTokenType: IssuedTokenType<TokenType>, states: List<AbstractToken<*>>) ->
             val issuers = states.map { it.issuer }.toSet()
             require(issuers.size == 1) { "All tokensToIssue must have the same issuer." }
             val issuer = issuers.single()
