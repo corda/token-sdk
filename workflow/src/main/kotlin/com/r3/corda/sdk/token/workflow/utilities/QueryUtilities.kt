@@ -31,38 +31,6 @@ inline fun <reified T : LinearState> VaultService.getLinearStateById(linearId: U
     return queryBy<T>(query).states.singleOrNull()
 }
 
-// Gets the distribution list for a particular token.
-fun getDistributionList(services: ServiceHub, linearId: UniqueIdentifier): List<DistributionRecord> {
-    return services.withEntityManager {
-        val query: CriteriaQuery<DistributionRecord> = criteriaBuilder.createQuery(DistributionRecord::class.java)
-        query.apply {
-            val root = from(DistributionRecord::class.java)
-            where(criteriaBuilder.equal(root.get<UUID>("linearId"), linearId.id))
-            select(root)
-        }
-        createQuery(query).resultList
-    }
-}
-
-// Gets the distribution record for a particular token and party.
-fun getDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, party: Party): DistributionRecord? {
-    return serviceHub.withEntityManager {
-        val query: CriteriaQuery<DistributionRecord> = criteriaBuilder.createQuery(DistributionRecord::class.java)
-        query.apply {
-            val root = from(DistributionRecord::class.java)
-            val linearIdEq = criteriaBuilder.equal(root.get<UUID>("linearId"), linearId.id)
-            val partyEq = criteriaBuilder.equal(root.get<Party>("party"), party)
-            where(criteriaBuilder.and(linearIdEq, partyEq))
-            select(root)
-        }
-        createQuery(query).resultList
-    }.singleOrNull()
-}
-
-fun hasDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, party: Party): Boolean {
-    return getDistributionRecord(serviceHub, linearId, party) != null
-}
-
 /** Utilities for getting tokens from the vault and performing miscellaneous queries. */
 
 // TODO: Add queries for getting the balance of all tokens, not just relevant ones.
@@ -70,7 +38,7 @@ fun hasDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, pa
 
 // Returns all owned token amounts of a specified token with given issuer.
 // We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
-fun <T: TokenType> tokenAmountWithIssuerCriteria(token: T, issuer: Party): QueryCriteria {
+fun <T : TokenType> tokenAmountWithIssuerCriteria(token: T, issuer: Party): QueryCriteria {
     val issuerCriteria = QueryCriteria.VaultCustomQueryCriteria(builder {
         PersistentFungibleToken::issuer.equal(issuer)
     })

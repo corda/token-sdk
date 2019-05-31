@@ -5,11 +5,11 @@ import com.r3.corda.sdk.token.contracts.utilities.heldBy
 import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.of
 import com.r3.corda.sdk.token.money.GBP
+import com.r3.corda.sdk.token.workflow.flows.internal.distribution.getDistributionList
 import com.r3.corda.sdk.token.workflow.flows.internal.selection.TokenSelection
 import com.r3.corda.sdk.token.workflow.flows.shell.IssueTokens
 import com.r3.corda.sdk.token.workflow.flows.shell.MoveFungibleTokens
 import com.r3.corda.sdk.token.workflow.statesAndContracts.House
-import com.r3.corda.sdk.token.workflow.utilities.getDistributionList
 import com.r3.corda.sdk.token.workflow.utilities.getLinearStateById
 import com.r3.corda.sdk.token.workflow.utilities.tokenBalance
 import net.corda.core.contracts.LinearState

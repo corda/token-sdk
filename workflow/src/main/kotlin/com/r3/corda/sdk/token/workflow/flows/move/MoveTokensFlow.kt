@@ -29,5 +29,4 @@ constructor(
     override fun addMove(transactionBuilder: TransactionBuilder) {
         addMoveTokens(transactionBuilder, inputs, outputs)
     }
-
 }

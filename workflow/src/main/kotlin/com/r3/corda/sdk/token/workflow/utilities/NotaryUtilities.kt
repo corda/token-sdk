@@ -41,7 +41,8 @@ fun getPreferredNotary(services: ServiceHub, backupSelector: (ServiceHub) -> Par
 /** Choose the first notary in the list. */
 @Suspendable
 fun firstNotary() = { services: ServiceHub ->
-    services.networkMapCache.notaryIdentities.first()
+    services.networkMapCache.notaryIdentities.firstOrNull()
+            ?: throw IllegalArgumentException("No available notaries.")
 }
 
 /** Choose a random notary from the list. */
@@ -67,7 +68,7 @@ fun randomValidatingNotary() = { services: ServiceHub ->
     }.randomOrNull()
 }
 
-/** Adds a notary to a new [TransactionBuilder]. If the notary is already set then this  */
+/** Adds a notary to a new [TransactionBuilder]. If the notary is already set then it get overwritten by preferred notary  */
 @Suspendable
 fun addNotary(services: ServiceHub, txb: TransactionBuilder): TransactionBuilder {
     return txb.apply { notary = getPreferredNotary(services) }
@@ -76,7 +77,7 @@ fun addNotary(services: ServiceHub, txb: TransactionBuilder): TransactionBuilder
 /**
  * Adds notary if not set. Otherwise checks if it's the same as the one in TransactionBuilder.
  */
-// TODO Internal, because for now useful only when selecting tokensToIssue and passing builder around.
+// TODO Internal, because for now useful only when selecting tokens and passing builder around.
 internal fun addNotaryWithCheck(txb: TransactionBuilder, notary: Party): TransactionBuilder {
     if (txb.notary == null) {
         txb.notary = notary

@@ -24,16 +24,21 @@ import net.corda.core.transactions.TransactionBuilder
  * best to split state issuance up for different token holders in separate flow invocations.
  *
  * @property transactionBuilder the transaction builder to finalise
+ * @property signedTransaction TODO
  * @property allSessions a set of sessions for, at least, all the transaction participants and maybe observers
  */
-class ObserverAwareFinalityFlow(
-        val transactionBuilder: TransactionBuilder,
-        val allSessions: List<FlowSession>
+class ObserverAwareFinalityFlow private constructor (
+        val allSessions: List<FlowSession>,
+        val signedTransaction: SignedTransaction? = null,
+        val transactionBuilder: TransactionBuilder? = null
 ) : FlowLogic<SignedTransaction>() {
+    constructor(transactionBuilder: TransactionBuilder, allSessions: List<FlowSession>): this(allSessions, null, transactionBuilder)
+    constructor(signedTransaction: SignedTransaction, allSessions: List<FlowSession>): this(allSessions, signedTransaction)
+
     @Suspendable
     override fun call(): SignedTransaction {
         // Check there is a session for each participant, apart from the node itself.
-        val ledgerTransaction: LedgerTransaction = transactionBuilder.toLedgerTransaction(serviceHub)
+        val ledgerTransaction: LedgerTransaction = transactionBuilder?.toLedgerTransaction(serviceHub) ?: signedTransaction!!.toLedgerTransaction(serviceHub, false)
         val participants: List<AbstractParty> = ledgerTransaction.participants
         val wellKnownParticipants: Set<Party> = participants.toWellKnownParties(serviceHub).toSet()
         val wellKnownParticipantsApartFromUs: Set<Party> = wellKnownParticipants - ourIdentity
@@ -48,7 +53,9 @@ class ObserverAwareFinalityFlow(
         }
         // Sign and finalise the transaction, obtaining the signing keys required from the LedgerTransaction.
         val ourSigningKeys = ledgerTransaction.ourSigningKeys(serviceHub)
-        val signedTransaction = serviceHub.signInitialTransaction(transactionBuilder, signingPubKeys = ourSigningKeys)
-        return subFlow(FinalityFlow(transaction = signedTransaction, sessions = finalSessions))
+        val stx = transactionBuilder?.let {
+            serviceHub.signInitialTransaction(it, signingPubKeys = ourSigningKeys)
+        } ?: signedTransaction!! // TODO get rid of null !!
+        return subFlow(FinalityFlow(transaction = stx, sessions = finalSessions))
     }
 }

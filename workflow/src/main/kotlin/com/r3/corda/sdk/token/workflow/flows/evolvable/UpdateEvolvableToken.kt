@@ -2,10 +2,14 @@ package com.r3.corda.sdk.token.workflow.flows.evolvable
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
+import com.r3.corda.sdk.token.workflow.flows.internal.distribution.getDistributionList
 import com.r3.corda.sdk.token.workflow.utilities.addUpdateEvolvableToken
-import com.r3.corda.sdk.token.workflow.utilities.getDistributionList
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.flows.*
+import net.corda.core.flows.CollectSignaturesFlow
+import net.corda.core.flows.FinalityFlow
+import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.InitiatingFlow
+import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
