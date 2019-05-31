@@ -1,6 +1,7 @@
 package com.r3.corda.sdk.token.workflow.flows.finality
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.sdk.token.contracts.commands.RedeemTokenCommand
 import com.r3.corda.sdk.token.workflow.flows.internal.finality.TransactionRole
 import com.r3.corda.sdk.token.workflow.utilities.ourSigningKeys
 import com.r3.corda.sdk.token.workflow.utilities.participants
@@ -40,15 +41,16 @@ class ObserverAwareFinalityFlow private constructor (
         // Check there is a session for each participant, apart from the node itself.
         val ledgerTransaction: LedgerTransaction = transactionBuilder?.toLedgerTransaction(serviceHub) ?: signedTransaction!!.toLedgerTransaction(serviceHub, false)
         val participants: List<AbstractParty> = ledgerTransaction.participants
-        val wellKnownParticipants: Set<Party> = participants.toWellKnownParties(serviceHub).toSet()
-        val wellKnownParticipantsApartFromUs: Set<Party> = wellKnownParticipants - ourIdentity
+        val issuers: Set<Party> = ledgerTransaction.commands.filterIsInstance<RedeemTokenCommand<*>>().map { it.token.issuer }.toSet()
+        val wellKnownParticipantsAndIssuers: Set<Party> = participants.toWellKnownParties(serviceHub).toSet() + issuers
+        val wellKnownParticipantsApartFromUs: Set<Party> = wellKnownParticipantsAndIssuers - ourIdentity
         // We need participantSessions for all participants apart from us.
         requireSessionsForParticipants(wellKnownParticipantsApartFromUs, allSessions)
         val finalSessions = allSessions.filter { it.counterparty != ourIdentity }
         // Notify all session counterparties of their role. Observers store the transaction using
         // StatesToRecord.ALL_VISIBLE, participants store the transaction using StatesToRecord.ONLY_RELEVANT.
         finalSessions.forEach { session ->
-            if (session.counterparty in wellKnownParticipants) session.send(TransactionRole.PARTICIPANT)
+            if (session.counterparty in wellKnownParticipantsAndIssuers) session.send(TransactionRole.PARTICIPANT)
             else session.send(TransactionRole.OBSERVER)
         }
         // Sign and finalise the transaction, obtaining the signing keys required from the LedgerTransaction.
