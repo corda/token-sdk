@@ -1,11 +1,9 @@
 package com.r3.corda.sdk.token.workflow.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.sdk.token.contracts.states.AbstractToken
 import com.r3.corda.sdk.token.workflow.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.sdk.token.workflow.utilities.ourSigningKeys
 import net.corda.confidential.IdentitySyncFlow
-import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.CollectSignaturesFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
@@ -17,18 +15,13 @@ abstract class AbstractRedeemTokensFlow : FlowLogic<SignedTransaction>() {
     abstract val issuerSession: FlowSession
     abstract val observerSessions: List<FlowSession>
 
-    // TODO update progress tracker
     companion object {
-        object REDEEM_NOTIFICATION : ProgressTracker.Step("Sending redeem notification to tokenHolders.")
-        //        object CONF_ID : ProgressTracker.Step("Requesting confidential identity.")
         object SELECTING_STATES : ProgressTracker.Step("Selecting states to redeem.")
-
-        object SEND_STATE_REF : ProgressTracker.Step("Sending states to the issuer for redeeming.")
         object SYNC_IDS : ProgressTracker.Step("Synchronising confidential identities.")
-        object SIGNING_TX : ProgressTracker.Step("Signing transaction")
+        object COLLECT_SIGS : ProgressTracker.Step("Collecting signatures")
         object FINALISING_TX : ProgressTracker.Step("Finalising transaction")
 
-        fun tracker() = ProgressTracker(REDEEM_NOTIFICATION, SELECTING_STATES, SEND_STATE_REF, SYNC_IDS, SIGNING_TX, FINALISING_TX)
+        fun tracker() = ProgressTracker(SELECTING_STATES, SYNC_IDS, COLLECT_SIGS, FINALISING_TX)
     }
 
     override val progressTracker: ProgressTracker = tracker()
@@ -36,17 +29,20 @@ abstract class AbstractRedeemTokensFlow : FlowLogic<SignedTransaction>() {
     @Suspendable
     abstract fun generateExit(transactionBuilder: TransactionBuilder): TransactionBuilder
 
-    //TODO add progress tracker
     @Suspendable
     override fun call(): SignedTransaction {
         val txBuilder = TransactionBuilder()
+        progressTracker.currentStep = SELECTING_STATES
         generateExit(txBuilder)
         // First synchronise identities between issuer and our states.
+        progressTracker.currentStep = SYNC_IDS
         subFlow(IdentitySyncFlow.Send(issuerSession, txBuilder.toWireTransaction(serviceHub)))
-        // Call collect signatures flow, issuer should perform all the checks for redeeming states.
         val ourSigningKeys = txBuilder.toLedgerTransaction(serviceHub).ourSigningKeys(serviceHub)
         val partialStx = serviceHub.signInitialTransaction(txBuilder, ourSigningKeys)
+        // Call collect signatures flow, issuer should perform all the checks for redeeming states.
+        progressTracker.currentStep = COLLECT_SIGS
         val stx = subFlow(CollectSignaturesFlow(partialStx, listOf(issuerSession), ourSigningKeys))
-        return subFlow(ObserverAwareFinalityFlow(stx, observerSessions + issuerSession))
+        progressTracker.currentStep = FINALISING_TX
+        return subFlow(ObserverAwareFinalityFlow(stx, observerSessions))
     }
 }
