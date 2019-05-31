@@ -33,6 +33,7 @@ abstract class AbstractRedeemTokensFlow : FlowLogic<SignedTransaction>() {
 
     override val progressTracker: ProgressTracker = tracker()
 
+    @Suspendable
     abstract fun generateExit(transactionBuilder: TransactionBuilder): TransactionBuilder
 
     //TODO add progress tracker

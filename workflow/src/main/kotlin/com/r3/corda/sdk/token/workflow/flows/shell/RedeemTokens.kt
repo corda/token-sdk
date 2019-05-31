@@ -29,7 +29,6 @@ constructor(
         val observers: List<Party> = emptyList()
 //        val queryCriteria: QueryCriteria? = null,
 ) : FlowLogic<SignedTransaction>() {
-
     @Suspendable
     override fun call(): SignedTransaction {
         val observerSessions = sessionsForParties(observers)

@@ -1,12 +1,16 @@
 package com.r3.corda.sdk.token.workflow
 
+import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.types.FixedTokenType
 import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.sumTokenStateAndRefs
+import com.r3.corda.sdk.token.money.FiatCurrency
 import com.r3.corda.sdk.token.money.GBP
 import com.r3.corda.sdk.token.money.USD
-import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountsByToken
+import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountCriteria
+import com.r3.corda.sdk.token.workflow.utilities.tokenAmountsByToken
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokensByToken
+import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
 import org.assertj.core.api.Assertions
@@ -42,22 +46,22 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
         A.redeemTokens(GBP, I, 100.GBP, true).getOrThrow()
-        assertThat(A.services.vaultService.ownedTokenAmountsByToken(GBP).states).isEmpty()
-        assertThat(I.services.vaultService.ownedTokenAmountsByToken(GBP).states).isEmpty()
+        assertThat(A.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
+        assertThat(I.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
     }
 
-//    @Test TODO
+    @Test
     fun `redeem fungible with change`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
         A.redeemTokens(GBP, I, 80.GBP, true).getOrThrow()
-        val ownedStates = A.services.vaultService.ownedTokenAmountsByToken(GBP).states
+        val ownedStates = A.services.vaultService.tokenAmountsByToken(GBP).states
         assertThat(ownedStates).isNotEmpty()
         assertThat(ownedStates.sumTokenStateAndRefs()).isEqualTo(20.GBP issuedBy I.legalIdentity())
-        assertThat(I.services.vaultService.ownedTokenAmountsByToken(GBP).states).isEmpty()
+        assertThat(I.services.vaultService.queryBy<FungibleToken<FiatCurrency>>(ownedTokenAmountCriteria(GBP, I.legalIdentity())).states).isEmpty()
     }
 
-//    @Test TODO
+    @Test
     fun `isufficient balance`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()

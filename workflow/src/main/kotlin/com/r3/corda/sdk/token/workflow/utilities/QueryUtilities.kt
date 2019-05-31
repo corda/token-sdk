@@ -5,13 +5,12 @@ import com.r3.corda.sdk.token.contracts.schemas.PersistentNonFungibleToken
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
 import com.r3.corda.sdk.token.contracts.types.TokenType
-import com.r3.corda.sdk.token.workflow.schemas.DistributionRecord
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
-import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.VaultService
 import net.corda.core.node.services.queryBy
@@ -19,8 +18,6 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.node.services.vault.Sort
 import net.corda.core.node.services.vault.SortAttribute
 import net.corda.core.node.services.vault.builder
-import java.util.*
-import javax.persistence.criteria.CriteriaQuery
 
 // TODO Revisit this API and add documentation.
 /** Miscellaneous helpers. */
@@ -42,13 +39,20 @@ fun <T : TokenType> tokenAmountWithIssuerCriteria(token: T, issuer: Party): Quer
     val issuerCriteria = QueryCriteria.VaultCustomQueryCriteria(builder {
         PersistentFungibleToken::issuer.equal(issuer)
     })
-    return ownedTokenAmountCriteria(token).and(issuerCriteria)
+    return tokenAmountCriteria(token).and(issuerCriteria)
+}
+
+fun <T: TokenType> ownedTokenAmountCriteria(token: T, holder: AbstractParty): QueryCriteria {
+    val holderCriteria = QueryCriteria.VaultCustomQueryCriteria(builder{
+        PersistentFungibleToken::holder.equal(holder)
+    })
+    return tokenAmountCriteria(token).and(holderCriteria)
 }
 
 // Returns all owned token amounts of a specified token.
 // We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
 // TODO should be called token amount criteria (there is no owner selection)
-fun <T : TokenType> ownedTokenAmountCriteria(token: T): QueryCriteria {
+fun <T : TokenType> tokenAmountCriteria(token: T): QueryCriteria {
     val tokenClass = builder {
         PersistentFungibleToken::tokenClass.equal(token.tokenClass)
     }
@@ -105,8 +109,8 @@ fun <T : TokenType> rowsToAmount(token: T, rows: Vault.Page<FungibleToken<T>>): 
 /** General queries. */
 
 // Get all owned token amounts for a specific token, ignoring the issuer.
-fun <T : TokenType> VaultService.ownedTokenAmountsByToken(token: T): Vault.Page<FungibleToken<T>> {
-    return queryBy(ownedTokenAmountCriteria(token))
+fun <T : TokenType> VaultService.tokenAmountsByToken(token: T): Vault.Page<FungibleToken<T>> {
+    return queryBy(tokenAmountCriteria(token))
 }
 
 // Get all owned tokens for a specific token, ignoring the issuer.
@@ -118,7 +122,7 @@ fun <T : TokenType> VaultService.ownedTokensByToken(token: T): Vault.Page<NonFun
 
 // We need to group the sum by the token class and token identifier.
 fun <T : TokenType> VaultService.tokenBalance(token: T): Amount<T> {
-    val query = ownedTokenAmountCriteria(token).and(sumTokenCriteria())
+    val query = tokenAmountCriteria(token).and(sumTokenCriteria())
     val result = queryBy<FungibleToken<T>>(query)
     return rowsToAmount(token, result)
 }

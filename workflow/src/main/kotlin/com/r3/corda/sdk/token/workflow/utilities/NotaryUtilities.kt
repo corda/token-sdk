@@ -78,6 +78,7 @@ fun addNotary(services: ServiceHub, txb: TransactionBuilder): TransactionBuilder
  * Adds notary if not set. Otherwise checks if it's the same as the one in TransactionBuilder.
  */
 // TODO Internal, because for now useful only when selecting tokens and passing builder around.
+@Suspendable
 internal fun addNotaryWithCheck(txb: TransactionBuilder, notary: Party): TransactionBuilder {
     if (txb.notary == null) {
         txb.notary = notary
