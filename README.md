@@ -4,27 +4,24 @@
 
 # Corda Token SDK
 
-### !!! REMEMBER: THIS PROJECT IS OPEN SOURCE - THAT MEANS YOU CAN SUBMIT PULL REQUESTS TO ADD THE FUNCTIONALITY YOU NEED IF IT IS NOT CURRENTLY AVAILABLE. !!!
+## Reminder
 
-## Release Candidate 01
-
-Release candidate 1 is available. Please see branch `release/1.0-RC01`.
-
-Known issues:
-
-1. Redeem flows still require refactoring.
-2. Some tests are ignored while we investigate why they are failing
-3. Docs and examples are still to come.
+This project is open source under an Apache 2.0 licence. That means you
+can submit PRs to fix bugs and add new features if they are not currently
+available.
 
 ## What is the token SDK?
 
-The token SDK is a set of libraries which provide CorDapp developers
-functionality to:
+The tokens SDK exists to make it easy for CorDapp developers to create
+CorDapps which use tokens. Functionality is provided to create token types,
+then issue, move and redeem tokens of a particular type.
 
-* create and manage the reference data which define tokens
-* Issue, move and redeem amounts of some token
-* Perform operations on tokens such as querying and selecting tokens for
-  spending
+The tokens SDK comprises three CorDapp JARs:
+
+1. Contracts which contains the base types, states and contracts
+2. Workflows which contains flows for issuing, moving and redeeming tokens
+   as well as utilities for
+3. Money which contains token type definitions for various currencies
 
 The token SDK is intended to replace the "finance module" in the core
 Corda repository.
@@ -32,119 +29,300 @@ Corda repository.
 For more details behind the token SDK's design, see
 [here](design/design.md).
 
-## Why did you create the token SDK?
-
-The finance module didn't meet the requirements of the increasing
-amount of token projects undertaken on Corda:
-
-* There was little documentation on how to use the finance module
-* The finance module did not define any standards for using tokens
-* There were only two state types defined: Cash and Obligation.
-  Defining new types resulted in significant code duplication.
-* Coin selection required database specific implementations and
-  didn't parallelise well.
-* Etc.
-
 ## How to use the SDK?
 
-### Installing the token SDK binaries
+### Using the tokens template.
 
-The token SDK is in a pre-release state, so currently, there are no
-binaries available. To use the SDK one must built it from source and
-publish binaries to your local maven repository like so:
-
-    git clone http://github.com/corda/token-sdk
-    cd token-sdk
-    ./gradlew clean install
-
-The most up-to-date version of the token SDK will be on the `master`
-branch. The first release version will be 0.1.
-
-### Building your CorDapp
-
-With the binaries installed to your local maven repository, you can add
-the token SDK as a dependency to your CorDapp. Add the following lines
-to the `build.gradle` files for your CorDapp. In your contract
-`build.gradle`, add:
-
-    cordaCompile "com.r3.tokens-sdk:contract:1.0-SNAPSHOT"
-    
-In your workflow `build.gradle` add:
-
-    cordaCompile "com.r3.tokens-sdk:workflow:1.0-SNAPSHOT"
-
-For `FiatCurrency` and `DigitalCurrency` definitions add:
-
-    cordaCompile "com.r3.tokens-sdk:money:1.0-SNAPSHOT"
-
-If you want to use the `deployNodes` task, you will need to add the following dependencies to your root `build.gradle`
-file:
-
-    cordapp "com.r3.tokens-sdk:contract:1.0-SNAPSHOT"
-    cordapp "com.r3.tokens-sdk:workflow:1.0-SNAPSHOT"
-    cordapp "com.r3.tokens-sdk:money:1.0-SNAPSHOT"
-
-These should also be added to the `deployNodes` task with the following syntax:
-
-    cordapp("com.r3.tokens-sdk:contract:1.0-SNAPSHOT")
-    cordapp("com.r3.tokens-sdk:workflow:1.0-SNAPSHOT")
-    cordapp("com.r3.tokens-sdk:money:1.0-SNAPSHOT")
-
-See the [kotlin token-template](https://github.com/corda/cordapp-template-kotlin/blob/token-template/build.gradle)
-for an example.
-
-Alternatively, you can use the following bootstrapped token SDK template:
+By far the easiest way to get started with the tokens SDK is to use the
+`tokens-template` which is a branch on the kotlin version of the "CorDapp
+template". You can obtain it with the following commands:
 
     git clone http://github.com/corda/cordapp-template-kotlin
     cd cordapp-template-kotlin
     git checkout token-template
 
-**Don't** build your CorDapp inside the token-sdk repository, instead
-use the supplied template, above.
+Once you have cloned the repository, you should open it with IntelliJ. This
+will give you a template repo with the token SDK dependencies already
+included and some example code which should illustrate you have the correct
+dependencies on your classpath. You can `deployNodes` to create three nodes
+and issue to tokens:
 
-### When building transactions
+    ./gradlew clean deployNodes
+    ./build/nodes/runnodes
 
-When building your flows, you need to make sure that you add the token
-SDK contract JAR to your transaction builders (and the money JAR if you
-require the money definitions). If you don't then you will likely
-encounter `NoClassDefFound` errors. This is because at this point in time
-there is no support for handling CorDapp dependencies in Corda 4.
+You can issue some currency tokens from `PartyA` to `PartyB` from Party A's
+shell with the following command:
 
-The solution is to manually add the contract JAR and the money JAR (if
-you need it), to your transaction builders. This can be done with the
-following code:
+    start ExampleFlowWithFixedToken currency: GBP, amount: 100, recipient: PartyB
 
-    val builder = TransactionBuilder()
-    val contractJarHash = SecureHash.parse("frewfrgregregre")
-    builder.addAttachment(contractJarHash)
+See the token template code [here](https://github.com/corda/cordapp-template-kotlin/blob/token-template/build.gradle)
+for more information.
 
-When support is added for handling CorDapp dependencies in Corda, then
-you will not need the above lines of code.
+### Adding token SDK dependencies to an existing CorDapp
 
-## What is a token?
+First, add a variable for the tokens SDK version you wish to use:
 
-In the majority of cases, the token SDK treats tokens as agreements
-between owners and issuers. As such, tokens either represent:
+    buildscript {
+        ext {
+            tokens_sdk_version = '1.0-RC02'
+        }
+    }
 
-* **Depository receipts** (or asset backed tokens) which are claims held
-  by the owner against the issuer to redeem an amount of some underlying
-  thing/asset/security. In this case, the value exists off-ledger.
-  However, the ledger remains authoritative regarding the question of
-  which party has a valid claim over said off-ledger value.
-* **Ledger native assets** which are issued directly on to the ledger by
-  parties participating on the ledger. In this case, we can say that the
-  token represents the
+Second, you must add the tokens development artifactory repository to the
+list of repositories for your project:
+
+    repositories {
+        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-dev' }
+    }
+
+Now, you can add the tokens SDK dependencies to the `dependencies` block
+in each module of your CorDapp. For contract modules add:
+
+    cordaCompile "com.r3.tokens-sdk:contract:$tokens_sdk_version"
+
+In your workflow `build.gradle` add:
+
+    cordaCompile "com.r3.tokens-sdk:workflow:$tokens_sdk_version"
+
+For `FiatCurrency` and `DigitalCurrency` definitions add:
+
+    cordaCompile "com.r3.tokens-sdk:money:$tokens_sdk_version"
+
+If you want to use the `deployNodes` task, you will need to add the
+following dependencies to your root `build.gradle` file:
+
+    cordapp "com.r3.tokens-sdk:contract:$tokens_sdk_version"
+    cordapp "com.r3.tokens-sdk:workflow:$tokens_sdk_version"
+    cordapp "com.r3.tokens-sdk:money:$tokens_sdk_version"
+
+These should also be added to the `deployNodes` task with the following syntax:
+
+    nodeDefaults {
+        projectCordapp {
+            deploy = false
+        }
+        cordapp("com.r3.tokens-sdk:contract:$tokens_sdk_version")
+        cordapp("com.r3.tokens-sdk:workflow:$tokens_sdk_version")
+        cordapp("com.r3.tokens-sdk:money:$tokens_sdk_version")
+    }
+
+### Installing the token SDK binaries
+
+If you wish to build the token SDK from source then do the following to
+publish binaries to your local maven repository:
+
+    git clone http://github.com/corda/token-sdk
+    cd token-sdk
+    ./gradlew clean install
+
+## Why should I use the token SDK?
+
+If you want to build a CorDapp which involves a transfer of value, we've
+done some heavy lifting for you by building the tokens SDK.
+
+## What are tokens?
+
+A token represents an agreement between an issuer and a holder. The token
+is a liability from the issuer's perspective and an asset from the holder's
+perspective.
+
+There are two types of tokens which are supported by the tokens SDK:
+
+1. Depository receipts (or asset backed tokens) which are claims held by
+   the owner against the issuer to redeem an amount of some underlying
+   thing/asset/security. In this case, the value exists off-ledger. However,
+   the Corda ledger is authoritative regarding the question of which party
+   has a valid claim over said off-ledger value.
+2. Ledger native assets which are issued directly on to the ledger by parties
+   participating on the ledger. In this case, we can say that the token
+   represents the actual instrument as opposed to a claim over an issuer
+   to deliver some underlying instrument.
 
 Ledger native crypto-currencies are the exceptional case where tokens do
 not represent agreements. This is because the miners which mint units of
-the crypto-currency are pseudo-anonymous and therefore cannot be
-identified. Clearly, it is impossible to enter into a legal agreement
-with an unknown party, therefore it is reaonsable to say that ledger
-native crypto-currencies are not agreements when represented on Corda.
+the crypto-currency are pseudo-anonymous and therefore cannot be identified.
+Clearly, it is impossible to enter into a legal agreement with an unknown
+party, therefore it is reaonsable to say that ledger native crypto-currencies
+are not agreements when represented on Corda.
 
 Do not be confused when a token is used to represent an amount of some
-existing crypto-currecny on Corda; such a token would be classed as a
-*depository receipt* because the underlying value exists off-ledger.
-Indeed, the only case where a token would not be an agreement on a Corda
-ledger would be where the crypto-currency is issued directly onto a
-Corda ledger.
+existing crypto-currency on Corda; such a token would be classed as a depository
+receipt because the underlying value exists off-ledger. Indeed, the only
+case where a token would not be an agreement on a Corda ledger would be
+where the crypto-currency is issued directly onto a Corda ledger.
+
+*Fungible and non-fungible*
+
+Furthermore, tokens come in fungible and non-fungible varieties. Fungible
+tokens are represented by the FungibleToken class and can be split and merged.
+They are for representing things such as money, stocks and bonds. Non-fungible
+tokens are represented by the NonFunguibleTokens state and cannot be split
+and merged. They are for representing unique things like title deeds and
+loans.
+
+## What are token types?
+
+The token SDK allows CorDapp developers to create their own token types.
+These token types can be used to issue tokens of a specified type on the
+ledger. Token types come in two flavours:
+
+1. `FixedTokenType`s, which do not change over time, or are not expected
+   to change over time. Currency is a good example of a FixedTokenType.
+   They are represented as a class which implements FixedTokenType.
+2. Evolvable token types, which are expected to evolve over time. They are
+   represented as LinearStates. CorDapps developers can design their own logic
+   that governs how the evolvable token types are updated over time. Evolvable
+   token types are introduce some additional complexity compared to fixed
+   token types. The reason being is that it doesn't make sense to in-line
+   a LinearState into a token state, so instead we include a pointer in the
+   token state which points to the LinearState that contains the token type
+   information. We call this pointer a TokenPointer.
+
+The token SDK comes with some token types already defined; FiatCurrency and
+DigitalCurrency which are both of type Money and in turn FixedTokenType.
+They are defined within the `money` module.
+
+## Changelog
+
+### Release Candidate 2
+
+Release candidate 2 is available. Please see branch `release/1.0-RC02`.
+This release candidate is almost code complete.
+
+#### Contracts
+
+* `NonFungibleToken`s are now `LinearState`s so they can be queried for
+  by `LinearId`.
+
+#### Workflows
+
+* The redeem flows have been re-factored so that they are in-line with the
+  design of the issue and move flows.
+* Various bug fixes.
+* Added progress trackers to more flows.
+* Added @Suspendable annotations to more functions.
+
+#### Known issues
+
+1. Increase test coverage still required.
+2. In memory teken selection to be merged into `master` and the addition
+   of a config option which allows CorDapp developers to use in memory
+   token selection or database token selection.
+3. Docs and examples are still to come.
+
+### Release Candidate 1 (15 May 2019)
+
+#### Contracts
+
+**Token types**
+
+* Addition of the `TokenType` interface which allows developers to define
+  their own token types.
+* Addition of a `IssuedTokenType` class which couples a token type with
+  an issuing `Party`. This type exists because identical token types with
+  different issuers cannot usually be considered fungible.
+* Addition of two `TokenType` sub-types; `FixedTokenType` for definitions
+  which are not expected to evolve over time and `TokenPointer` which points
+  to the `linearId` of a `LinearState` which contains the token type data
+  that _is_ expected to evolve.
+* Addition of an abstract `EvolvableTokenType` which will be pointed to
+  by a `TokenPointer`. It allows developers to define their own evolvable
+  token types as `LinearState`s. The `EvolvableTokenType` state comes with
+  an abstract contract which defines common logic expected to be used in
+  all evolvable token types. Evolvable token types can be converted to
+  `TokenPointer`s.
+* Addition of two command types `Create` and `Update` for performing transactions
+  on evolvable token types.
+
+**Tokens**
+
+* Addition of a `FungibleToken` state type which allows parties to hold
+  some amount of an `IssuedTokenType`. Amounts of fungible tokens can be
+  split and merged, providing the `IssuedTokenType` is the same type.
+* Addition of a `NonFungibleToken` state type which allows parties to hold
+  a fungible token of an `IssuedTokenType`. Non fungible tokens cannot be
+  split and merged. It is expected that only one non fungible token of a
+  particular `IssuedTokenType` can be issued on the ledger at any one time,
+  although there are currently no controls to prevent multiple non fungible
+  tokens being issued. For the time being, these controls will be up to issuers
+  to enforce.
+* Addition of contracts for `FungibleToken` and `NonFungibleToken` which
+  govern how fungible and non fungible tokens can be issued, moved and redeemed.
+* Addition of commands for performing transactions on fungible and non fungible
+  tokens.
+
+**Schemas**
+
+* Addition of object relational mappers for `NonFungibleToken` and `FungibleToken`
+  so that they can be queried from the vault by the following properties:
+  issuer, holder, amount (for fungible tokens) and token type.
+
+**Utilities**
+
+* Addition of kotlin utilities for creating amounts of a `TokenType` or
+  `IssuedTokenType` using the following syntax: `10.TOKEN_TYPE` or `10 of tokenType`.
+* Addition of kotlin utilities to create an `IssuedTokenType` from a `TokenType`
+  using the following syntax `tokenType issuedBy issuer`
+* Addition of kotlin utilities to sum amounts of `IssuedTokenType` and `TokenType`.
+* Addition of kotlin utilities to create a `NonFungibleToken` or `FungibleToken`
+  from an `IssuedTokenType` and a `Party` using the following syntax:
+  `issuedTokenType ownedBy party`
+* Addition of kotlin utilities to assign a notary to a `NonFungibleToken`
+  or `FungibleToken` using the following syntax: `tokens withNotary notary`
+* Addition of utilities for summing lists of `FungibleToken`s.
+
+#### Money
+
+* Addition of an abstract `Money` class, that sub-classes `FixedTokenType`,
+  from which all money-like token types should derive.
+* Addition of a `FiatCurrency` class which is a wrapper around `java.util.Currency`.
+* Addition of a `DigitalCurrency` class which behaves similarly to `FiatCurrency`,
+  it's registry has been populated with the following digital currencies:
+  Bitcoin, Ethereum, Ripple and Dogecoin.
+* Addition of utilities for creating amounts of `Money` using the following
+  syntax `10.GBP`.
+
+#### Workflows
+
+* Creation of an `internal` package to house aprts of the API which may
+  change.
+* Addition of flows to issue, move and redeem fungible tokens, called
+  `IssueTokensFlow`, `MoveTokensFlow` and `RedeemTokensFlow`, respectively.
+  All flows are intended to be used as in-line sub-flows. `IssueTokenFlow`
+  handles the issuance of fungible as well as non-fungible tokens. The
+  move and redeem flows have variants for fungible tokens and variants for
+  non-fungible tokens.
+* Added confidential variants of the above flows, which allow CorDapp developers
+  to issue tokens to newly created public keys, move tokens to newly created
+  public keys and redeem tokens, with change being assigned to a newly
+  created public key.
+* Initiating versions of the above flows have been added which can be
+  easily invoked from the node shell (this is useful for testing and performing
+  demos).
+* Addition of flows to create new evolvable token types.
+* Addition of a generic flow to update an evolvable token type.
+* Addition of a set of flows to add parties to a distribution list for evolvable
+  token updates. This flow exists in the absence of data distribution groups.
+  When tokens with evolvable token types are newly issued, the recipient
+  is added to a distribution list. When tokens with evolvable token types
+  are moved, the recipient is added to the issuer's distribution list.
+* Addition of query utilities to query fungible and non fungible tokens
+  by type and issuer.
+* Addition of query utilities to obtain sums by token type.
+* Creation of an "observer aware" finality flow which allows transaction
+  observers to store a transaction with `StatesToRecord.ALL_VISIBLE`.
+
+#### Token selection
+
+* Addition of a token selection utility which keeps in memory records of
+  available tokens for spending. Multiple buckets can be created to cateogrise
+  tokens by various criteria. For example, tokens for a particular account,
+  tokens of a particular type, tokens with a particular issuer or notary.
+
+#### Known issues
+
+1. Redeem flows still require refactoring to bring in-line with issue and
+   move flows.
+2. Some tests are ignored while we investigate why they are failing.
+3. Docs and examples are still to come.
+4. Increased test coverage required.
