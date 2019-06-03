@@ -4,7 +4,10 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
 import com.r3.corda.sdk.token.workflow.utilities.addPartyToDistributionList
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.flows.*
+import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.FlowSession
+import net.corda.core.flows.InitiatedBy
+import net.corda.core.flows.InitiatingFlow
 import net.corda.core.utilities.unwrap
 
 // TODO: REMOVE THIS?
@@ -31,7 +34,6 @@ object RequestAdditionToDistributionList {
         // No failure for now!
     }
 
-    @StartableByRPC
     @InitiatingFlow
     class Initiator(val stateAndRef: StateAndRef<EvolvableTokenType>) : FlowLogic<Unit>() {
         @Suspendable

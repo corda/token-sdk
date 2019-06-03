@@ -6,7 +6,6 @@ import com.r3.corda.sdk.token.contracts.types.TokenType
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatingFlow
-import net.corda.core.flows.StartableByRPC
 import net.corda.core.transactions.TransactionBuilder
 
 /**
@@ -14,7 +13,6 @@ import net.corda.core.transactions.TransactionBuilder
  */
 // Called on owner side.
 @InitiatingFlow
-@StartableByRPC
 class RedeemTokensFlow<T : TokenType>
 @JvmOverloads
 constructor(
