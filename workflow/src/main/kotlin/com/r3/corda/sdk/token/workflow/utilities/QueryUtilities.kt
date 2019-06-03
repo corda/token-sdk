@@ -5,13 +5,12 @@ import com.r3.corda.sdk.token.contracts.schemas.PersistentNonFungibleToken
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
 import com.r3.corda.sdk.token.contracts.types.TokenType
-import com.r3.corda.sdk.token.workflow.schemas.DistributionRecord
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
-import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.VaultService
 import net.corda.core.node.services.queryBy
@@ -19,8 +18,6 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.node.services.vault.Sort
 import net.corda.core.node.services.vault.SortAttribute
 import net.corda.core.node.services.vault.builder
-import java.util.*
-import javax.persistence.criteria.CriteriaQuery
 
 // TODO Revisit this API and add documentation.
 /** Miscellaneous helpers. */
@@ -31,38 +28,6 @@ inline fun <reified T : LinearState> VaultService.getLinearStateById(linearId: U
     return queryBy<T>(query).states.singleOrNull()
 }
 
-// Gets the distribution list for a particular token.
-fun getDistributionList(services: ServiceHub, linearId: UniqueIdentifier): List<DistributionRecord> {
-    return services.withEntityManager {
-        val query: CriteriaQuery<DistributionRecord> = criteriaBuilder.createQuery(DistributionRecord::class.java)
-        query.apply {
-            val root = from(DistributionRecord::class.java)
-            where(criteriaBuilder.equal(root.get<UUID>("linearId"), linearId.id))
-            select(root)
-        }
-        createQuery(query).resultList
-    }
-}
-
-// Gets the distribution record for a particular token and party.
-fun getDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, party: Party): DistributionRecord? {
-    return serviceHub.withEntityManager {
-        val query: CriteriaQuery<DistributionRecord> = criteriaBuilder.createQuery(DistributionRecord::class.java)
-        query.apply {
-            val root = from(DistributionRecord::class.java)
-            val linearIdEq = criteriaBuilder.equal(root.get<UUID>("linearId"), linearId.id)
-            val partyEq = criteriaBuilder.equal(root.get<Party>("party"), party)
-            where(criteriaBuilder.and(linearIdEq, partyEq))
-            select(root)
-        }
-        createQuery(query).resultList
-    }.singleOrNull()
-}
-
-fun hasDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, party: Party): Boolean {
-    return getDistributionRecord(serviceHub, linearId, party) != null
-}
-
 /** Utilities for getting tokens from the vault and performing miscellaneous queries. */
 
 // TODO: Add queries for getting the balance of all tokens, not just relevant ones.
@@ -70,17 +35,24 @@ fun hasDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, pa
 
 // Returns all owned token amounts of a specified token with given issuer.
 // We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
-fun <T: TokenType> tokenAmountWithIssuerCriteria(token: T, issuer: Party): QueryCriteria {
+fun <T : TokenType> tokenAmountWithIssuerCriteria(token: T, issuer: Party): QueryCriteria {
     val issuerCriteria = QueryCriteria.VaultCustomQueryCriteria(builder {
         PersistentFungibleToken::issuer.equal(issuer)
     })
-    return ownedTokenAmountCriteria(token).and(issuerCriteria)
+    return tokenAmountCriteria(token).and(issuerCriteria)
+}
+
+fun <T: TokenType> ownedTokenAmountCriteria(token: T, holder: AbstractParty): QueryCriteria {
+    val holderCriteria = QueryCriteria.VaultCustomQueryCriteria(builder{
+        PersistentFungibleToken::holder.equal(holder)
+    })
+    return tokenAmountCriteria(token).and(holderCriteria)
 }
 
 // Returns all owned token amounts of a specified token.
 // We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
 // TODO should be called token amount criteria (there is no owner selection)
-fun <T : TokenType> ownedTokenAmountCriteria(token: T): QueryCriteria {
+fun <T : TokenType> tokenAmountCriteria(token: T): QueryCriteria {
     val tokenClass = builder {
         PersistentFungibleToken::tokenClass.equal(token.tokenClass)
     }
@@ -137,8 +109,8 @@ fun <T : TokenType> rowsToAmount(token: T, rows: Vault.Page<FungibleToken<T>>): 
 /** General queries. */
 
 // Get all owned token amounts for a specific token, ignoring the issuer.
-fun <T : TokenType> VaultService.ownedTokenAmountsByToken(token: T): Vault.Page<FungibleToken<T>> {
-    return queryBy(ownedTokenAmountCriteria(token))
+fun <T : TokenType> VaultService.tokenAmountsByToken(token: T): Vault.Page<FungibleToken<T>> {
+    return queryBy(tokenAmountCriteria(token))
 }
 
 // Get all owned tokens for a specific token, ignoring the issuer.
@@ -150,7 +122,7 @@ fun <T : TokenType> VaultService.ownedTokensByToken(token: T): Vault.Page<NonFun
 
 // We need to group the sum by the token class and token identifier.
 fun <T : TokenType> VaultService.tokenBalance(token: T): Amount<T> {
-    val query = ownedTokenAmountCriteria(token).and(sumTokenCriteria())
+    val query = tokenAmountCriteria(token).and(sumTokenCriteria())
     val result = queryBy<FungibleToken<T>>(query)
     return rowsToAmount(token, result)
 }

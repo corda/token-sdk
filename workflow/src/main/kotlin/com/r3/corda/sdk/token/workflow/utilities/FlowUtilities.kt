@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.AbstractToken
 import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.workflow.flows.internal.distribution.UpdateDistributionListRequestFlow
+import com.r3.corda.sdk.token.workflow.flows.internal.distribution.hasDistributionRecord
 import com.r3.corda.sdk.token.workflow.schemas.DistributionRecord
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.ContractState

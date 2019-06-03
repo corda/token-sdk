@@ -9,6 +9,7 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 
+// TODO this should be internal?
 class AnonymisePartiesFlow(
         val parties: List<AbstractParty>,
         val sessions: List<FlowSession>

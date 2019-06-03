@@ -9,7 +9,7 @@ import com.r3.corda.sdk.token.contracts.utilities.heldBy
 import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.sdk.token.workflow.types.PartyAndAmount
-import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountCriteria
+import com.r3.corda.sdk.token.workflow.utilities.tokenAmountCriteria
 import com.r3.corda.sdk.token.workflow.utilities.sortByStateRefAscending
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Amount.Companion.sumOrThrow
@@ -123,7 +123,7 @@ class TokenSelection(
     fun <T : TokenType> attemptSpend(
             requiredAmount: Amount<T>,
             lockId: UUID,
-            additionalCriteria: QueryCriteria = ownedTokenAmountCriteria(requiredAmount.token),
+            additionalCriteria: QueryCriteria = tokenAmountCriteria(requiredAmount.token),
             sorter: Sort = sortByStateRefAscending(),
             pageSize: Int = 200
     ): List<StateAndRef<FungibleToken<T>>> {
@@ -172,7 +172,7 @@ class TokenSelection(
         // The way to do this will be to perform a query for each token type. If there are multiple token types then
         // just do all the below however many times is necessary.
         val totalRequired = partyAndAmounts.map { it.amount }.sumOrThrow()
-        val additionalCriteria = queryCriteria ?: ownedTokenAmountCriteria(totalRequired.token)
+        val additionalCriteria = queryCriteria ?: tokenAmountCriteria(totalRequired.token)
         val acceptableStates = attemptSpend(totalRequired, lockId, additionalCriteria)
         require(acceptableStates.isNotEmpty()) {
             "No states matching given criteria to generate move."

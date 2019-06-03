@@ -7,8 +7,16 @@ import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import com.r3.corda.sdk.token.workflow.flows.evolvable.CreateEvolvableToken
 import com.r3.corda.sdk.token.workflow.flows.evolvable.UpdateEvolvableToken
-import com.r3.corda.sdk.token.workflow.flows.redeem.RedeemToken
-import com.r3.corda.sdk.token.workflow.flows.shell.*
+import com.r3.corda.sdk.token.workflow.flows.redeem.RedeemTokensFlow
+import com.r3.corda.sdk.token.workflow.flows.shell.ConfidentialIssueTokens
+import com.r3.corda.sdk.token.workflow.flows.shell.ConfidentialMoveFungibleTokens
+import com.r3.corda.sdk.token.workflow.flows.shell.ConfidentialMoveNonFungibleTokens
+import com.r3.corda.sdk.token.workflow.flows.shell.ConfidentialRedeemFungibleTokens
+import com.r3.corda.sdk.token.workflow.flows.shell.IssueTokens
+import com.r3.corda.sdk.token.workflow.flows.shell.MoveFungibleTokens
+import com.r3.corda.sdk.token.workflow.flows.shell.MoveNonFungibleTokens
+import com.r3.corda.sdk.token.workflow.flows.shell.RedeemFungibleTokens
+import com.r3.corda.sdk.token.workflow.flows.shell.RedeemNonFungibleTokens
 import com.r3.corda.sdk.token.workflow.types.PartyAndAmount
 import com.r3.corda.sdk.token.workflow.types.PartyAndToken
 import net.corda.core.concurrent.CordaFuture
@@ -90,10 +98,11 @@ fun <T : TokenType> StartedMockNode.redeemTokens(
         amount: Amount<T>? = null,
         anonymous: Boolean = true
 ): CordaFuture<SignedTransaction> {
-    return startFlow(RedeemToken.InitiateRedeem(
-            ownedToken = token,
-            issuer = issuer.legalIdentity(),
-            amount = amount,
-            anonymous = anonymous
-    ))
+    return if (anonymous && amount != null) {
+        startFlow(ConfidentialRedeemFungibleTokens(amount, issuer.legalIdentity()))
+    } else if (amount == null) {
+        startFlow(RedeemNonFungibleTokens(token, issuer.legalIdentity()))
+    } else {
+        startFlow(RedeemFungibleTokens(amount, issuer.legalIdentity()))
+    }
 }

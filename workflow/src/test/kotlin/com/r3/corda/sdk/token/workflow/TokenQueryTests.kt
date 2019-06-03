@@ -91,11 +91,11 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     @Test
     fun `query owned token amounts by token`() {
         // Perform a   custom query for GBP only tokensToIssue.
-        val gbp = A.services.vaultService.ownedTokenAmountsByToken(GBP).states
+        val gbp = A.services.vaultService.tokenAmountsByToken(GBP).states
         assertEquals(gbpTokens.size, gbp.size)
-        val usd = A.services.vaultService.ownedTokenAmountsByToken(USD).states
+        val usd = A.services.vaultService.tokenAmountsByToken(USD).states
         assertEquals(usdTokens.size, usd.size)
-        val btc = A.services.vaultService.ownedTokenAmountsByToken(BTC).states
+        val btc = A.services.vaultService.tokenAmountsByToken(BTC).states
         assertEquals(btcTokens.size, btc.size)
     }
 
