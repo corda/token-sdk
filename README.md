@@ -55,7 +55,7 @@ shell with the following command:
 
     start ExampleFlowWithFixedToken currency: GBP, amount: 100, recipient: PartyB
 
-See the token template code [here](https://github.com/corda/cordapp-template-kotlin/blob/token-template/build.gradle)
+See the token template code [here](https://github.com/corda/cordapp-template-kotlin/blob/token-template/)
 for more information.
 
 ### Adding token SDK dependencies to an existing CorDapp
@@ -142,7 +142,7 @@ Ledger native crypto-currencies are the exceptional case where tokens do
 not represent agreements. This is because the miners which mint units of
 the crypto-currency are pseudo-anonymous and therefore cannot be identified.
 Clearly, it is impossible to enter into a legal agreement with an unknown
-party, therefore it is reaonsable to say that ledger native crypto-currencies
+party, therefore it is reasonable to say that ledger native crypto-currencies
 are not agreements when represented on Corda.
 
 Do not be confused when a token is used to represent an amount of some
@@ -154,9 +154,9 @@ where the crypto-currency is issued directly onto a Corda ledger.
 *Fungible and non-fungible*
 
 Furthermore, tokens come in fungible and non-fungible varieties. Fungible
-tokens are represented by the FungibleToken class and can be split and merged.
+tokens are represented by the `FungibleToken` class and can be split and merged.
 They are for representing things such as money, stocks and bonds. Non-fungible
-tokens are represented by the NonFunguibleTokens state and cannot be split
+tokens are represented by the `NonFungibleToken`s state and cannot be split
 and merged. They are for representing unique things like title deeds and
 loans.
 
@@ -166,21 +166,119 @@ The token SDK allows CorDapp developers to create their own token types.
 These token types can be used to issue tokens of a specified type on the
 ledger. Token types come in two flavours:
 
-1. `FixedTokenType`s, which do not change over time, or are not expected
-   to change over time. Currency is a good example of a FixedTokenType.
-   They are represented as a class which implements FixedTokenType.
+1. Fixed token types, which do not change over time, or are not expected
+   to change over time. Currency is a good example of a fixed token type.
+   They are represented as a class which implements `FixedTokenType`.
 2. Evolvable token types, which are expected to evolve over time. They are
-   represented as LinearStates. CorDapps developers can design their own logic
-   that governs how the evolvable token types are updated over time. Evolvable
-   token types are introduce some additional complexity compared to fixed
-   token types. The reason being is that it doesn't make sense to in-line
-   a LinearState into a token state, so instead we include a pointer in the
-   token state which points to the LinearState that contains the token type
-   information. We call this pointer a TokenPointer.
+   represented by the `EvolvableTokenType` interface, which is a `LinearState`.
+   CorDapps developers can design their own logic that governs how the
+   evolvable token types are updated over time. Evolvable token types
+   introduce some additional complexity compared to fixed token types. The
+   reason being is that it doesn't make sense to in-line a `LinearState`
+   into a token state, so instead we include a pointer in the token state
+   which points to the LinearState that contains the token type information.
+   We call this pointer a `TokenPointer`.
 
-The token SDK comes with some token types already defined; FiatCurrency and
-DigitalCurrency which are both of type Money and in turn FixedTokenType.
+The token SDK comes with some token types already defined; `FiatCurrency` and
+`DigitalCurrency` which are both of type `Money` and in turn `FixedTokenType`.
 They are defined within the `money` module.
+
+## Issued token types
+
+As tokens are an agreement between an issuer and a holder, we must specify
+an issuer for each token type. For example, there might exist a token type
+representing an amount of GBP, that token type can be issued by multiple issuers
+
+    GBP issued by Alice
+    GBP issued by Bob
+
+and we need a way to represent this in the token SDK. This is what the
+`IssuedTokenType` is for. The class is a tuple of `TokenType` and `Party`
+(which represents the issuer).
+
+It is worth noting that the same token type issued by different issuers
+are not considered interchangeable. By that we mean that fungible tokens
+of the same token type which different issuers cannot be merged.
+
+This makes sense in the case of a depository receipt because whilst the
+underlying instrument might be the same thing (GBP), each issuer presents
+different credit and operational risks meaning the the tokens they issue
+are not equivalent.
+
+In the case of ledger native tokens, things are slightly different. As ledger
+participants can issue financial instruments directly onto the ledger then
+the `TokenType` for their token implies which participant the issuer is.
+However, tokens using this `TokenType` can still be re-issued by another
+ledger participant as a depository receipt.
+
+## Creating and issuing your first token
+
+### Defining a `FixedTokenType`
+
+Two `FixedTokenType`s already exist in the token SDK, `FiatCurrency` and
+`DigitalCurrency`. There are easy to use helpers for both, for example:
+
+    val pounds: FiatCurrency = GBP
+    val euros: FiatCurrency = EUR
+    val bitcoin: DigitalCurrency = BTC
+
+Creating your own is easy; just sub-class the `FixedTokenType` abstract
+class. You will need to specify a `tokenIdentifier` property and how many
+fraction digits amounts of this token can have. E.g.
+
+* "0" for zero fraction digits where there can only exist whole numbers
+  of your token type, and
+* "2" for two decimal places like GBP, USD and EUR
+
+You can also add a `toString` override, if you like.
+
+    class MyTokenType(
+        override val tokenIdentifier: String,
+        private val defaultFractionDigits: Int = 0
+    ) : FixedTokenType() {
+        override val tokenClass: String get() = javaClass.canonicalName
+        override val displayTokenSize: BigDecimal get() = BigDecimal.ONE.scaleByPowerOfTen(-defaultFractionDigits)
+        override fun toString(): String = tokenIdentifier
+    }
+
+The `tokenClass` property should usually just be the fully qualified class
+name for your token type. Both the `tokenClass` and `tokenIdentifier` are
+used when serializing token types. Two properties are required, as with
+`FiatCurrency` and `DigitalCurrency`, there can be many different instances
+of one `tokenClass`, each with their own `tokenIdentifier`.
+
+### Creating an instance of your new `FixedTokenType`
+
+Create an instance of your new token type like you would a regular object.
+
+    val myTokenType = MyTokenType("TEST", 2)
+
+This creates a token of
+
+    class: MyTokenType
+    identifier: TEST
+
+### Creating an instance of an `IssuedTokenType`
+
+Create an `IssuedTokenType` as follows
+
+    // With your own token type.
+    val issuer: Party = ...
+    val myTokenType = MyTokenType("TEST", 2)
+    val issuedTokenType: IssuedTokenType<MyTokenType> = myTokenType issuedBy issuer
+
+    // Or with the built in types.
+    val issuedGbp: IssuedTokenType<FiatCurrency> = GBP issuedBy issuer
+    val issuedGbp: IssuedTokenType<DigitalCurrency>  = BTC issuedBy issuer
+
+The issuing party must be a `Party` as opposed to an `AbstractParty` or
+`AnonymousParty`, this is because the issuer must be well known.
+
+The `issuedBy` syntax uses a kotlin infix extension function.
+
+### Creating an amount of some `IssuedTokenType`
+
+### Creating instances of `FungibleToken`s and `NonFungibleToken`s
 
 ## Changelog
 
