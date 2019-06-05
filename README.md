@@ -20,10 +20,10 @@ The tokens SDK comprises three CorDapp JARs:
 
 1. Contracts which contains the base types, states and contracts
 2. Workflows which contains flows for issuing, moving and redeeming tokens
-   as well as utilities for
+   as well as utilities for the above operations.
 3. Money which contains token type definitions for various currencies
 
-The token SDK is intended to replace the "finance module" in the core
+The token SDK is intended to replace the "finance module" from the core
 Corda repository.
 
 For more details behind the token SDK's design, see
@@ -43,9 +43,8 @@ template". You can obtain it with the following commands:
 
 Once you have cloned the repository, you should open it with IntelliJ. This
 will give you a template repo with the token SDK dependencies already
-included and some example code which should illustrate you have the correct
-dependencies on your classpath. You can `deployNodes` to create three nodes
-and issue to tokens:
+included and some example code which should illustrate you how to use  token SDK.
+You can `deployNodes` to create three nodes:
 
     ./gradlew clean deployNodes
     ./build/nodes/runnodes
@@ -196,7 +195,7 @@ and we need a way to represent this in the token SDK. This is what the
 `IssuedTokenType` is for. The class is a tuple of `TokenType` and `Party`
 (which represents the issuer).
 
-It is worth noting that the same token type issued by different issuers
+It is worth noting that the same token types issued by different issuers
 are not considered interchangeable. By that we mean that fungible tokens
 of the same token type which different issuers cannot be merged.
 
@@ -303,7 +302,7 @@ This release candidate is almost code complete.
 #### Known issues
 
 1. Increase test coverage still required.
-2. In memory teken selection to be merged into `master` and the addition
+2. In memory token selection to be merged into `master` and the addition
    of a config option which allows CorDapp developers to use in memory
    token selection or database token selection.
 3. Docs and examples are still to come.
@@ -382,7 +381,7 @@ This release candidate is almost code complete.
 
 #### Workflows
 
-* Creation of an `internal` package to house aprts of the API which may
+* Creation of an `internal` package to house parts of the API which may
   change.
 * Addition of flows to issue, move and redeem fungible tokens, called
   `IssueTokensFlow`, `MoveTokensFlow` and `RedeemTokensFlow`, respectively.

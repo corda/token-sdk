@@ -1,4 +1,4 @@
-package com.r3.corda.sdk.token.workflow.flows.confidential
+package com.r3.corda.sdk.token.workflow.flows.internal.confidential
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.workflow.flows.internal.confidential.ActionRequest

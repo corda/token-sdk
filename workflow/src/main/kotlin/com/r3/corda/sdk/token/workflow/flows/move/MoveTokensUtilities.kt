@@ -66,6 +66,11 @@ fun <T : TokenType> addMoveTokens(
     return addMoveTokens(transactionBuilder = transactionBuilder, inputs = listOf(input), outputs = listOf(output))
 }
 
+/**
+ * Adds multiple token moves to transaction. [partiesAndAmounts] parameter specify which parties should receive amounts of the token.
+ * With possible change paid to [changeOwner].
+ * Provide optional [queryCriteria] for move generation.
+ */
 @Suspendable
 fun <T : TokenType> addMoveTokens(
         transactionBuilder: TransactionBuilder,
@@ -84,6 +89,10 @@ fun <T : TokenType> addMoveTokens(
     return addMoveTokens(transactionBuilder = transactionBuilder, inputs = inputs, outputs = outputs)
 }
 
+/**
+ * Add single move of [amount] of token to the new [holder]. Possible change output will be paid to [changeOwner].
+ * Provide optional [queryCriteria] for move generation.
+ */
 @Suspendable
 fun <T : TokenType> addMoveTokens(
         transactionBuilder: TransactionBuilder,
@@ -102,6 +111,10 @@ fun <T : TokenType> addMoveTokens(
     )
 }
 
+/**
+ * Add single move of amount of token to the new holder specified by [partyAndAmount] parameter. Possible change output will be paid to [changeOwner].
+ * Provide optional [queryCriteria] for move generation.
+ */
 @Suspendable
 fun <T : TokenType> addMoveTokens(
         transactionBuilder: TransactionBuilder,
@@ -121,6 +134,10 @@ fun <T : TokenType> addMoveTokens(
 
 /* For non-fungible tokens. */
 
+/**
+ * Add single move of [token] to the new [holder].
+ * Provide optional [queryCriteria] for move generation.
+ */
 @Suspendable
 fun <T : TokenType> addMoveTokens(
         transactionBuilder: TransactionBuilder,
@@ -132,6 +149,10 @@ fun <T : TokenType> addMoveTokens(
     return generateMoveNonFungible(transactionBuilder, PartyAndToken(holder, token), serviceHub.vaultService, queryCriteria)
 }
 
+/**
+ * Add single move of token to the new holder specified using [partyAndToken] parameter.
+ * Provide optional [queryCriteria] for move generation.
+ */
 @Suspendable
 fun <T : TokenType> addMoveTokens(
         transactionBuilder: TransactionBuilder,
@@ -144,6 +165,10 @@ fun <T : TokenType> addMoveTokens(
 
 /* FlowLogic extension functions. */
 
+/**
+ * Add single move of token to the new holder specified using [partyAndToken] parameter.
+ * Provide optional [queryCriteria] for move generation.
+ */
 @Suspendable
 fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         transactionBuilder: TransactionBuilder,
@@ -153,6 +178,10 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
     return addMoveTokens(transactionBuilder, serviceHub, partyAndToken, queryCriteria)
 }
 
+/**
+ * Add single move of [token] to the new [holder].
+ * Provide optional [queryCriteria] for move generation.
+ */
 @Suspendable
 fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         transactionBuilder: TransactionBuilder,
@@ -163,6 +192,10 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
     return addMoveTokens(transactionBuilder, serviceHub, token, holder, queryCriteria)
 }
 
+/**
+ * Add single move of [amount] of token to the new [holder]. Possible change output will be paid to [changeOwner].
+ * Provide optional [queryCriteria] for move generation.
+ */
 @Suspendable
 fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         transactionBuilder: TransactionBuilder,
@@ -174,6 +207,10 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
     return addMoveTokens(transactionBuilder, serviceHub, amount, holder, queryCriteria, changeOwner)
 }
 
+/**
+ * Add single move of amount of token to the new holder specified by [partyAndAmount] parameter. Possible change output will be paid to [changeOwner].
+ * Provide optional [queryCriteria] for move generation.
+ */
 @Suspendable
 fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         transactionBuilder: TransactionBuilder,
@@ -184,6 +221,11 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
     return addMoveTokens(transactionBuilder, serviceHub, partyAndAmount, queryCriteria, changeOwner)
 }
 
+/**
+ * Adds multiple token moves to transaction. [partiesAndAmounts] parameter specify which parties should receive amounts of the token.
+ * With possible change paid to [changeOwner].
+ * Provide optional [queryCriteria] for move generation.
+ */
 @Suspendable
 fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         transactionBuilder: TransactionBuilder,

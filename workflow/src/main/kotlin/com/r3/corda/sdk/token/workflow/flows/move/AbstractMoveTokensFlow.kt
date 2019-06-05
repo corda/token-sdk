@@ -10,8 +10,14 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 
+/**
+ * Abstract class for the move tokens flows family.
+ * You must provide [participantSessions] and optional [observerSessions] for finalization. Override [addMove] to select
+ * tokens to move. See helper functions in [MoveTokensUtilities] module.
+ * The flow performs basic tasks, generates move transaction proposal for all the participants, collects signatures and
+ * finalises transaction with observers if present.
+ */
 abstract class AbstractMoveTokensFlow : FlowLogic<SignedTransaction>() {
-
     abstract val participantSessions: List<FlowSession>
     abstract val observerSessions: List<FlowSession>
 
@@ -20,6 +26,7 @@ abstract class AbstractMoveTokensFlow : FlowLogic<SignedTransaction>() {
         object RECORDING : ProgressTracker.Step("Recording signed transaction.") {
             override fun childProgressTracker() = FinalityFlow.tracker()
         }
+
         object UPDATING : ProgressTracker.Step("Updating data distribution list.")
 
         fun tracker() = ProgressTracker(GENERATE, RECORDING, UPDATING)
@@ -27,6 +34,9 @@ abstract class AbstractMoveTokensFlow : FlowLogic<SignedTransaction>() {
 
     override val progressTracker: ProgressTracker = tracker()
 
+    /**
+     * Add move of tokens to the [transactionBuilder]. Modifies the builder.
+     */
     @Suspendable
     abstract fun addMove(transactionBuilder: TransactionBuilder)
 

@@ -60,9 +60,9 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
         I.issueFungibleTokens(A, 100.USD).getOrThrow()
         I.issueFungibleTokens(A, 500.BTC).getOrThrow()
         // Non-fungible tokensToIssue.
-        I.issueNonFungibleTokens(fooToken, A)
-        I.issueNonFungibleTokens(barToken, A)
-        I2.issueNonFungibleTokens(bazToken, A) // Different issuer.
+        I.issueNonFungibleTokens(fooToken, A).getOrThrow()
+        I.issueNonFungibleTokens(barToken, A).getOrThrow()
+        I2.issueNonFungibleTokens(bazToken, A).getOrThrow() // Different issuer.
         network.waitQuiescent()
     }
 

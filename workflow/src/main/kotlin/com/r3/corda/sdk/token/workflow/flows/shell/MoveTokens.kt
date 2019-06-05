@@ -13,6 +13,9 @@ import net.corda.core.identity.Party
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 
+/**
+ * TODO docs
+ */
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
@@ -39,7 +42,7 @@ constructor(
         val participants = partiesAndAmounts.map(PartyAndAmount<*>::party)
         val observerSessions = sessionsForParties(observers)
         val participantSessions = sessionsForParties(participants)
-        return subFlow(SelectAndMoveFungibleTokensFlow(
+        return subFlow(MoveFungibleTokensFlow(
                 partiesAndAmounts = partiesAndAmounts,
                 participantSessions = participantSessions,
                 observerSessions = observerSessions,
@@ -49,12 +52,18 @@ constructor(
     }
 }
 
+/**
+ * TODO docs
+ */
 @InitiatedBy(MoveFungibleTokens::class)
 class MoveFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() = subFlow(MoveTokensFlowHandler(otherSession))
 }
 
+/**
+ * TODO docs
+ */
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
@@ -67,7 +76,7 @@ class MoveNonFungibleTokens<T : TokenType>(
     override fun call(): SignedTransaction {
         val observerSessions = sessionsForParties(observers)
         val participantSessions = sessionsForParties(listOf(partyAndToken.party))
-        return subFlow(SelectAndMoveNonFungibleTokensFlow(
+        return subFlow(MoveNonFungibleTokensFlow(
                 partyAndToken = partyAndToken,
                 participantSessions = participantSessions,
                 observerSessions = observerSessions,
@@ -76,6 +85,9 @@ class MoveNonFungibleTokens<T : TokenType>(
     }
 }
 
+/**
+ * TODO docs
+ */
 @InitiatedBy(MoveNonFungibleTokens::class)
 class MoveNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
@@ -84,6 +96,9 @@ class MoveNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Un
 
 /* Confidential flows. */
 
+/**
+ * TODO docs
+ */
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
@@ -106,7 +121,7 @@ class ConfidentialMoveFungibleTokens<T : TokenType>(
         val participants = partiesAndAmounts.map(PartyAndAmount<*>::party)
         val observerSessions = sessionsForParties(observers)
         val participantSessions = sessionsForParties(participants)
-        return subFlow(ConfidentialSelectAndMoveFungibleTokensFlow(
+        return subFlow(ConfidentialMoveFungibleTokensFlow(
                 partiesAndAmounts = partiesAndAmounts,
                 participantSessions = participantSessions,
                 observerSessions = observerSessions,
@@ -116,12 +131,18 @@ class ConfidentialMoveFungibleTokens<T : TokenType>(
     }
 }
 
+/**
+ * TODO docs
+ */
 @InitiatedBy(ConfidentialMoveFungibleTokens::class)
 class ConfidentialMoveFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() = subFlow(ConfidentialMoveTokensFlowHandler(otherSession))
 }
 
+/**
+ * TODO docs
+ */
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
@@ -134,7 +155,7 @@ class ConfidentialMoveNonFungibleTokens<T : TokenType>(
     override fun call(): SignedTransaction {
         val observerSessions = sessionsForParties(observers)
         val participantSessions = sessionsForParties(listOf(partyAndToken.party))
-        return subFlow(ConfidentialSelectAndMoveNonFungibleTokensFlow(
+        return subFlow(ConfidentialMoveNonFungibleTokensFlow(
                 partyAndToken = partyAndToken,
                 participantSessions = participantSessions,
                 observerSessions = observerSessions,
@@ -143,6 +164,9 @@ class ConfidentialMoveNonFungibleTokens<T : TokenType>(
     }
 }
 
+/**
+ * TODO docs
+ */
 @InitiatedBy(ConfidentialMoveNonFungibleTokens::class)
 class ConfidentialMoveNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
