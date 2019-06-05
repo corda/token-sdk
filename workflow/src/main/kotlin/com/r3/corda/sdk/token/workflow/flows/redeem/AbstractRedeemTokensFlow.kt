@@ -3,16 +3,22 @@ package com.r3.corda.sdk.token.workflow.flows.redeem
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.workflow.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.sdk.token.workflow.utilities.ourSigningKeys
-import com.r3.corda.sdk.token.workflow.utilities.participants
 import net.corda.confidential.IdentitySyncFlow
 import net.corda.core.flows.CollectSignaturesFlow
-import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 
+/**
+ * Abstract class for the redeem token flows family.
+ * You must provide [issuerSession] and optional [observerSessions] for finalization. Override [generateExit] to select
+ * tokens for redeeming.
+ * The flow performs basic tasks, generates redeem transaction proposal for the issuer, synchronises any confidential
+ * identities from the states to redeem with the issuer (bear in mind that issuer usually isn't involved in move of tokens),
+ * collects signatures and finalises transaction with observers if present.
+ */
 abstract class AbstractRedeemTokensFlow : FlowLogic<SignedTransaction>() {
     abstract val issuerSession: FlowSession
     abstract val observerSessions: List<FlowSession>
@@ -28,8 +34,11 @@ abstract class AbstractRedeemTokensFlow : FlowLogic<SignedTransaction>() {
 
     override val progressTracker: ProgressTracker = tracker()
 
+    /**
+     * Add redeem of tokens to the [transactionBuilder]. Modifies builder.
+     */
     @Suspendable
-    abstract fun generateExit(transactionBuilder: TransactionBuilder): TransactionBuilder
+    abstract fun generateExit(transactionBuilder: TransactionBuilder)
 
     @Suspendable
     override fun call(): SignedTransaction {

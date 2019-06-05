@@ -3,12 +3,24 @@ package com.r3.corda.sdk.token.workflow.flows.move
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.AbstractToken
 import com.r3.corda.sdk.token.contracts.types.TokenType
+import com.r3.corda.sdk.token.workflow.flows.redeem.addRedeemTokens
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowSession
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 
+/**
+ * General inlined flow used to move any type of tokens. This flow builds a transaction
+ * containing passed as parameters input and output states, but all checks should have be done before calling this flow as a subflow.
+ * It can only be called for one [TokenType] at a time. If you need to do multiple token types in one transaction then create a new
+ * flow, calling [addMoveTokens] for each token type.
+ *
+ * @param inputs list of token inputs to move
+ * @param outputs list of result token outputs
+ * @param participantSessions session with the participants of move tokens transaction
+ * @param observerSessions session with optional observers of the redeem transaction
+ */
 class MoveTokensFlow<T : TokenType>
 @JvmOverloads
 constructor(

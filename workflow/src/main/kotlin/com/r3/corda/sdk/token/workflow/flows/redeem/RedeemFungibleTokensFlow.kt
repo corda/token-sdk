@@ -2,30 +2,32 @@ package com.r3.corda.sdk.token.workflow.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.types.TokenType
-import com.r3.corda.sdk.token.workflow.flows.internal.checkSameNotary
-import com.r3.corda.sdk.token.workflow.flows.internal.selection.TokenSelection
-import com.r3.corda.sdk.token.workflow.utilities.tokenAmountWithIssuerCriteria
 import net.corda.core.contracts.Amount
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AbstractParty
-import net.corda.core.identity.Party
+import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.TransactionBuilder
 
 /**
- * TODO docs
+ * Inlined flow used to redeem amount of [FungibleToken]s issued by the particular issuer with possible change output paid to the [changeOwner].
+ *
+ * @param amount amount of token to redeem
+ * @param changeOwner owner of possible change output
+ * @param issuerSession session with the issuer tokens should be redeemed with
+ * @param observerSessions optional sessions with the observer nodes, to witch the transaction will be broadcasted
+ * @param additionalQueryCriteria additional criteria for token selection
  */
-// TODO query criteria?
 class RedeemFungibleTokensFlow<T : TokenType>
 @JvmOverloads
 constructor(
         val amount: Amount<T>,
-        val issuer: Party,
-        val changeOwner: AbstractParty, // TODO default it to us
+        val changeOwner: AbstractParty,
         override val issuerSession: FlowSession,
-        override val observerSessions: List<FlowSession> = emptyList()
+        override val observerSessions: List<FlowSession> = emptyList(),
+        val additionalQueryCriteria: QueryCriteria? = null
 ) : AbstractRedeemTokensFlow() {
     @Suspendable
-    override fun generateExit(transactionBuilder: TransactionBuilder): TransactionBuilder {
-       return addRedeemTokens(transactionBuilder, amount, issuer, changeOwner)
+    override fun generateExit(transactionBuilder: TransactionBuilder) {
+        addRedeemTokens(transactionBuilder, amount, issuerSession.counterparty, changeOwner, additionalQueryCriteria)
     }
 }

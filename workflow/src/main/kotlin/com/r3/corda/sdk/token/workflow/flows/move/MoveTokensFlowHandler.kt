@@ -5,6 +5,9 @@ import com.r3.corda.sdk.token.workflow.flows.finality.ObserverAwareFinalityFlowH
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 
+/**
+ * Responder flow for [MoveTokensFlow], [MoveFungibleTokensFlow], [MoveNonFungibleTokensFlow]
+ */
 class MoveTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {

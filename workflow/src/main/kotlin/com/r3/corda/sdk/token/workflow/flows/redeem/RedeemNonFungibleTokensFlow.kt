@@ -11,16 +11,19 @@ import net.corda.core.identity.Party
 import net.corda.core.transactions.TransactionBuilder
 
 /**
- * TODO docs
+ * Inlined flow used to redeem [NonFungibleToken] [ownedToken] issued by the particular issuer.
+ *
+ * @param ownedToken non fungible token to redeem
+ * @param issuerSession session with the issuer token should be redeemed with
+ * @param observerSessions optional sessions with the observer nodes, to witch the transaction will be broadcasted
  */
 class RedeemNonFungibleTokensFlow<T : TokenType>(
         val ownedToken: T,
-        val issuer: Party,
         override val issuerSession: FlowSession,
         override val observerSessions: List<FlowSession>
 ) : AbstractRedeemTokensFlow() {
     @Suspendable
-    override fun generateExit(transactionBuilder: TransactionBuilder): TransactionBuilder {
-        return addRedeemTokens(transactionBuilder, ownedToken, issuer)
+    override fun generateExit(transactionBuilder: TransactionBuilder) {
+        addRedeemTokens(transactionBuilder, ownedToken, issuerSession.counterparty)
     }
 }

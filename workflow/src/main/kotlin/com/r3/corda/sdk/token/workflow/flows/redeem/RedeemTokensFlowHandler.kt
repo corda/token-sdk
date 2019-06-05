@@ -14,9 +14,13 @@ import net.corda.core.flows.InitiatedBy
 import net.corda.core.flows.SignTransactionFlow
 import net.corda.core.transactions.SignedTransaction
 
+/**
+ * Inlined responder flow called on the issuer side, should be used with: [RedeemFungibleTokensFlow], [RedeemNonFungibleTokensFlow],
+ * [RedeemTokensFlow].
+ */
 // Called on Issuer side.
 @InitiatedBy(RedeemTokensFlow::class)
-class RedeemTokensFlowHandler<T : TokenType>(val otherSession: FlowSession) : FlowLogic<Unit>() {
+class RedeemTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
         // Synchronise all confidential identities, issuer isn't involved in move transactions, so states holders may not be known to this node.
@@ -24,7 +28,7 @@ class RedeemTokensFlowHandler<T : TokenType>(val otherSession: FlowSession) : Fl
         // Perform all the checks to sign the transaction.
         subFlow(object : SignTransactionFlow(otherSession) {
             override fun checkTransaction(stx: SignedTransaction) {
-                val stateAndRefsToRedeem = stx.toLedgerTransaction(serviceHub, false).inRefsOfType<AbstractToken<T>>()
+                val stateAndRefsToRedeem = stx.toLedgerTransaction(serviceHub, false).inRefsOfType<AbstractToken<TokenType>>()
                 checkSameIssuer(stateAndRefsToRedeem, ourIdentity)
                 checkSameNotary(stateAndRefsToRedeem)
                 checkOwner(serviceHub.identityService, stateAndRefsToRedeem, otherSession.counterparty)

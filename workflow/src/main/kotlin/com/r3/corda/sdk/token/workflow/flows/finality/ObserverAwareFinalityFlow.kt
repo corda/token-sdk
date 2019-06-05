@@ -23,9 +23,12 @@ import net.corda.core.transactions.TransactionBuilder
  * will not store any of the states. Those which are participants record the transaction as usual. This does mean that
  * there is an "all or nothing" approach to storing outputs for observers, so if there are privacy concerns, then it is
  * best to split state issuance up for different token holders in separate flow invocations.
+ * If transaction is a redeem tokens transaction, the issuer is treated as a participant - it records transaction and states with
+ * [StatesToRecord.ONLY_RELEVANT] set.
  *
  * @property transactionBuilder the transaction builder to finalise
- * @property signedTransaction TODO
+ * @property signedTransaction if [CollectSignaturesFlow] was called before you can use this flow to finalise signed
+ *  transaction with observers, notice that this flow can be called either with [transactionBuilder] or [signedTransaction]
  * @property allSessions a set of sessions for, at least, all the transaction participants and maybe observers
  */
 class ObserverAwareFinalityFlow private constructor (
@@ -57,7 +60,7 @@ class ObserverAwareFinalityFlow private constructor (
         val ourSigningKeys = ledgerTransaction.ourSigningKeys(serviceHub)
         val stx = transactionBuilder?.let {
             serviceHub.signInitialTransaction(it, signingPubKeys = ourSigningKeys)
-        } ?: signedTransaction!! // TODO get rid of null !!
+        } ?: signedTransaction ?: throw IllegalArgumentException("Didn't provide transactionBuilder nor signedTransaction to the flow.")
         return subFlow(FinalityFlow(transaction = stx, sessions = finalSessions))
     }
 }

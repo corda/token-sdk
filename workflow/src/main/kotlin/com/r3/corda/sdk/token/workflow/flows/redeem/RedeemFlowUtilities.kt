@@ -24,6 +24,9 @@ import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.TransactionBuilder
 
+/**
+ * Add redeeming of multiple [inputs] to the [transactionBuilder] with possible [changeOutput].
+ */
 @Suspendable
 @JvmOverloads
 fun <T : TokenType> addRedeemTokens(
@@ -52,20 +55,20 @@ fun <T : TokenType> addRedeemTokens(
 }
 
 /**
- * Adds a single token move to a transaction.
+ * Adds a single token redeem to a [transactionBuilder] with possible change [changeOutput].
  */
 @Suspendable
 @JvmOverloads
 fun <T : TokenType> addRedeemTokens(
         transactionBuilder: TransactionBuilder,
         input: StateAndRef<AbstractToken<T>>,
-        output: AbstractToken<T>? = null
+        changeOutput: AbstractToken<T>? = null
 ): TransactionBuilder {
-    return addRedeemTokens(transactionBuilder = transactionBuilder, inputs = listOf(input), changeOutput = output)
+    return addRedeemTokens(transactionBuilder = transactionBuilder, inputs = listOf(input), changeOutput = changeOutput)
 }
 
 /**
- * TODO
+ * Redeem non-fungible [ownedToken] issued by the [issuer] and add it to the [transactionBuilder].
  */
 @Suspendable
 fun <T : TokenType> addRedeemTokens(
@@ -85,31 +88,22 @@ fun <T : TokenType> addRedeemTokens(
 }
 
 /**
- * TODO, move to FlowLogic section
+ * Redeem amount of certain type of the token issued by [issuer]. Pay possible change to the [changeOwner] - it can be confidential identity.
+ * Additional query criteria can be provided using [additionalQueryCriteria].
  */
 @Suspendable
-fun <T : TokenType> FlowLogic<*>.addRedeemTokens(
-        transactionBuilder: TransactionBuilder,
-        ownedToken: T,
-        issuer: Party
-): TransactionBuilder {
-    return addRedeemTokens(transactionBuilder, serviceHub, ownedToken, issuer)
-}
-
-// TODO query criteria
-/**
- * TODO docs
- */
-@Suspendable
+@JvmOverloads
 fun <T : TokenType> addRedeemTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         amount: Amount<T>,
         issuer: Party,
-        changeOwner: AbstractParty
+        changeOwner: AbstractParty,
+        additionalQueryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
     val tokenSelection = TokenSelection(serviceHub)
-    val queryCriteria = tokenAmountWithIssuerCriteria(amount.token, issuer)
+    val baseCriteria = tokenAmountWithIssuerCriteria(amount.token, issuer)
+    val queryCriteria = additionalQueryCriteria?.let { baseCriteria.and(it) } ?: baseCriteria
     val fungibleStates = tokenSelection.attemptSpend(amount, TransactionBuilder().lockId, queryCriteria) // TODO We shouldn't expose lockId in this function
     checkSameNotary(fungibleStates)
     check(fungibleStates.isNotEmpty()) {
@@ -127,16 +121,32 @@ fun <T : TokenType> addRedeemTokens(
     return transactionBuilder
 }
 
-//TODO query criteria
+// Extensions on FlowLogic.
+
 /**
- * TODO docs
+ *  Redeem non-fungible [ownedToken] issued by the [issuer] and add it to the [transactionBuilder].
  */
 @Suspendable
 fun <T : TokenType> FlowLogic<*>.addRedeemTokens(
         transactionBuilder: TransactionBuilder,
+        ownedToken: T,
+        issuer: Party
+): TransactionBuilder {
+    return addRedeemTokens(transactionBuilder, serviceHub, ownedToken, issuer)
+}
+
+/**
+ * Redeem amount of certain type of the token issued by [issuer]. Pay possible change to the [changeOwner] - it can be confidential identity.
+ * Additional query criteria can be provided using [additionalQueryCriteria].
+ */
+@Suspendable
+@JvmOverloads
+fun <T : TokenType> FlowLogic<*>.addRedeemTokens(
+        transactionBuilder: TransactionBuilder,
         amount: Amount<T>,
         issuer: Party,
-        changeOwner: AbstractParty
+        changeOwner: AbstractParty,
+        additionalQueryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    return addRedeemTokens(transactionBuilder, serviceHub, amount, issuer, changeOwner)
+    return addRedeemTokens(transactionBuilder, serviceHub, amount, issuer, changeOwner, additionalQueryCriteria)
 }

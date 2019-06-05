@@ -33,14 +33,14 @@ constructor(
     override fun call(): SignedTransaction {
         val observerSessions = sessionsForParties(observers)
         val issuerSession = initiateFlow(issuer)
-        return subFlow(RedeemFungibleTokensFlow(amount, issuer, ourIdentity, issuerSession, observerSessions))
+        return subFlow(RedeemFungibleTokensFlow(amount, ourIdentity, issuerSession, observerSessions))
     }
 }
 
 @InitiatedBy(RedeemFungibleTokens::class)
-class RedeemFungibleTokensHandler<T : TokenType>(val otherSession: FlowSession) : FlowLogic<Unit>() {
+class RedeemFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
-    override fun call() = subFlow(RedeemTokensFlowHandler<T>(otherSession))
+    override fun call() = subFlow(RedeemTokensFlowHandler(otherSession))
 }
 
 @StartableByService
@@ -58,14 +58,14 @@ constructor(
     override fun call(): SignedTransaction {
         val observerSessions = sessionsForParties(observers)
         val issuerSession = initiateFlow(issuer)
-        return subFlow(RedeemNonFungibleTokensFlow(ownedToken, issuer, issuerSession, observerSessions))
+        return subFlow(RedeemNonFungibleTokensFlow(ownedToken, issuerSession, observerSessions))
     }
 }
 
 @InitiatedBy(RedeemNonFungibleTokens::class)
-class RedeemNonFungibleTokensHandler<T : TokenType>(val otherSession: FlowSession) : FlowLogic<Unit>() {
+class RedeemNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
-    override fun call() = subFlow(RedeemTokensFlowHandler<T>(otherSession))
+    override fun call() = subFlow(RedeemTokensFlowHandler(otherSession))
 }
 
 /* Confidential flows. */
@@ -85,12 +85,12 @@ constructor(
     override fun call(): SignedTransaction {
         val observerSessions = sessionsForParties(observers)
         val issuerSession = initiateFlow(issuer)
-        return subFlow(ConfidentialRedeemFungibleTokensFlow(amount, issuer, issuerSession, observerSessions))
+        return subFlow(ConfidentialRedeemFungibleTokensFlow(amount, issuerSession, observerSessions))
     }
 }
 
 @InitiatedBy(ConfidentialRedeemFungibleTokens::class)
-class ConfidentialRedeemFungibleTokensHandler<T : TokenType>(val otherSession: FlowSession) : FlowLogic<Unit>() {
+class ConfidentialRedeemFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
-    override fun call() = subFlow(ConfidentialRedeemFungibleTokensFlowHandler<T>(otherSession))
+    override fun call() = subFlow(ConfidentialRedeemFungibleTokensFlowHandler(otherSession))
 }
