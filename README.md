@@ -231,10 +231,7 @@ class. You will need to specify a `tokenIdentifier` property and how many
 
 You can also add a `toString` override, if you like.
 
-    class MyTokenType(
-        override val tokenIdentifier: String,
-        private val fractionDigits: Int = 0
-    ) : FixedTokenType()
+    class MyTokenType(override val tokenIdentifier: String, override val fractionDigits: Int = 0) : FixedTokenType()
 
 The `tokenIdentifier` is used along with the `tokenClass` property (defined
 in `TokenType` when serializing token types. Two properties are required,
