@@ -223,7 +223,7 @@ Two `FixedTokenType`s already exist in the token SDK, `FiatCurrency` and
 
 Creating your own is easy; just sub-class the `FixedTokenType` abstract
 class. You will need to specify a `tokenIdentifier` property and how many
-fraction digits amounts of this token can have. E.g.
+`fractionDigits` amounts of this token can have. E.g.
 
 * "0" for zero fraction digits where there can only exist whole numbers
   of your token type, and
@@ -233,18 +233,30 @@ You can also add a `toString` override, if you like.
 
     class MyTokenType(
         override val tokenIdentifier: String,
-        private val defaultFractionDigits: Int = 0
-    ) : FixedTokenType() {
-        override val tokenClass: String get() = javaClass.canonicalName
-        override val displayTokenSize: BigDecimal get() = BigDecimal.ONE.scaleByPowerOfTen(-defaultFractionDigits)
-        override fun toString(): String = tokenIdentifier
-    }
+        private val fractionDigits: Int = 0
+    ) : FixedTokenType()
 
-The `tokenClass` property should usually just be the fully qualified class
-name for your token type. Both the `tokenClass` and `tokenIdentifier` are
-used when serializing token types. Two properties are required, as with
-`FiatCurrency` and `DigitalCurrency`, there can be many different instances
-of one `tokenClass`, each with their own `tokenIdentifier`.
+The `tokenIdentifier` is used along with the `tokenClass` property (defined
+in `TokenType` when serializing token types. Two properties are required,
+as with `FiatCurrency` and `DigitalCurrency`, there can be many different
+instances of one `tokenClass`, each with their own `tokenIdentifier`.
+
+The above defined token type, allows CorDapp developers to create multiple
+instances of the token type with different identifiers, for example:
+
+* `MyTokenType("ABC") -> tokenClass: MyTokenType, tokenIdentifier: ABC`
+* `MyTokenType("XYZ") -> tokenClass: MyTokenType, tokenIdentifier: XYZ`
+
+This is particularly useful for things like currencies, where there can be
+many different instances of the same type of thing. Indeed, this is how
+the `FiatCurrency` and `DigitalCurrency` classes work. However, this isn't
+always required. For cases where you'll only ever need a single instance
+of a token type you can create singleton objects like so:
+
+    object PitchTokenClassic : FixedTokenType() {
+        override val tokenIdentifier: String = "PTK"
+        override val fractionDigits: Int = 12
+    }
 
 ### Creating an instance of your new `FixedTokenType`
 
@@ -254,8 +266,8 @@ Create an instance of your new token type like you would a regular object.
 
 This creates a token of
 
-    class: MyTokenType
-    identifier: TEST
+    tokenClass: MyTokenType
+    tokenIdentifier: TEST
 
 ### Creating an instance of an `IssuedTokenType`
 
@@ -277,7 +289,46 @@ The `issuedBy` syntax uses a kotlin infix extension function.
 
 ### Creating an amount of some `IssuedTokenType`
 
+Once you have an `IssuedTokenType` you can optionally create some amount
+of it using the `of` syntax. For example:
+
+    val issuer: Party = ...
+    val myTokenType = MyTokenType("TEST", 2)
+    val myIssuedTokenType: IssuedTokenType<MyTokenType> = myTokenType issuedBy issuer
+    val tenOfMyIssuedTokenType = 10 of myIssuedTokenType
+
+Or:
+
+    val tenPounds: Amount<IssuedTokenType<FiatCurrency>> = 10 of GBP issuedBy issuer
+
+Or:
+
+    val tenPounds = 10.GBP issuedBy issuer
+
+If you do not need to create amounts of your token type because it is always
+intended to be issued as a `NonFungibleToken` then you don't have to create
+amounts of it.
+
 ### Creating instances of `FungibleToken`s and `NonFungibleToken`s
+
+To get from a token type or some amount of a token type to a non-fungible
+token or fungible token, we need to specify which party the proposed holder
+is. This can be done using the `heldBy` syntax:
+
+    val issuer: Party = ...
+    val holder: Party = ...
+
+    val myTokenType = MyTokenType("TEST", 2)
+    val myIssuedTokenType: IssuedTokenType<MyTokenType> = myTokenType issuedBy issuer
+    val tenOfMyIssuedTokenType = 10 of myIssuedTokenType
+
+    // Adding a holder to an amount of a token type, creates a fungible token.
+    val fungibleToken: FungibleToken<MyTokenType> = tenOfMyIssuedTokenType heldBy holder
+    // Adding a holder to a token type, creates a non-fungible token.
+    val nonFungibleToken: NonFungibleToken<MyTokenType> = myIssuedTokenType heldBy holder
+
+Once you have a `FungibleToken` or a `NonFungibleToken`, you can then go
+and issue that token on ledger.
 
 ## Changelog
 
