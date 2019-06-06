@@ -3,7 +3,6 @@ package com.r3.corda.sdk.token.contracts.states
 import com.r3.corda.sdk.token.contracts.FungibleTokenContract
 import com.r3.corda.sdk.token.contracts.schemas.FungibleTokenSchemaV1
 import com.r3.corda.sdk.token.contracts.schemas.PersistentFungibleToken
-import com.r3.corda.sdk.token.contracts.types.FixedTokenType
 import com.r3.corda.sdk.token.contracts.types.IssuedTokenType
 import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.contracts.types.TokenType
@@ -19,14 +18,13 @@ import net.corda.core.schemas.QueryableState
 
 /**
  * This class is for handling the issuer and holder relationship for fungible token types. If the [TokenType] is a
- * [TokenPointer], then the token can evolve independently of who owns it. Otherwise, if the [TokenType] is
- * [FixedTokenType] then the token definition is inlined into the [FungibleToken] state. This state object implements
- * [FungibleState] as the expectation is that it contains [Amount]s of an [IssuedTokenType] which can be split and
- * merged. All [TokenType]s are wrapped with an [IssuedTokenType] class to add the issuer party, this is necessary so
- * that the [FungibleToken] represents an agreement between an issuer of the [IssuedTokenType] and a holder of the
- * [IssuedTokenType]. In effect, the [FungibleToken] conveys a right for the holder to make a claim on the issuer for
- * whatever the [IssuedTokenType] represents. The class is defined as open, so it can be extended to add new
- * functionality, like a whitelisted token, for example.
+ * [TokenPointer], then the token can evolve independently of who owns it. Otherwise, the token definition is inlined
+ * into the [FungibleToken] state. This state object implements [FungibleState] as the expectation is that it contains
+ * [Amount]s of an [IssuedTokenType] which can be split and merged. All [TokenType]s are wrapped with an [IssuedTokenType]
+ * class to add the issuer party, this is necessary so that the [FungibleToken] represents an agreement between an issuer
+ * of the [IssuedTokenType] and a holder of the [IssuedTokenType]. In effect, the [FungibleToken] conveys a right for the
+ * holder to make a claim on the issuer for whatever the [IssuedTokenType] represents. The class is defined as open, so
+ * it can be extended to add new functionality, like a whitelisted token, for example.
  *
  * @property amount the [Amount] of [IssuedTokenType] represented by this [FungibleToken].
  * @property holder the [AbstractParty] which has a claim on the issuer of the [IssuedTokenType].

@@ -169,17 +169,26 @@ As it suggests, `TokenType` refers to a "type of thing" as opposed to the vehicl
 
 The interface implements `TokenizableAssetInfo` because in almost all cases, the `TokenType` must define the nominal display unit of a single `TokenType`. For example, JYP has zero fraction digits, whereas most currencies have two fraction digits. Therefore, to be able to reason about amounts of tokens arithmetically, we must define the fraction digits.
 
-`TokenType` also defines a class and identifier which are used for serialisation.
+`TokenType` also defines a class and identifier which are used for serialisation. The `tokenClass` property is implemented by the interface.
 
 ```kotlin
 @CordaSerializable
 interface TokenType : TokenizableAssetInfo {
     val tokenIdentifier: String
-    val tokenClass: String
+    val tokenClass: String get() = javaClass.canonicalName
+    val fractionDigits: Int
+    override val displayTokenSize: BigDecimal get() = BigDecimal.ONE.scaleByPowerOfTen(-fractionDigits)
 }
 ```
 
 `TokenType`s can be composed into a `NonFungibleToken` or a `FungibleToken` and they are almost always wrapped with an `IssuedTokenType` class.
+
+Implement `TokenType` when you don't expect the token type to evolve over time. Note that `TokenType`s are **not** states! They don't need to be because the definition of the token never changes or hardly ever changes. You are certainly likely to use this when testing or creating tokens for currencies (which don't typically evolve). If you do need to make changes to a `TokenType` then they need to be made by either:
+
+1. Upgrading your state and contract (see implicit and explicit upgrades in the Corda docs), or;
+2. By specifying a new version of the token and then redeeming and re-issuing the `NonFungibleToken` or `FungibleToken` with the new token.
+
+However, if your `TokenType` is likely to need updating often, then use the `EvolvableTokenType` type.
 
 #### IssuedTokenType
 
@@ -195,31 +204,18 @@ data class IssuedTokenType<out T : TokenType>(
 }
 ```
 
-#### FixedTokenType
-
-A `FixedTokenType` is where the definition of a token is inlined into the `NonFungibleToken` or `FungibleToken` class. This is for tokens which you don't expect to evolve over time. Note that `FixedTokenType`s are **not** states! They don't need to be because the definition of the token never changes or hardly ever changes. You are certainly likely to use this when testing or creating tokens for currencies (which don't typically evolve). If you do need to make changes to a `FixedTokenType` then they need to be made by either:
-
-1. Upgrading your state and contract (see implicit and explicit upgrades in the Corda docs), or;
-2. By specifying a new version of the token and then redeeming and re-issuing the `NonFungibleToken` or `FungibleToken` with the new token. 
-
-However, if your `TokenType` is likely to need updating often, then use the `EvolvableTokenType` type.
-
-```kotlin
-abstract class FixedTokenType : TokenType {
-    override fun toString(): String = "$tokenClass($tokenIdentifier)"
-}
-```
-
 #### EvolvableTokenType
 
 `EvolvableToken`s _are_ state objects because the expectation is that they will evolve over time. Of course in-lining a `LinearState` directly into the `NonFungibleToken` or `FungibleToken` state doesn't make much sense, as you would have to perform a state update to change the token type. Instead, it makes more sense to include a pointer to the token type. That's what `TokenPointer` is for (see below). This way, the token can evolve independently to which party currently holds (some amount of) the token type.
 
 ```kotlin
-abstract class EvolvableToken : LinearState, TokenizableAssetInfo {
+abstract class EvolvableToken : LinearState {
     abstract val maintainers: List<Party>
 
     /** Defaults to the maintainer but can be overridden if necessary. */
     override val participants: List<AbstractParty> get() = maintainers
+
+    abstract val fractionDigits: Int
 
     /** For obtaining a pointer to this [EvolveableToken]. */
     inline fun <reified T : EvolvableToken> toPointer(): TokenPointer<T> {
@@ -274,7 +270,7 @@ e.g. one which incorporates owner whitelists, for example.
 #### NonFungibleToken
 
 This class is for handling the issuer and holder relationship for non-fungible token types. Non-fungible tokens cannot be split and merged, as they are considered unique at the ledger level. If the `TokenType` is a
-`TokenPointer`, then the token can evolve independently of who holds it. Otherwise, if a `FixedTokenType` is used then the `TokenType` is in-lined into the `NonFungibleToken` and it cannot change. There is no `Amount` property in this class, as the assumption is there is only ever ONE of the `IssuedTokenType` provided. It is up to issuers to ensure that only ONE of a non-fungible token ever issued. All `TokenType`s are wrapped with an `IssuedTokenType` class to add the issuer `Party`. This is necessary so that the `NonFungibleToken` represents an agreement between the issuer and holder. In effect, the `NonFungibleToken` conveys a right for the holder to make a claim on the issuer for whatever the `TokenType` represents. This is the equivalent of **ERC-721**.
+`TokenPointer`, then the token can evolve independently of who holds it. Otherwise, the class which implements `TokenType` is in-lined into the `NonFungibleToken` and it cannot change. There is no `Amount` property in this class, as the assumption is there is only ever ONE of the `IssuedTokenType` provided. It is up to issuers to ensure that only ONE of a non-fungible token ever issued. All `TokenType`s are wrapped with an `IssuedTokenType` class to add the issuer `Party`. This is necessary so that the `NonFungibleToken` represents an agreement between the issuer and holder. In effect, the `NonFungibleToken` conveys a right for the holder to make a claim on the issuer for whatever the `TokenType` represents. This is the equivalent of **ERC-721**.
 
 ```kotlin
 open class NonFungibleToken<T : TokenType>(
@@ -297,23 +293,20 @@ An example would be integrating the ISDA common domain model ("CDM") with this p
 
 #### Money
 
-We can define an example of a `FixedtokenType`, in this case `FiatCurrency`—which is already included in the `money` module of the token SDK.
+We can define an example of a `TokenType`, in this case `FiatCurrency`—which is already included in the `money` module of the token SDK.
 
 ```kotlin
 // Abstract type for Money-like things.
-abstract class Money : FixedTokenType() {
+abstract class Money : TokenType {
     abstract val description: String
 }
 
 // A simple definition of FiatCurrency using java.util.Currency.
 class FiatCurrency(private val currency: Currency) : Money() {
     override val tokenIdentifier: String get() = currency.currencyCode
-    override val tokenClass: String get() = javaClass.canonicalName
     override val description: String get() = currency.displayName
     override fun toString(): String = tokenIdentifier
-    override val displayTokenSize: BigDecimal get() {
-        return BigDecimal.ONE.scaleByPowerOfTen(-currency.defaultFractionDigits)
-    }
+    override val fractionDigits: Int get() = currency.defaultFractionDigits
 
     companion object {
         fun getInstance(currencyCode: String) { 
