@@ -44,5 +44,5 @@ data class DiamondGradingReport(
 
     override val participants get() = setOf(assessor, requester).toList()
 
-    override val displayTokenSize: BigDecimal = BigDecimal.ZERO
+    override val fractionDigits: Int get() = 0
 }

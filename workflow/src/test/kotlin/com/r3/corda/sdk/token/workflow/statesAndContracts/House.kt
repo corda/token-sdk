@@ -9,7 +9,6 @@ import net.corda.core.contracts.Contract
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.Party
 import net.corda.core.transactions.LedgerTransaction
-import java.math.BigDecimal
 
 // A token representing a house on ledger.
 @BelongsToContract(HouseContract::class)
@@ -17,7 +16,7 @@ data class House(
         val address: String,
         val valuation: Amount<FiatCurrency>,
         override val maintainers: List<Party>,
-        override val displayTokenSize: BigDecimal = BigDecimal.TEN,
+        override val fractionDigits: Int = 5,
         override val linearId: UniqueIdentifier = UniqueIdentifier()
 ) : EvolvableTokenType()
 

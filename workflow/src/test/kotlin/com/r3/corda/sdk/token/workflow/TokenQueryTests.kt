@@ -16,7 +16,6 @@ import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
 import org.junit.Before
 import org.junit.Test
-import java.math.BigDecimal
 import kotlin.test.assertEquals
 
 class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
@@ -40,7 +39,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
 
     private data class SomeNonFungibleToken(
             override val tokenIdentifier: String = "FOO",
-            override val displayTokenSize: BigDecimal = BigDecimal.ONE
+            override val fractionDigits: Int = 0
     ) : FixedTokenType() {
         override val tokenClass: String get() = javaClass.canonicalName
     }

@@ -5,7 +5,6 @@ import net.corda.core.contracts.Contract
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.Party
 import net.corda.core.transactions.LedgerTransaction
-import java.math.BigDecimal
 
 class TestEvolvableTokenContract : EvolvableTokenContract(), Contract {
 
@@ -23,6 +22,6 @@ class TestEvolvableTokenContract : EvolvableTokenContract(), Contract {
             override val participants: List<Party> = (maintainers + observers),
             override val linearId: UniqueIdentifier = UniqueIdentifier()
     ) : EvolvableTokenType() {
-        override val displayTokenSize: BigDecimal = BigDecimal.ZERO
+        override val fractionDigits: Int get() = 0
     }
 }

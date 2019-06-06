@@ -4,7 +4,6 @@ import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
 import net.corda.core.contracts.LinearPointer
-import java.math.BigDecimal
 
 /**
  * To harness the power of [EvolvableTokenType]s, they cannot be directly embedded in [NonFungibleToken]s or
@@ -19,7 +18,7 @@ import java.math.BigDecimal
  */
 data class TokenPointer<T : EvolvableTokenType>(
         val pointer: LinearPointer<T>,
-        override val displayTokenSize: BigDecimal
+        override val fractionDigits: Int
 ) : TokenType {
     /**
      * In the case of a [TokenPointer], the [tokenIdentifier] becomes the linearId of the [EvolvableTokenType] being
