@@ -2,7 +2,7 @@ package com.r3.corda.sdk.token.workflow
 
 import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
-import com.r3.corda.sdk.token.contracts.types.FixedTokenType
+import com.r3.corda.sdk.token.contracts.types.TokenType
 import com.r3.corda.sdk.token.contracts.utilities.issuedBy
 import com.r3.corda.sdk.token.contracts.utilities.sumTokensOrThrow
 import com.r3.corda.sdk.token.money.BTC
@@ -40,9 +40,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     private data class SomeNonFungibleToken(
             override val tokenIdentifier: String = "FOO",
             override val fractionDigits: Int = 0
-    ) : FixedTokenType() {
-        override val tokenClass: String get() = javaClass.canonicalName
-    }
+    ) : TokenType
 
     private val fooToken = SomeNonFungibleToken("FOO")
     private val barToken = SomeNonFungibleToken("BAR")

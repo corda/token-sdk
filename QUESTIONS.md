@@ -13,7 +13,7 @@ as long as the type and symbol doesn't change.
 
 ### Evolvable tokens
 
-Each `EvolvableTokenType` represents only one type of token. This is unlike `FixedTokenType`s which act as registries.
+Each `EvolvableTokenType` represents only one type of token. This is unlike regular `TokenType`s which can act as registries. See the `FiatCurrency` class for an example.
 For pointers we need to list the linearID of the token pointer and the type of the underlying evolvable token. we can
 use this information to create an instance of a token pointer. We must get the linearID first. The assumption is that
 we do not initially know the linear ID, so we must use some other information (the symbol) to query for it. If there

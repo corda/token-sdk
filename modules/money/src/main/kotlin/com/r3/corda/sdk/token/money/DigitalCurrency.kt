@@ -7,7 +7,7 @@ data class DigitalCurrency(
         override val tokenIdentifier: String,
         override val description: String,
         override val fractionDigits: Int = 0
-) : Money() {
+) : Money {
     override fun toString(): String = tokenIdentifier
 
     constructor(currencyCode: String) : this(

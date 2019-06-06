@@ -167,7 +167,7 @@ ledger. Token types come in two flavours:
 
 1. Fixed token types, which do not change over time, or are not expected
    to change over time. Currency is a good example of a fixed token type.
-   They are represented as a class which implements `FixedTokenType`.
+   They are represented as a class which implements `TokenType`.
 2. Evolvable token types, which are expected to evolve over time. They are
    represented by the `EvolvableTokenType` interface, which is a `LinearState`.
    CorDapps developers can design their own logic that governs how the
@@ -179,7 +179,7 @@ ledger. Token types come in two flavours:
    We call this pointer a `TokenPointer`.
 
 The token SDK comes with some token types already defined; `FiatCurrency` and
-`DigitalCurrency` which are both of type `Money` and in turn `FixedTokenType`.
+`DigitalCurrency` which are both of type `Money` and in turn `TokenType`.
 They are defined within the `money` module.
 
 ## Issued token types
@@ -212,18 +212,18 @@ ledger participant as a depository receipt.
 
 ## Creating and issuing your first token
 
-### Defining a `FixedTokenType`
+### Defining a `TokenType`
 
-Two `FixedTokenType`s already exist in the token SDK, `FiatCurrency` and
+Two `TokenType`s already exist in the token SDK, `FiatCurrency` and
 `DigitalCurrency`. There are easy to use helpers for both, for example:
 
     val pounds: FiatCurrency = GBP
     val euros: FiatCurrency = EUR
     val bitcoin: DigitalCurrency = BTC
 
-Creating your own is easy; just sub-class the `FixedTokenType` abstract
-class. You will need to specify a `tokenIdentifier` property and how many
-`fractionDigits` amounts of this token can have. E.g.
+Creating your own is easy; just sub-class the `TokenType` interface. You 
+will need to specify a `tokenIdentifier` property and how many `fractionDigits` 
+amounts of this token can have. E.g.
 
 * "0" for zero fraction digits where there can only exist whole numbers
   of your token type, and
@@ -231,7 +231,7 @@ class. You will need to specify a `tokenIdentifier` property and how many
 
 You can also add a `toString` override, if you like.
 
-    class MyTokenType(override val tokenIdentifier: String, override val fractionDigits: Int = 0) : FixedTokenType()
+    class MyTokenType(override val tokenIdentifier: String, override val fractionDigits: Int = 0) : TokenType
 
 The `tokenIdentifier` is used along with the `tokenClass` property (defined
 in `TokenType` when serializing token types. Two properties are required,
@@ -250,12 +250,12 @@ the `FiatCurrency` and `DigitalCurrency` classes work. However, this isn't
 always required. For cases where you'll only ever need a single instance
 of a token type you can create singleton objects like so:
 
-    object PitchTokenClassic : FixedTokenType() {
+    object PitchTokenClassic : TokenType {
         override val tokenIdentifier: String = "PTK"
         override val fractionDigits: Int = 12
     }
 
-### Creating an instance of your new `FixedTokenType`
+### Creating an instance of your new `TokenType`
 
 Create an instance of your new token type like you would a regular object.
 
@@ -328,6 +328,41 @@ Once you have a `FungibleToken` or a `NonFungibleToken`, you can then go
 and issue that token on ledger.
 
 ## Changelog
+
+### Release candidate 3
+
+Currently unreleased.
+
+#### Contracts
+
+* The `tokenClass` property which CorDapp developers were required to implement
+  has been implemented in `TokenType`, so there is now no need to implement
+  it in your token type classes.
+* The `defaultFractionDigits` property of type `BigInteger` has been removed
+  in favour of a `fractionDigits` property of type `Int`, simplifying the
+  way to create a token type. Example:
+
+  * RC02:
+
+            class MyTokenType(
+                override val tokenIdentifier: String,
+                val fractionDigits: Int,
+                override val tokenClass: String = javaClass.canonicalName
+                override val defaultFractionDigits: BigDecimal = BigDecimal.ONE.scaleByPowerOfTen(-fractionDigits)
+            ) : FixedTokenType()
+
+  * RC03:
+
+            class MyTokenType(
+                override val tokenIdentifier: String,
+                override val fractionDigits: Int = 0
+            ) : TokenType
+            
+* Removed `FixedTokenType` as it was a spurious abstraction. All "fixed"
+  tokens can instead implement `TokenType` directly. Removing `FixedTokenType`
+  removes a concept and therefore reduces the mental load of developers 
+  who are new to Corda and the token SDK.
+
 
 ### Release Candidate 2
 

@@ -7,7 +7,7 @@ import java.util.*
  * implement the Token SDK interfaces. It also adds specificity around the money, in question, being fiat. Note that
  * fiat money backed stable coins such as Tether would be classed asa [FiatCurrency].
  */
-class FiatCurrency(private val currency: Currency) : Money() {
+class FiatCurrency(private val currency: Currency) : Money {
     override val tokenIdentifier: String get() = currency.currencyCode
     override val description: String get() = currency.displayName
     override val fractionDigits: Int get() = currency.defaultFractionDigits
