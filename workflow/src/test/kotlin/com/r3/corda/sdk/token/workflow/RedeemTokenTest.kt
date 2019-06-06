@@ -8,8 +8,8 @@ import com.r3.corda.sdk.token.money.FiatCurrency
 import com.r3.corda.sdk.token.money.GBP
 import com.r3.corda.sdk.token.money.USD
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokenAmountCriteria
-import com.r3.corda.sdk.token.workflow.utilities.tokenAmountsByToken
 import com.r3.corda.sdk.token.workflow.utilities.ownedTokensByToken
+import com.r3.corda.sdk.token.workflow.utilities.tokenAmountsByToken
 import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
@@ -17,7 +17,6 @@ import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
-import java.math.BigDecimal
 
 class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     lateinit var A: StartedMockNode
@@ -27,7 +26,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     // TODO Refactor to test utils. It's used in other tests too.
     private data class SomeNonFungibleToken(
             override val tokenIdentifier: String = "FOO",
-            override val displayTokenSize: BigDecimal = BigDecimal.ONE
+            override val fractionDigits: Int = 0
     ) : FixedTokenType() {
         override val tokenClass: String get() = javaClass.canonicalName
     }

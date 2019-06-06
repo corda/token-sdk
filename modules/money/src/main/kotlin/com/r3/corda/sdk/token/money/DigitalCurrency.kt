@@ -1,22 +1,19 @@
 package com.r3.corda.sdk.token.money
 
-import java.math.BigDecimal
 import java.util.*
 
 /** A representation of digital money. This implementation somewhat mirrors that of [Currency]. */
 data class DigitalCurrency(
         override val tokenIdentifier: String,
         override val description: String,
-        private val defaultFractionDigits: Int = 0
+        override val fractionDigits: Int = 0
 ) : Money() {
-    override val tokenClass: String get() = javaClass.canonicalName
-    override val displayTokenSize: BigDecimal get() = BigDecimal.ONE.scaleByPowerOfTen(-defaultFractionDigits)
     override fun toString(): String = tokenIdentifier
 
     constructor(currencyCode: String) : this(
             getInstance(currencyCode).tokenIdentifier,
             getInstance(currencyCode).description,
-            getInstance(currencyCode).defaultFractionDigits
+            getInstance(currencyCode).fractionDigits
     )
 
     companion object {

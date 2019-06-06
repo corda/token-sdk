@@ -4,7 +4,6 @@ import com.r3.corda.sdk.token.contracts.types.TokenPointer
 import com.r3.corda.sdk.token.contracts.types.TokenType
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
-import net.corda.core.contracts.TokenizableAssetInfo
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 
@@ -18,7 +17,7 @@ import net.corda.core.identity.Party
  * currently owns (some amount) of the token. Because the [EvolvableTokenType] is not inlined into the
  * [NonFungibleToken] or [FungibleToken] state it does not sub-class [TokenType].
  */
-abstract class EvolvableTokenType : LinearState, TokenizableAssetInfo {
+abstract class EvolvableTokenType : LinearState {
     /**
      * The [Party]s which create and maintain this token [EvolvableTokenType]. It probably _is_ the issuer of the token
      * but may not necessarily be. For example, a reference data maintainer may create an [EvolvableTokenType] for
@@ -32,9 +31,15 @@ abstract class EvolvableTokenType : LinearState, TokenizableAssetInfo {
     /** Defaults to the maintainer but can be overridden if necessary. */
     override val participants: List<AbstractParty> get() = maintainers
 
-    /** For obtaining a pointer to this [EvolveableToken]. */
+    /**
+     * The number of fractional digits allowable for this token type. Specifying "0" will only allow integer amounts of
+     * the token type. Specifying "2", allows two decimal places, much like most fiat currencies, and so on...
+     */
+    abstract val fractionDigits: Int
+
+    /** For obtaining a pointer to this [EvolveableTokenType]. */
     inline fun <reified T : EvolvableTokenType> toPointer(): TokenPointer<T> {
         val linearPointer = LinearPointer(linearId, T::class.java)
-        return TokenPointer(linearPointer, displayTokenSize)
+        return TokenPointer(linearPointer, fractionDigits)
     }
 }

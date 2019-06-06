@@ -82,12 +82,3 @@ Corda have an issuer, so this probably doesn't hold.
 
 * Need to discriminate on issuer, notary, token type
 * Can we do coin selection with a mixture of fixed and evolvable token types?
-
-## Token redemption flow
-
-Need to bear in mind that the redemption flow will be "augmented" with
-the issuer SDK Stuff. (See cash-issuer) for now. Do we:
-
-1. Send tokens to the issuer, then the issuer redeems.
-2. Send and redeem at the same time. Here the issuer and the owner must
-   sign the redemption transaction. The issuer checks that

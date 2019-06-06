@@ -5,6 +5,7 @@ import com.r3.corda.sdk.token.contracts.states.FungibleToken
 import com.r3.corda.sdk.token.contracts.states.NonFungibleToken
 import net.corda.core.contracts.TokenizableAssetInfo
 import net.corda.core.serialization.CordaSerializable
+import java.math.BigDecimal
 
 /**
  * Represents a token type or definition which can be embedded within an [NonFungibleToken] or [FungibleToken] state.
@@ -34,5 +35,16 @@ interface TokenType : TokenizableAssetInfo {
      * [tokenIdentifier] is a linearId, which is opaque, the [tokenClass] provides a bit more context on what is being
      * pointed to.
      */
-    val tokenClass: String
+    val tokenClass: String get() = javaClass.canonicalName
+
+    /**
+     * The number of fractional digits allowable for this token type. Specifying "0" will only allow integer amounts of
+     * the token type. Specifying "2", allows two decimal places, much like most fiat currencies, and so on...
+     */
+    val fractionDigits: Int
+
+    /**
+     * For use by the [Amount] class. There is no need to override this.
+     */
+    override val displayTokenSize: BigDecimal get() = BigDecimal.ONE.scaleByPowerOfTen(-fractionDigits)
 }
