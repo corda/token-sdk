@@ -55,6 +55,7 @@ import java.security.PublicKey
  * TODO: Split into two flows. One for owned tokens and another for owned token amounts.
  * TODO: Profile and optimise this flow.
  */
+
 object IssueToken {
 
     abstract class Primary<T : TokenType>(
