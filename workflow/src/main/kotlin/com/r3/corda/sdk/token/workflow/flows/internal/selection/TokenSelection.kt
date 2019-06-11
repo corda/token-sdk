@@ -165,7 +165,7 @@ class TokenSelection(
             partyAndAmounts: List<PartyAndAmount<T>>,
             queryCriteria: QueryCriteria? = null,
             changeOwner: AbstractParty? = null
-    ): Pair<List<StateAndRef<AbstractToken<T>>>, List<AbstractToken<T>>> {
+    ): Pair<List<StateAndRef<FungibleToken<T>>>, List<FungibleToken<T>>> {
         // Grab some tokens from the vault and soft-lock.
         // Only supports moves of the same token instance currently.
         // TODO Support spends for different token types, different instances of the same type.

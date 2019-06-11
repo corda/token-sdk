@@ -70,8 +70,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         assertEquals(100.GBP, gbp)
     }
 
-    // TODO fix
-//    @Test
+    @Test
     fun `issue and move fixed tokens`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()

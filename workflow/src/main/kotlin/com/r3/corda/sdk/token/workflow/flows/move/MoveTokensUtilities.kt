@@ -72,6 +72,7 @@ fun <T : TokenType> addMoveTokens(
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
+@JvmOverloads
 fun <T : TokenType> addMoveTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
@@ -94,12 +95,13 @@ fun <T : TokenType> addMoveTokens(
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
+@JvmOverloads
 fun <T : TokenType> addMoveTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         amount: Amount<T>,
         holder: AbstractParty,
-        queryCriteria: QueryCriteria?,
+        queryCriteria: QueryCriteria? = null,
         changeOwner: AbstractParty? = null
 ): TransactionBuilder {
     return addMoveTokens(
@@ -116,11 +118,12 @@ fun <T : TokenType> addMoveTokens(
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
+@JvmOverloads
 fun <T : TokenType> addMoveTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         partyAndAmount: PartyAndAmount<T>,
-        queryCriteria: QueryCriteria?,
+        queryCriteria: QueryCriteria? = null,
         changeOwner: AbstractParty? = null
 ): TransactionBuilder {
     return addMoveTokens(
@@ -139,12 +142,13 @@ fun <T : TokenType> addMoveTokens(
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
+@JvmOverloads
 fun <T : TokenType> addMoveTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         token: T,
         holder: AbstractParty,
-        queryCriteria: QueryCriteria?
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
     return generateMoveNonFungible(transactionBuilder, PartyAndToken(holder, token), serviceHub.vaultService, queryCriteria)
 }
@@ -154,11 +158,12 @@ fun <T : TokenType> addMoveTokens(
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
+@JvmOverloads
 fun <T : TokenType> addMoveTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         partyAndToken: PartyAndToken<T>,
-        queryCriteria: QueryCriteria?
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
     return generateMoveNonFungible(transactionBuilder, partyAndToken, serviceHub.vaultService, queryCriteria)
 }
@@ -170,10 +175,11 @@ fun <T : TokenType> addMoveTokens(
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
+@JvmOverloads
 fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         transactionBuilder: TransactionBuilder,
         partyAndToken: PartyAndToken<T>,
-        queryCriteria: QueryCriteria?
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
     return addMoveTokens(transactionBuilder, serviceHub, partyAndToken, queryCriteria)
 }
@@ -183,11 +189,12 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
+@JvmOverloads
 fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         transactionBuilder: TransactionBuilder,
         token: T,
         holder: AbstractParty,
-        queryCriteria: QueryCriteria?
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
     return addMoveTokens(transactionBuilder, serviceHub, token, holder, queryCriteria)
 }
@@ -197,11 +204,12 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
+@JvmOverloads
 fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         transactionBuilder: TransactionBuilder,
         amount: Amount<T>,
         holder: AbstractParty,
-        queryCriteria: QueryCriteria?,
+        queryCriteria: QueryCriteria? = null,
         changeOwner: AbstractParty? = null
 ): TransactionBuilder {
     return addMoveTokens(transactionBuilder, serviceHub, amount, holder, queryCriteria, changeOwner)
@@ -212,10 +220,11 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
+@JvmOverloads
 fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         transactionBuilder: TransactionBuilder,
         partyAndAmount: PartyAndAmount<T>,
-        queryCriteria: QueryCriteria?,
+        queryCriteria: QueryCriteria? = null,
         changeOwner: AbstractParty? = null
 ): TransactionBuilder {
     return addMoveTokens(transactionBuilder, serviceHub, partyAndAmount, queryCriteria, changeOwner)
@@ -227,10 +236,11 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
+@JvmOverloads
 fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         transactionBuilder: TransactionBuilder,
         partiesAndAmounts: List<PartyAndAmount<T>>,
-        queryCriteria: QueryCriteria?,
+        queryCriteria: QueryCriteria? = null,
         changeOwner: AbstractParty? = null
 ): TransactionBuilder {
     return addMoveTokens(transactionBuilder, serviceHub, partiesAndAmounts, queryCriteria, changeOwner)

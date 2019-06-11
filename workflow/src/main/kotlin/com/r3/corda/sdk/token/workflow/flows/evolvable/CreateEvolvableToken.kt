@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.sdk.token.contracts.states.EvolvableTokenType
 import com.r3.corda.sdk.token.contracts.utilities.withNotary
 import com.r3.corda.sdk.token.workflow.utilities.addCreateEvolvableToken
+import com.r3.corda.sdk.token.workflow.utilities.getPreferredNotary
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.TransactionState
 import net.corda.core.flows.*
@@ -24,6 +25,7 @@ class CreateEvolvableToken<T : EvolvableTokenType>(
         val transactionState: TransactionState<T>
 ) : FlowLogic<SignedTransaction>() {
 
+    // TODO Use preferred notary
     constructor(evolvableToken: T, contract: ContractClassName, notary: Party)
             : this(TransactionState(evolvableToken, contract, notary))
 
