@@ -1,0 +1,45 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet author="R3.Corda" id="create_fungible_token_table_id">
+        <createTable tableName="fungible_token">
+            <column name="output_index" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transaction_id" type="NVARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="holder" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="issuer" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="token_class" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="token_identifier" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="R3.Corda" id="fungible_token_pkey_id">
+        <addPrimaryKey columnNames="output_index, transaction_id" constraintName="fungible_token_pkey"
+                       tableName="fungible_token"/>
+    </changeSet>
+    <changeSet author="R3.Corda" id="amount_idx_id">
+        <createIndex indexName="amount_idx" tableName="fungible_token">
+            <column name="amount"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="R3.Corda" id="owned_token_amount_idx_id">
+        <createIndex indexName="owned_token_amount_idx" tableName="fungible_token">
+            <column name="token_class"/>
+            <column name="token_identifier"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

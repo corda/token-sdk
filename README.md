@@ -63,7 +63,8 @@ First, add a variable for the tokens SDK version you wish to use:
 
     buildscript {
         ext {
-            tokens_sdk_version = '1.0-RC02'
+            tokens_release_version = '1.0-RC03'
+            tokens_release_group = 'com.r3.corda.lib.tokens'
         }
     }
 
@@ -77,22 +78,22 @@ list of repositories for your project:
 Now, you can add the tokens SDK dependencies to the `dependencies` block
 in each module of your CorDapp. For contract modules add:
 
-    cordaCompile "com.r3.tokens-sdk:contract:$tokens_sdk_version"
+    cordaCompile "tokens_release_group:tokens-contracts:$tokens_sdk_version"
 
 In your workflow `build.gradle` add:
 
-    cordaCompile "com.r3.tokens-sdk:workflow:$tokens_sdk_version"
+    cordaCompile "$tokens_release_group:tokens-workflows:$tokens_release_version"
 
 For `FiatCurrency` and `DigitalCurrency` definitions add:
 
-    cordaCompile "com.r3.tokens-sdk:money:$tokens_sdk_version"
+    cordaCompile "$tokens_release_group:tokens-money:$tokens_release_version"
 
 If you want to use the `deployNodes` task, you will need to add the
 following dependencies to your root `build.gradle` file:
 
-    cordapp "com.r3.tokens-sdk:contract:$tokens_sdk_version"
-    cordapp "com.r3.tokens-sdk:workflow:$tokens_sdk_version"
-    cordapp "com.r3.tokens-sdk:money:$tokens_sdk_version"
+    cordapp "$tokens_release_group:tokens-contracts:$tokens_release_version"
+    cordapp "$tokens_release_group:tokens-workflows:$tokens_release_version"
+    cordapp "$tokens_release_group:tokens-money:$tokens_release_version"
 
 These should also be added to the `deployNodes` task with the following syntax:
 
@@ -100,9 +101,9 @@ These should also be added to the `deployNodes` task with the following syntax:
         projectCordapp {
             deploy = false
         }
-        cordapp("com.r3.tokens-sdk:contract:$tokens_sdk_version")
-        cordapp("com.r3.tokens-sdk:workflow:$tokens_sdk_version")
-        cordapp("com.r3.tokens-sdk:money:$tokens_sdk_version")
+        cordapp("$tokens_release_group:tokens-contracts:$tokens_sdk_version")
+        cordapp("$tokens_release_group:tokens-workflows:$tokens_sdk_version")
+        cordapp("$tokens_release_group:tokens-money:$tokens_sdk_version")
     }
 
 ### Installing the token SDK binaries
@@ -331,7 +332,15 @@ and issue that token on ledger.
 
 ### Release candidate 3
 
-Currently unreleased.
+#### General
+
+* Changed module names from "contract", "workflow" to "contracts" and
+  "workflows", so now inline with other CorDapps.
+* Now don't publish an empty "modules" JAR.
+* Changed package namespace to "com.r3.corda.lib" from "com.r3.corda.sdk".
+* Changed artifact IDs to be prefixed with "tokens-".
+* Changed release group to "com.r3.corda.lib" from "com.r3.tokens-sdk".
+* Fixed various compiler warnings.
 
 #### Contracts
 
@@ -363,6 +372,10 @@ Currently unreleased.
   removes a concept and therefore reduces the mental load of developers 
   who are new to Corda and the token SDK.
 
+#### Workflows
+
+* Added an integration test which uses a DvP flow to swap a `House` for
+  some `Money`.
 
 ### Release Candidate 2
 

@@ -2,6 +2,8 @@ buildscript {
     ext {
         corda_release_group = 'net.corda'
         corda_release_version = '5.0-SNAPSHOT'
+        tokens_release_group = "com.r3.corda.lib.tokens"
+        tokens_release_version = "1.0-RC03"
         corda_gradle_plugins_version = '4.0.42'
         aetherVersion = '1.0.0.v20140518'
         mavenVersion = '3.1.0'
@@ -37,8 +39,8 @@ plugins {
 }
 
 allprojects {
-    version "1.0-SNAPSHOT"
-    group "com.r3.tokens-sdk"
+    version "$tokens_release_version"
+    group "$tokens_release_group"
 
     configurations.all {
         resolutionStrategy {
@@ -95,7 +97,12 @@ subprojects {
     }
 }
 
-def publishProjects = subprojects
+// Don't publish an empty "modules" JAR.
+def publishProjects = [
+        project(":modules:money"),
+        project(":contracts"),
+        project(":workflows")
+]
 
 configure(publishProjects) { subproject ->
     apply plugin: 'kotlin'
@@ -120,7 +127,7 @@ configure(publishProjects) { subproject ->
                 from components.java
 
                 groupId subproject.group
-                artifactId subproject.name
+                artifactId subproject.jar.baseName
                 artifact tasks.sourceJar
                 artifact tasks.javadocJar
 
