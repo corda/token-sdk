@@ -7,13 +7,16 @@ buildscript {
     }
 }
 
+
+apply plugin: 'kotlin-jpa'
+apply plugin: 'net.corda.plugins.quasar-utils'
 apply plugin: 'net.corda.plugins.cordapp'
 
 cordapp {
     targetPlatformVersion 4
     minimumPlatformVersion 4
-    contract {
-        name "Token SDK money definitions"
+    workflow {
+        name "Token SDK Workflows"
         vendor "R3"
         licence "Apache 2"
         versionId 1
@@ -34,6 +37,18 @@ sourceSets {
             srcDir rootProject.file("config/test")
         }
     }
+    integrationTest {
+        kotlin {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/integrationTest/kotlin')
+        }
+    }
+}
+
+configurations {
+    integrationTestCompile.extendsFrom testCompile
+    integrationTestRuntime.extendsFrom testRuntime
 }
 
 dependencies {
@@ -44,6 +59,9 @@ dependencies {
     cordaCompile ("$corda_release_group:corda-core:$corda_release_version"){
         changing = true
     }
+    cordaCompile ("$corda_release_group:corda-confidential-identities:$corda_release_version"){
+        changing = true
+    }
 
     // Logging.
     testCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
@@ -52,13 +70,20 @@ dependencies {
     testCompile "$corda_release_group:corda-node-driver:$corda_release_version"
     testCompile "junit:junit:$junit_version"
     testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
+    testCompile "junit:junit:$junit_version"
 
     // CorDapp dependencies.
     cordapp project(":contracts")
+    cordapp project(":modules:money")
+}
+
+task integrationTest(type: Test, dependsOn: []) {
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
 }
 
 jar {
-    baseName "tokens-modules-money"
+    baseName "tokens-workflows"
 }
 
 publish {
