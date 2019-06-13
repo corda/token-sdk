@@ -58,7 +58,7 @@ dependencies {
 }
 
 jar {
-    baseName "tokens-modules-money"
+    baseName "tokens-money"
 }
 
 publish {

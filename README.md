@@ -63,7 +63,8 @@ First, add a variable for the tokens SDK version you wish to use:
 
     buildscript {
         ext {
-            tokens_sdk_version = '1.0-RC02'
+            tokens_release_version = '1.0-RC02'
+            tokens_release_group = 'com.r3.corda.lib.tokens'
         }
     }
 
@@ -77,22 +78,22 @@ list of repositories for your project:
 Now, you can add the tokens SDK dependencies to the `dependencies` block
 in each module of your CorDapp. For contract modules add:
 
-    cordaCompile "com.r3.tokens-sdk:contract:$tokens_sdk_version"
+    cordaCompile "tokens_release_group:tokens-contracts:$tokens_sdk_version"
 
 In your workflow `build.gradle` add:
 
-    cordaCompile "com.r3.tokens-sdk:workflow:$tokens_sdk_version"
+    cordaCompile "$tokens_release_group:tokens-workflows:$tokens_release_version"
 
 For `FiatCurrency` and `DigitalCurrency` definitions add:
 
-    cordaCompile "com.r3.tokens-sdk:money:$tokens_sdk_version"
+    cordaCompile "$tokens_release_group:tokens-money:$tokens_release_version"
 
 If you want to use the `deployNodes` task, you will need to add the
 following dependencies to your root `build.gradle` file:
 
-    cordapp "com.r3.tokens-sdk:contract:$tokens_sdk_version"
-    cordapp "com.r3.tokens-sdk:workflow:$tokens_sdk_version"
-    cordapp "com.r3.tokens-sdk:money:$tokens_sdk_version"
+    cordapp "$tokens_release_group:tokens-contracts:$tokens_release_version"
+    cordapp "$tokens_release_group:tokens-workflows:$tokens_release_version"
+    cordapp "$tokens_release_group:tokens-money:$tokens_release_version"
 
 These should also be added to the `deployNodes` task with the following syntax:
 
@@ -100,9 +101,9 @@ These should also be added to the `deployNodes` task with the following syntax:
         projectCordapp {
             deploy = false
         }
-        cordapp("com.r3.tokens-sdk:contract:$tokens_sdk_version")
-        cordapp("com.r3.tokens-sdk:workflow:$tokens_sdk_version")
-        cordapp("com.r3.tokens-sdk:money:$tokens_sdk_version")
+        cordapp("$tokens_release_group:tokens-contracts:$tokens_sdk_version")
+        cordapp("$tokens_release_group:tokens-workflows:$tokens_sdk_version")
+        cordapp("$tokens_release_group:tokens-money:$tokens_sdk_version")
     }
 
 ### Installing the token SDK binaries

@@ -2,7 +2,7 @@ buildscript {
     ext {
         corda_release_group = 'net.corda'
         corda_release_version = '5.0-SNAPSHOT'
-        tokens_release_group = "com.r3.corda.lib"
+        tokens_release_group = "com.r3.corda.lib.tokens"
         tokens_release_version = "1.0-SNAPSHOT"
         corda_gradle_plugins_version = '4.0.42'
         aetherVersion = '1.0.0.v20140518'
