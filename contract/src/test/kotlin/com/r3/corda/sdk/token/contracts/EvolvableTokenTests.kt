@@ -305,9 +305,9 @@ object EvolvableTokenTests {
                     command(ALICE.publicKey, Create())
                     command(ALICE.publicKey, Create())
                     // V5 behaviour
-//                    failsWith(expectedError)
+                    failsWith(expectedError)
                     // V4 behaviour
-                    verifies()
+//                    verifies()
                 }
 
                 // With 1 create and 1 update command from the same maintainer
@@ -326,10 +326,9 @@ object EvolvableTokenTests {
                     command(ALICE.publicKey, Create())
                     command(BOB.publicKey, Create())
                     // V5 behaviour
-//                    failsWith(expectedError)
+                    failsWith(expectedError)
                     // V4 behaviour
-                    failsWith("Only evolvable token maintainers may sign the create evolvable token transaction.")
-
+//                    failsWith("Only evolvable token maintainers may sign the create evolvable token transaction.")
                 }
 
                 // With 1 create and 1 update command from different maintainers
@@ -353,9 +352,9 @@ object EvolvableTokenTests {
                     command(ALICE.publicKey, Create())
                     command(BOB.publicKey, Create())
                     // V5 behaviour
-//                    failsWith(expectedError)
+                    failsWith(expectedError)
                     // V4 behaviour
-                    verifies()
+//                    verifies()
                 }
 
                 // With 3 create commands from different parties
@@ -368,9 +367,9 @@ object EvolvableTokenTests {
                     command(BOB.publicKey, Create())
                     command(CHARLES.publicKey, Create())
                     // V5 behaviour
-//                    failsWith(expectedError)
+                    failsWith(expectedError)
                     // V4 behaviour
-                    failsWith("Only evolvable token maintainers may sign the create evolvable token transaction.")
+//                    failsWith("Only evolvable token maintainers may sign the create evolvable token transaction.")
                 }
             }
         }
@@ -632,14 +631,20 @@ object EvolvableTokenTests {
                 tweak {
                     command(ALICE.publicKey, Update())
                     command(ALICE.publicKey, Update())
-                    verifies()
+                    // V5 behaviour
+                    failsWith(expectedError)
+                    // V4 behaviour
+//                    verifies()
                 }
 
                 // With 1 create and 1 update command from the same maintainer
                 tweak {
                     command(ALICE.publicKey, Create())
                     command(ALICE.publicKey, Update())
+                    // V5 behaviour
                     failsWith(expectedError)
+                    // V4 behaviour
+//                    verifies()
                 }
 
                 // With 2 create commands from different parties
@@ -650,7 +655,11 @@ object EvolvableTokenTests {
                 tweak {
                     command(ALICE.publicKey, Update())
                     command(BOB.publicKey, Update())
-                    failsWith("Only evolvable token maintainers (from inputs and outputs) may sign the update evolvable token transaction.")
+                    // V5 behaviour
+                    failsWith(expectedError)
+                    // V4 behaviour
+//                    failsWith("Only evolvable token maintainers (from inputs and outputs) may sign the update evolvable token transaction.")
+
                 }
 
                 // With 1 create and 1 update command from different maintainers
@@ -676,20 +685,23 @@ object EvolvableTokenTests {
                 tweak {
                     command(ALICE.publicKey, Update())
                     command(BOB.publicKey, Update())
-                    verifies()
+                    // V5 behaviour
+                    failsWith(expectedError)
+                    // V4 behaviour
+//                    verifies()
                 }
 
-                // With 3 create commands from different parties
-                // Note: Due to change in V4, the TransactionBuilder will coalesce commands by CommandData. This means
-                // that multiple commands of the same type are merged with the union of all signers.
-                // This will _not_ error the same way as other multiple commands.
-                // TODO Ensure this test passes/fails as expected for the given version of Corda
-                tweak {
-                    command(ALICE.publicKey, Update())
-                    command(BOB.publicKey, Update())
-                    command(CHARLES.publicKey, Update())
-                    failsWith("Only evolvable token maintainers (from inputs and outputs) may sign the update evolvable token transaction.")
-                }
+//                // With 3 create commands from different parties
+//                // Note: Due to change in V4, the TransactionBuilder will coalesce commands by CommandData. This means
+//                // that multiple commands of the same type are merged with the union of all signers.
+//                // This will _not_ error the same way as other multiple commands.
+//                // TODO Ensure this test passes/fails as expected for the given version of Corda
+//                tweak {
+//                    command(ALICE.publicKey, Update())
+//                    command(BOB.publicKey, Update())
+//                    command(CHARLES.publicKey, Update())
+//                    failsWith("Only evolvable token maintainers (from inputs and outputs) may sign the update evolvable token transaction.")
+//                }
             }
         }
 
