@@ -40,8 +40,8 @@ class UpdateDistributionListFlow(val signedTransaction: SignedTransaction) : Flo
                 .filter { it.tokenType is TokenPointer<*> } // IntelliJ bug?? Check is not always true!
         // There are no evolvable tokens so we don't need to update any distribution lists. Otherwise, carry on.
         if (tokensWithTokenPointers.isEmpty()) return
-        val issueCmds = tx.commands.map(Command<*>::value).filterIsInstance<IssueTokenCommand<TokenPointer<*>>>()
-        val moveCmds = tx.commands.map(Command<*>::value).filterIsInstance<MoveTokenCommand<TokenPointer<*>>>()
+        val issueCmds: List<IssueTokenCommand<TokenPointer<*>>> = tx.commands.map(Command<*>::value).filterIsInstance<IssueTokenCommand<TokenPointer<*>>>().filter { it.token.tokenType is TokenPointer<*> }
+        val moveCmds: List<MoveTokenCommand<TokenPointer<*>>> = tx.commands.map(Command<*>::value).filterIsInstance<MoveTokenCommand<TokenPointer<*>>>().filter { it.token.tokenType is TokenPointer<*> }
         progressTracker.currentStep = RECORDING
         if (issueCmds.isNotEmpty()) {
             // If it's an issue transaction then the party calling this flow will be the issuer and they just need to

@@ -5,9 +5,12 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.crypto.SecureHash
+import net.corda.core.internal.concurrent.doneFuture
+import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.queryBy
 import net.corda.core.node.services.vault.QueryCriteria
+import net.corda.core.toFuture
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.MockNetwork
@@ -42,6 +45,18 @@ fun StartedMockNode.watchForTransaction(txId: SecureHash): CordaFuture<SignedTra
 
 fun StartedMockNode.watchForTransaction(tx: SignedTransaction): CordaFuture<SignedTransaction> {
     return watchForTransaction(tx.id)
+}
+
+/**
+ * It's internal because it uses deprecated [internalVerifiedTransactionsFeed].
+ */
+internal fun CordaRPCOps.watchForTransaction(tx: SignedTransaction): CordaFuture<SignedTransaction> {
+    val (snapshot, feed) = internalVerifiedTransactionsFeed()
+    return if (tx in snapshot) {
+        doneFuture(tx)
+    } else {
+        feed.filter { it == tx }.toFuture()
+    }
 }
 
 @Deprecated("Replaced by assertHasTransaction; note that the new method uses SignedTransaction, not SecureHash, and requires the network")

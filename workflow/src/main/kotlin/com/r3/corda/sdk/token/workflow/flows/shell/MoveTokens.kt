@@ -67,9 +67,11 @@ class MoveFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
-class MoveNonFungibleTokens<T : TokenType>(
+class MoveNonFungibleTokens<T : TokenType>
+@JvmOverloads
+constructor(
         val partyAndToken: PartyAndToken<T>,
-        val observers: List<Party>,
+        val observers: List<Party> = emptyList(),
         val queryCriteria: QueryCriteria? = null
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable

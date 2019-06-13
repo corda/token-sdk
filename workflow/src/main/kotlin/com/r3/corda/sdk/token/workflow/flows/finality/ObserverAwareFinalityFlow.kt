@@ -7,6 +7,8 @@ import com.r3.corda.sdk.token.workflow.utilities.ourSigningKeys
 import com.r3.corda.sdk.token.workflow.utilities.participants
 import com.r3.corda.sdk.token.workflow.utilities.requireSessionsForParticipants
 import com.r3.corda.sdk.token.workflow.utilities.toWellKnownParties
+import net.corda.core.contracts.Command
+import net.corda.core.contracts.CommandWithParties
 import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
@@ -44,7 +46,7 @@ class ObserverAwareFinalityFlow private constructor (
         // Check there is a session for each participant, apart from the node itself.
         val ledgerTransaction: LedgerTransaction = transactionBuilder?.toLedgerTransaction(serviceHub) ?: signedTransaction!!.toLedgerTransaction(serviceHub, false)
         val participants: List<AbstractParty> = ledgerTransaction.participants
-        val issuers: Set<Party> = ledgerTransaction.commands.filterIsInstance<RedeemTokenCommand<*>>().map { it.token.issuer }.toSet()
+        val issuers: Set<Party> = ledgerTransaction.commands.map(CommandWithParties<*>::value).filterIsInstance<RedeemTokenCommand<*>>().map { it.token.issuer }.toSet()
         val wellKnownParticipantsAndIssuers: Set<Party> = participants.toWellKnownParties(serviceHub).toSet() + issuers
         val wellKnownParticipantsApartFromUs: Set<Party> = wellKnownParticipantsAndIssuers - ourIdentity
         // We need participantSessions for all participants apart from us.

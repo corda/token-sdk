@@ -102,9 +102,11 @@ class IssueTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
-class ConfidentialIssueTokens<T : TokenType>(
+class ConfidentialIssueTokens<T : TokenType>
+@JvmOverloads
+constructor(
         val tokensToIssue: List<AbstractToken<T>>,
-        val observers: List<Party>
+        val observers: List<Party> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
