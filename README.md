@@ -332,7 +332,15 @@ and issue that token on ledger.
 
 ### Release candidate 3
 
-Currently unreleased.
+#### General
+
+* Changed module names from "contract", "workflow" to "contracts" and
+  "workflows", so now inline with other CorDapps.
+* Now don't publish an empty "modules" JAR.
+* Changed package namespace to "com.r3.corda.lib" from "com.r3.corda.sdk".
+* Changed artifact IDs to be prefixed with "tokens-".
+* Changed release group to "com.r3.corda.lib" from "com.r3.tokens-sdk".
+* Fixed various compiler warnings.
 
 #### Contracts
 
@@ -364,6 +372,10 @@ Currently unreleased.
   removes a concept and therefore reduces the mental load of developers 
   who are new to Corda and the token SDK.
 
+#### Workflows
+
+* Added an integration test which uses a DvP flow to swap a `House` for
+  some `Money`.
 
 ### Release Candidate 2
 
