@@ -63,7 +63,7 @@ First, add a variable for the tokens SDK version you wish to use:
 
     buildscript {
         ext {
-            tokens_release_version = '1.0-RC02'
+            tokens_release_version = '1.0-RC03'
             tokens_release_group = 'com.r3.corda.lib.tokens'
         }
     }
