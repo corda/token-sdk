@@ -334,6 +334,8 @@ and issue that token on ledger.
 
 #### General
 
+* Builds against Corda `5.0-SNAPSHOT` for this release. The final release
+  will be built against Corda `4.1`.
 * Changed module names from "contract", "workflow" to "contracts" and
   "workflows", so now inline with other CorDapps.
 * Now don't publish an empty "modules" JAR.
