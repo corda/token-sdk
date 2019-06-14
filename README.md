@@ -427,7 +427,7 @@ This release candidate is almost code complete.
       nullable parameter. If it was set to null then the token selection
       mechanism would always generate a new confidential identity for
       the change holder. This behaviour is a little counter-intuitive so
-      it have been changed in RC-03.
+      it has been changed in RC-03.
 
     * RC03:
 
