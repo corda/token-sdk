@@ -86,7 +86,7 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         )
 
         A.transaction {
-            addMoveTokens(transactionBuilder, A.services, moves)
+            addMoveTokens(transactionBuilder, A.services, moves, A.legalIdentity())
         }
         println(transactionBuilder.toWireTransaction(A.services))
         // Just using this to check and see if the output is as expected.

@@ -111,8 +111,9 @@ class TokenSelection(
 
 
     /**
-     * Attempt spend of [requiredAmount] of [FungibleToken] T. Returns states that cover given amount. Notice that this function
-     * doesn't calculate change. If query criteria is not specified then only owned token amounts are used.
+     * Attempt spend of [requiredAmount] of [FungibleToken] T. Returns states that cover given amount. Notice that this
+     * function doesn't calculate change. If query criteria is not specified then only owned token amounts are used.
+     *
      * Use [QueryUtilities.tokenAmountWithIssuerCriteria] to specify issuer.
      * Calling attemptSpend multiple time with the same lockId will return next unlocked states.
      *
@@ -150,11 +151,10 @@ class TokenSelection(
     }
 
     /**
-     * Generate move of [FungibleToken] T to tokenHolders specified in [PartyAndAmount]. Each party will receive amount defined
-     * by [partyAndAmounts]. If query criteria is not specified then only owned token amounts are used. Use [QueryUtilities.tokenAmountWithIssuerCriteria]
-     * to specify issuer. This function mutates [builder] provided as parameter.
-     * If [changeOwner] is provided, then the change outputs (if present) will be returned back to this identity. If not,
-     * then fresh confidential identity for the caller will be created.
+     * Generate move of [FungibleToken] T to tokenHolders specified in [PartyAndAmount]. Each party will receive amount
+     * defined by [partyAndAmounts]. If query criteria is not specified then only owned token amounts are used. Use
+     * [QueryUtilities.tokenAmountWithIssuerCriteria] to specify issuer. This function mutates [builder] provided as
+     * parameter.
      *
      * @return [TransactionBuilder] and list of all owner keys used in the input states that are going to be moved.
      */
@@ -162,8 +162,8 @@ class TokenSelection(
     fun <T : TokenType> generateMove(
             lockId: UUID,
             partyAndAmounts: List<PartyAndAmount<T>>,
-            queryCriteria: QueryCriteria? = null,
-            changeOwner: AbstractParty? = null
+            changeHolder: AbstractParty,
+            queryCriteria: QueryCriteria? = null
     ): Pair<List<StateAndRef<FungibleToken<T>>>, List<FungibleToken<T>>> {
         // Grab some tokens from the vault and soft-lock.
         // Only supports moves of the same token instance currently.
@@ -176,19 +176,11 @@ class TokenSelection(
         require(acceptableStates.isNotEmpty()) {
             "No states matching given criteria to generate move."
         }
-        // Provide a key to send any change to. Currently token selection is done only for the node operator.
-        // TODO: Generalise this so it can be done for any "account".
-        val nodeIdentity = services.myInfo.legalIdentitiesAndCerts.first()
-        val changeParty = if (changeOwner == null) {
-            // TODO This approach is clearly taken from core. Revisit it.
-            services.keyManagementService.freshKeyAndCert(nodeIdentity, revocationEnabled = false).party.anonymise()
-        } else {
-            // Check that this identity belongs to the node that called generateMove.
-            val ownerId = services.identityService.wellKnownPartyFromAnonymous(changeOwner)
-            check(ownerId != null && services.myInfo.isLegalIdentity(ownerId)) {
-                "Owner of the change: $changeOwner is not the identity that belongs to the node."
-            }
-            changeOwner
+
+        // Check that the change identity belongs to the node that called generateMove.
+        val ownerId = services.identityService.wellKnownPartyFromAnonymous(changeHolder)
+        check(ownerId != null && services.myInfo.isLegalIdentity(ownerId)) {
+            "Owner of the change: $changeHolder is not the identity that belongs to the node."
         }
 
         // Now calculate the output states. This is complicated by the fact that a single payment may require
@@ -238,7 +230,7 @@ class TokenSelection(
 
         // Generate the change states.
         remainingTokensFromEachIssuer.forEach { (_, amount) ->
-            outputStates += FungibleToken(amount, changeParty)
+            outputStates += FungibleToken(amount, changeHolder)
         }
 
         return Pair(acceptableStates, outputStates)

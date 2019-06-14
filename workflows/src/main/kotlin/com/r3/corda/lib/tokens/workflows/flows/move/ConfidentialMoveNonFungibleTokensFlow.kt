@@ -11,8 +11,9 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 
 /**
- * Version of [MoveNonFungibleTokensFlow] using confidential identities. Confidential identities are generated and exchanged for
- * all parties that receive tokens states.
+ * Version of [MoveNonFungibleTokensFlow] using confidential identities. Confidential identities are generated and
+ * exchanged for all parties that receive tokens states.
+ *
  * Call this for one [TokenType] at a time. If you need to do multiple token types in one transaction then create a new
  * flow, calling [addMoveTokens] for each token type and handle confidential identities exchange yourself.
  *
@@ -27,11 +28,10 @@ constructor(
         val partyAndToken: PartyAndToken<T>,
         val participantSessions: List<FlowSession>,
         val observerSessions: List<FlowSession> = emptyList(),
-        val queryCriteria: QueryCriteria?
+        val queryCriteria: QueryCriteria? = null
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
-        // TODO: This should be moved into a utility function.
         val (input, output) = generateMoveNonFungible(partyAndToken, serviceHub.vaultService, queryCriteria)
         val confidentialOutput = subFlow(ConfidentialTokensFlow(listOf(output), participantSessions)).single()
         return subFlow(MoveTokensFlow(input, confidentialOutput, participantSessions, observerSessions))

@@ -11,11 +11,16 @@ import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
 
 /**
- * Abstract class for the move tokens flows family.
+ * An abstract class for the move tokens flows family.
+ *
  * You must provide [participantSessions] and optional [observerSessions] for finalization. Override [addMove] to select
  * tokens to move. See helper functions in [MoveTokensUtilities] module.
+ *
  * The flow performs basic tasks, generates move transaction proposal for all the participants, collects signatures and
  * finalises transaction with observers if present.
+ *
+ * @property participantSessions a list of flow participantSessions for the transaction participants.
+ * @property observerSessions a list of flow participantSessions for the transaction observers.
  */
 abstract class AbstractMoveTokensFlow : FlowLogic<SignedTransaction>() {
     abstract val participantSessions: List<FlowSession>
@@ -35,7 +40,7 @@ abstract class AbstractMoveTokensFlow : FlowLogic<SignedTransaction>() {
     override val progressTracker: ProgressTracker = tracker()
 
     /**
-     * Add move of tokens to the [transactionBuilder]. Modifies the builder.
+     * Adds a move of tokens to the [transactionBuilder]. This function mutates the builder.
      */
     @Suspendable
     abstract fun addMove(transactionBuilder: TransactionBuilder)
@@ -50,7 +55,12 @@ abstract class AbstractMoveTokensFlow : FlowLogic<SignedTransaction>() {
         addMove(transactionBuilder)
         progressTracker.currentStep = RECORDING
         // Create new participantSessions if this is started as a top level flow.
-        val signedTransaction = subFlow(ObserverAwareFinalityFlow(transactionBuilder, participantSessions + observerSessions))
+        val signedTransaction = subFlow(
+                ObserverAwareFinalityFlow(
+                        transactionBuilder = transactionBuilder,
+                        allSessions = participantSessions + observerSessions
+                )
+        )
         progressTracker.currentStep = UPDATING
         // Update the distribution list.
         subFlow(UpdateDistributionListFlow(signedTransaction))

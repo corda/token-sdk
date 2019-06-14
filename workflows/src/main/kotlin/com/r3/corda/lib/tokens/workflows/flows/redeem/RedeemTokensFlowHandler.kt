@@ -15,15 +15,16 @@ import net.corda.core.flows.SignTransactionFlow
 import net.corda.core.transactions.SignedTransaction
 
 /**
- * Inlined responder flow called on the issuer side, should be used with: [RedeemFungibleTokensFlow], [RedeemNonFungibleTokensFlow],
- * [RedeemTokensFlow].
+ * Inlined responder flow called on the issuer side, should be used with: [RedeemFungibleTokensFlow],
+ * [RedeemNonFungibleTokensFlow], [RedeemTokensFlow].
  */
 // Called on Issuer side.
 @InitiatedBy(RedeemTokensFlow::class)
 class RedeemTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
-        // Synchronise all confidential identities, issuer isn't involved in move transactions, so states holders may not be known to this node.
+        // Synchronise all confidential identities, issuer isn't involved in move transactions, so states holders may
+        // not be known to this node.
         subFlow(IdentitySyncFlow.Receive(otherSession))
         // Perform all the checks to sign the transaction.
         subFlow(object : SignTransactionFlow(otherSession) {

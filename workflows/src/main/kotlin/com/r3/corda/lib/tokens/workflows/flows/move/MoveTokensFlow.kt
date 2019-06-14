@@ -8,10 +8,11 @@ import net.corda.core.flows.FlowSession
 import net.corda.core.transactions.TransactionBuilder
 
 /**
- * General inlined flow used to move any type of tokens. This flow builds a transaction
- * containing passed as parameters input and output states, but all checks should have be done before calling this flow as a subflow.
- * It can only be called for one [TokenType] at a time. If you need to do multiple token types in one transaction then create a new
- * flow, calling [addMoveTokens] for each token type.
+ * General inlined flow used to move any type of tokens. This flow builds a transaction containing passed as parameters
+ * input and output states, but all checks should have be done before calling this flow as a subflow.
+ *
+ * It can only be called for one [TokenType] at a time. If you need to do multiple token types in one transaction then
+ * create a new flow, calling [addMoveTokens] for each token type.
  *
  * @param inputs list of token inputs to move
  * @param outputs list of result token outputs

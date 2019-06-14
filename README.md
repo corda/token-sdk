@@ -421,6 +421,24 @@ This release candidate is almost code complete.
 * Various bug fixes.
 * Added progress trackers to more flows.
 * Added @Suspendable annotations to more functions.
+* Changes to how how change parties are generated and used:
+
+    * RC02: All move and redeem flows specified `changeHolder` as a
+      nullable parameter. If it was set to null then the token selection
+      mechanism would always generate a new confidential identity for
+      the change holder. This behaviour is a little counter-intuitive so
+      it have been changed in RC-03.
+
+    * RC03:
+
+        * The issuance flows don't require any change outputs
+        * The non-confidential move and redeem token flows now default
+          the change party to be the calling node's identity.
+        * The confidential redeem flow requires that the issuer request
+          a new key from the redeeming party.
+        * The confidential move token flow requires that a change party
+          is generated prior and passed into the confidential move
+          tokens flow.
 
 #### Known issues
 

@@ -20,6 +20,7 @@ import net.corda.core.utilities.ProgressTracker
  * collects signatures and finalises transaction with observers if present.
  */
 abstract class AbstractRedeemTokensFlow : FlowLogic<SignedTransaction>() {
+
     abstract val issuerSession: FlowSession
     abstract val observerSessions: List<FlowSession>
 
@@ -46,6 +47,7 @@ abstract class AbstractRedeemTokensFlow : FlowLogic<SignedTransaction>() {
         progressTracker.currentStep = SELECTING_STATES
         generateExit(txBuilder)
         // First synchronise identities between issuer and our states.
+        // TODO: Only do this if necessary.
         progressTracker.currentStep = SYNC_IDS
         subFlow(IdentitySyncFlow.Send(issuerSession, txBuilder.toWireTransaction(serviceHub)))
         val ourSigningKeys = txBuilder.toLedgerTransaction(serviceHub).ourSigningKeys(serviceHub)
