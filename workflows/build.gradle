@@ -58,7 +58,6 @@ dependencies {
 
     // Testing.
     testCompile "$corda_release_group:corda-node-driver:$corda_release_version"
-    testCompile "junit:junit:$junit_version"
     testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
     testCompile "junit:junit:$junit_version"
 
