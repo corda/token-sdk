@@ -7,6 +7,7 @@ import com.r3.corda.lib.tokens.money.BTC
 import com.r3.corda.lib.tokens.money.DigitalCurrency
 import com.r3.corda.lib.tokens.money.FiatCurrency
 import com.r3.corda.lib.tokens.money.GBP
+import com.r3.corda.lib.tokens.workflows.flows.shell.IssueTokens
 import com.r3.corda.lib.tokens.workflows.utilities.InsufficientBalanceException
 import com.r3.corda.lib.tokens.workflows.utilities.TokenObserver
 import com.r3.corda.lib.tokens.workflows.utilities.VaultWatcherService
@@ -22,7 +23,13 @@ import net.corda.core.identity.Party
 import net.corda.core.internal.sumByLong
 import net.corda.core.node.services.Vault
 import net.corda.core.utilities.getOrThrow
+import net.corda.testing.core.ALICE_NAME
+import net.corda.testing.core.CHARLIE_NAME
 import net.corda.testing.core.TestIdentity
+import net.corda.testing.core.singleIdentity
+import net.corda.testing.node.internal.InternalMockNetwork
+import net.corda.testing.node.internal.InternalMockNodeParameters
+import net.corda.testing.node.internal.startFlow
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.Matchers.greaterThanOrEqualTo
@@ -279,32 +286,32 @@ class VaultWatcherServiceTest {
         Assert.assertThat(spendTracker.filter { it.value.get() > 1 }.toList(), `is`(equalTo(emptyList())))
     }
 
-//    @Test
-//    fun `should allow selection of tokens already issued from within a flow`() {
-//
-//        val mockNet = InternalMockNetwork(cordappPackages = listOf(
-//                "com.r3.corda.sdk.token.money",
-//                "com.r3.corda.sdk.token.contracts",
-//                "com.r3.corda.sdk.token.workflow"
-//        ))
-//        val aliceNode = mockNet.createNode(InternalMockNodeParameters(legalName = ALICE_NAME))
-//        val issuerNode = mockNet.createNode(InternalMockNodeParameters(legalName = CHARLIE_NAME))
-//        val alice = aliceNode.info.singleIdentity()
-//        val issuer = issuerNode.info.singleIdentity()
-//        val notaryIdentity = mockNet.defaultNotaryIdentity
-//
-//        val resultFuture = issuerNode.services.startFlow(IssueTokensFlow(BTC, alice, notaryIdentity, Amount(10_000_000, BTC))).resultFuture
-//        mockNet.runNetwork()
-//        val issueResultTx = resultFuture.get()
-//        val issuedStateRef = issueResultTx.coreTransaction.outRefsOfType<FungibleToken<TokenType>>().single()
-//
-//        val tokensFuture = aliceNode.services.startFlow(SuspendingSelector(alice.owningKey, Amount(1, IssuedTokenType(issuer, BTC)), allowShortfall = true)).resultFuture
-//        mockNet.runNetwork()
-//        val selectedToken = tokensFuture.getOrThrow().single()
-//
-//        Assert.assertThat(issuedStateRef, `is`(equalTo(selectedToken)))
-//
-//    }
+    @Test
+    fun `should allow selection of tokens already issued from within a flow`() {
+
+        val mockNet = InternalMockNetwork(cordappPackages = listOf(
+                "com.r3.corda.lib.tokens.money",
+                "com.r3.corda.lib.tokens.contracts",
+                "com.r3.corda.lib.tokens.workflows"
+        ))
+        val aliceNode = mockNet.createNode(InternalMockNodeParameters(legalName = ALICE_NAME))
+        val issuerNode = mockNet.createNode(InternalMockNodeParameters(legalName = CHARLIE_NAME))
+        val alice = aliceNode.info.singleIdentity()
+        val issuer = issuerNode.info.singleIdentity()
+        val notaryIdentity = mockNet.defaultNotaryIdentity
+
+        val resultFuture = issuerNode.services.startFlow(IssueTokens(BTC, 100000, issuer, alice)).resultFuture
+        mockNet.runNetwork()
+        val issueResultTx = resultFuture.get()
+        val issuedStateRef = issueResultTx.coreTransaction.outRefsOfType<FungibleToken<TokenType>>().single()
+
+        val tokensFuture = aliceNode.services.startFlow(SuspendingSelector(alice.owningKey, Amount(1, IssuedTokenType(issuer, BTC)), allowShortfall = false)).resultFuture
+        mockNet.runNetwork()
+        val selectedToken = tokensFuture.getOrThrow().single()
+
+        Assert.assertThat(issuedStateRef, `is`(equalTo(selectedToken)))
+
+    }
 
     companion object {
 
