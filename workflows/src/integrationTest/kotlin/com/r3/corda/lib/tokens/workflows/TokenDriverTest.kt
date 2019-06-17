@@ -112,7 +112,7 @@ class TokenDriverTest {
             assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(1_900_000L.GBP issuedBy issuerParty)
             assertThat(nodeB.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
             // Check that dist list was updated at issuer node.
-            val distributionList = issuer.rpc.startFlow(::GetDistributionList, housePtr).returnValue.getOrThrow()
+            val distributionList = issuer.rpc.startFlow(TokenDriverTest::GetDistributionList, housePtr).returnValue.getOrThrow()
             assertThat(distributionList.map { it.party }).containsExactly(nodeAParty, nodeBParty)
             // Update that evolvable state on issuer node.
             val oldHouse = housePublishTx.singleOutput<House>()
@@ -121,8 +121,8 @@ class TokenDriverTest {
             // Check that both nodeA and B got update.
             nodeA.rpc.watchForTransaction(houseUpdateTx).getOrThrow(5.seconds)
             nodeB.rpc.watchForTransaction(houseUpdateTx).getOrThrow(5.seconds)
-            val houseA = nodeA.rpc.startFlow(::CheckTokenPointer, housePtr).returnValue.getOrThrow()
-            val houseB = nodeB.rpc.startFlow(::CheckTokenPointer, housePtr).returnValue.getOrThrow()
+            val houseA = nodeA.rpc.startFlow(TokenDriverTest::CheckTokenPointer, housePtr).returnValue.getOrThrow()
+            val houseB = nodeB.rpc.startFlow(TokenDriverTest::CheckTokenPointer, housePtr).returnValue.getOrThrow()
             assertThat(houseA.valuation).isEqualTo(800_000L.GBP)
             assertThat(houseB.valuation).isEqualTo(800_000L.GBP)
             assertThatExceptionOfType(CordaRuntimeException::class.java).isThrownBy {
