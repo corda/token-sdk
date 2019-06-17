@@ -1,13 +1,3 @@
-buildscript {
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "net.corda.plugins:cordapp:$corda_gradle_plugins_version"
-        classpath "net.corda.plugins:quasar-utils:$corda_gradle_plugins_version"
-        classpath "org.jetbrains.kotlin:kotlin-noarg:$kotlin_version"
-    }
-}
-
-
 apply plugin: 'kotlin-jpa'
 apply plugin: 'net.corda.plugins.quasar-utils'
 apply plugin: 'net.corda.plugins.cordapp'

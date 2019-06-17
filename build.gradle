@@ -4,7 +4,7 @@ buildscript {
         corda_release_version = '5.0-SNAPSHOT'
         tokens_release_group = "com.r3.corda.lib.tokens"
         tokens_release_version = "1.0-RC03"
-        corda_gradle_plugins_version = '4.0.42'
+        corda_gradle_plugins_version = '4.0.45'
         aetherVersion = '1.0.0.v20140518'
         mavenVersion = '3.1.0'
         maven_resolver_version = "1.1.1"
@@ -27,6 +27,7 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-noarg:$kotlin_version"
         classpath "net.corda.plugins:cordformation:$corda_gradle_plugins_version"
         classpath "net.corda.plugins:quasar-utils:$corda_gradle_plugins_version"
         classpath "net.corda.plugins:cordapp:$corda_gradle_plugins_version"

@@ -1,0 +1,11 @@
+configurations {
+    all {
+        if (it.state == Configuration.State.UNRESOLVED) {
+            // Ensure that this module uses the deterministic Corda artifacts.
+            resolutionStrategy.dependencySubstitution {
+                substitute module("$corda_release_group:corda-serialization:$corda_release_version") with module("$corda_release_group:corda-serialization-deterministic:$corda_release_version")
+                substitute module("$corda_release_group:corda-core:$corda_release_version") with module("$corda_release_group:corda-core-deterministic:$corda_release_version")
+            }
+        }
+    }
+}
