@@ -17,11 +17,8 @@ import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.FixMethodOrder
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.Timeout
 import org.junit.runners.MethodSorters
-import java.util.concurrent.TimeUnit
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
@@ -36,9 +33,6 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     ) : TokenType
 
     private val fooToken = SomeNonFungibleToken("FOO")
-
-    @Rule
-    val timeoutRule = Timeout(1, TimeUnit.MINUTES)
 
     @Before
     override fun initialiseNodes() {
