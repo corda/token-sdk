@@ -40,7 +40,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         I2 = nodes[3]
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `create evolvable token`() {
         // Create new token.
         val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
@@ -49,7 +49,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         assertEquals(house, token.state.data)
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `create and update evolvable token`() {
         // Create new token.
         val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
@@ -62,7 +62,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         assertEquals(proposedToken, newToken.state.data)
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `issue token to yourself`() {
         val issueTokenTx = I.issueFungibleTokens(I, 100.GBP).getOrThrow()
         I.watchForTransaction(issueTokenTx.id).getOrThrow()
@@ -70,7 +70,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         assertEquals(100.GBP, gbp)
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `issue and move fixed tokens`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
@@ -81,7 +81,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         println(moveTokenTx.tx)
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `create evolvable token, then issue evolvable token`() {
         // Create new token.
         val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
@@ -98,7 +98,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         assertEquals(token.linearId().id, distributionRecord.linearId)
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `check token recipient also receives token`() {
         // Create new token.
         val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
@@ -113,7 +113,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         assertEquals(houseToken, houseQuery.single())
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `create evolvable token, then issue tokens, then update token`() {
         // Create new token.
         val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
@@ -131,7 +131,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         assertEquals(updateTx.singleOutput(), updatedToken.singleOutput<House>())
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `create evolvable token, then issue and move`() {
         // Create new token.
         val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
@@ -146,7 +146,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         B.watchForTransaction(moveTokenTx.id).getOrThrow()
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `create evolvable token and issue to multiple nodes`() {
         // Create new token.
         val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
@@ -162,7 +162,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         B.watchForTransaction(issueTokenB.id).toCompletableFuture().getOrThrow()
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `moving evolvable token updates distribution list`() {
         //Create evolvable token with 2 maintainers
         val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity(), I2.legalIdentity()))
@@ -197,7 +197,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         }
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `issue to unknown anonymous party`() {
         val confidentialHolder = A.services.keyManagementService.freshKeyAndCert(A.services.myInfo.chooseIdentityAndCert(), false).party.anonymise()
         Assertions.assertThatThrownBy {
@@ -205,7 +205,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         }.hasMessageContaining("Called flow with anonymous party that node doesn't know about. Make sure that RequestConfidentialIdentity flow is called before.")
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `move to unknown anonymous party`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
@@ -215,7 +215,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         }.hasMessageContaining("Called flow with anonymous party that node doesn't know about. Make sure that RequestConfidentialIdentity flow is called before.")
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `move to anonymous party on the same node`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
@@ -225,7 +225,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     }
 
 
-    @Test
+    @Test(timeout = 60_000)
     fun `create evolvable token, then issue to the same node twice, expecting only one distribution record`() {
         // Create new token.
         val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
@@ -241,7 +241,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     }
 
     // Ben's test.
-    @Test
+    @Test(timeout = 60_000)
     fun `should get different tokens if we select twice`() {
         (1..2).map { I.issueFungibleTokens(A, 1 of GBP).getOrThrow() }
         val tokenSelection = TokenSelection(A.services)

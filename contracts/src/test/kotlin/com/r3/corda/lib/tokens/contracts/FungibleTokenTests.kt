@@ -14,7 +14,7 @@ import org.junit.Test
 // TODO: Some of these tests are testing AbstractToken and should be moved into the super-class.
 class FungibleTokenTests : ContractTestCommon() {
 
-    @Test
+    @Test(timeout = 60_000)
     fun `issue token tests`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -104,7 +104,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `move token tests`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -226,7 +226,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `redeem token tests`() {
         val issuedToken = GBP issuedBy ISSUER.party
         val otherIssuerToken = GBP issuedBy BOB.party

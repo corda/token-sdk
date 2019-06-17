@@ -20,7 +20,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
 
     private val issuedToken = PTK issuedBy ISSUER.party
 
-    @Test
+    @Test(timeout = 60_000)
     fun `issue non fungible token tests`() {
         transaction {
             // Start with only one output.
@@ -95,7 +95,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `move non fungible token tests`() {
         val heldToken = issuedToken heldBy ALICE.party
         transaction {

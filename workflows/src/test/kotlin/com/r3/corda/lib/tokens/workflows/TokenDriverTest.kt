@@ -51,7 +51,7 @@ import org.junit.Test
 
 class TokenDriverTest {
     //    @Ignore("There is a bug with type parameters in startRPCFlow in Corda 4.0 that will be fixed in... who knows when, probably 5? You can run this test using 5.0-SNAPSHOT version.")
-    @Test
+    @Test(timeout = 300_000)
     fun `beefy tokens integration test`() {
         driver(DriverParameters(
                 portAllocation = incrementalPortAllocation(20000),

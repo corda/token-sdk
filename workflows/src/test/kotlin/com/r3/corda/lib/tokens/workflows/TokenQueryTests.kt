@@ -63,7 +63,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
         network.waitQuiescent()
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `query for all owned token amounts`() {
         // Query for all tokensToIssue and check they are all returned.
         val query = QueryCriteria.FungibleStateQueryCriteria(
@@ -74,7 +74,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
         assertEquals(allTokens.size, states.size)
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `query for all owned tokens`() {
         // Query for all tokensToIssue and check they are all returned.
         val query = QueryCriteria.VaultQueryCriteria(
@@ -85,7 +85,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
         assertEquals(allOtherTokens.size, states.size)
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `query owned token amounts by token`() {
         // Perform a   custom query for GBP only tokensToIssue.
         val gbp = A.services.vaultService.tokenAmountsByToken(GBP).states
@@ -96,7 +96,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
         assertEquals(btcTokens.size, btc.size)
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `query owned tokens by token`() {
         // Perform a custom query for GBP only tokensToIssue.
         val foo = A.services.vaultService.ownedTokensByToken(fooToken).states
@@ -105,14 +105,14 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
         assertEquals(1, bar.size)
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `query for sum of an owned token amount`() {
         // Perform a custom query to get the balance for a specific token type.
         val gbpBalance = A.services.vaultService.tokenBalance(GBP)
         assertEquals(gbpTokens.sumTokensOrThrow(), gbpBalance)
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `query for sum of an owned token amount by issuer`() {
         val issueTx = I2.issueFungibleTokens(A, 13.GBP).getOrThrow()
         A.watchForTransaction(issueTx.id).getOrThrow()
@@ -123,7 +123,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
         assertEquals(13.GBP, gbpBalanceI2)
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `query owned token amounts with given issuer`() {
         // Fungible
         val issueTx = I2.issueFungibleTokens(A, 13.GBP).getOrThrow()
@@ -135,7 +135,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
         assertEquals(13.GBP issuedBy I2.legalIdentity(), gbp)
     }
 
-    @Test
+    @Test(timeout = 60_000)
     fun `query owned token with given issuer`() {
         // Non-fungible
         val fooI2 = A.services.vaultService.ownedTokensByTokenIssuer(fooToken, I2.legalIdentity()).states
