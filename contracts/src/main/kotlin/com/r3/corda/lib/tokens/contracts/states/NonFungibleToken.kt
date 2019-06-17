@@ -1,8 +1,8 @@
 package com.r3.corda.lib.tokens.contracts.states
 
 import com.r3.corda.lib.tokens.contracts.NonFungibleTokenContract
-import com.r3.corda.lib.tokens.contracts.schemas.NonFungibleTokenSchemaV1
-import com.r3.corda.lib.tokens.contracts.schemas.PersistentNonFungibleToken
+import com.r3.corda.lib.tokens.contracts.internal.schemas.NonFungibleTokenSchemaV1
+import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentNonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
@@ -66,10 +66,8 @@ open class NonFungibleToken<T : TokenType>(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is NonFungibleToken<*>) return false
-
         if (token != other.token) return false
         if (holder != other.holder) return false
-
         return true
     }
 

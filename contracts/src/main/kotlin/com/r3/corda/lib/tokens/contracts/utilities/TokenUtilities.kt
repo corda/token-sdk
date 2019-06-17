@@ -62,3 +62,5 @@ internal infix fun <T : EvolvableTokenType> T._withNotary(notary: Party): Transa
 val AbstractToken<*>.holderString: String
     get() =
         (holder as? Party)?.name?.organisation ?: holder.owningKey.toStringShort().substring(0, 16)
+
+inline infix fun <reified T : TokenType> AbstractToken<T>.withNewHolder(newHolder: AbstractParty) = withNewHolder(newHolder)

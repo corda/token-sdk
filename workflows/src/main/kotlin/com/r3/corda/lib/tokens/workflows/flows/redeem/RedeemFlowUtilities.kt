@@ -6,10 +6,10 @@ import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
-import com.r3.corda.lib.tokens.workflows.flows.internal.checkSameIssuer
-import com.r3.corda.lib.tokens.workflows.flows.internal.checkSameNotary
-import com.r3.corda.lib.tokens.workflows.flows.internal.selection.TokenSelection
-import com.r3.corda.lib.tokens.workflows.flows.internal.selection.generateExitNonFungible
+import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer
+import com.r3.corda.lib.tokens.workflows.internal.checkSameNotary
+import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
+import com.r3.corda.lib.tokens.workflows.internal.selection.generateExitNonFungible
 import com.r3.corda.lib.tokens.workflows.utilities.addNotaryWithCheck
 import com.r3.corda.lib.tokens.workflows.utilities.ownedTokensByTokenIssuer
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountWithIssuerCriteria

@@ -1,7 +1,7 @@
 package com.r3.corda.lib.tokens.workflows.utilities
 
-import com.r3.corda.lib.tokens.contracts.schemas.PersistentFungibleToken
-import com.r3.corda.lib.tokens.contracts.schemas.PersistentNonFungibleToken
+import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleToken
+import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentNonFungibleToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType

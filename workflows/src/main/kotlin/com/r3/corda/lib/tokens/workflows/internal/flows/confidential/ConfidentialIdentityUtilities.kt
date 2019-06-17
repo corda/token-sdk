@@ -1,4 +1,4 @@
-package com.r3.corda.lib.tokens.workflows.flows.internal.confidential
+package com.r3.corda.lib.tokens.workflows.internal.flows.confidential
 
 import net.corda.core.crypto.DigitalSignature
 import net.corda.core.crypto.verify

@@ -8,7 +8,7 @@ import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.flows.finality.ObserverAwareFinalityFlow
-import com.r3.corda.lib.tokens.workflows.flows.internal.distribution.UpdateDistributionListFlow
+import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListFlow
 import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession

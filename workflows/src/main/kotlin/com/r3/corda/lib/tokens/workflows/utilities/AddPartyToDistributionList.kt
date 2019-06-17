@@ -1,6 +1,6 @@
 package com.r3.corda.lib.tokens.workflows.utilities
 
-import com.r3.corda.lib.tokens.workflows.flows.internal.schemas.DistributionRecord
+import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.Party
 import net.corda.core.node.ServiceHub
