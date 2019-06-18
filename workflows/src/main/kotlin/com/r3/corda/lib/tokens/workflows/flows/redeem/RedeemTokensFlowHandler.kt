@@ -4,9 +4,9 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.flows.finality.ObserverAwareFinalityFlowHandler
-import com.r3.corda.lib.tokens.workflows.flows.internal.checkOwner
-import com.r3.corda.lib.tokens.workflows.flows.internal.checkSameIssuer
-import com.r3.corda.lib.tokens.workflows.flows.internal.checkSameNotary
+import com.r3.corda.lib.tokens.workflows.internal.checkOwner
+import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer
+import com.r3.corda.lib.tokens.workflows.internal.checkSameNotary
 import net.corda.confidential.IdentitySyncFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession

@@ -3,7 +3,7 @@ package com.r3.corda.lib.tokens.workflows.flows.move
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.flows.confidential.ConfidentialTokensFlow
-import com.r3.corda.lib.tokens.workflows.flows.internal.selection.generateMoveNonFungible
+import com.r3.corda.lib.tokens.workflows.internal.selection.generateMoveNonFungible
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession

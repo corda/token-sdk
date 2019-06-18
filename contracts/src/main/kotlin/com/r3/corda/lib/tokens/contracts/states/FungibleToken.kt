@@ -1,8 +1,8 @@
 package com.r3.corda.lib.tokens.contracts.states
 
 import com.r3.corda.lib.tokens.contracts.FungibleTokenContract
-import com.r3.corda.lib.tokens.contracts.schemas.FungibleTokenSchemaV1
-import com.r3.corda.lib.tokens.contracts.schemas.PersistentFungibleToken
+import com.r3.corda.lib.tokens.contracts.internal.schemas.FungibleTokenSchemaV1
+import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
@@ -64,10 +64,8 @@ open class FungibleToken<T : TokenType>(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is FungibleToken<*>) return false
-
         if (amount != other.amount) return false
         if (holder != other.holder) return false
-
         return true
     }
 

@@ -6,10 +6,10 @@ import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
-import com.r3.corda.lib.tokens.workflows.flows.internal.checkSameIssuer
-import com.r3.corda.lib.tokens.workflows.flows.internal.checkSameNotary
-import com.r3.corda.lib.tokens.workflows.flows.internal.selection.TokenSelection
-import com.r3.corda.lib.tokens.workflows.flows.internal.selection.generateExitNonFungible
+import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer
+import com.r3.corda.lib.tokens.workflows.internal.checkSameNotary
+import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
+import com.r3.corda.lib.tokens.workflows.internal.selection.generateExitNonFungible
 import com.r3.corda.lib.tokens.workflows.utilities.addNotaryWithCheck
 import com.r3.corda.lib.tokens.workflows.utilities.ownedTokensByTokenIssuer
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountWithIssuerCriteria
@@ -25,9 +25,10 @@ import net.corda.core.transactions.TransactionBuilder
 /**
  * Add redeeming of multiple [inputs] to the [transactionBuilder] with possible [changeOutput].
  */
+
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addRedeemTokens(
+fun <T : TokenType> addFungibleTokensToRedeem(
         transactionBuilder: TransactionBuilder,
         inputs: List<StateAndRef<AbstractToken<T>>>,
         changeOutput: AbstractToken<T>? = null
@@ -53,23 +54,10 @@ fun <T : TokenType> addRedeemTokens(
 }
 
 /**
- * Adds a single token redeem to a [transactionBuilder] with possible change [changeOutput].
- */
-@Suspendable
-@JvmOverloads
-fun <T : TokenType> addRedeemTokens(
-        transactionBuilder: TransactionBuilder,
-        input: StateAndRef<AbstractToken<T>>,
-        changeOutput: AbstractToken<T>? = null
-): TransactionBuilder {
-    return addRedeemTokens(transactionBuilder = transactionBuilder, inputs = listOf(input), changeOutput = changeOutput)
-}
-
-/**
  * Redeem non-fungible [ownedToken] issued by the [issuer] and add it to the [transactionBuilder].
  */
 @Suspendable
-fun <T : TokenType> addRedeemTokens(
+fun <T : TokenType> addNonFungibleTokensToRedeem(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         ownedToken: T,
@@ -91,7 +79,7 @@ fun <T : TokenType> addRedeemTokens(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addRedeemTokens(
+fun <T : TokenType> addFungibleTokensToRedeemAndGenerateChangeToOwner(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         amount: Amount<T>,
@@ -102,7 +90,7 @@ fun <T : TokenType> addRedeemTokens(
     val tokenSelection = TokenSelection(serviceHub)
     val baseCriteria = tokenAmountWithIssuerCriteria(amount.token, issuer)
     val queryCriteria = additionalQueryCriteria?.let { baseCriteria.and(it) } ?: baseCriteria
-    val fungibleStates = tokenSelection.attemptSpend(amount, TransactionBuilder().lockId, queryCriteria) // TODO We shouldn't expose lockId in this function
+    val fungibleStates = tokenSelection.attemptSpend(amount, transactionBuilder.lockId, queryCriteria) // TODO We shouldn't expose lockId in this function
     checkSameNotary(fungibleStates)
     check(fungibleStates.isNotEmpty()) {
         "Received empty list of states to redeem."
@@ -130,7 +118,7 @@ fun <T : TokenType> FlowLogic<*>.addRedeemTokens(
         ownedToken: T,
         issuer: Party
 ): TransactionBuilder {
-    return addRedeemTokens(transactionBuilder, serviceHub, ownedToken, issuer)
+    return addNonFungibleTokensToRedeem(transactionBuilder, serviceHub, ownedToken, issuer)
 }
 
 /**
@@ -146,5 +134,5 @@ fun <T : TokenType> FlowLogic<*>.addRedeemTokens(
         changeOwner: AbstractParty,
         additionalQueryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    return addRedeemTokens(transactionBuilder, serviceHub, amount, issuer, changeOwner, additionalQueryCriteria)
+    return addFungibleTokensToRedeemAndGenerateChangeToOwner(transactionBuilder, serviceHub, amount, issuer, changeOwner, additionalQueryCriteria)
 }

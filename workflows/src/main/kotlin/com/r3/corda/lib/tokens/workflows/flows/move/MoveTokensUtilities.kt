@@ -5,8 +5,8 @@ import com.r3.corda.lib.tokens.contracts.commands.MoveTokenCommand
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.workflows.flows.internal.selection.TokenSelection
-import com.r3.corda.lib.tokens.workflows.flows.internal.selection.generateMoveNonFungible
+import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
+import com.r3.corda.lib.tokens.workflows.internal.selection.generateMoveNonFungible
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
 import net.corda.core.contracts.Amount

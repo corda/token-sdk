@@ -1,4 +1,4 @@
-package com.r3.corda.lib.tokens.money
+package com.r3.corda.lib.tokens.money.internal
 
 import net.corda.core.contracts.Contract
 import net.corda.core.transactions.LedgerTransaction

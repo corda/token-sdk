@@ -3,9 +3,9 @@ package com.r3.corda.lib.tokens.workflows.utilities
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
-import com.r3.corda.lib.tokens.workflows.flows.internal.distribution.UpdateDistributionListRequestFlow
-import com.r3.corda.lib.tokens.workflows.flows.internal.distribution.hasDistributionRecord
-import com.r3.corda.lib.tokens.workflows.flows.internal.schemas.DistributionRecord
+import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListRequestFlow
+import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.hasDistributionRecord
+import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.UniqueIdentifier

@@ -33,7 +33,7 @@ abstract class EvolvableTokenType : LinearState {
 
     /**
      * The number of fractional digits allowable for this token type. Specifying "0" will only allow integer amounts of
-     * the token type. Specifying "2", allows two decimal places, much like most fiat currencies, and so on...
+     * the token type. Specifying "2", allows two decimal places, like most fiat currencies, and so on...
      */
     abstract val fractionDigits: Int
 

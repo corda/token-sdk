@@ -35,7 +35,6 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
     @Before
     fun setupNetwork() {
         nodes = names.map { network.createPartyNode(it) }
-
         val nodeMap = LinkedHashMap<Any, StartedMockNode>()
         nodes.forEachIndexed { index, node ->
             nodeMap[index] = node

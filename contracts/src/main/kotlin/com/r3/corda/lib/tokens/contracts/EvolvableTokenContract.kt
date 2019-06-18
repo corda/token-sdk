@@ -101,12 +101,12 @@ abstract class EvolvableTokenContract : Contract {
             "Only evolvable token maintainers (from inputs and outputs) may sign the update evolvable token transaction."
         }
 
-        // Verify linear IDs.
+        // Verify linear IDs does not change.
         require(input.linearId == output.linearId) {
             "The Linear ID of the evolvable token cannot change during an update."
         }
 
-        // TODO: Determine whether displayTokenSize should be updatable?
+        // Fraction digits should be updatable, therefore isn't checked as a constant here.
 
         // Perform additional checks as implemented by subclasses.
         additionalUpdateChecks(tx)

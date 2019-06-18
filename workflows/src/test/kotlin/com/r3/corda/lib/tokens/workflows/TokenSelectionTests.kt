@@ -4,8 +4,8 @@ import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.money.CHF
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
-import com.r3.corda.lib.tokens.workflows.flows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveTokens
+import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.getOrThrow
