@@ -1,5 +1,6 @@
 package com.r3.corda.lib.tokens.workflows.utilities
 
+import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleToken
 import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentNonFungibleToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
@@ -35,6 +36,7 @@ inline fun <reified T : LinearState> VaultService.getLinearStateById(linearId: U
 
 // Returns all owned token amounts of a specified token with given issuer.
 // We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
+@Suspendable
 fun <T : TokenType> tokenAmountWithIssuerCriteria(token: T, issuer: Party): QueryCriteria {
     val issuerCriteria = QueryCriteria.VaultCustomQueryCriteria(builder {
         PersistentFungibleToken::issuer.equal(issuer)
@@ -52,6 +54,7 @@ fun <T : TokenType> ownedTokenAmountCriteria(token: T, holder: AbstractParty): Q
 // Returns all owned token amounts of a specified token.
 // We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
 // TODO should be called token amount criteria (there is no owner selection)
+@Suspendable
 fun <T : TokenType> tokenAmountCriteria(token: T): QueryCriteria {
     val tokenClass = builder {
         PersistentFungibleToken::tokenClass.equal(token.tokenClass)

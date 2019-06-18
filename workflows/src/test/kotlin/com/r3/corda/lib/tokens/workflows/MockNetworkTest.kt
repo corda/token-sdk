@@ -7,14 +7,11 @@ import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
 import org.junit.After
 import org.junit.Before
-import org.junit.Rule
-import org.junit.rules.Timeout
-import java.util.concurrent.TimeUnit
 
 abstract class MockNetworkTest(val names: List<CordaX500Name>) {
 
-    @get:Rule
-    open val timeoutRule = Timeout(1, TimeUnit.MINUTES)
+//    @get:Rule
+//    open val timeoutRule = Timeout(1, TimeUnit.MINUTES)
 
     constructor(vararg names: String) : this(names.map { CordaX500Name(it, "London", "GB") })
 
@@ -41,7 +38,6 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
     @Before
     fun setupNetwork() {
         nodes = names.map { network.createPartyNode(it) }
-
         val nodeMap = LinkedHashMap<Any, StartedMockNode>()
         nodes.forEachIndexed { index, node ->
             nodeMap[index] = node

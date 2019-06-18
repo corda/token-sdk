@@ -28,6 +28,6 @@ constructor(
 ) : AbstractRedeemTokensFlow() {
     @Suspendable
     override fun generateExit(transactionBuilder: TransactionBuilder) {
-        addRedeemTokens(transactionBuilder, amount, issuerSession.counterparty, changeOwner, additionalQueryCriteria)
+        addRedeemTokens6(transactionBuilder, amount, issuerSession.counterparty, changeOwner, additionalQueryCriteria)
     }
 }

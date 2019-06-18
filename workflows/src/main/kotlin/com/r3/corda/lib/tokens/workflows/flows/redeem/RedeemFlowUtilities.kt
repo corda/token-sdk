@@ -27,7 +27,7 @@ import net.corda.core.transactions.TransactionBuilder
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addRedeemTokens(
+fun <T : TokenType> addRedeemTokens1(
         transactionBuilder: TransactionBuilder,
         inputs: List<StateAndRef<AbstractToken<T>>>,
         changeOutput: AbstractToken<T>? = null
@@ -57,19 +57,19 @@ fun <T : TokenType> addRedeemTokens(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addRedeemTokens(
+fun <T : TokenType> addRedeemTokens2(
         transactionBuilder: TransactionBuilder,
         input: StateAndRef<AbstractToken<T>>,
         changeOutput: AbstractToken<T>? = null
 ): TransactionBuilder {
-    return addRedeemTokens(transactionBuilder = transactionBuilder, inputs = listOf(input), changeOutput = changeOutput)
+    return addRedeemTokens1(transactionBuilder = transactionBuilder, inputs = listOf(input), changeOutput = changeOutput)
 }
 
 /**
  * Redeem non-fungible [ownedToken] issued by the [issuer] and add it to the [transactionBuilder].
  */
 @Suspendable
-fun <T : TokenType> addRedeemTokens(
+fun <T : TokenType> addRedeemTokens3(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         ownedToken: T,
@@ -91,7 +91,7 @@ fun <T : TokenType> addRedeemTokens(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addRedeemTokens(
+fun <T : TokenType> addRedeemTokens4(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         amount: Amount<T>,
@@ -102,7 +102,7 @@ fun <T : TokenType> addRedeemTokens(
     val tokenSelection = TokenSelection(serviceHub)
     val baseCriteria = tokenAmountWithIssuerCriteria(amount.token, issuer)
     val queryCriteria = additionalQueryCriteria?.let { baseCriteria.and(it) } ?: baseCriteria
-    val fungibleStates = tokenSelection.attemptSpend(amount, TransactionBuilder().lockId, queryCriteria) // TODO We shouldn't expose lockId in this function
+    val fungibleStates = tokenSelection.attemptSpend(amount, transactionBuilder.lockId, queryCriteria) // TODO We shouldn't expose lockId in this function
     checkSameNotary(fungibleStates)
     check(fungibleStates.isNotEmpty()) {
         "Received empty list of states to redeem."
@@ -125,12 +125,12 @@ fun <T : TokenType> addRedeemTokens(
  *  Redeem non-fungible [ownedToken] issued by the [issuer] and add it to the [transactionBuilder].
  */
 @Suspendable
-fun <T : TokenType> FlowLogic<*>.addRedeemTokens(
+fun <T : TokenType> FlowLogic<*>.addRedeemTokens5(
         transactionBuilder: TransactionBuilder,
         ownedToken: T,
         issuer: Party
 ): TransactionBuilder {
-    return addRedeemTokens(transactionBuilder, serviceHub, ownedToken, issuer)
+    return addRedeemTokens3(transactionBuilder, serviceHub, ownedToken, issuer)
 }
 
 /**
@@ -139,12 +139,12 @@ fun <T : TokenType> FlowLogic<*>.addRedeemTokens(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> FlowLogic<*>.addRedeemTokens(
+fun <T : TokenType> FlowLogic<*>.addRedeemTokens6(
         transactionBuilder: TransactionBuilder,
         amount: Amount<T>,
         issuer: Party,
         changeOwner: AbstractParty,
         additionalQueryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    return addRedeemTokens(transactionBuilder, serviceHub, amount, issuer, changeOwner, additionalQueryCriteria)
+    return addRedeemTokens4(transactionBuilder, serviceHub, amount, issuer, changeOwner, additionalQueryCriteria)
 }

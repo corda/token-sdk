@@ -19,6 +19,6 @@ class RedeemNonFungibleTokensFlow<T : TokenType>(
 ) : AbstractRedeemTokensFlow() {
     @Suspendable
     override fun generateExit(transactionBuilder: TransactionBuilder) {
-        addRedeemTokens(transactionBuilder, ownedToken, issuerSession.counterparty)
+        addRedeemTokens5(transactionBuilder, ownedToken, issuerSession.counterparty)
     }
 }
