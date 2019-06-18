@@ -108,7 +108,7 @@ constructor(
         // Initialise the transaction builder with a preferred notary or choose a random notary.
         val transactionBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
         // Add all the specified tokensToIssue to the transaction. The correct commands and signing keys are also added.
-        addIssueTokens(tokensToIssue, transactionBuilder)
+        addIssueTokens(transactionBuilder, tokensToIssue)
         // Create new participantSessions if this is started as a top level flow.
         val signedTransaction = subFlow(ObserverAwareFinalityFlow(transactionBuilder, participantSessions + observerSessions))
         // Update the distribution list.

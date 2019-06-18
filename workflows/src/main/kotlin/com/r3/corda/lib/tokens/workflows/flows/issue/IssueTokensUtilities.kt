@@ -14,10 +14,10 @@ import net.corda.core.transactions.TransactionBuilder
  * before this function can be called.
  */
 @Suspendable
-fun addIssueTokens(outputs: List<AbstractToken<*>>, txb: TransactionBuilder): TransactionBuilder {
+fun addIssueTokens(transactionBuilder: TransactionBuilder, outputs: List<AbstractToken<*>>): TransactionBuilder {
     val outputGroups: Map<IssuedTokenType<TokenType>, List<AbstractToken<*>>> = outputs.groupBy { it.issuedTokenType }
-    return txb.apply {
-        outputGroups.forEach { issuedTokenType: IssuedTokenType<TokenType>, states: List<AbstractToken<*>> ->
+    return transactionBuilder.apply {
+        outputGroups.forEach { (issuedTokenType: IssuedTokenType<TokenType>, states: List<AbstractToken<*>>) ->
             val issuers = states.map { it.issuer }.toSet()
             require(issuers.size == 1) { "All tokensToIssue must have the same issuer." }
             val issuer = issuers.single()
@@ -33,8 +33,8 @@ fun addIssueTokens(outputs: List<AbstractToken<*>>, txb: TransactionBuilder): Tr
  * before this function can be called.
  */
 @Suspendable
-fun addIssueTokens(vararg outputs: AbstractToken<*>, transactionBuilder: TransactionBuilder): TransactionBuilder {
-    return addIssueTokens(outputs.toList(), transactionBuilder)
+fun addIssueTokens(transactionBuilder: TransactionBuilder, vararg outputs: AbstractToken<*>): TransactionBuilder {
+    return addIssueTokens(transactionBuilder, outputs.toList())
 }
 
 /**
@@ -43,6 +43,6 @@ fun addIssueTokens(vararg outputs: AbstractToken<*>, transactionBuilder: Transac
  * called.
  */
 @Suspendable
-fun addIssueTokens(output: AbstractToken<*>, transactionBuilder: TransactionBuilder): TransactionBuilder {
-    return addIssueTokens(listOf(output), transactionBuilder)
+fun addIssueTokens(transactionBuilder: TransactionBuilder, output: AbstractToken<*>): TransactionBuilder {
+    return addIssueTokens(transactionBuilder, listOf(output))
 }

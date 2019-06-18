@@ -24,7 +24,6 @@ class CreateEvolvableToken<T : EvolvableTokenType>(
         val transactionState: TransactionState<T>
 ) : FlowLogic<SignedTransaction>() {
 
-    // TODO Use preferred notary
     constructor(evolvableToken: T, contract: ContractClassName, notary: Party)
             : this(TransactionState(evolvableToken, contract, notary))
 
