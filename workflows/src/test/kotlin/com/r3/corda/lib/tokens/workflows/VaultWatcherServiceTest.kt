@@ -35,6 +35,7 @@ import org.hamcrest.CoreMatchers.*
 import org.hamcrest.Matchers.greaterThanOrEqualTo
 import org.hamcrest.Matchers.isIn
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Test
 import rx.Observable
 import rx.subjects.PublishSubject
@@ -45,6 +46,7 @@ import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
+@Ignore
 class VaultWatcherServiceTest {
 
     @Test
