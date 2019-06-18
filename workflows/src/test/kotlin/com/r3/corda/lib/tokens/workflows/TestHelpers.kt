@@ -50,7 +50,7 @@ fun StartedMockNode.watchForTransaction(tx: SignedTransaction): CordaFuture<Sign
 /**
  * It's internal because it uses deprecated [internalVerifiedTransactionsFeed].
  */
-internal fun CordaRPCOps.watchForTransaction(tx: SignedTransaction): CordaFuture<SignedTransaction> {
+fun CordaRPCOps.watchForTransaction(tx: SignedTransaction): CordaFuture<SignedTransaction> {
     val (snapshot, feed) = internalVerifiedTransactionsFeed()
     return if (tx in snapshot) {
         doneFuture(tx)

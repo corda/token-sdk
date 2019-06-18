@@ -249,11 +249,11 @@ This is particularly useful for things like currencies, where there can be
 many different instances of the same type of thing. Indeed, this is how
 the `FiatCurrency` and `DigitalCurrency` classes work. However, this isn't
 always required. For cases where you'll only ever need a single instance
-of a token type you can create singleton objects like so:
+of a token type you can create token types like so:
 
-    object PitchTokenClassic : TokenType {
+    object PTK : TokenType {
         override val tokenIdentifier: String = "PTK"
-        override val fractionDigits: Int = 12
+        override val fractionDigits: Int = 0
     }
 
 ### Creating an instance of your new `TokenType`
@@ -355,7 +355,7 @@ and issue that token on ledger.
 
   * RC02:
 
-            class MyTokenType(
+            data class MyTokenType(
                 override val tokenIdentifier: String,
                 val fractionDigits: Int,
                 override val tokenClass: String = javaClass.canonicalName
@@ -364,7 +364,7 @@ and issue that token on ledger.
 
   * RC03:
 
-            class MyTokenType(
+            data class MyTokenType(
                 override val tokenIdentifier: String,
                 override val fractionDigits: Int = 0
             ) : TokenType

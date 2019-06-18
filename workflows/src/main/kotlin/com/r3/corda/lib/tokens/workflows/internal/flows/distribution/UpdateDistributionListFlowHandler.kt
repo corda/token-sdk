@@ -1,4 +1,4 @@
-package com.r3.corda.lib.tokens.workflows.flows.internal.distribution
+package com.r3.corda.lib.tokens.workflows.internal.flows.distribution
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.workflows.utilities.addPartyToDistributionList

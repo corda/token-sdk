@@ -12,7 +12,7 @@ import net.corda.core.contracts.CommandData
  * type. Furthermore, we need to distinguish between the same token issued by two different issuers as the same token
  * issued by different issuers is not fungible, so one cannot add or subtract them. This is why [IssuedTokenType] is
  * used. The [IssuedTokenType] is also included in the [TokenType] so each command can be linked to a group. The
- * [AbstractTokenContract] doesn't allow a group of tokens without a [Command].
+ * [AbstractTokenContract] doesn't allow a group of tokens without an associated [Command].
  *
  * @property token the group of [IssuedTokenType]s this command should be tied to.
  * @param T the [TokenType].

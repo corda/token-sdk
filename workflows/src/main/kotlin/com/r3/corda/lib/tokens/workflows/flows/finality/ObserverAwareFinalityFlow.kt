@@ -2,7 +2,7 @@ package com.r3.corda.lib.tokens.workflows.flows.finality
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.commands.RedeemTokenCommand
-import com.r3.corda.lib.tokens.workflows.flows.internal.finality.TransactionRole
+import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
 import com.r3.corda.lib.tokens.workflows.utilities.participants
 import com.r3.corda.lib.tokens.workflows.utilities.requireSessionsForParticipants

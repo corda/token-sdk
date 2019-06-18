@@ -2,7 +2,7 @@ package com.r3.corda.lib.tokens.workflows.flows.move
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.workflows.flows.finality.ObserverAwareFinalityFlow
-import com.r3.corda.lib.tokens.workflows.flows.internal.distribution.UpdateDistributionListFlow
+import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListFlow
 import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession

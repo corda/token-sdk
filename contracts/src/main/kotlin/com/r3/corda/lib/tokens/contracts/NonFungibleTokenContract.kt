@@ -26,13 +26,13 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
             inputs: List<NonFungibleToken<T>>,
             outputs: List<NonFungibleToken<T>>
     ) {
-        require(inputs.isEmpty()) { "When issuing tokens, there cannot be any input states." }
-        require(outputs.isNotEmpty()) { "When issuing tokens, there must be output states." }
+        require(inputs.isEmpty()) { "When issuing non fungible tokens, there cannot be any input states." }
+        require(outputs.size == 1) { "When issuing non fungible tokens, there must be a single output state." }
         val output = outputs.single()
         // There can only be one issuer per group as the issuer is part of the token which is used to group states.
         // If there are multiple issuers for the same tokens then there will be a group for each issued token. So,
         // the line below should never fail on single().
-        require(output.issuer.owningKey == issueCommand.signers.single()) {
+        require(issueCommand.signers.singleOrNull { it == output.issuer.owningKey } != null) {
             "The issuer must be the only signing party when a token is issued."
         }
     }
@@ -47,8 +47,8 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
             outputs: List<NonFungibleToken<T>>
     ) {
         // There must be inputs and outputs present.
-        require(inputs.isNotEmpty()) { "When moving a token, there must be one input state present." }
-        require(outputs.isNotEmpty()) { "When moving a token, there must be one output state present." }
+        require(inputs.isNotEmpty()) { "When moving a non fungible token, there must be one input state present." }
+        require(outputs.isNotEmpty()) { "When moving a non fungible token, there must be one output state present." }
         // Sum the amount of input and output tokens.
         val input = inputs.single()
         val output = outputs.single()
@@ -56,9 +56,10 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
             "When moving a token, there must be an input and corresponding output for that token."
         }
         // There should only be one move command with one signature.
-        require(moveCommands.size == 1) { "There should be only one move command." }
+        require(moveCommands.size == 1) { "There should be only one move command per group when moving non fungible tokens." }
+        require(input.linearId == output.linearId) { "The linear ID must not change." }
         val moveCommand: CommandWithParties<TokenCommand<T>> = moveCommands.single()
-        require(input.holder.owningKey == moveCommand.signers.single()) {
+        require(moveCommand.signers.toSet() == setOf(input.holder.owningKey)) {
             "The current holder must be the only signing party when a non-fungible (discrete) token is moved."
         }
     }

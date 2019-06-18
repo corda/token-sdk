@@ -2,7 +2,7 @@ package com.r3.corda.lib.tokens.workflows.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.workflows.flows.internal.confidential.RequestConfidentialIdentityFlowHandler
+import com.r3.corda.lib.tokens.workflows.internal.flows.confidential.RequestConfidentialIdentityFlowHandler
 import net.corda.core.contracts.Amount
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession

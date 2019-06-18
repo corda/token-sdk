@@ -11,15 +11,15 @@ import com.r3.corda.lib.tokens.workflows.flows.evolvable.CreateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.lib.tokens.workflows.flows.finality.ObserverAwareFinalityFlowHandler
-import com.r3.corda.lib.tokens.workflows.flows.internal.distribution.UpdateDistributionListFlow
-import com.r3.corda.lib.tokens.workflows.flows.internal.distribution.getDistributionList
-import com.r3.corda.lib.tokens.workflows.flows.internal.schemas.DistributionRecord
-import com.r3.corda.lib.tokens.workflows.flows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveTokens
 import com.r3.corda.lib.tokens.workflows.flows.shell.ConfidentialIssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.shell.IssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.shell.RedeemFungibleTokens
 import com.r3.corda.lib.tokens.workflows.flows.shell.RedeemNonFungibleTokens
+import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListFlow
+import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistributionList
+import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
+import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.statesAndContracts.House
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.utilities.*
@@ -51,7 +51,7 @@ import org.junit.Test
 
 class TokenDriverTest {
     //    @Ignore("There is a bug with type parameters in startRPCFlow in Corda 4.0 that will be fixed in... who knows when, probably 5? You can run this test using 5.0-SNAPSHOT version.")
-    @Test
+    @Test(timeout = 300_000)
     fun `beefy tokens integration test`() {
         driver(DriverParameters(
                 portAllocation = incrementalPortAllocation(20000),
@@ -112,7 +112,7 @@ class TokenDriverTest {
             assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(1_900_000L.GBP issuedBy issuerParty)
             assertThat(nodeB.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
             // Check that dist list was updated at issuer node.
-            val distributionList = issuer.rpc.startFlow(::GetDistributionList, housePtr).returnValue.getOrThrow()
+            val distributionList = issuer.rpc.startFlow(TokenDriverTest::GetDistributionList, housePtr).returnValue.getOrThrow()
             assertThat(distributionList.map { it.party }).containsExactly(nodeAParty, nodeBParty)
             // Update that evolvable state on issuer node.
             val oldHouse = housePublishTx.singleOutput<House>()
@@ -121,8 +121,8 @@ class TokenDriverTest {
             // Check that both nodeA and B got update.
             nodeA.rpc.watchForTransaction(houseUpdateTx).getOrThrow(5.seconds)
             nodeB.rpc.watchForTransaction(houseUpdateTx).getOrThrow(5.seconds)
-            val houseA = nodeA.rpc.startFlow(::CheckTokenPointer, housePtr).returnValue.getOrThrow()
-            val houseB = nodeB.rpc.startFlow(::CheckTokenPointer, housePtr).returnValue.getOrThrow()
+            val houseA = nodeA.rpc.startFlow(TokenDriverTest::CheckTokenPointer, housePtr).returnValue.getOrThrow()
+            val houseB = nodeB.rpc.startFlow(TokenDriverTest::CheckTokenPointer, housePtr).returnValue.getOrThrow()
             assertThat(houseA.valuation).isEqualTo(800_000L.GBP)
             assertThat(houseB.valuation).isEqualTo(800_000L.GBP)
             assertThatExceptionOfType(CordaRuntimeException::class.java).isThrownBy {

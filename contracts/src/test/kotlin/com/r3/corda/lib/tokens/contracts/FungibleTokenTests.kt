@@ -1,8 +1,5 @@
 package com.r3.corda.lib.tokens.contracts
 
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.whenever
 import com.r3.corda.lib.tokens.contracts.commands.IssueTokenCommand
 import com.r3.corda.lib.tokens.contracts.commands.MoveTokenCommand
 import com.r3.corda.lib.tokens.contracts.commands.RedeemTokenCommand
@@ -12,58 +9,10 @@ import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import net.corda.core.contracts.Amount
-import net.corda.core.contracts.TypeOnlyCommandData
-import net.corda.core.identity.CordaX500Name
-import net.corda.core.node.NotaryInfo
-import net.corda.node.services.api.IdentityServiceInternal
-import net.corda.testing.common.internal.testNetworkParameters
-import net.corda.testing.core.DUMMY_NOTARY_NAME
-import net.corda.testing.core.SerializationEnvironmentRule
-import net.corda.testing.core.TestIdentity
-import net.corda.testing.dsl.EnforceVerifyOrFail
-import net.corda.testing.dsl.TransactionDSL
-import net.corda.testing.dsl.TransactionDSLInterpreter
-import net.corda.testing.node.MockServices
-import net.corda.testing.node.transaction
-import org.junit.Rule
 import org.junit.Test
 
-class FungibleTokenTests {
-
-    private companion object {
-        val NOTARY = TestIdentity(DUMMY_NOTARY_NAME, 20)
-        val ISSUER = TestIdentity(CordaX500Name("ISSUER", "London", "GB"))
-        val ALICE = TestIdentity(CordaX500Name("ALICE", "London", "GB"))
-        val BOB = TestIdentity(CordaX500Name("BOB", "London", "GB"))
-        val PETER = TestIdentity(CordaX500Name("PETER", "London", "GB"))
-        val PAUL = TestIdentity(CordaX500Name("PAUL", "London", "GB"))
-    }
-
-    @Rule
-    @JvmField
-    val testSerialization = SerializationEnvironmentRule()
-
-    private val aliceServices = MockServices(
-            cordappPackages = listOf("com.r3.corda.lib.tokens.contracts", "com.r3.corda.lib.tokens.money"),
-            initialIdentity = ALICE,
-            identityService = mock<IdentityServiceInternal>().also {
-                doReturn(ALICE.party).whenever(it).partyFromKey(ALICE.publicKey)
-                doReturn(BOB.party).whenever(it).partyFromKey(BOB.publicKey)
-                doReturn(PETER.party).whenever(it).partyFromKey(PETER.publicKey)
-                doReturn(PAUL.party).whenever(it).partyFromKey(PAUL.publicKey)
-                doReturn(ISSUER.party).whenever(it).partyFromKey(ISSUER.publicKey)
-            },
-            networkParameters = testNetworkParameters(
-                    minimumPlatformVersion = 4,
-                    notaries = listOf(NotaryInfo(NOTARY.party, false))
-            )
-    )
-
-    private fun transaction(script: TransactionDSL<TransactionDSLInterpreter>.() -> EnforceVerifyOrFail) {
-        aliceServices.transaction(NOTARY.party, script)
-    }
-
-    class WrongCommand : TypeOnlyCommandData()
+// TODO: Some of these tests are testing AbstractToken and should be moved into the super-class.
+class FungibleTokenTests : ContractTestCommon() {
 
     @Test
     fun `issue token tests`() {
@@ -252,10 +201,10 @@ class FungibleTokenTests {
             // Two moves (one group).
             tweak {
                 // Add a basic move from Peter to Paul.
-                input(FungibleTokenContract.contractId, 20 of issuedToken heldBy PETER.party)
-                output(FungibleTokenContract.contractId, 20 of issuedToken heldBy PAUL.party)
+                input(FungibleTokenContract.contractId, 20 of issuedToken heldBy CHARLIE.party)
+                output(FungibleTokenContract.contractId, 20 of issuedToken heldBy DAENERYS.party)
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken))
-                command(PETER.publicKey, MoveTokenCommand(issuedToken))
+                command(CHARLIE.publicKey, MoveTokenCommand(issuedToken))
                 verifies()
             }
 
@@ -274,7 +223,6 @@ class FungibleTokenTests {
                         "required. A transaction to move token amounts must be signed by ONLY ALL the owners " +
                         "of ALL the input token amounts."
             }
-
         }
     }
 
@@ -358,8 +306,8 @@ class FungibleTokenTests {
                 this `fails with` "When redeeming tokens, there must be zero or one output state."
             }
 
-            // TODO This should fail because there is additional command without inputs/outputs?
             // Add the redeem command, signed by the ISSUER and ALICE - owner. No input for one group.
+            // The commands signed by BOB and ALICE is ignored as there are no tokens issued by BOB in this transaction.
             tweak {
                 command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
                 command(listOf(BOB.publicKey, ALICE.publicKey), RedeemTokenCommand(otherIssuerToken))

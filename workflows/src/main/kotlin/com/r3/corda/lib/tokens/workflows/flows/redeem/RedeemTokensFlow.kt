@@ -13,7 +13,7 @@ import net.corda.core.transactions.TransactionBuilder
  * Notice that token selection and change output generation should be done beforehand. This flow builds a transaction
  * containing those states, but all checks should have be done before calling this flow as a subflow.
  * It can only be called for one [TokenType] at a time. If you need to do multiple token types in one transaction then create a new
- * flow, calling [addRedeemTokens] for each token type.
+ * flow, calling [addFungibleTokensToRedeem] for each token type.
  *
  * @param inputs list of token inputs to redeem
  * @param changeOutput possible change output to be paid back to the tokens owner
@@ -32,6 +32,6 @@ constructor(
 ) : AbstractRedeemTokensFlow() {
     @Suspendable
     override fun generateExit(transactionBuilder: TransactionBuilder) {
-        addRedeemTokens(transactionBuilder, inputs, changeOutput)
+        addFungibleTokensToRedeem(transactionBuilder, inputs, changeOutput)
     }
 }
