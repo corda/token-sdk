@@ -44,7 +44,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     @Test
     fun `redeem fungible happy path`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
-        A.watchForTransaction(issueTokenTx.id).getOrThrow()
+        network.waitQuiescent()
         A.redeemTokens(GBP, I, 100.GBP, true).getOrThrow()
         assertThat(A.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
         assertThat(I.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
@@ -53,7 +53,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     @Test
     fun `redeem fungible with change`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
-        A.watchForTransaction(issueTokenTx.id).getOrThrow()
+        network.waitQuiescent()
         A.redeemTokens(GBP, I, 80.GBP, true).getOrThrow()
         val ownedStates = A.services.vaultService.tokenAmountsByToken(GBP).states
         assertThat(ownedStates).isNotEmpty()
@@ -64,7 +64,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     @Test
     fun `isufficient balance`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
-        A.watchForTransaction(issueTokenTx.id).getOrThrow()
+        network.waitQuiescent()
         Assertions.assertThatThrownBy {
             A.redeemTokens(GBP, I, 200.GBP, true).getOrThrow()
         }.hasMessageContaining("Insufficient spendable states identified for")
@@ -73,9 +73,9 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     @Test
     fun `different issuers for fungible tokens`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
-        A.watchForTransaction(issueTokenTx.id).getOrThrow()
+        network.waitQuiescent()
         val issueTokenTx2 = B.issueFungibleTokens(A, 100.USD).getOrThrow()
-        A.watchForTransaction(issueTokenTx2.id).getOrThrow()
+        network.waitQuiescent()
         Assertions.assertThatThrownBy {
             A.redeemTokens(USD, I, 100.USD, true).getOrThrow()
         }.hasMessageContaining("Insufficient spendable states identified for ${100.USD}")
@@ -84,7 +84,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     @Test
     fun `redeem non-fungible happy path`() {
         val issueTokenTx = I.issueNonFungibleTokens(fooToken, A).getOrThrow()
-        A.watchForTransaction(issueTokenTx.id).getOrThrow()
+        network.waitQuiescent()
         assertThat(A.services.vaultService.ownedTokensByToken(fooToken).states).isNotEmpty()
         A.redeemTokens(fooToken, I, null, true).getOrThrow()
         assertThat(A.services.vaultService.ownedTokensByToken(fooToken).states).isEmpty()
@@ -94,7 +94,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     @Test
     fun `redeem tokens from different issuer - non fungible`() {
         val issueTokenTx = I.issueNonFungibleTokens(fooToken, A).getOrThrow()
-        A.watchForTransaction(issueTokenTx.id).getOrThrow()
+        network.waitQuiescent()
         assertThat(A.services.vaultService.ownedTokensByToken(fooToken).states).isNotEmpty()
         Assertions.assertThatThrownBy {
             A.redeemTokens(fooToken, B, null, true).getOrThrow()
@@ -114,7 +114,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     @Test
     fun `redeem states with confidential identities not known to issuer`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
-        A.watchForTransaction(issueTokenTx.id).getOrThrow()
+        network.waitQuiescent()
         // Check to see that A was added to I's distribution list.
         val moveTokenTx = A.moveFungibleTokens(50.GBP, B, anonymous = true).getOrThrow()
         B.watchForTransaction(moveTokenTx.id).getOrThrow()
