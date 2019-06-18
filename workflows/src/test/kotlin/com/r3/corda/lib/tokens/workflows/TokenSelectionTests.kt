@@ -48,7 +48,7 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         network.waitQuiescent()
     }
 
-    @Test(timeout = 60_000)
+    @Test
     fun `select up to available amount with tokens sorted by state ref`() {
         val tokenSelection = TokenSelection(A.services)
         val uuid = UUID.randomUUID()
@@ -66,7 +66,7 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         assertEquals(1, results.size)
     }
 
-    @Test(timeout = 60_000)
+    @Test
     fun `not enough tokens available`() {
         val tokenSelection = TokenSelection(A.services)
         val uuid = UUID.randomUUID()
@@ -77,7 +77,7 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         }
     }
 
-    @Test(timeout = 60_000)
+    @Test
     fun `generate move test`() {
         val transactionBuilder = TransactionBuilder()
         val moves = listOf(
@@ -93,7 +93,7 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         // TODO: Assert something...
     }
 
-    @Test(timeout = 60_000)
+    @Test
     fun `should be able to select tokens if you need more than one page to fulfill`() {
         (1..12).map { I.issueFungibleTokens(A, 1 of CHF).getOrThrow() }
         val tokenSelection = TokenSelection(A.services)

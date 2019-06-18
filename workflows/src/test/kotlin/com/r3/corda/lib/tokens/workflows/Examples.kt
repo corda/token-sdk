@@ -14,7 +14,7 @@ import kotlin.test.assertEquals
 
 class Examples : LedgerTestWithPersistence() {
 
-    @Test(timeout = 60_000)
+    @Test
     fun `creating inlined token definition`() {
         // Some amount of GBP issued by the Bank of England and owned by Alice.
         val tenPoundsIssuedByIssuerOwnedByAlice: FungibleToken<FiatCurrency> = 10.GBP issuedBy ISSUER.party heldBy ALICE.party
@@ -26,7 +26,7 @@ class Examples : LedgerTestWithPersistence() {
         println(tenPoundsIssuedByIssuerOwnedByAlice)
     }
 
-    @Test(timeout = 60_000)
+    @Test
     fun `evolvable token definition`() {
         val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(BOB.party))
         val housePointer: TokenPointer<House> = house.toPointer()

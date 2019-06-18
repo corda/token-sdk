@@ -10,9 +10,6 @@ import org.junit.Before
 
 abstract class MockNetworkTest(val names: List<CordaX500Name>) {
 
-//    @get:Rule
-//    open val timeoutRule = Timeout(1, TimeUnit.MINUTES)
-
     constructor(vararg names: String) : this(names.map { CordaX500Name(it, "London", "GB") })
 
     constructor(numberOfNodes: Int) : this(*(1..numberOfNodes).map { "Party${it.toChar() + 64}" }.toTypedArray())

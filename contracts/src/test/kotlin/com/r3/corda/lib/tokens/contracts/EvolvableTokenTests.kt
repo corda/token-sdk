@@ -53,7 +53,7 @@ object EvolvableTokenTests : ContractTestCommon() {
 
     class OnCreateTests {
 
-        @Test(timeout = 60_000)
+        @Test
         fun `valid transactions`() {
             // With 1 maintainer
             transaction {
@@ -84,7 +84,7 @@ object EvolvableTokenTests : ContractTestCommon() {
             }
         }
 
-        @Test(timeout = 60_000)
+        @Test
         fun `all maintainers must be participants`() {
             val expectedError = "All evolvable token maintainers must also be participants."
 
@@ -95,7 +95,7 @@ object EvolvableTokenTests : ContractTestCommon() {
             }
         }
 
-        @Test(timeout = 60_000)
+        @Test
         fun `requires one command`() {
             val expectedError = "A transaction must contain at least one command"
 
@@ -108,7 +108,7 @@ object EvolvableTokenTests : ContractTestCommon() {
             }
         }
 
-        @Test(timeout = 60_000)
+        @Test
         fun `must be signed by all maintainers`() {
             val expectedError = "All evolvable token maintainers must sign the create evolvable token transaction."
 
@@ -176,7 +176,7 @@ object EvolvableTokenTests : ContractTestCommon() {
             }
         }
 
-        @Test(timeout = 60_000)
+        @Test
         fun `may only be signed by maintainers`() {
             val expectedError = "Only evolvable token maintainers may sign the create evolvable token transaction."
 
@@ -238,7 +238,7 @@ object EvolvableTokenTests : ContractTestCommon() {
             }
         }
 
-        @Test(timeout = 60_000)
+        @Test
         fun `may only have one command`() {
             val expectedError = "Evolvable token transactions support exactly one command only."
 
@@ -326,7 +326,7 @@ object EvolvableTokenTests : ContractTestCommon() {
             }
         }
 
-        @Test(timeout = 60_000)
+        @Test
         fun `may not contain input states`() {
             val expectedError = "Create evolvable token transactions must not contain any inputs."
 
@@ -338,7 +338,7 @@ object EvolvableTokenTests : ContractTestCommon() {
             }
         }
 
-        @Test(timeout = 60_000)
+        @Test
         fun `may only contain one output state`() {
             val expectedError = "Create evolvable token transactions must contain exactly one output."
 
@@ -353,7 +353,7 @@ object EvolvableTokenTests : ContractTestCommon() {
 
     class OnUpdateTests {
 
-        @Test(timeout = 60_000)
+        @Test
         fun `linear ID can't change`() {
             val expectedMessage = "The Linear ID of the evolvable token cannot change during an update."
 
@@ -367,7 +367,7 @@ object EvolvableTokenTests : ContractTestCommon() {
             }
         }
 
-        @Test(timeout = 60_000)
+        @Test
         fun `valid transactions`() {
 
             // With 1 maintainer, no ownership change
@@ -451,7 +451,7 @@ object EvolvableTokenTests : ContractTestCommon() {
             }
         }
 
-        @Test(timeout = 60_000)
+        @Test
         fun `all maintainers must be participants`() {
             val expectedError = "All evolvable token maintainers must also be participants."
 
@@ -465,7 +465,7 @@ object EvolvableTokenTests : ContractTestCommon() {
             }
         }
 
-        @Test(timeout = 60_000)
+        @Test
         fun `requires one command`() {
             val expectedError = "A transaction must contain at least one command"
 
@@ -479,7 +479,7 @@ object EvolvableTokenTests : ContractTestCommon() {
             }
         }
 
-        @Test(timeout = 60_000)
+        @Test
         fun `must be signed by all maintainers`() {
             val expectedError = "All evolvable token maintainers (from inputs and outputs) must sign the update evolvable token transaction."
 
@@ -538,7 +538,7 @@ object EvolvableTokenTests : ContractTestCommon() {
             }
         }
 
-        @Test(timeout = 60_000)
+        @Test
         fun `may only be signed by maintainers`() {
             val expectedError = "Only evolvable token maintainers (from inputs and outputs) may sign the update evolvable token transaction."
 
@@ -571,7 +571,7 @@ object EvolvableTokenTests : ContractTestCommon() {
             }
         }
 
-        @Test(timeout = 60_000)
+        @Test
         fun `may only have one command`() {
             val expectedError = "Evolvable token transactions support exactly one command only."
 
@@ -666,7 +666,7 @@ object EvolvableTokenTests : ContractTestCommon() {
             }
         }
 
-        @Test(timeout = 60_000)
+        @Test
         fun `may only contain one input state`() {
             val expectedError = "Update evolvable token transactions must contain exactly one input."
 
@@ -687,7 +687,7 @@ object EvolvableTokenTests : ContractTestCommon() {
             }
         }
 
-        @Test(timeout = 60_000)
+        @Test
         fun `may only contain one output state`() {
             val expectedError = "Update evolvable token transactions must contain exactly one output."
 

@@ -25,7 +25,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should be creatable with just a maintainer.
      * Maintainers is equal to participants.
      */
-    @Test(timeout = 60_000)
+    @Test
     fun `with 1 maintainer`() {
         val token = factory.withOneMaintainer()
 
@@ -47,7 +47,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should be creatable with two maintainers. Both must sign.
      * Maintainers is equal to participants.
      */
-    @Test(timeout = 60_000)
+    @Test
     fun `with 2 maintainers`() {
         val token = factory.withTwoMaintainers()
 
@@ -69,7 +69,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should be creatable with a maintainer and an additional participant. Only maintainers must sign.
      * Participants is a superset of maintainers.
      */
-    @Test(timeout = 60_000)
+    @Test
     fun `with 1 maintainer and 1 additional participant`() {
         val token = factory.withOneMaintainerAndOneObserver()
 
@@ -91,7 +91,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should be creatable with a maintainer and two additional participants. Only maintainers must sign.
      * Participants is a superset of maintainers.
      */
-    @Test(timeout = 60_000)
+    @Test
     fun `with 1 maintainer and 2 additional participants`() {
         val token = factory.withOneMaintainerAndTwoObservers()
 
@@ -113,7 +113,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should be creatable with two maintainers and an additional participant. Only maintainers must sign.
      * Participants is a superset of maintainers.
      */
-    @Test(timeout = 60_000)
+    @Test
     fun `with 2 maintainers and 1 additional participant`() {
         val token = factory.withTwoMaintainersAndOneObserver()
 
@@ -135,7 +135,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should be creatable with two maintainers and two additional participants. Only maintainers must sign.
      * Participants is a superset of maintainers.
      */
-    @Test(timeout = 60_000)
+    @Test
     fun `with 2 maintainers and 2 additional participants`() {
         val token = factory.withTwoMaintainersAndTwoObservers()
 
@@ -157,7 +157,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should *not* be creatable if not all maintainers are participants.
      * Participants is *not* a superset of maintainers.
      */
-    @Test(timeout = 60_000)
+    @Test
     fun `fails if participants is not a superset of maintainers`() {
         val token = factory.withDifferingMaintainersAndParticipants()
 

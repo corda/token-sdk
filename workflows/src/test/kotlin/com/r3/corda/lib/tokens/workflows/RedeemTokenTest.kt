@@ -41,7 +41,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         I = nodes[2]
     }
 
-    @Test(timeout = 60_000)
+    @Test
     fun `redeem fungible happy path`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
@@ -50,7 +50,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         assertThat(I.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
     }
 
-    @Test(timeout = 60_000)
+    @Test
     fun `redeem fungible with change`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
@@ -61,7 +61,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         assertThat(I.services.vaultService.queryBy<FungibleToken<FiatCurrency>>(ownedTokenAmountCriteria(GBP, I.legalIdentity())).states).isEmpty()
     }
 
-    @Test(timeout = 60_000)
+    @Test
     fun `isufficient balance`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
@@ -70,7 +70,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         }.hasMessageContaining("Insufficient spendable states identified for")
     }
 
-    @Test(timeout = 60_000)
+    @Test
     fun `different issuers for fungible tokens`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
@@ -81,7 +81,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         }.hasMessageContaining("Insufficient spendable states identified for ${100.USD}")
     }
 
-    @Test(timeout = 60_000)
+    @Test
     fun `redeem non-fungible happy path`() {
         val issueTokenTx = I.issueNonFungibleTokens(fooToken, A).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
@@ -91,7 +91,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         assertThat(I.services.vaultService.ownedTokensByToken(fooToken).states).isEmpty()
     }
 
-    @Test(timeout = 60_000)
+    @Test
     fun `redeem tokens from different issuer - non fungible`() {
         val issueTokenTx = I.issueNonFungibleTokens(fooToken, A).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
@@ -101,7 +101,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         }.hasMessageContaining("Exactly one owned token of a particular type $fooToken should be in the vault at any one time.")
     }
 
-    @Test(timeout = 60_000)
+    @Test
     fun `non fungible two same tokens`() {
         I.issueNonFungibleTokens(fooToken, A).getOrThrow()
         I.issueNonFungibleTokens(fooToken, A).getOrThrow()
@@ -111,7 +111,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         }.hasMessageContaining("Exactly one owned token of a particular type $fooToken should be in the vault at any one time.")
     }
 
-    @Test(timeout = 60_000)
+    @Test
     fun `redeem states with confidential identities not known to issuer`() {
         val issueTokenTx = I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         A.watchForTransaction(issueTokenTx.id).getOrThrow()
