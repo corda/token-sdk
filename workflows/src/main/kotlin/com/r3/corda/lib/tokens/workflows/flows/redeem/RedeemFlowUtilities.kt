@@ -25,9 +25,10 @@ import net.corda.core.transactions.TransactionBuilder
 /**
  * Add redeeming of multiple [inputs] to the [transactionBuilder] with possible [changeOutput].
  */
+
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addRedeemTokens1(
+fun <T : TokenType> addFungibleTokensToRedeem(
         transactionBuilder: TransactionBuilder,
         inputs: List<StateAndRef<AbstractToken<T>>>,
         changeOutput: AbstractToken<T>? = null
@@ -53,23 +54,10 @@ fun <T : TokenType> addRedeemTokens1(
 }
 
 /**
- * Adds a single token redeem to a [transactionBuilder] with possible change [changeOutput].
- */
-@Suspendable
-@JvmOverloads
-fun <T : TokenType> addRedeemTokens2(
-        transactionBuilder: TransactionBuilder,
-        input: StateAndRef<AbstractToken<T>>,
-        changeOutput: AbstractToken<T>? = null
-): TransactionBuilder {
-    return addRedeemTokens1(transactionBuilder = transactionBuilder, inputs = listOf(input), changeOutput = changeOutput)
-}
-
-/**
  * Redeem non-fungible [ownedToken] issued by the [issuer] and add it to the [transactionBuilder].
  */
 @Suspendable
-fun <T : TokenType> addRedeemTokens3(
+fun <T : TokenType> addNonFungibleTokensToRedeem(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         ownedToken: T,
@@ -91,7 +79,7 @@ fun <T : TokenType> addRedeemTokens3(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addRedeemTokens4(
+fun <T : TokenType> addFungibleTokensToRedeemAndGenerateChangeToOwner(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         amount: Amount<T>,
@@ -125,12 +113,12 @@ fun <T : TokenType> addRedeemTokens4(
  *  Redeem non-fungible [ownedToken] issued by the [issuer] and add it to the [transactionBuilder].
  */
 @Suspendable
-fun <T : TokenType> FlowLogic<*>.addRedeemTokens5(
+fun <T : TokenType> FlowLogic<*>.addRedeemTokens(
         transactionBuilder: TransactionBuilder,
         ownedToken: T,
         issuer: Party
 ): TransactionBuilder {
-    return addRedeemTokens3(transactionBuilder, serviceHub, ownedToken, issuer)
+    return addNonFungibleTokensToRedeem(transactionBuilder, serviceHub, ownedToken, issuer)
 }
 
 /**
@@ -139,12 +127,12 @@ fun <T : TokenType> FlowLogic<*>.addRedeemTokens5(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> FlowLogic<*>.addRedeemTokens6(
+fun <T : TokenType> FlowLogic<*>.addRedeemTokens(
         transactionBuilder: TransactionBuilder,
         amount: Amount<T>,
         issuer: Party,
         changeOwner: AbstractParty,
         additionalQueryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    return addRedeemTokens4(transactionBuilder, serviceHub, amount, issuer, changeOwner, additionalQueryCriteria)
+    return addFungibleTokensToRedeemAndGenerateChangeToOwner(transactionBuilder, serviceHub, amount, issuer, changeOwner, additionalQueryCriteria)
 }
