@@ -330,6 +330,31 @@ and issue that token on ledger.
 
 ## Changelog
 
+### V1
+
+#### Contracts
+
+* The type of `TokenType.tokenClass` has been changed from `String`
+  to `Class<*>`.
+* The contracts module now builds against core-deterministic. The tokens
+  SDK is the FIRST project with a contracts JAR compiled against Corda
+  `core-deterministic`.
+* Moved `IssuedTokenType<T>._heldBy(owner: AbstractParty)` and the sister
+  infix function to the `workflows` module as it requires the generation
+  of a `UniqueIdentifier` which is not deterministic.
+* `NonFungibleTokens` now must be passed a `UniqueIdentifier` upon creation.
+* Changed the method signatures for `addIssueTokens` so that they now
+  take `TransactionBuilder` as the first argument. Thanks to Ian Lloyd
+  for the contribution.
+* Added tests for `NonFungibleTokens`
+*
+
+#### Workflows
+
+* Added in memory token selection implementation. It is not currently the
+  default token selection method but in a future release CorDapp developers
+  will be able to choose between database or in memory selection.
+
 ### Release candidate 3
 
 #### General
