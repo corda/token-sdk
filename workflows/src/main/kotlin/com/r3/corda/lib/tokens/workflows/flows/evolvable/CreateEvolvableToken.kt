@@ -3,7 +3,6 @@ package com.r3.corda.lib.tokens.workflows.flows.evolvable
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
 import com.r3.corda.lib.tokens.contracts.utilities.withNotary
-import com.r3.corda.lib.tokens.workflows.utilities.addCreateEvolvableToken
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.TransactionState
 import net.corda.core.flows.*

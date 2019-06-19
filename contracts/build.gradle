@@ -1,14 +1,6 @@
-buildscript {
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "net.corda.plugins:cordapp:$corda_gradle_plugins_version"
-        classpath "net.corda.plugins:quasar-utils:$corda_gradle_plugins_version"
-        classpath "org.jetbrains.kotlin:kotlin-noarg:$kotlin_version"
-    }
-}
-
 apply plugin: 'kotlin-jpa'
 apply plugin: 'net.corda.plugins.cordapp'
+apply from: "${rootProject.projectDir}/deterministic.gradle"
 
 sourceSets {
     main {
@@ -39,7 +31,6 @@ dependencies {
     testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
     testCompile "junit:junit:$junit_version"
     testCompile "$corda_release_group:corda-node-driver:$corda_release_version"
-    testCompile "junit:junit:$junit_version"
     testCompile project(":modules:money")
 }
 
@@ -59,8 +50,4 @@ cordapp {
 
 jar {
     baseName "tokens-contracts"
-}
-
-publish {
-    name jar.baseName
 }
