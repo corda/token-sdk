@@ -3,7 +3,12 @@ package com.r3.corda.lib.tokens.contracts
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
+import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
+import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
+import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.TypeOnlyCommandData
+import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.node.NotaryInfo
 import net.corda.node.services.api.IdentityServiceInternal
@@ -17,6 +22,16 @@ import net.corda.testing.dsl.TransactionDSLInterpreter
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.transaction
 import org.junit.Rule
+
+/**
+ * Creates a [NonFungibleToken] from an [IssuedTokenType].
+ * E.g. IssuedTokenType<TokenType> -> NonFungibleToken<TokenType>.
+ */
+infix fun <T : TokenType> IssuedTokenType<T>.heldBy(owner: AbstractParty): NonFungibleToken<T> = _heldBy(owner)
+
+private infix fun <T : TokenType> IssuedTokenType<T>._heldBy(owner: AbstractParty): NonFungibleToken<T> {
+    return NonFungibleToken(this, owner, UniqueIdentifier())
+}
 
 abstract class ContractTestCommon {
 

@@ -8,6 +8,7 @@ import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionState
+import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
@@ -25,16 +26,6 @@ infix fun <T : TokenType> Amount<IssuedTokenType<T>>.heldBy(owner: AbstractParty
 
 internal infix fun <T : TokenType> Amount<IssuedTokenType<T>>._heldBy(owner: AbstractParty): FungibleToken<T> {
     return FungibleToken(this, owner)
-}
-
-/**
- * Creates a [NonFungibleToken] from an [IssuedTokenType].
- * E.g. IssuedTokenType<TokenType> -> NonFungibleToken<TokenType>.
- */
-infix fun <T : TokenType> IssuedTokenType<T>.heldBy(owner: AbstractParty): NonFungibleToken<T> = _heldBy(owner)
-
-internal infix fun <T : TokenType> IssuedTokenType<T>._heldBy(owner: AbstractParty): NonFungibleToken<T> {
-    return NonFungibleToken(this, owner)
 }
 
 // --------------------------
