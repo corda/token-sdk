@@ -8,9 +8,9 @@ import com.r3.corda.lib.tokens.money.DigitalCurrency
 import com.r3.corda.lib.tokens.money.FiatCurrency
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.workflows.flows.shell.IssueTokens
-import com.r3.corda.lib.tokens.workflows.utilities.InsufficientBalanceException
-import com.r3.corda.lib.tokens.workflows.utilities.TokenObserver
-import com.r3.corda.lib.tokens.workflows.utilities.VaultWatcherService
+import com.r3.corda.lib.tokens.workflows.internal.selection.InsufficientBalanceException
+import com.r3.corda.lib.tokens.workflows.internal.selection.TokenObserver
+import com.r3.corda.lib.tokens.workflows.internal.selection.VaultWatcherService
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef

@@ -1,4 +1,4 @@
-package com.r3.corda.lib.tokens.workflows.utilities
+package com.r3.corda.lib.tokens.workflows.internal.selection
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
