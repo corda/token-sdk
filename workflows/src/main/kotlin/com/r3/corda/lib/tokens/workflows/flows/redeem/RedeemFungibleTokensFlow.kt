@@ -9,10 +9,11 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.TransactionBuilder
 
 /**
- * Inlined flow used to redeem amount of [FungibleToken]s issued by the particular issuer with possible change output paid to the [changeOwner].
+ * Inlined flow used to redeem amount of [FungibleToken]s issued by the particular issuer with possible change output
+ * paid to the [changeOwner].
  *
  * @param amount amount of token to redeem
- * @param changeOwner owner of possible change output
+ * @param changeOwner owner of possible change output, which defaults to the node identity of the calling node
  * @param issuerSession session with the issuer tokens should be redeemed with
  * @param observerSessions optional sessions with the observer nodes, to witch the transaction will be broadcasted
  * @param additionalQueryCriteria additional criteria for token selection
@@ -21,13 +22,19 @@ class RedeemFungibleTokensFlow<T : TokenType>
 @JvmOverloads
 constructor(
         val amount: Amount<T>,
-        val changeOwner: AbstractParty,
         override val issuerSession: FlowSession,
+        val changeOwner: AbstractParty? = null,
         override val observerSessions: List<FlowSession> = emptyList(),
         val additionalQueryCriteria: QueryCriteria? = null
 ) : AbstractRedeemTokensFlow() {
     @Suspendable
     override fun generateExit(transactionBuilder: TransactionBuilder) {
-        addRedeemTokens(transactionBuilder, amount, issuerSession.counterparty, changeOwner, additionalQueryCriteria)
+        addRedeemTokens(
+                transactionBuilder = transactionBuilder,
+                amount = amount,
+                issuer = issuerSession.counterparty,
+                changeOwner = changeOwner ?: ourIdentity,
+                additionalQueryCriteria = additionalQueryCriteria
+        )
     }
 }

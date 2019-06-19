@@ -5,6 +5,9 @@ import com.r3.corda.lib.tokens.workflows.flows.confidential.ConfidentialTokensFl
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 
+/**
+ * The flow handler for [ConfidentialIssueTokensFlow].
+ */
 class ConfidentialIssueTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {

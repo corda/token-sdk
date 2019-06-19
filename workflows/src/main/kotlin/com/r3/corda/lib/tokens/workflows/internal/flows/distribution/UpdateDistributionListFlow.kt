@@ -54,7 +54,9 @@ class UpdateDistributionListFlow(val signedTransaction: SignedTransaction) : Flo
             // update their local distribution list with the parties that have been just issued tokens.
             val issueTypes: List<TokenPointer<*>> = issueCmds.map { it.token.tokenType }
             progressTracker.currentStep = ADD_DIST_LIST
-            val issueStates: List<AbstractToken<TokenPointer<*>>> = tokensWithTokenPointers.filter { it.tokenType in issueTypes }
+            val issueStates: List<AbstractToken<TokenPointer<*>>> = tokensWithTokenPointers.filter {
+                it.tokenType in issueTypes
+            }
             addToDistributionList(issueStates)
         }
         if (moveCmds.isNotEmpty()) {

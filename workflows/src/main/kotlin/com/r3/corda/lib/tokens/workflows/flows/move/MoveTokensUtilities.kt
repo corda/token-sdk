@@ -68,7 +68,7 @@ fun <T : TokenType> addMoveTokens(
 
 /**
  * Adds multiple token moves to transaction. [partiesAndAmounts] parameter specify which parties should receive amounts of the token.
- * With possible change paid to [changeOwner].
+ * With possible change paid to [changeHolder].
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
@@ -77,21 +77,21 @@ fun <T : TokenType> addMoveTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         partiesAndAmounts: List<PartyAndAmount<T>>,
-        queryCriteria: QueryCriteria? = null,
-        changeOwner: AbstractParty? = null
+        changeHolder: AbstractParty,
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
     val tokenSelection = TokenSelection(serviceHub)
     val (inputs, outputs) = tokenSelection.generateMove(
             lockId = transactionBuilder.lockId,
             partyAndAmounts = partiesAndAmounts,
             queryCriteria = queryCriteria,
-            changeOwner = changeOwner
+            changeHolder = changeHolder
     )
     return addMoveTokens(transactionBuilder = transactionBuilder, inputs = inputs, outputs = outputs)
 }
 
 /**
- * Add single move of [amount] of token to the new [holder]. Possible change output will be paid to [changeOwner].
+ * Add single move of [amount] of token to the new [holder]. Possible change output will be paid to [changeHolder].
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
@@ -101,20 +101,20 @@ fun <T : TokenType> addMoveTokens(
         serviceHub: ServiceHub,
         amount: Amount<T>,
         holder: AbstractParty,
-        queryCriteria: QueryCriteria? = null,
-        changeOwner: AbstractParty? = null
+        changeHolder: AbstractParty,
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
     return addMoveTokens(
             transactionBuilder = transactionBuilder,
             serviceHub = serviceHub,
             partyAndAmount = PartyAndAmount(holder, amount),
             queryCriteria = queryCriteria,
-            changeOwner = changeOwner
+            changeHolder = changeHolder
     )
 }
 
 /**
- * Add single move of amount of token to the new holder specified by [partyAndAmount] parameter. Possible change output will be paid to [changeOwner].
+ * Add single move of amount of token to the new holder specified by [partyAndAmount] parameter. Possible change output will be paid to [changeHolder].
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
@@ -123,15 +123,15 @@ fun <T : TokenType> addMoveTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         partyAndAmount: PartyAndAmount<T>,
-        queryCriteria: QueryCriteria? = null,
-        changeOwner: AbstractParty? = null
+        changeHolder: AbstractParty,
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
     return addMoveTokens(
             transactionBuilder = transactionBuilder,
             serviceHub = serviceHub,
             partiesAndAmounts = listOf(partyAndAmount),
             queryCriteria = queryCriteria,
-            changeOwner = changeOwner
+            changeHolder = changeHolder
     )
 }
 
@@ -200,7 +200,7 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
 }
 
 /**
- * Add single move of [amount] of token to the new [holder]. Possible change output will be paid to [changeOwner].
+ * Add single move of [amount] of token to the new [holder]. Possible change output will be paid to [changeHolder].
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
@@ -209,14 +209,14 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         transactionBuilder: TransactionBuilder,
         amount: Amount<T>,
         holder: AbstractParty,
-        queryCriteria: QueryCriteria? = null,
-        changeOwner: AbstractParty? = null
+        changeHolder: AbstractParty,
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    return addMoveTokens(transactionBuilder, serviceHub, amount, holder, queryCriteria, changeOwner)
+    return addMoveTokens(transactionBuilder, serviceHub, amount, holder, changeHolder, queryCriteria)
 }
 
 /**
- * Add single move of amount of token to the new holder specified by [partyAndAmount] parameter. Possible change output will be paid to [changeOwner].
+ * Add single move of amount of token to the new holder specified by [partyAndAmount] parameter. Possible change output will be paid to [changeHolder].
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
@@ -224,15 +224,15 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
 fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         transactionBuilder: TransactionBuilder,
         partyAndAmount: PartyAndAmount<T>,
-        queryCriteria: QueryCriteria? = null,
-        changeOwner: AbstractParty? = null
+        changeHolder: AbstractParty,
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    return addMoveTokens(transactionBuilder, serviceHub, partyAndAmount, queryCriteria, changeOwner)
+    return addMoveTokens(transactionBuilder, serviceHub, partyAndAmount, changeHolder, queryCriteria)
 }
 
 /**
  * Adds multiple token moves to transaction. [partiesAndAmounts] parameter specify which parties should receive amounts of the token.
- * With possible change paid to [changeOwner].
+ * With possible change paid to [changeHolder].
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
@@ -240,8 +240,8 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
 fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         transactionBuilder: TransactionBuilder,
         partiesAndAmounts: List<PartyAndAmount<T>>,
-        queryCriteria: QueryCriteria? = null,
-        changeOwner: AbstractParty? = null
+        changeHolder: AbstractParty,
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    return addMoveTokens(transactionBuilder, serviceHub, partiesAndAmounts, queryCriteria, changeOwner)
+    return addMoveTokens(transactionBuilder, serviceHub, partiesAndAmounts, changeHolder, queryCriteria)
 }

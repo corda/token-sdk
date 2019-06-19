@@ -31,6 +31,12 @@ constructor(
     override fun call(): SignedTransaction {
         // Send anonymous identity to the issuer.
         val changeOwner = subFlow(RequestConfidentialIdentityFlowHandler(issuerSession))
-        return subFlow(RedeemFungibleTokensFlow(amount, changeOwner, issuerSession, observerSessions, additionalQueryCriteria))
+        return subFlow(RedeemFungibleTokensFlow(
+                amount = amount,
+                issuerSession = issuerSession,
+                changeOwner = changeOwner,
+                observerSessions = observerSessions,
+                additionalQueryCriteria = additionalQueryCriteria
+        ))
     }
 }

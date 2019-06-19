@@ -10,6 +10,7 @@ import net.corda.core.transactions.TransactionBuilder
 /**
  * Inlined flow used to move non fungible tokens to parties, [partiesAndTokens] specifies what tokens are moved
  * to each participant.
+ *
  * Call this for one [TokenType] at a time. If you need to do multiple token types in one transaction then create a new
  * flow, calling [addMoveTokens] for each token type.
  *

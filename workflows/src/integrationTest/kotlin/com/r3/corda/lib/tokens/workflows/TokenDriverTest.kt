@@ -193,7 +193,12 @@ class TokenDriverTest {
             // Chose state and refs to send back.
             // TODO This is API pain, we assumed that we could just modify TransactionBuilder, but... it cannot be sent over the wire, because non-serializable
             // We need custom serializer and some custom flows to do checks.
-            val (inputs, outputs) = TokenSelection(serviceHub).generateMove(runId.uuid, listOf(PartyAndAmount(otherSession.counterparty, dvPNotification.amount)))
+            val changeHolder = serviceHub.keyManagementService.freshKeyAndCert(ourIdentityAndCert, false).party.anonymise()
+            val (inputs, outputs) = TokenSelection(serviceHub).generateMove(
+                    lockId = runId.uuid,
+                    partyAndAmounts = listOf(PartyAndAmount(otherSession.counterparty, dvPNotification.amount)),
+                    changeHolder = changeHolder
+            )
             subFlow(SendStateAndRefFlow(otherSession, inputs))
             otherSession.send(outputs)
             subFlow(IdentitySyncFlow.Receive(otherSession))

@@ -18,10 +18,14 @@ import net.corda.core.identity.Party
  * new tokens. As this is an in-line sub-flow, we must pass it a list of sessions, which _may_ contain sessions
  * for observers.
  * As such, we can't assume that all token holders we have sessions for will need to generate a new key
- * pair, so only the session token holders which are also hold passed tokens are sent an [ActionRequest.CREATE_NEW_KEY] and
- * everyone else is sent [ActionRequest.DO_NOTHING].
+ * pair, so only the session token holders which are also hold passed tokens are sent an [ActionRequest.CREATE_NEW_KEY]
+ * and everyone else is sent [ActionRequest.DO_NOTHING].
  *
  * This is an in-line flow and use of it should be paired with [ConfidentialTokensFlowHandler].
+ *
+ * Note that this flow should only be called if you are dealing with [Party]s as individual nodes, i.e. not accounts.
+ * When issuing tokens to accounts, the public keys + tokens need to be generated up-front as passed into the
+ * [IssueTokensFlow].
  *
  * @property tokens a list of [AbstractToken]s.
  * @property sessions a list of participants' sessions which may contain sessions for observers.
