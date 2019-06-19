@@ -51,7 +51,3 @@ cordapp {
 jar {
     baseName "tokens-contracts"
 }
-
-publish {
-    name jar.baseName
-}
