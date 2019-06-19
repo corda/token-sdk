@@ -23,16 +23,6 @@ import net.corda.testing.node.MockServices
 import net.corda.testing.node.transaction
 import org.junit.Rule
 
-/**
- * Creates a [NonFungibleToken] from an [IssuedTokenType].
- * E.g. IssuedTokenType<TokenType> -> NonFungibleToken<TokenType>.
- */
-infix fun <T : TokenType> IssuedTokenType<T>.heldBy(owner: AbstractParty): NonFungibleToken<T> = _heldBy(owner)
-
-private infix fun <T : TokenType> IssuedTokenType<T>._heldBy(owner: AbstractParty): NonFungibleToken<T> {
-    return NonFungibleToken(this, owner, UniqueIdentifier())
-}
-
 abstract class ContractTestCommon {
 
     protected companion object {
@@ -69,4 +59,15 @@ abstract class ContractTestCommon {
     }
 
     protected class WrongCommand : TypeOnlyCommandData()
+}
+
+/**
+ * Creates a [NonFungibleToken] from an [IssuedTokenType].
+ * E.g. IssuedTokenType<TokenType> -> NonFungibleToken<TokenType>.
+ * This function must exist outside of the contracts module as creating a unique identifier is non deterministic.
+ */
+infix fun <T : TokenType> IssuedTokenType<T>.heldBy(owner: AbstractParty): NonFungibleToken<T> = _heldBy(owner)
+
+private infix fun <T : TokenType> IssuedTokenType<T>._heldBy(owner: AbstractParty): NonFungibleToken<T> {
+    return NonFungibleToken(this, owner, UniqueIdentifier())
 }

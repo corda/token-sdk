@@ -8,8 +8,8 @@ import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.money.FiatCurrency
 import com.r3.corda.lib.tokens.money.GBP
-import com.r3.corda.lib.tokens.workflows.flows.shell.heldBy
 import com.r3.corda.lib.tokens.workflows.statesAndContracts.House
+import com.r3.corda.lib.tokens.workflows.utilities.heldBy
 import org.junit.Test
 import kotlin.test.assertEquals
 

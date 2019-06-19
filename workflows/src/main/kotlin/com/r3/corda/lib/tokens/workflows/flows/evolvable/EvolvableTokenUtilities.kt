@@ -1,4 +1,4 @@
-package com.r3.corda.lib.tokens.workflows.utilities
+package com.r3.corda.lib.tokens.workflows.flows.evolvable
 
 import com.r3.corda.lib.tokens.contracts.commands.Create
 import com.r3.corda.lib.tokens.contracts.commands.Update
