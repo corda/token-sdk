@@ -13,6 +13,7 @@ import com.r3.corda.lib.tokens.workflows.flows.issue.ConfidentialIssueTokensFlow
 import com.r3.corda.lib.tokens.workflows.flows.issue.ConfidentialIssueTokensFlowHandler
 import com.r3.corda.lib.tokens.workflows.flows.issue.IssueTokensFlow
 import com.r3.corda.lib.tokens.workflows.flows.issue.IssueTokensFlowHandler
+import com.r3.corda.lib.tokens.workflows.utilities.heldBy
 import com.r3.corda.lib.tokens.workflows.utilities.sessionsForParticipants
 import com.r3.corda.lib.tokens.workflows.utilities.sessionsForParties
 import net.corda.core.flows.*

@@ -1,12 +1,3 @@
-buildscript {
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "net.corda.plugins:cordapp:$corda_gradle_plugins_version"
-        classpath "net.corda.plugins:quasar-utils:$corda_gradle_plugins_version"
-        classpath "org.jetbrains.kotlin:kotlin-noarg:$kotlin_version"
-    }
-}
-
 apply plugin: 'net.corda.plugins.cordapp'
 
 cordapp {
@@ -59,8 +50,4 @@ dependencies {
 
 jar {
     baseName "tokens-money"
-}
-
-publish {
-    name jar.baseName
 }

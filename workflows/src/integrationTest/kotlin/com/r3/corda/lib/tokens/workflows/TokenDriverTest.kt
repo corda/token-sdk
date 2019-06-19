@@ -12,10 +12,7 @@ import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.lib.tokens.workflows.flows.finality.ObserverAwareFinalityFlowHandler
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveTokens
-import com.r3.corda.lib.tokens.workflows.flows.shell.ConfidentialIssueTokens
-import com.r3.corda.lib.tokens.workflows.flows.shell.IssueTokens
-import com.r3.corda.lib.tokens.workflows.flows.shell.RedeemFungibleTokens
-import com.r3.corda.lib.tokens.workflows.flows.shell.RedeemNonFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.shell.*
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistributionList
 import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
