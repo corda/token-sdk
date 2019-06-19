@@ -45,8 +45,7 @@ constructor(
                 partiesAndAmounts = partiesAndAmounts,
                 participantSessions = participantSessions,
                 observerSessions = observerSessions,
-                queryCriteria = queryCriteria,
-                changeHolder = ourIdentity
+                queryCriteria = queryCriteria
         ))
     }
 }

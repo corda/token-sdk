@@ -24,7 +24,7 @@ constructor(
     override fun call(): SignedTransaction {
         val observerSessions = sessionsForParties(observers)
         val issuerSession = initiateFlow(issuer)
-        return subFlow(RedeemFungibleTokensFlow(amount, ourIdentity, issuerSession, observerSessions))
+        return subFlow(RedeemFungibleTokensFlow(amount, issuerSession, ourIdentity, observerSessions))
     }
 }
 

@@ -7,6 +7,7 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.utilities.sortByStateRefAscending
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
+import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
 import net.corda.core.node.services.Vault
@@ -50,7 +51,7 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
                     stateAndRef.state.data.holder.owningKey
                 }
             } else {
-                { stateAndRef, appServiceHub ->
+                { _, _ ->
                     //                    val kms = appServiceHub.keyManagementService as KeyManagementServiceInternal
 //                    kms.externalIdForPublicKey(stateAndRef.state.data.holder.owningKey)?:"UNKNOWN"
 
@@ -67,10 +68,10 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
                     sorting = sortByStateRefAscending())
             val listOfThings = mutableListOf<StateAndRef<FungibleToken<TokenType>>>()
             while (existingStates.states.isNotEmpty()) {
-                listOfThings.addAll(existingStates.states as Iterable<StateAndRef<FungibleToken<TokenType>>>)
+                listOfThings.addAll(uncheckedCast(existingStates.states))
                 existingStates = appServiceHub.vaultService.queryBy(FungibleToken::class.java, PageSpecification(pageNumber = ++currentPage, pageSize = pageSize))
             }
-            return TokenObserver(listOfThings, observable as Observable<Vault.Update<FungibleToken<in TokenType>>>, ownerProvider)
+            return TokenObserver(listOfThings, uncheckedCast(observable), ownerProvider)
         }
 
         fun processToken(token: FungibleToken<*>): TokenIndex {
@@ -144,7 +145,7 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
                     //we won the race to lock this token
                     lockedTokens.add(tokenStateAndRef)
                     val token = tokenStateAndRef.state.data
-                    amountLocked += token.amount as Amount<IssuedTokenType<T>>
+                    amountLocked += uncheckedCast(token.amount)
                     if (amountLocked >= amountRequested) {
                         break
                     }
@@ -161,7 +162,7 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
             }
         }, autoUnlockDelay.toMillis(), TimeUnit.MILLISECONDS)
 
-        return lockedTokens as List<StateAndRef<FungibleToken<T>>>
+        return uncheckedCast(lockedTokens)
     }
 
     fun unlockToken(it: StateAndRef<FungibleToken<TokenType>>, selectionId: String) {
