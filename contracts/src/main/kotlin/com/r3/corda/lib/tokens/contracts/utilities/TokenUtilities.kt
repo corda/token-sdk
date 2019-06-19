@@ -3,12 +3,10 @@ package com.r3.corda.lib.tokens.contracts.utilities
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
-import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionState
-import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
@@ -47,9 +45,9 @@ internal infix fun <T : EvolvableTokenType> T._withNotary(notary: Party): Transa
 }
 
 /**
- * Converts [holder] into a more friendly string. It uses only the x500 organisation for [Party] objects and
- * shortens the public key for [AnonymousParty]s to the first 16 characters.
- * */
+ * Converts [AbstractToken.holder] into a more friendly string. It uses only the x500 organisation for [Party] objects
+ * and shortens the public key for [AnonymousParty]s to the first 16 characters.
+ */
 val AbstractToken<*>.holderString: String
     get() =
         (holder as? Party)?.name?.organisation ?: holder.owningKey.toStringShort().substring(0, 16)
