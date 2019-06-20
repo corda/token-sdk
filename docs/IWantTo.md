@@ -9,9 +9,11 @@
 Two `TokenType`s already exist in the token SDK, `FiatCurrency` and
 `DigitalCurrency`. There are easy to use helpers for both, for example:
 
+```kotlin
     val pounds: FiatCurrency = GBP
     val euros: FiatCurrency = EUR
     val bitcoin: DigitalCurrency = BTC
+```
 
 Creating your own is easy; just sub-class the `TokenType` interface. You 
 will need to specify a `tokenIdentifier` property and how many `fractionDigits` 
@@ -23,7 +25,10 @@ amounts of this token can have. E.g.
 
 You can also add a `toString` override, if you like.
 
+```kotlin
     class MyTokenType(override val tokenIdentifier: String, override val fractionDigits: Int = 0) : TokenType
+```
+
 
 The `tokenIdentifier` is used along with the `tokenClass` property (defined
 in `TokenType` when serializing token types. Two properties are required,
@@ -42,26 +47,33 @@ the `FiatCurrency` and `DigitalCurrency` classes work. However, this isn't
 always required. For cases where you'll only ever need a single instance
 of a token type you can create token types like so:
 
+```kotlin
     object PTK : TokenType {
         override val tokenIdentifier: String = "PTK"
         override val fractionDigits: Int = 12
     }
+```
 
 ### Creating an instance of your new `TokenType`
 
 Create an instance of your new token type like you would a regular object.
 
+```kotlin
     val myTokenType = MyTokenType("TEST", 2)
+```
 
 This creates a token of
 
+```kotlin
     tokenClass: MyTokenType
     tokenIdentifier: TEST
+```
 
 ### Creating an instance of an `IssuedTokenType`
 
 Create an `IssuedTokenType` as follows
 
+```kotlin
     // With your own token type.
     val issuer: Party = ...
     val myTokenType = MyTokenType("TEST", 2)
@@ -70,6 +82,7 @@ Create an `IssuedTokenType` as follows
     // Or with the built in types.
     val issuedGbp: IssuedTokenType<FiatCurrency> = GBP issuedBy issuer
     val issuedGbp: IssuedTokenType<DigitalCurrency>  = BTC issuedBy issuer
+```
 
 The issuing party must be a `Party` as opposed to an `AbstractParty` or
 `AnonymousParty`, this is because the issuer must be well known.
@@ -81,18 +94,24 @@ The `issuedBy` syntax uses a kotlin infix extension function.
 Once you have an `IssuedTokenType` you can optionally create some amount
 of it using the `of` syntax. For example:
 
+```kotlin
     val issuer: Party = ...
     val myTokenType = MyTokenType("TEST", 2)
     val myIssuedTokenType: IssuedTokenType<MyTokenType> = myTokenType issuedBy issuer
     val tenOfMyIssuedTokenType = 10 of myIssuedTokenType
+```
 
 Or:
 
+```kotlin
     val tenPounds: Amount<IssuedTokenType<FiatCurrency>> = 10 of GBP issuedBy issuer
+```
 
 Or:
 
+```kotlin
     val tenPounds = 10.GBP issuedBy issuer
+```
 
 If you do not need to create amounts of your token type because it is always
 intended to be issued as a `NonFungibleToken` then you don't have to create
@@ -104,6 +123,7 @@ To get from a token type or some amount of a token type to a non-fungible
 token or fungible token, we need to specify which party the proposed holder
 is. This can be done using the `heldBy` syntax:
 
+```kotlin
     val issuer: Party = ...
     val holder: Party = ...
 
@@ -115,6 +135,7 @@ is. This can be done using the `heldBy` syntax:
     val fungibleToken: FungibleToken<MyTokenType> = tenOfMyIssuedTokenType heldBy holder
     // Adding a holder to a token type, creates a non-fungible token.
     val nonFungibleToken: NonFungibleToken<MyTokenType> = myIssuedTokenType heldBy holder
+```
 
 Once you have a `FungibleToken` or a `NonFungibleToken`, you can then go
 and issue that token on ledger.
