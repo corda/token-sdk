@@ -206,10 +206,10 @@ data class IssuedTokenType<out T : TokenType>(
 
 #### EvolvableTokenType
 
-`EvolvableToken`s _are_ state objects because the expectation is that they will evolve over time. Of course in-lining a `LinearState` directly into the `NonFungibleToken` or `FungibleToken` state doesn't make much sense, as you would have to perform a state update to change the token type. Instead, it makes more sense to include a pointer to the token type. That's what `TokenPointer` is for (see below). This way, the token can evolve independently to which party currently holds (some amount of) the token type.
+`EvolvableTokenType`s _are_ state objects because the expectation is that they will evolve over time. Of course in-lining a `LinearState` directly into the `NonFungibleToken` or `FungibleToken` state doesn't make much sense, as you would have to perform a state update to change the token type. Instead, it makes more sense to include a pointer to the token type. That's what `TokenPointer` is for (see below). This way, the token can evolve independently to which party currently holds (some amount of) the token type.
 
 ```kotlin
-abstract class EvolvableToken : LinearState {
+abstract class EvolvableTokenType : LinearState {
     abstract val maintainers: List<Party>
 
     /** Defaults to the maintainer but can be overridden if necessary. */
@@ -218,7 +218,7 @@ abstract class EvolvableToken : LinearState {
     abstract val fractionDigits: Int
 
     /** For obtaining a pointer to this [EvolveableToken]. */
-    inline fun <reified T : EvolvableToken> toPointer(): TokenPointer<T> {
+    inline fun <reified T : EvolvableTokenType> toPointer(): TokenPointer<T> {
         val linearPointer = LinearPointer(linearId, T::class.java)
         return TokenPointer(linearPointer, displayTokenSize)
     }
@@ -234,7 +234,7 @@ It is expected that a specific set of `Party`s create and maintain `EvolvableTok
 To harness the power of `EvolvableTokenType`s, they cannot be directly embedded in `NonFungibleToken` or `FungibleToken`s. Instead, a `TokenPointer` is embedded. The pointer can be resolved inside the verify function and inside flows, to obtain the data within the `EvolvableTokenType`. This way, the `TokenType` can evolve independently from which party holds (some amount of) it, as the data is held in a separate state object.
 
 ```kotlin
-data class TokenPointer<T : EvolvableToken>(
+data class TokenPointer<T : EvolvableTokenType>(
         val pointer: LinearPointer<T>,
         override val displayTokenSize: BigDecimal
 ) : TokenType {

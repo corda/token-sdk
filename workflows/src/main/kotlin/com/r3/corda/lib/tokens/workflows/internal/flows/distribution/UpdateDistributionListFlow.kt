@@ -22,11 +22,8 @@ class UpdateDistributionListFlow(val signedTransaction: SignedTransaction) : Flo
     companion object {
         object ADD_DIST_LIST : ProgressTracker.Step("Adding to distribution list.")
         object UPDATE_DIST_LIST : ProgressTracker.Step("Updating distribution list.")
-        object RECORDING : ProgressTracker.Step("Recording tokensToIssue transaction.") {
-            override fun childProgressTracker() = FinalityFlow.tracker()
-        }
 
-        fun tracker() = ProgressTracker(RECORDING, ADD_DIST_LIST, UPDATE_DIST_LIST)
+        fun tracker() = ProgressTracker(ADD_DIST_LIST, UPDATE_DIST_LIST)
     }
 
     override val progressTracker: ProgressTracker = tracker()
@@ -48,7 +45,6 @@ class UpdateDistributionListFlow(val signedTransaction: SignedTransaction) : Flo
                 .map(Command<*>::value)
                 .filterIsInstance<MoveTokenCommand<TokenPointer<*>>>()
                 .filter { it.token.tokenType is TokenPointer<*> }
-        progressTracker.currentStep = RECORDING
         if (issueCmds.isNotEmpty()) {
             // If it's an issue transaction then the party calling this flow will be the issuer and they just need to
             // update their local distribution list with the parties that have been just issued tokens.
