@@ -5,8 +5,6 @@ import com.r3.corda.lib.tokens.contracts.commands.IssueTokenCommand
 import com.r3.corda.lib.tokens.contracts.commands.MoveTokenCommand
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
-import com.r3.corda.lib.tokens.workflows.utilities.addToDistributionList
-import com.r3.corda.lib.tokens.workflows.utilities.updateDistributionList
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.TransactionState
 import net.corda.core.flows.FinalityFlow

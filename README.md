@@ -332,6 +332,12 @@ and issue that token on ledger.
 
 ### V1
 
+#### Known issues
+
+* IntelliJ highlights a couple of type errors in the workflows module. However,
+  this is a bug in intelliJ which was raised here:
+  https://youtrack.jetbrains.com/issue/IDEA-216604
+
 #### Contracts
 
 * The type of `TokenType.tokenClass` has been changed from `String`
@@ -378,6 +384,10 @@ and issue that token on ledger.
 
 #### General
 
+* Renamed `shell` package to `rpc`
+* Moved a the distribution utils and `ObserverAwareFinalityFlow` code into
+  an `internal` package as that code will be released in a "Corda Commons"
+  library in the near future.
 * Builds against Corda `5.0-SNAPSHOT` for this release. The final release
   will be built against Corda `4.1`.
 * Changed module names from "contract", "workflow" to "contracts" and
