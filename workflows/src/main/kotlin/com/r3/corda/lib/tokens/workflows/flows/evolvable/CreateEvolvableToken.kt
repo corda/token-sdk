@@ -15,7 +15,7 @@ import net.corda.core.utilities.ProgressTracker
 
 /**
  * Flow for creating an evolvable token type. This is just a simple flow for now. Although it can be invoked via the
- * shell, it is more likely to be used for unit testing or called as an inlined-subflow.
+ * rpc, it is more likely to be used for unit testing or called as an inlined-subflow.
  */
 @InitiatingFlow
 @StartableByRPC

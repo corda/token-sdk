@@ -7,8 +7,8 @@ import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.workflows.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListFlow
+import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
@@ -37,7 +37,7 @@ import net.corda.core.transactions.TransactionBuilder
  * 6. Observers can also be specified.
  * 7. This flow supports the issuance of fungible and non fungible tokens in the same transaction.
  * 8. The notary is selected from a config file or picked at random if no notary preference is available.
- * 9. This is not an initiating flow. There will also be an initiating version which is startable from the shell.
+ * 9. This is not an initiating flow. There will also be an initiating version which is startable from the rpc.
  *
  * @property tokensToIssue a list of tokens to issue. May be fungible or non-fungible.
  * @property participantSessions a list of flow participantSessions for the transaction participants.

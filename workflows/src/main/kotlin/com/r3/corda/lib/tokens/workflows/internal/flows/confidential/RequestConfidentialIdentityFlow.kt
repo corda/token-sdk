@@ -10,7 +10,12 @@ class RequestConfidentialIdentityFlow(val session: FlowSession) : FlowLogic<Part
     @Suspendable
     override fun call(): PartyAndCertificate {
         return session.sendAndReceive<IdentityWithSignature>(ConfidentialIdentityRequest()).unwrap { theirIdentWithSig ->
-            validateAndRegisterIdentity(serviceHub, session.counterparty, theirIdentWithSig.identity, theirIdentWithSig.signature)
+            validateAndRegisterIdentity(
+                    serviceHub = serviceHub,
+                    otherSide = session.counterparty,
+                    theirAnonymousIdentity = theirIdentWithSig.identity,
+                    signature = theirIdentWithSig.signature
+            )
         }
     }
 }

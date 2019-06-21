@@ -1,9 +1,6 @@
 package com.r3.corda.lib.tokens.workflows.utilities
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.lib.tokens.contracts.states.AbstractToken
-import com.r3.corda.lib.tokens.contracts.types.TokenPointer
-import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListRequestFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.hasDistributionRecord
 import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
 import net.corda.core.contracts.CommandWithParties
@@ -76,25 +73,6 @@ fun FlowLogic<*>.sessionsForParticipants(states: List<ContractState>): List<Flow
 fun FlowLogic<*>.sessionsForParties(parties: List<AbstractParty>): List<FlowSession> {
     val wellKnownParties = parties.toWellKnownParties(serviceHub)
     return wellKnownParties.map(::initiateFlow)
-}
-
-@Suspendable
-fun FlowLogic<*>.addToDistributionList(tokens: List<AbstractToken<TokenPointer<*>>>) {
-    tokens.forEach { token ->
-        val tokenType = token.tokenType
-        val pointer = tokenType.pointer.pointer
-        val holder = token.holder.toParty(serviceHub)
-        addPartyToDistributionList(holder, pointer)
-    }
-}
-
-@Suspendable
-fun FlowLogic<*>.updateDistributionList(tokens: List<AbstractToken<TokenPointer<*>>>) {
-    for (token in tokens) {
-        val tokenType = token.tokenType
-        val holderParty = serviceHub.identityService.requireKnownConfidentialIdentity(token.holder)
-        subFlow(UpdateDistributionListRequestFlow(tokenType, ourIdentity, holderParty))
-    }
 }
 
 // Extension function that has nicer error message than the default one from [IdentityService::requireWellKnownPartyFromAnonymous].

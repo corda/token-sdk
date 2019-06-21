@@ -1,7 +1,14 @@
 package com.r3.corda.lib.tokens.workflows.internal.flows.distribution
 
+import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.tokens.contracts.states.AbstractToken
+import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
+import com.r3.corda.lib.tokens.workflows.utilities.addPartyToDistributionList
+import com.r3.corda.lib.tokens.workflows.utilities.requireKnownConfidentialIdentity
+import com.r3.corda.lib.tokens.workflows.utilities.toParty
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.Party
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.CordaSerializable
@@ -41,4 +48,40 @@ fun getDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, pa
 
 fun hasDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, party: Party): Boolean {
     return getDistributionRecord(serviceHub, linearId, party) != null
+}
+
+/**
+ * Utility function to persist a new entity pertaining to a distribution record.
+ * TODO: Add some error handling.
+ * TODO: Don't duplicate pairs of linearId and party.
+ */
+fun ServiceHub.addPartyToDistributionList(party: Party, linearId: UniqueIdentifier) {
+    // Create an persist a new entity.
+    val distributionRecord = DistributionRecord(linearId.id, party)
+    withEntityManager { persist(distributionRecord) }
+}
+
+@Suspendable
+fun FlowLogic<*>.addToDistributionList(tokens: List<AbstractToken<TokenPointer<*>>>) {
+    tokens.forEach { token ->
+        val tokenType = token.tokenType
+        val pointer = tokenType.pointer.pointer
+        val holder = token.holder.toParty(serviceHub)
+        addPartyToDistributionList(holder, pointer)
+    }
+}
+
+@Suspendable
+fun FlowLogic<*>.updateDistributionList(tokens: List<AbstractToken<TokenPointer<*>>>) {
+    for (token in tokens) {
+        val tokenType = token.tokenType
+        val holderParty = serviceHub.identityService.requireKnownConfidentialIdentity(token.holder)
+        val evolvableToken = tokenType.pointer.resolve(serviceHub).state.data
+        val distributionListUpdate = DistributionListUpdate(ourIdentity, holderParty, evolvableToken.linearId)
+        val maintainers = evolvableToken.maintainers
+        val maintainersSessions = maintainers.map(::initiateFlow)
+        maintainersSessions.forEach {
+            it.send(distributionListUpdate)
+        }
+    }
 }

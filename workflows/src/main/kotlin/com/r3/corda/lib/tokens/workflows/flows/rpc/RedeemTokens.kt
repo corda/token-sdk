@@ -1,4 +1,4 @@
-package com.r3.corda.lib.tokens.workflows.flows.shell
+package com.r3.corda.lib.tokens.workflows.flows.rpc
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.types.TokenType

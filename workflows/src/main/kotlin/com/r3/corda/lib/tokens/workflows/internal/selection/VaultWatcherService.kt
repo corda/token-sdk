@@ -69,7 +69,10 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
             val listOfThings = mutableListOf<StateAndRef<FungibleToken<TokenType>>>()
             while (existingStates.states.isNotEmpty()) {
                 listOfThings.addAll(uncheckedCast(existingStates.states))
-                existingStates = appServiceHub.vaultService.queryBy(FungibleToken::class.java, PageSpecification(pageNumber = ++currentPage, pageSize = pageSize))
+                existingStates = appServiceHub.vaultService.queryBy(
+                        contractStateType = FungibleToken::class.java,
+                        paging = PageSpecification(pageNumber = ++currentPage, pageSize = pageSize)
+                )
             }
             return TokenObserver(listOfThings, uncheckedCast(observable), ownerProvider)
         }
