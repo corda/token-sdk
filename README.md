@@ -123,7 +123,7 @@ publish binaries to your local maven repository:
 
 [Using evolvable tokens](docs/EvolvableTokens.md)
 
-[Most common taks](docs/IWantTo.md)
+[Most common tasks](docs/IWantTo.md)
 
 ## Other useful links
 [Token SDK Design](design/design.md)

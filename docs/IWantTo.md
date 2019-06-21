@@ -1,7 +1,4 @@
 # How do I?
-// TODO this goes to tutorials
-// Rename
-// Restructure
 ## Create and issue my first token
 
 ### Defining a `TokenType`
@@ -65,8 +62,8 @@ Create an instance of your new token type like you would a regular object.
 This creates a token of
 
 ```kotlin
-    tokenClass: MyTokenType
-    tokenIdentifier: TEST
+    val tokenClass: MyTokenType
+    val tokenIdentifier: TEST
 ```
 
 ### Creating an instance of an `IssuedTokenType`

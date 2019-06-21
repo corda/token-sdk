@@ -1,15 +1,15 @@
 # Simple delivery versus payment tutorial
 
 ## Overview
-This section will walk you step by step through the extremely simple delivery versus payment flow using tokens-sdk.
+This section will walk you step by step through the extremely simple delivery versus payment flow using token-sdk.
 
 At the end of this section you will know how to:
 
-* create, issue and update `EvolvableTokenType`,
+* create, issue and update `EvolvableTokenType`s,
 * issue fungible and non-fungible tokens,
 * move tokens,
 * use confidential identities,
-* sign and finalise tokens transaction,
+* sign and finalise token transaction,
 * construct business logic using the building blocks from `tokens-sdk`.
 
 If you would like to see how to write simple integration tests using similar example take a look at: 
@@ -38,7 +38,7 @@ data class House(
         val address: String,
         val valuation: Amount<FiatCurrency>,
         override val maintainers: List<Party>,
-        override val fractionDigits: Int = 5
+        override val fractionDigits: Int = 0
 ) : EvolvableTokenType()
 ```
 
@@ -107,8 +107,11 @@ fungible `GBP` tokens is straightforward:
 
 ```kotlin
     // Let's print some money!
-    subFlow(IssueTokens(GBP, 1_000_000L, issuerParty, otherParty))
+    subFlow(IssueTokens(1_000_00.GBP issuedBy issuerParty heldBy otherParty)) // Initiating version of IssueFlow
 ```
+
+**Note** There are different versions of `IssueFlow` inlined (that require you to pass in flow sessions) and initiating (callable via RPC),
+ it's worth checking API documentation.
 
 ## Write initiator flow
 
@@ -137,7 +140,8 @@ First we need to extract house state from the vault. We can use `ownedTokensByTo
 ```kotlin
     @Suspendable
     override fun call(): SignedTransaction {
-        val houseStateRef = serviceHub.vaultService.ownedTokensByToken(house.toPointer<House>()).states.singleOrNull()
+        val housePtr = house.toPointer<House>()
+        val houseStateRef = serviceHub.vaultService.ownedTokensByToken(housePtr).states.singleOrNull()
                             ?: throw IllegalArgumentException("Couldn't find house state: $house in the vault.")
         ...
     }
@@ -202,7 +206,7 @@ The last step is signing the transaction by all parties involved:
 ```
 
 Evolvable tokens are special, because they can change over time. To keep all the parties interested notified about the update
-distribution lists are used. This is tactical solution that will be changed in the future for more robust design.
+distribution lists are used. This is a tactical solution that will be changed in the future for more robust design.
 Distribution list is a list of identities that should receive updates, it's usually kept on the issuer node (and other maintainers nodes if specified).
 For this mechanism to behave correctly we need to add special `UpdateDistributionListFlow` subflow:
 
