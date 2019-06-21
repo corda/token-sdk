@@ -82,6 +82,10 @@ subprojects {
             exclude "**/log4j2*.xml"
         }
     }
+    
+    tasks.withType(Test){
+        forkEvery = 1
+    }
 }
 
 // Don't publish an empty "modules" JAR.

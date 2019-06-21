@@ -34,20 +34,6 @@ inline fun <reified T : ContractState> SignedTransaction.singleOutput() = tx.out
 inline fun <reified T : LinearState> StateAndRef<T>.linearId() = state.data.linearId
 
 /**
- * Check to see if a node recorded a transaction with a particular hash. Return a future signed transaction.
- *
- * *Note*: This method can cause an infinite wait; please see assertHasTransaction for a potentially safer method of
- * checking that the node has recorded the given transaction.
- * */
-fun StartedMockNode.watchForTransaction(txId: SecureHash): CordaFuture<SignedTransaction> {
-    return transaction { services.validatedTransactions.trackTransaction(txId) }
-}
-
-fun StartedMockNode.watchForTransaction(tx: SignedTransaction): CordaFuture<SignedTransaction> {
-    return watchForTransaction(tx.id)
-}
-
-/**
  * It's internal because it uses deprecated [internalVerifiedTransactionsFeed].
  */
 fun CordaRPCOps.watchForTransaction(tx: SignedTransaction): CordaFuture<SignedTransaction> {
@@ -57,34 +43,6 @@ fun CordaRPCOps.watchForTransaction(tx: SignedTransaction): CordaFuture<SignedTr
     } else {
         feed.filter { it == tx }.toFuture()
     }
-}
-
-@Deprecated("Replaced by assertHasTransaction; note that the new method uses SignedTransaction, not SecureHash, and requires the network")
-fun assertRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_RECORDS_TRANSACTION_TIMEOUT) {
-    nodes.map {
-        it.watchForTransaction(txId)
-    }.map {
-        assertEquals(txId, it.getOrThrow(Duration.ofSeconds(timeout)).id)
-    }
-}
-
-@Deprecated("Replaced by assertHasTransaction", ReplaceWith("assertHasTransaction(tx, network, *nodes)"))
-fun assertRecordsTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_RECORDS_TRANSACTION_TIMEOUT) {
-    assertRecordsTransaction(tx.id, *nodes, timeout = timeout)
-}
-
-@Deprecated("Replaced by assertNotHasTransaction; note that the new method uses SignedTransaction, not SecureHash, and requires the network")
-fun assertNotRecordsTransaction(txId: SecureHash, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_NOT_RECORDS_TRANSACTION_TIMEOUT) {
-    nodes.map {
-        it.watchForTransaction(txId)
-    }.map {
-        assertFailsWith<TimeoutException> { it.getOrThrow(Duration.ofSeconds(timeout)) }
-    }
-}
-
-@Deprecated("Replaced by assertNotHasTransaction", ReplaceWith("assertNotHasTransaction(tx, network, *nodes)"))
-fun assertNotRecordsTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode, timeout: Long = DEFAULT_WATCH_FOR_NOT_RECORDS_TRANSACTION_TIMEOUT) {
-    assertNotRecordsTransaction(tx.id, *nodes, timeout = timeout)
 }
 
 /**

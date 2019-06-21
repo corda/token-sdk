@@ -7,8 +7,14 @@ import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
+import org.junit.rules.Timeout
+import java.util.concurrent.TimeUnit
 
 abstract class MockNetworkTest(val names: List<CordaX500Name>) {
+
+    @get:Rule
+    val timeoutRule = Timeout(5, TimeUnit.MINUTES)
 
     constructor(vararg names: String) : this(names.map { CordaX500Name(it, "London", "GB") })
 

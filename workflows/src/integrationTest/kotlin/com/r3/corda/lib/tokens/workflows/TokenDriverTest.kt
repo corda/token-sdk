@@ -25,11 +25,24 @@ import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.statesAndContracts.House
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
-import com.r3.corda.lib.tokens.workflows.utilities.*
+import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
+import com.r3.corda.lib.tokens.workflows.utilities.heldBy
+import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
+import com.r3.corda.lib.tokens.workflows.utilities.ownedTokenCriteria
+import com.r3.corda.lib.tokens.workflows.utilities.ownedTokensByToken
+import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
 import net.corda.confidential.IdentitySyncFlow
 import net.corda.core.CordaRuntimeException
 import net.corda.core.contracts.Amount
-import net.corda.core.flows.*
+import net.corda.core.flows.CollectSignaturesFlow
+import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.FlowSession
+import net.corda.core.flows.InitiatedBy
+import net.corda.core.flows.InitiatingFlow
+import net.corda.core.flows.ReceiveStateAndRefFlow
+import net.corda.core.flows.SendStateAndRefFlow
+import net.corda.core.flows.SignTransactionFlow
+import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.Party
 import net.corda.core.internal.concurrent.transpose
 import net.corda.core.messaging.startFlow
@@ -53,7 +66,6 @@ import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.Test
 
 class TokenDriverTest {
-    //    @Ignore("There is a bug with type parameters in startRPCFlow in Corda 4.0 that will be fixed in... who knows when, probably 5? You can run this test using 5.0-SNAPSHOT version.")
     @Test(timeout = 300_000)
     fun `beefy tokens integration test`() {
         driver(DriverParameters(
@@ -85,7 +97,6 @@ class TokenDriverTest {
                     emptyList<Party>() // TODO this should be handled by JvmOverloads on the constructor, but for some reason corda doesn't see the second constructor
             ).returnValue.getOrThrow()
             // Issue some fungible GBP cash to NodeA, NodeB.
-            println("ISSUING CASH")
             issuer.rpc.run {
                 startFlowDynamic(IssueTokens::class.java, GBP, 1_000_000L, issuerParty, nodeAParty, emptyList<Party>()).returnValue.getOrThrow()
                 startFlowDynamic(IssueTokens::class.java, GBP, 900_000L, issuerParty, nodeBParty, emptyList<Party>()).returnValue.getOrThrow()
@@ -98,7 +109,6 @@ class TokenDriverTest {
                     .isEqualTo(900_000L.GBP issuedBy issuerParty)
             // Move house to Node B using conf identities in exchange for cash using DvP flow.
             // TODO use conf identities
-            println("STARTING DVP TX")
             val dvpTx = nodeA.rpc.startFlowDynamic(
                     DvPFlow::class.java,
                     house,

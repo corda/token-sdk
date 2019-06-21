@@ -8,8 +8,15 @@ import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
+import org.junit.rules.Timeout
+import java.util.concurrent.TimeUnit
 
 abstract class JITMockNetworkTests(val names: List<CordaX500Name> = emptyList()) {
+
+    @get:Rule
+    //overly generous but we just want to find
+    val timeoutRule = Timeout(5, TimeUnit.MINUTES)
 
     companion object {
         const val DEFAULT_LOCALITY: String = "London"

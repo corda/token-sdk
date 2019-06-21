@@ -4,6 +4,7 @@ import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
+import com.r3.corda.lib.tokens.contracts.utilities.sumIssuedTokensOrNull
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveFungibleTokens
@@ -11,6 +12,7 @@ import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistribu
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.statesAndContracts.House
 import com.r3.corda.lib.tokens.workflows.utilities.getLinearStateById
+import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountsByToken
 import com.r3.corda.lib.tokens.workflows.utilities.tokenBalance
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
@@ -89,8 +91,8 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         val token = createTokenTx.singleOutput<House>()
         // Issue amount of the token.
         val housePointer: TokenPointer<House> = house.toPointer()
-        val issueTokenAmountTx = I.issueFungibleTokens(A, 100 of housePointer).getOrThrow()
-        A.watchForTransaction(issueTokenAmountTx.id).getOrThrow()
+        I.issueFungibleTokens(A, 100 of housePointer).getOrThrow()
+        network.waitQuiescent()
         // Check to see that A was added to I's distribution list.
         val distributionList = I.transaction { getDistributionList(I.services, token.linearId()) }
         val distributionRecord = distributionList.single()
@@ -106,9 +108,8 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         val houseToken: StateAndRef<House> = createTokenTx.singleOutput()
         // Issue amount of the token.
         val housePointer: TokenPointer<House> = house.toPointer()
-        val issueTokenAmountTx = I.issueFungibleTokens(A, 100 of housePointer).getOrThrow()
-        // Wait for the transaction to be recorded by A.
-        A.watchForTransaction(issueTokenAmountTx.id).getOrThrow()
+        I.issueFungibleTokens(A, 100 of housePointer).getOrThrow()
+        network.waitQuiescent()
         val houseQuery = A.services.vaultService.queryBy<House>().states
         assertEquals(houseToken, houseQuery.single())
     }
@@ -121,14 +122,14 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         val token = createTokenTx.singleOutput<House>()
         // Issue amount of the token.
         val housePointer: TokenPointer<House> = house.toPointer()
-        val issueTokenAmountTx = I.issueFungibleTokens(A, 100 of housePointer).getOrThrow()
-        A.watchForTransaction(issueTokenAmountTx.id).toCompletableFuture().getOrThrow()
+        I.issueFungibleTokens(A, 100 of housePointer).getOrThrow()
+        network.waitQuiescent()
         // Update the token.
         val proposedToken = house.copy(valuation = 950_000.GBP)
         val updateTx = I.updateEvolvableToken(token, proposedToken).getOrThrow()
         // Wait to see if A is sent the updated token.
-        val updatedToken = A.watchForTransaction(updateTx.id).toCompletableFuture().getOrThrow()
-        assertEquals(updateTx.singleOutput(), updatedToken.singleOutput<House>())
+        network.waitQuiescent()
+        assertEquals(updateTx.singleOutput(), updateTx.singleOutput<House>())
     }
 
     @Test
@@ -138,12 +139,14 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         // Issue amount of the token.
         val housePointer: TokenPointer<House> = house.toPointer()
-        val issueTokenTx = I.issueFungibleTokens(A, 100 of housePointer).getOrThrow()
-        A.watchForTransaction(issueTokenTx.id).toCompletableFuture().getOrThrow()
+        I.issueFungibleTokens(A, 100 of housePointer).getOrThrow()
+        network.waitQuiescent()
         A.transaction { A.services.vaultService.getLinearStateById<LinearState>(housePointer.pointer.pointer) }
         // Move some of the tokensToIssue.
-        val moveTokenTx = A.moveFungibleTokens(50 of housePointer, B, anonymous = true).getOrThrow()
-        B.watchForTransaction(moveTokenTx.id).getOrThrow()
+        A.moveFungibleTokens(50 of housePointer, B, anonymous = true).getOrThrow()
+        network.waitQuiescent()
+        val houseAmounts = B.services.vaultService.tokenAmountsByToken(housePointer).states.map { it.state.data.amount }
+        assertEquals(houseAmounts.sumIssuedTokensOrNull(), 50 of housePointer issuedBy I.legalIdentity())
     }
 
     @Test
@@ -155,11 +158,15 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         val token = tx.singleOutput<House>()
         assertEquals(house, token.state.data)
         // Issue to node A.
-        val issueTokenA = I.issueFungibleTokens(A, 50 of housePointer).getOrThrow()
-        A.watchForTransaction(issueTokenA.id).toCompletableFuture().getOrThrow()
+        I.issueFungibleTokens(A, 50 of housePointer).getOrThrow()
+        network.waitQuiescent()
+        val houseAmountsA = A.services.vaultService.tokenAmountsByToken(housePointer).states.map { it.state.data.amount }
+        assertEquals(houseAmountsA.sumIssuedTokensOrNull(), 50 of housePointer issuedBy I.legalIdentity())
         // Issue to node B.
-        val issueTokenB = I.issueFungibleTokens(B, 50 of housePointer).getOrThrow()
-        B.watchForTransaction(issueTokenB.id).toCompletableFuture().getOrThrow()
+        I.issueFungibleTokens(B, 50 of housePointer).getOrThrow()
+        network.waitQuiescent()
+        val houseAmountsB = B.services.vaultService.tokenAmountsByToken(housePointer).states.map { it.state.data.amount }
+        assertEquals(houseAmountsB.sumIssuedTokensOrNull(), 50 of housePointer issuedBy I.legalIdentity())
     }
 
     @Test
@@ -171,8 +178,8 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         val token = tx.singleOutput<House>()
         assertEquals(house, token.state.data)
         // Issue to node A.
-        val issueTokenA = I.issueFungibleTokens(A, 50 of housePointer).getOrThrow()
-        A.watchForTransaction(issueTokenA.id).toCompletableFuture().getOrThrow()
+        I.issueFungibleTokens(A, 50 of housePointer).getOrThrow()
+        network.waitQuiescent()
         // Assert that A is on distribution list for both I and I2
         I.transaction {
             val distList = getDistributionList(I.services, token.linearId()).map { it.party }.toSet()
@@ -184,8 +191,8 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
 //            assertThat(distList).containsExactly(A.legalIdentity())
 //        }
         // Move some of the tokensToIssue.
-        val moveTokenTx = A.moveFungibleTokens(50 of housePointer, B, anonymous = true).getOrThrow()
-        B.watchForTransaction(moveTokenTx.id).getOrThrow()
+        A.moveFungibleTokens(50 of housePointer, B, anonymous = true).getOrThrow()
+        network.waitQuiescent()
         // Assert that both A and B are on distribution list for both I and I2
         I.transaction {
             val distList = getDistributionList(I.services, token.linearId()).map { it.party }.toSet()
