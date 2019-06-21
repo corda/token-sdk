@@ -116,9 +116,13 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         network.waitQuiescent()
         // Check to see that A was added to I's distribution list.
-        val moveTokenTx = A.moveFungibleTokens(50.GBP, B, anonymous = true).getOrThrow()
-        B.watchForTransaction(moveTokenTx.id).getOrThrow()
-        val redeemTx = B.redeemTokens(GBP, I, 30.GBP, anonymous = true).getOrThrow()
-        B.watchForTransaction(redeemTx.id).getOrThrow()
+        A.moveFungibleTokens(50.GBP, B, anonymous = true).getOrThrow()
+        network.waitQuiescent()
+        val states = B.services.vaultService.tokenAmountsByToken(GBP).states
+        assertThat(states.sumTokenStateAndRefs()).isEqualTo(50.GBP issuedBy I.legalIdentity())
+        B.redeemTokens(GBP, I, 30.GBP, anonymous = true).getOrThrow()
+        network.waitQuiescent()
+        val statesAfterRedeem = B.services.vaultService.tokenAmountsByToken(GBP).states
+        assertThat(statesAfterRedeem.sumTokenStateAndRefs()).isEqualTo(20.GBP issuedBy I.legalIdentity())
     }
 }
