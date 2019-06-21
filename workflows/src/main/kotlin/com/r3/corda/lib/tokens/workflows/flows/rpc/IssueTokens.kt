@@ -1,4 +1,4 @@
-package com.r3.corda.lib.tokens.workflows.flows.shell
+package com.r3.corda.lib.tokens.workflows.flows.rpc
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
@@ -22,9 +22,9 @@ import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 
 /**
- * A flow for issuing fungible or non-fungible tokens which initiates its own participantSessions. This is the case when called
- * from the node shell or in a unit test. However, in the case where you already have a session with another [Party] and
- * you wish to issue tokens as part of a wider workflow, then use [IssueTokensFlow].
+ * A flow for issuing fungible or non-fungible tokens which initiates its own participantSessions. This is the case when
+ * called from the node rpc or in a unit test. However, in the case where you already have a session with another [Party]
+ * and you wish to issue tokens as part of a wider workflow, then use [IssueTokensFlow].
  *
  * @property tokensToIssue a list of [AbstractToken]s to issue
  * @property observers aset of observing [Party]s
@@ -97,7 +97,7 @@ class IssueTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
 
 /**
  * A flow for issuing fungible or non-fungible tokens which initiates its own participantSessions. This is the case when called
- * from the node shell or in a unit test. However, in the case where you already have a session with another [Party] and
+ * from the node rpc or in a unit test. However, in the case where you already have a session with another [Party] and
  * you wish to issue tokens as part of a wider workflow, then use [IssueTokensFlow].
  *
  * @property tokensToIssue a list of [AbstractToken]s to issue

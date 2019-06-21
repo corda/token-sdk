@@ -33,7 +33,7 @@ internal data class CertificateOwnershipAssertion(val name: CordaX500Name, val o
 @CordaSerializable
 internal data class IdentityWithSignature(val identity: PartyAndCertificate, val signature: DigitalSignature)
 
-// TODO This needs refactor after work on confidenital identities in Corda is done. We duplicate code here.
+// TODO This needs refactoring after work on confidential identities is complete as we duplicate code here.
 /**
  * Verifies the confidential identity cert chain and if vaild then stores the identity mapping in the [IdentityService].
  */

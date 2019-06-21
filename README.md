@@ -126,6 +126,7 @@ publish binaries to your local maven repository:
 [Most common tasks](docs/IWantTo.md)
 
 ## Other useful links
+
 [Token SDK Design](design/design.md)
 
 [Changelog](CHANGELOG.md)

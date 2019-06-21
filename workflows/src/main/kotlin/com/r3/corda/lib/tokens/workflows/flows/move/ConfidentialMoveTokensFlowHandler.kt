@@ -2,7 +2,7 @@ package com.r3.corda.lib.tokens.workflows.flows.move
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.workflows.flows.confidential.ConfidentialTokensFlowHandler
-import com.r3.corda.lib.tokens.workflows.flows.finality.ObserverAwareFinalityFlowHandler
+import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlowHandler
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 

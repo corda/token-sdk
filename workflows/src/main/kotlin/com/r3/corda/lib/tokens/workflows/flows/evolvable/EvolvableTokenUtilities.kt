@@ -15,7 +15,10 @@ import net.corda.core.transactions.TransactionBuilder
  * as token details, and adds commands and outputs to the transaction. Returns the [TransactionBuilder]
  * to allow for continued assembly of the transaction, as needed.
  */
-fun <T : EvolvableTokenType> addCreateEvolvableToken(transactionBuilder: TransactionBuilder, state: TransactionState<T>): TransactionBuilder {
+fun <T : EvolvableTokenType> addCreateEvolvableToken(
+        transactionBuilder: TransactionBuilder,
+        state: TransactionState<T>
+): TransactionBuilder {
     val maintainers = state.data.maintainers.toSet()
     val signingKeys = maintainers.map { it.owningKey }
     return transactionBuilder
@@ -23,11 +26,20 @@ fun <T : EvolvableTokenType> addCreateEvolvableToken(transactionBuilder: Transac
             .addOutputState(state = state)
 }
 
-fun <T : EvolvableTokenType> addCreateEvolvableToken(transactionBuilder: TransactionBuilder, evolvableToken: T, contract: ContractClassName, notary: Party): TransactionBuilder {
+fun <T : EvolvableTokenType> addCreateEvolvableToken(
+        transactionBuilder: TransactionBuilder,
+        evolvableToken: T,
+        contract: ContractClassName,
+        notary: Party
+): TransactionBuilder {
     return addCreateEvolvableToken(transactionBuilder, TransactionState(evolvableToken, contract, notary))
 }
 
-fun <T : EvolvableTokenType> addCreateEvolvableToken(transactionBuilder: TransactionBuilder, evolvableToken: T, notary: Party): TransactionBuilder {
+fun <T : EvolvableTokenType> addCreateEvolvableToken(
+        transactionBuilder: TransactionBuilder,
+        evolvableToken: T,
+        notary: Party
+): TransactionBuilder {
     return addCreateEvolvableToken(transactionBuilder, evolvableToken withNotary notary)
 }
 

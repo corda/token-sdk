@@ -10,8 +10,6 @@ import net.corda.core.flows.InitiatedBy
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.utilities.unwrap
 
-// TODO: REMOVE THIS?
-
 /**
  * Simple set of flows for a party to request updates for a particular evolvable token. These flows don't do much
  * checking, the responder always adds a requesting party to the distribution list.

@@ -12,9 +12,15 @@ class RequestConfidentialIdentityFlowHandler(val otherSession: FlowSession) : Fl
     @Suspendable
     override fun call(): AnonymousParty {
         otherSession.receive<ConfidentialIdentityRequest>().unwrap { it }
-        val ourAnonymousIdentity: PartyAndCertificate = serviceHub.keyManagementService.freshKeyAndCert(ourIdentityAndCert, false)
+        val ourAnonymousIdentity: PartyAndCertificate = serviceHub.keyManagementService.freshKeyAndCert(
+                identity = ourIdentityAndCert,
+                revocationEnabled = false
+        )
         val data: ByteArray = buildDataToSign(ourAnonymousIdentity)
-        val signature: DigitalSignature = serviceHub.keyManagementService.sign(data, ourAnonymousIdentity.owningKey).withoutKey()
+        val signature: DigitalSignature = serviceHub.keyManagementService.sign(
+                bytes = data,
+                publicKey = ourAnonymousIdentity.owningKey
+        ).withoutKey()
         val ourIdentityWithSig = IdentityWithSignature(ourAnonymousIdentity, signature)
         otherSession.send(ourIdentityWithSig)
         return ourAnonymousIdentity.party.anonymise()
