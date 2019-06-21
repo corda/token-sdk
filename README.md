@@ -385,7 +385,7 @@ and issue that token on ledger.
 #### General
 
 * Renamed `shell` package to `rpc`
-* Moved a the distribution utils and `ObserverAwareFinalityFlow` code into
+* Moved the distribution utils and `ObserverAwareFinalityFlow` code into
   an `internal` package as that code will be released in a "Corda Commons"
   library in the near future.
 * Builds against Corda `5.0-SNAPSHOT` for this release. The final release

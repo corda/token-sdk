@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.internal.flows.confidential.AnonymisePartiesFlow
+import com.r3.corda.lib.tokens.workflows.utilities.toWellKnownParties
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.Party
@@ -34,7 +35,9 @@ class ConfidentialTokensFlow<T : TokenType>(
         // change address was requested.
         val tokensWithWellKnownHolders = tokens.filter { it.holder is Party }
         val tokensWithAnonymousHolders = tokens - tokensWithWellKnownHolders
-        val wellKnownTokenHolders = tokensWithWellKnownHolders.map(AbstractToken<T>::holder)
+        val wellKnownTokenHolders = tokensWithWellKnownHolders
+                .map(AbstractToken<T>::holder)
+                .toWellKnownParties(serviceHub)
         val anonymousParties = subFlow(AnonymisePartiesFlow(wellKnownTokenHolders, sessions))
         // Replace Party with AnonymousParty.
         return tokensWithWellKnownHolders.map { token ->

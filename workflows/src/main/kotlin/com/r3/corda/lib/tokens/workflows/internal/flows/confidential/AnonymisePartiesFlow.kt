@@ -3,7 +3,6 @@ package com.r3.corda.lib.tokens.workflows.internal.flows.confidential
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
-import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 
@@ -14,7 +13,7 @@ import net.corda.core.identity.Party
  * [ActionRequest.DO_NOTHING].
  */
 class AnonymisePartiesFlow(
-        val parties: List<AbstractParty>,
+        val parties: List<Party>,
         val sessions: List<FlowSession>
 ) : FlowLogic<Map<Party, AnonymousParty>>() {
     @Suspendable
