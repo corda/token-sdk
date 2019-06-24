@@ -55,5 +55,4 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
     }
 
     protected val NOTARY: StartedMockNode get() = network.defaultNotaryNode
-
 }
