@@ -27,7 +27,7 @@ import net.corda.core.transactions.TransactionBuilder
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addRedeemTokens(
+fun <T : TokenType> addTokensToRedeem(
         transactionBuilder: TransactionBuilder,
         inputs: List<StateAndRef<AbstractToken<T>>>,
         changeOutput: AbstractToken<T>? = null
