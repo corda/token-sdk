@@ -302,7 +302,7 @@ class VaultWatcherServiceTest {
         val alice = aliceNode.info.singleIdentity()
         val issuer = issuerNode.info.singleIdentity()
 
-        val resultFuture = issuerNode.services.startFlow(IssueTokens(BTC, 100000, issuer, alice)).resultFuture
+        val resultFuture = issuerNode.services.startFlow(IssueTokens(100000.BTC, issuer, alice)).resultFuture
         mockNet.runNetwork()
         val issueResultTx = resultFuture.get()
         val issuedStateRef = issueResultTx.coreTransaction.outRefsOfType<FungibleToken<TokenType>>().single()
