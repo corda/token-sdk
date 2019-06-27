@@ -26,10 +26,9 @@ import net.corda.core.transactions.TransactionBuilder
 /**
  * Add redeeming of multiple [inputs] to the [transactionBuilder] with possible [changeOutput].
  */
-
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addFungibleTokensToRedeem(
+fun <T : TokenType> addTokensToRedeem(
         transactionBuilder: TransactionBuilder,
         inputs: List<StateAndRef<AbstractToken<T>>>,
         changeOutput: AbstractToken<T>? = null
@@ -84,7 +83,7 @@ fun <T : TokenType> addNonFungibleTokensToRedeem(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addFungibleTokensToRedeemAndGenerateChangeToOwner(
+fun <T : TokenType> addFungibleTokensToRedeem(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         amount: Amount<T>,
@@ -139,5 +138,5 @@ fun <T : TokenType> FlowLogic<*>.addRedeemTokens(
         changeOwner: AbstractParty,
         additionalQueryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    return addFungibleTokensToRedeemAndGenerateChangeToOwner(transactionBuilder, serviceHub, amount, issuer, changeOwner, additionalQueryCriteria)
+    return addFungibleTokensToRedeem(transactionBuilder, serviceHub, amount, issuer, changeOwner, additionalQueryCriteria)
 }
