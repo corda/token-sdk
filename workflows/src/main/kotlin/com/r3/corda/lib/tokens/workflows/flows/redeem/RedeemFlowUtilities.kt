@@ -9,6 +9,7 @@ import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer
 import com.r3.corda.lib.tokens.workflows.internal.checkSameNotary
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
+import com.r3.corda.lib.tokens.workflows.internal.selection.generateExit
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateExitNonFungible
 import com.r3.corda.lib.tokens.workflows.utilities.addNotaryWithCheck
 import com.r3.corda.lib.tokens.workflows.utilities.ownedTokensByTokenIssuer
@@ -89,7 +90,7 @@ fun <T : TokenType> addFungibleTokensToRedeem(
     val tokenSelection = TokenSelection(serviceHub)
     val baseCriteria = tokenAmountWithIssuerCriteria(amount.token, issuer)
     val queryCriteria = additionalQueryCriteria?.let { baseCriteria.and(it) } ?: baseCriteria
-    val fungibleStates = tokenSelection.attemptSpend(amount, transactionBuilder.lockId, queryCriteria) // TODO We shouldn't expose lockId in this function
+    val fungibleStates = tokenSelection.attemptSelection(amount, transactionBuilder.lockId, queryCriteria) // TODO We shouldn't expose lockId in this function
     checkSameNotary(fungibleStates)
     check(fungibleStates.isNotEmpty()) {
         "Received empty list of states to redeem."
@@ -97,7 +98,7 @@ fun <T : TokenType> addFungibleTokensToRedeem(
     val notary = fungibleStates.first().state.notary
     addNotaryWithCheck(transactionBuilder, notary)
     // TODO unify it, probably need to move generate exit to redeem utils
-    tokenSelection.generateExit(
+    generateExit(
             builder = transactionBuilder,
             exitStates = fungibleStates,
             amount = amount,

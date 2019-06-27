@@ -29,7 +29,14 @@ class LocalTokenSelector(private val vaultObserver: VaultWatcherService, state: 
     ): List<StateAndRef<FungibleToken<T>>> {
         synchronized(mostRecentlyLocked) {
             if (mostRecentlyLocked.get() == null) {
-                return vaultObserver.selectTokens(owner, amountRequested, predicate, allowShortfall, autoUnlockDelay, selectionId).also { mostRecentlyLocked.set(it as List<StateAndRef<FungibleToken<TokenType>>> to selectionId) }
+                return vaultObserver.selectTokens(
+                        owner = owner,
+                        amountRequested = amountRequested,
+                        predicate = predicate,
+                        allowShortfall = allowShortfall,
+                        autoUnlockDelay = autoUnlockDelay,
+                        selectionId = selectionId
+                ).also { mostRecentlyLocked.set(it as List<StateAndRef<FungibleToken<TokenType>>> to selectionId) }
             } else {
                 throw IllegalStateException("Each instance can only used to select tokens once")
             }

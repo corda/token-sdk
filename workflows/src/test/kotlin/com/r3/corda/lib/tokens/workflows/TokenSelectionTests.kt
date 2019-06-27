@@ -52,17 +52,17 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
     fun `select up to available amount with tokens sorted by state ref`() {
         val tokenSelection = TokenSelection(A.services)
         val uuid = UUID.randomUUID()
-        val one = A.transaction { tokenSelection.attemptSpend(160.GBP, uuid) }
+        val one = A.transaction { tokenSelection.attemptSelection(160.GBP, uuid) }
         // We need to release the soft lock after acquiring it, this is because we before we used LOCK_AND_SPECIFIED
         // and now we use UNLOCKED_ONLY. The difference is that LOCK_AND_SPECIFIED lets you re lock tokens you have
         // already locked, where as with UNLOCKED_ONLY, the tokens which have already been locked are out of scope for
         // future selections. This _is_ a behavioural change but should only affect unit tests.
         A.transaction { A.services.vaultService.softLockRelease(uuid) }
         assertEquals(gbpTokens.size, one.size)
-        val two = A.transaction { tokenSelection.attemptSpend(175.GBP, uuid) }
+        val two = A.transaction { tokenSelection.attemptSelection(175.GBP, uuid) }
         A.transaction { A.services.vaultService.softLockRelease(uuid) }
         assertEquals(gbpTokens.size, two.size)
-        val results = A.transaction { tokenSelection.attemptSpend(25.GBP, uuid) }
+        val results = A.transaction { tokenSelection.attemptSelection(25.GBP, uuid) }
         assertEquals(1, results.size)
     }
 
@@ -72,7 +72,7 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         val uuid = UUID.randomUUID()
         assertFailsWith<IllegalStateException> {
             A.transaction {
-                tokenSelection.attemptSpend(176.GBP, uuid)
+                tokenSelection.attemptSelection(176.GBP, uuid)
             }
         }
     }
@@ -98,7 +98,7 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         (1..12).map { I.issueFungibleTokens(A, 1 of CHF).getOrThrow() }
         val tokenSelection = TokenSelection(A.services)
         A.transaction {
-            val tokens = tokenSelection.attemptSpend(12 of CHF, UUID.randomUUID(), pageSize = 5)
+            val tokens = tokenSelection.attemptSelection(12 of CHF, UUID.randomUUID(), pageSize = 5)
             val value = tokens.fold(0L) { acc, token ->
                 acc + token.state.data.amount.quantity
             }

@@ -47,7 +47,7 @@ constructor(
     @Suspendable
     override fun call(): SignedTransaction {
         val tokenSelection = TokenSelection(serviceHub)
-        val (inputs, outputs) = tokenSelection.generateMove(
+        val (inputs, outputs) = tokenSelection.selectInputsAndComputeOutputs(
                 lockId = stateMachine.id.uuid,
                 partyAndAmounts = partiesAndAmounts,
                 changeHolder = changeHolder,

@@ -3,9 +3,11 @@ package com.r3.corda.lib.tokens.workflows.flows.move
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.commands.MoveTokenCommand
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
+import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
+import com.r3.corda.lib.tokens.workflows.internal.selection.computeOutputs
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateMoveNonFungible
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
@@ -67,6 +69,20 @@ fun <T : TokenType> addMoveTokens(
 }
 
 /**
+ * TODO Add kdoc.
+ */
+@Suspendable
+fun <T : TokenType> addMoveTokens(
+        transactionBuilder: TransactionBuilder,
+        acceptableStates: List<StateAndRef<FungibleToken<T>>>,
+        partiesAndAmounts: List<PartyAndAmount<T>>,
+        changeHolder: AbstractParty
+): TransactionBuilder {
+    val (inputs, outputs) = computeOutputs(acceptableStates, partiesAndAmounts, changeHolder)
+    return addMoveTokens(transactionBuilder, inputs, outputs)
+}
+
+/**
  * Adds multiple token moves to transaction. [partiesAndAmounts] parameter specify which parties should receive amounts of the token.
  * With possible change paid to [changeHolder].
  * Provide optional [queryCriteria] for move generation.
@@ -81,7 +97,7 @@ fun <T : TokenType> addMoveTokens(
         queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
     val tokenSelection = TokenSelection(serviceHub)
-    val (inputs, outputs) = tokenSelection.generateMove(
+    val (inputs, outputs) = tokenSelection.selectInputsAndComputeOutputs(
             lockId = transactionBuilder.lockId,
             partyAndAmounts = partiesAndAmounts,
             queryCriteria = queryCriteria,

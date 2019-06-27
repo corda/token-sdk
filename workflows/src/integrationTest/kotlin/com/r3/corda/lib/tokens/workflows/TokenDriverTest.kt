@@ -25,24 +25,11 @@ import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.statesAndContracts.House
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
-import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
-import com.r3.corda.lib.tokens.workflows.utilities.heldBy
-import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
-import com.r3.corda.lib.tokens.workflows.utilities.ownedTokenCriteria
-import com.r3.corda.lib.tokens.workflows.utilities.ownedTokensByToken
-import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
+import com.r3.corda.lib.tokens.workflows.utilities.*
 import net.corda.confidential.IdentitySyncFlow
 import net.corda.core.CordaRuntimeException
 import net.corda.core.contracts.Amount
-import net.corda.core.flows.CollectSignaturesFlow
-import net.corda.core.flows.FlowLogic
-import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatedBy
-import net.corda.core.flows.InitiatingFlow
-import net.corda.core.flows.ReceiveStateAndRefFlow
-import net.corda.core.flows.SendStateAndRefFlow
-import net.corda.core.flows.SignTransactionFlow
-import net.corda.core.flows.StartableByRPC
+import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.internal.concurrent.transpose
 import net.corda.core.messaging.startFlow
@@ -210,7 +197,7 @@ class TokenDriverTest {
             // TODO This is API pain, we assumed that we could just modify TransactionBuilder, but... it cannot be sent over the wire, because non-serializable
             // We need custom serializer and some custom flows to do checks.
             val changeHolder = serviceHub.keyManagementService.freshKeyAndCert(ourIdentityAndCert, false).party.anonymise()
-            val (inputs, outputs) = TokenSelection(serviceHub).generateMove(
+            val (inputs, outputs) = TokenSelection(serviceHub).selectInputsAndComputeOutputs(
                     lockId = runId.uuid,
                     partyAndAmounts = listOf(PartyAndAmount(otherSession.counterparty, dvPNotification.amount)),
                     changeHolder = changeHolder
@@ -238,6 +225,7 @@ class TokenDriverTest {
     class CheckTokenPointer(val housePtr: TokenPointer<House>) : FlowLogic<House>() {
         @Suspendable
         override fun call(): House {
+            // The type mismatch error here is an IntelliJ IDEA bug - ignore it.
             return housePtr.pointer.resolve(serviceHub).state.data
         }
     }

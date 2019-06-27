@@ -33,7 +33,7 @@ import java.util.*
  * AbstractCoinSelection within the finance module. The only difference is that now there are not specific database
  * implementations, instead hibernate is used for an agnostic approach.
  *
- * When calling [attemptSpend] there is the option to pass in a custom [QueryCriteria] and [Sort]. The default behaviour
+ * When calling [attemptSelection] there is the option to pass in a custom [QueryCriteria] and [Sort]. The default behaviour
  * is to order all states by [StateRef] and query for a specific token type. The default behaviour is probably not very
  * efficient but the behaviour can be customised if necessary.
  *
@@ -81,7 +81,11 @@ class TokenSelection(
 
         do {
             val pageSpec = PageSpecification(pageNumber = pageNumber, pageSize = pageSize)
-            val results: Vault.Page<FungibleToken<T>> = services.vaultService.queryBy(baseCriteria.and(additionalCriteria), pageSpec, sorter)
+            val results: Vault.Page<FungibleToken<T>> = services.vaultService.queryBy(
+                    criteria = baseCriteria.and(additionalCriteria),
+                    paging = pageSpec,
+                    sorting = sorter
+            )
 
             for (state in results.states) {
                 stateAndRefs += state
@@ -115,12 +119,12 @@ class TokenSelection(
      * function doesn't calculate change. If query criteria is not specified then only owned token amounts are used.
      *
      * Use [QueryUtilities.tokenAmountWithIssuerCriteria] to specify issuer.
-     * Calling attemptSpend multiple time with the same lockId will return next unlocked states.
+     * Calling attemptSelection multiple time with the same lockId will return next unlocked states.
      *
      * @return List of [FungibleToken]s that satisfy the amount to spend, empty list if none found.
      */
     @Suspendable
-    fun <T : TokenType> attemptSpend(
+    fun <T : TokenType> attemptSelection(
             requiredAmount: Amount<T>,
             lockId: UUID,
             additionalCriteria: QueryCriteria = tokenAmountCriteria(requiredAmount.token),
@@ -159,7 +163,7 @@ class TokenSelection(
      * @return [TransactionBuilder] and list of all owner keys used in the input states that are going to be moved.
      */
     @Suspendable
-    fun <T : TokenType> generateMove(
+    fun <T : TokenType> selectInputsAndComputeOutputs(
             lockId: UUID,
             partyAndAmounts: List<PartyAndAmount<T>>,
             changeHolder: AbstractParty,
@@ -172,106 +176,115 @@ class TokenSelection(
         // just do all the below however many times is necessary.
         val totalRequired = partyAndAmounts.map { it.amount }.sumOrThrow()
         val additionalCriteria = queryCriteria ?: tokenAmountCriteria(totalRequired.token)
-        val acceptableStates = attemptSpend(totalRequired, lockId, additionalCriteria)
+        val acceptableStates = attemptSelection(totalRequired, lockId, additionalCriteria)
         require(acceptableStates.isNotEmpty()) {
             "No states matching given criteria to generate move."
         }
 
-        // Check that the change identity belongs to the node that called generateMove.
+        // Check that the change identity belongs to the node that called selectInputsAndComputeOutputs.
         val ownerId = services.identityService.wellKnownPartyFromAnonymous(changeHolder)
         check(ownerId != null && services.myInfo.isLegalIdentity(ownerId)) {
             "Owner of the change: $changeHolder is not the identity that belongs to the node."
         }
 
-        // Now calculate the output states. This is complicated by the fact that a single payment may require
-        // multiple output states, due to the need to keep states separated by issuer. We start by figuring out
-        // how much we've gathered for each issuer: this map will keep track of how much we've used from each
-        // as we work our way through the payments.
-        val tokensGroupedByIssuer = acceptableStates.groupBy { it.state.data.amount.token }
-        val remainingTokensFromEachIssuer = tokensGroupedByIssuer.mapValues { (_, value) ->
-            value.map { (state) -> state.data.amount }.sumOrThrow()
-        }.toList().toMutableList()
+        return computeOutputs(acceptableStates, partyAndAmounts, changeHolder)
+    }
+}
 
-        // TODO: This assumes there is only ever ONE notary. In the future we need to deal with notary change.
-        check(acceptableStates.map { it.state.notary }.toSet().size == 1) {
-            "States selected have different notaries. For now we don't support notary change, it should be performed beforehand."
-        }
+@Suspendable
+fun <T : TokenType> computeOutputs(
+        acceptableStates: List<StateAndRef<FungibleToken<T>>>,
+        partyAndAmounts: List<PartyAndAmount<T>>,
+        changeHolder: AbstractParty
+): Pair<List<StateAndRef<FungibleToken<T>>>, List<FungibleToken<T>>> {
+    // Now calculate the output states. This is complicated by the fact that a single payment may require
+    // multiple output states, due to the need to keep states separated by issuer. We start by figuring out
+    // how much we've gathered for each issuer: this map will keep track of how much we've used from each
+    // as we work our way through the payments.
+    val tokensGroupedByIssuer = acceptableStates.groupBy { it.state.data.amount.token }
+    val remainingTokensFromEachIssuer = tokensGroupedByIssuer.mapValues { (_, value) ->
+        value.map { (state) -> state.data.amount }.sumOrThrow()
+    }.toList().toMutableList()
 
-        // Calculate the list of output states making sure that the
-        val outputStates = mutableListOf<FungibleToken<T>>()
-        for ((party, paymentAmount) in partyAndAmounts) {
-            var remainingToPay = paymentAmount.quantity
-            while (remainingToPay > 0) {
-                val (token, remainingFromCurrentIssuer) = remainingTokensFromEachIssuer.last()
-                val delta = remainingFromCurrentIssuer.quantity - remainingToPay
-                when {
-                    delta > 0 -> {
-                        // The states from the current issuer more than covers this payment.
-                        outputStates += FungibleToken(Amount(remainingToPay, token), party)
-                        remainingTokensFromEachIssuer[remainingTokensFromEachIssuer.lastIndex] = Pair(token, Amount(delta, token))
-                        remainingToPay = 0
-                    }
-                    delta == 0L -> {
-                        // The states from the current issuer exactly covers this payment.
-                        outputStates += FungibleToken(Amount(remainingToPay, token), party)
-                        remainingTokensFromEachIssuer.removeAt(remainingTokensFromEachIssuer.lastIndex)
-                        remainingToPay = 0
-                    }
-                    delta < 0 -> {
-                        // The states from the current issuer don't cover this payment, so we'll have to use >1 output
-                        // state to cover this payment.
-                        outputStates += FungibleToken(remainingFromCurrentIssuer, party)
-                        remainingTokensFromEachIssuer.removeAt(remainingTokensFromEachIssuer.lastIndex)
-                        remainingToPay -= remainingFromCurrentIssuer.quantity
-                    }
+    // TODO: This assumes there is only ever ONE notary. In the future we need to deal with notary change.
+    check(acceptableStates.map { it.state.notary }.toSet().size == 1) {
+        "States selected have different notaries. For now we don't support notary change, it should be performed beforehand."
+    }
+
+    // Calculate the list of output states making sure that the
+    val outputStates = mutableListOf<FungibleToken<T>>()
+    for ((party, paymentAmount) in partyAndAmounts) {
+        var remainingToPay = paymentAmount.quantity
+        while (remainingToPay > 0) {
+            val (token, remainingFromCurrentIssuer) = remainingTokensFromEachIssuer.last()
+            val delta = remainingFromCurrentIssuer.quantity - remainingToPay
+            when {
+                delta > 0 -> {
+                    // The states from the current issuer more than covers this payment.
+                    outputStates += FungibleToken(Amount(remainingToPay, token), party)
+                    remainingTokensFromEachIssuer[remainingTokensFromEachIssuer.lastIndex] = Pair(token, Amount(delta, token))
+                    remainingToPay = 0
+                }
+                delta == 0L -> {
+                    // The states from the current issuer exactly covers this payment.
+                    outputStates += FungibleToken(Amount(remainingToPay, token), party)
+                    remainingTokensFromEachIssuer.removeAt(remainingTokensFromEachIssuer.lastIndex)
+                    remainingToPay = 0
+                }
+                delta < 0 -> {
+                    // The states from the current issuer don't cover this payment, so we'll have to use >1 output
+                    // state to cover this payment.
+                    outputStates += FungibleToken(remainingFromCurrentIssuer, party)
+                    remainingTokensFromEachIssuer.removeAt(remainingTokensFromEachIssuer.lastIndex)
+                    remainingToPay -= remainingFromCurrentIssuer.quantity
                 }
             }
         }
-
-        // Generate the change states.
-        remainingTokensFromEachIssuer.forEach { (_, amount) ->
-            outputStates += FungibleToken(amount, changeHolder)
-        }
-
-        return Pair(acceptableStates, outputStates)
     }
 
-    // Modifies builder in place. All checks for exit states should have been done before.
-    // For example we assume that existStates have same issuer.
-    @Suspendable
-    fun <T : TokenType> generateExit(
-            builder: TransactionBuilder,
-            exitStates: List<StateAndRef<FungibleToken<T>>>,
-            amount: Amount<T>,
-            changeOwner: AbstractParty
-    ) {
-        val firstState = exitStates.first().state.data
-        // Choose states to cover amount - return ones used, and change output
-        val changeOutput = change(exitStates, amount, changeOwner)
-        val moveKey = firstState.holder.owningKey
-        val issuerKey = firstState.amount.token.issuer.owningKey
-        val redeemCommand = RedeemTokenCommand(firstState.amount.token)
-        builder.apply {
-            exitStates.forEach { addInputState(it) }
-            if (changeOutput != null) addOutputState(changeOutput)
-            addCommand(redeemCommand, issuerKey, moveKey)
-        }
+    // Generate the change states.
+    remainingTokensFromEachIssuer.forEach { (_, amount) ->
+        outputStates += FungibleToken(amount, changeHolder)
     }
 
-    private fun <T : TokenType> change(
-            exitStates: List<StateAndRef<FungibleToken<T>>>,
-            amount: Amount<T>,
-            changeOwner: AbstractParty
-    ): FungibleToken<T>? {
-        val assetsSum = exitStates.sumTokenStateAndRefs()
-        val difference = assetsSum - amount.issuedBy(exitStates.first().state.data.amount.token.issuer)
-        check(difference.quantity >= 0) {
-            "Sum of exit states should be equal or greater than the amount to exit."
-        }
-        return if (difference.quantity == 0L) {
-            null
-        } else {
-            difference heldBy changeOwner
-        }
+    return Pair(acceptableStates, outputStates.toList())
+}
+
+// Modifies builder in place. All checks for exit states should have been done before.
+// For example we assume that existStates have same issuer.
+@Suspendable
+fun <T : TokenType> generateExit(
+        builder: TransactionBuilder,
+        exitStates: List<StateAndRef<FungibleToken<T>>>,
+        amount: Amount<T>,
+        changeOwner: AbstractParty
+) {
+    val firstState = exitStates.first().state.data
+    // Choose states to cover amount - return ones used, and change output
+    val changeOutput = change(exitStates, amount, changeOwner)
+    val moveKey = firstState.holder.owningKey
+    val issuerKey = firstState.amount.token.issuer.owningKey
+    val redeemCommand = RedeemTokenCommand(firstState.amount.token)
+    builder.apply {
+        exitStates.forEach { addInputState(it) }
+        if (changeOutput != null) addOutputState(changeOutput)
+        addCommand(redeemCommand, issuerKey, moveKey)
+    }
+}
+
+private fun <T : TokenType> change(
+        exitStates: List<StateAndRef<FungibleToken<T>>>,
+        amount: Amount<T>,
+        changeOwner: AbstractParty
+): FungibleToken<T>? {
+    val assetsSum = exitStates.sumTokenStateAndRefs()
+    val difference = assetsSum - amount.issuedBy(exitStates.first().state.data.amount.token.issuer)
+    check(difference.quantity >= 0) {
+        "Sum of exit states should be equal or greater than the amount to exit."
+    }
+    return if (difference.quantity == 0L) {
+        null
+    } else {
+        difference heldBy changeOwner
     }
 }
