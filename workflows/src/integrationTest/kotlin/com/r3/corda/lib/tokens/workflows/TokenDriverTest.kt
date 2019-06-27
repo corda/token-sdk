@@ -98,8 +98,8 @@ class TokenDriverTest {
             ).returnValue.getOrThrow()
             // Issue some fungible GBP cash to NodeA, NodeB.
             issuer.rpc.run {
-                startFlowDynamic(IssueTokens::class.java, GBP, 1_000_000L, issuerParty, nodeAParty, emptyList<Party>()).returnValue.getOrThrow()
-                startFlowDynamic(IssueTokens::class.java, GBP, 900_000L, issuerParty, nodeBParty, emptyList<Party>()).returnValue.getOrThrow()
+                startFlowDynamic(IssueTokens::class.java, 1_000_000.GBP, issuerParty, nodeAParty, emptyList<Party>()).returnValue.getOrThrow()
+                startFlowDynamic(IssueTokens::class.java, 900_000.GBP, issuerParty, nodeBParty, emptyList<Party>()).returnValue.getOrThrow()
             }
             // Check that node A has cash and house.
             assertThat(nodeA.rpc.vaultQuery(House::class.java).states).isNotEmpty
