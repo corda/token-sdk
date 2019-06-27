@@ -13,7 +13,7 @@ import net.corda.core.transactions.TransactionBuilder
  * to each participant with possible change output paid to the [changeOwner].
  *
  * Call this for one [TokenType] at a time. If you need to do multiple token types in one transaction then create a new
- * flow, calling [addMoveTokens] for each token type.
+ * flow, calling [addMoveFungibleTokens] for each token type.
  *
  * @param partiesAndAmounts list of pairing party - amount of token that is to be moved to that party
  * @param participantSessions sessions with the participants of move transaction

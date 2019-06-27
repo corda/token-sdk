@@ -7,6 +7,7 @@ import com.r3.corda.lib.tokens.workflows.utilities.sessionsForParties
 import net.corda.core.contracts.Amount
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
+import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 
 @StartableByService
@@ -17,14 +18,14 @@ class RedeemFungibleTokens<T : TokenType>
 constructor(
         val amount: Amount<T>,
         val issuer: Party,
-        val observers: List<Party> = emptyList()
-//        val queryCriteria: QueryCriteria? = null,
+        val observers: List<Party> = emptyList(),
+        val queryCriteria: QueryCriteria? = null
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
         val observerSessions = sessionsForParties(observers)
         val issuerSession = initiateFlow(issuer)
-        return subFlow(RedeemFungibleTokensFlow(amount, issuerSession, ourIdentity, observerSessions))
+        return subFlow(RedeemFungibleTokensFlow(amount, issuerSession, ourIdentity, observerSessions, queryCriteria))
     }
 }
 
@@ -43,7 +44,6 @@ constructor(
         val ownedToken: T,
         val issuer: Party,
         val observers: List<Party> = emptyList()
-//        val queryCriteria: QueryCriteria? = null
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
@@ -69,14 +69,14 @@ class ConfidentialRedeemFungibleTokens<T : TokenType>
 constructor(
         val amount: Amount<T>,
         val issuer: Party,
-        val observers: List<Party> = emptyList()
-//        val queryCriteria: QueryCriteria? = null
+        val observers: List<Party> = emptyList(),
+        val queryCriteria: QueryCriteria? = null
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
         val observerSessions = sessionsForParties(observers)
         val issuerSession = initiateFlow(issuer)
-        return subFlow(ConfidentialRedeemFungibleTokensFlow(amount, issuerSession, observerSessions))
+        return subFlow(ConfidentialRedeemFungibleTokensFlow(amount, issuerSession, observerSessions, queryCriteria))
     }
 }
 
