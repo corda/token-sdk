@@ -10,6 +10,7 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.transactions.SignedTransaction
@@ -79,6 +80,7 @@ constructor(
         val transactionBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
         // Add all the specified tokensToIssue to the transaction. The correct commands and signing keys are also added.
         addIssueTokens(transactionBuilder, tokensToIssue)
+        addTransactionDependencies(tokensToIssue, transactionBuilder)
         // Create new participantSessions if this is started as a top level flow.
         val signedTransaction = subFlow(
                 ObserverAwareFinalityFlow(
@@ -91,4 +93,22 @@ constructor(
         // Return the newly created transaction.
         return signedTransaction
     }
+}
+
+fun addTransactionDependencies(tokens: List<AbstractToken<*>>, transactionBuilder: TransactionBuilder) {
+    tokens.forEach {
+        transactionBuilder.addAttachment(it.tokenTypeJarHash())
+    }
+}
+
+fun addTransactionDependencies(tokens: Iterable<StateAndRef<AbstractToken<*>>>, transactionBuilder: TransactionBuilder) {
+    addTransactionDependencies(tokens.map { it.state.data }, transactionBuilder)
+}
+
+fun addTransactionDependencies(changeOutput: AbstractToken<*>, transactionBuilder: TransactionBuilder) {
+    addTransactionDependencies(listOf(changeOutput), transactionBuilder)
+}
+
+fun addTransactionDependencies(input: StateAndRef<AbstractToken<*>>, transactionBuilder: TransactionBuilder) {
+    addTransactionDependencies(input.state.data, transactionBuilder)
 }

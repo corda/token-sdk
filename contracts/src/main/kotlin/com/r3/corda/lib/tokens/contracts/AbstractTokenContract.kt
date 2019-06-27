@@ -7,9 +7,11 @@ import com.r3.corda.lib.tokens.contracts.commands.TokenCommand
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.select
+import net.corda.core.crypto.SecureHash
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.LedgerTransaction.InOutGroup
 
@@ -29,14 +31,24 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
      * inputs and outputs are required to verify issuances, moves and redemptions. Attachments and the timestamp
      * are not provided.
      */
-    open fun dispatchOnCommand(commands: List<CommandWithParties<TokenCommand<T>>>, inputs: List<U>, outputs: List<U>) {
+    open fun dispatchOnCommand(commands: List<CommandWithParties<TokenCommand<T>>>, inputs: List<U>, outputs: List<U>, attachments: List<Attachment>) {
+        val jarHash = verifyAllTokensUseSameTypeJar(inputs = inputs, outputs = outputs)
+        verifyTypeJarPresentInTransaction(jarHash, attachments)
         when (commands.first().value) {
+
+            //verify the type jar presence and correctness
             // Issuances should only contain one issue command.
-            is IssueTokenCommand<*> -> verifyIssue(commands.single(), inputs, outputs)
+            is IssueTokenCommand<*> -> {
+                verifyIssue(commands.single(), inputs, outputs, attachments)
+            }
             // Moves may contain more than one move command.
-            is MoveTokenCommand<*> -> verifyMove(commands, inputs, outputs)
+            is MoveTokenCommand<*> -> {
+                verifyMove(commands, inputs, outputs, attachments)
+            }
             // Redeems must only contain one redeem command.
-            is RedeemTokenCommand<*> -> verifyRedeem(commands.single(), inputs, outputs)
+            is RedeemTokenCommand<*> -> {
+                verifyRedeem(commands.single(), inputs, outputs, attachments)
+            }
         }
     }
 
@@ -44,21 +56,21 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
      * Provide custom logic for handling issuance of a token. With issuances, the assumption is that only one issuer
      * will be involved in any one issuance, therefore there will only be one [IssueTokenCommand] per group.
      */
-    abstract fun verifyIssue(issueCommand: CommandWithParties<TokenCommand<T>>, inputs: List<U>, outputs: List<U>)
+    abstract fun verifyIssue(issueCommand: CommandWithParties<TokenCommand<T>>, inputs: List<U>, outputs: List<U>, attachments: List<Attachment>)
 
     /**
      * Provide custom logic for handling the moving of a token. More than one move command can be supplied because
      * multiple parties may need to move the same [IssuedTokenType] in one atomic transaction. Each party adds their
      * own command with the required public keys for the tokens they are moving.
      */
-    abstract fun verifyMove(moveCommands: List<CommandWithParties<TokenCommand<T>>>, inputs: List<U>, outputs: List<U>)
+    abstract fun verifyMove(moveCommands: List<CommandWithParties<TokenCommand<T>>>, inputs: List<U>, outputs: List<U>, attachments: List<Attachment>)
 
     /**
      * Provide custom logic for handling the redemption of a token. There is an assumption in that only one issuer will
      * be involved in a single redemption transaction, therefore there will only be one [RedeemTokenCommand] per
      * group of [IssuedTokenType]s.
      */
-    abstract fun verifyRedeem(redeemCommand: CommandWithParties<TokenCommand<T>>, inputs: List<U>, outputs: List<U>)
+    abstract fun verifyRedeem(redeemCommand: CommandWithParties<TokenCommand<T>>, inputs: List<U>, outputs: List<U>, attachments: List<Attachment>)
 
     /** Necessary for providing a grouping function, which is usually the [IssuedTokenType]. */
     abstract fun groupStates(tx: LedgerTransaction): List<InOutGroup<U, IssuedTokenType<T>>>
@@ -96,9 +108,19 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
                 // Handle each group individually. Although it is possible, there would not usually be a move group and
                 // an issue group in the same transaction. It doesn't make sense for privacy reasons. However, it is
                 // common to see multiple move groups in the same transaction.
-                matchedCommandValues.size == 1 -> dispatchOnCommand(matchedCommands, group.inputs, group.outputs)
+                matchedCommandValues.size == 1 -> dispatchOnCommand(matchedCommands, group.inputs, group.outputs, tx.attachments)
             }
         }
+    }
+
+    fun verifyTypeJarPresentInTransaction(jar: SecureHash, attachments: List<Attachment>) {
+        require(jar in attachments.map { it.id }) { "Expected to find type jar: $jar in transaction attachment list, but did not" }
+    }
+
+    fun verifyAllTokensUseSameTypeJar(inputs: List<AbstractToken<T>>, outputs: List<AbstractToken<T>>): SecureHash {
+        val jarHashes = (inputs + outputs).map { it.tokenTypeJarHash() }.toSet()
+        require(jarHashes.size == 1) { "There must only be one Jar (Hash) providing TokenType: ${outputs.first().tokenType.tokenIdentifier}" }
+        return jarHashes.single()
     }
 
 }

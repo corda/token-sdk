@@ -5,12 +5,25 @@ import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.contracts.utilities.TokenUtilities.Companion.logger
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionState
+import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.sha256
 import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
+import net.corda.core.internal.location
+import net.corda.core.utilities.contextLogger
+import java.util.concurrent.ConcurrentHashMap
+
+class TokenUtilities {
+    companion object {
+        val logger = contextLogger()
+
+    }
+}
 
 // ------------------------------------------------------
 // Creates a tokens from (amounts of) issued token types.
@@ -53,3 +66,17 @@ val AbstractToken<*>.holderString: String
         (holder as? Party)?.name?.organisation ?: holder.owningKey.toStringShort().substring(0, 16)
 
 inline infix fun <reified T : TokenType> AbstractToken<T>.withNewHolder(newHolder: AbstractParty) = withNewHolder(newHolder)
+
+val attachmentCache = ConcurrentHashMap<Class<*>, SecureHash>()
+fun TokenType.getAttachmentIdForGenericParam(): SecureHash {
+    return attachmentCache.computeIfAbsent(this.javaClass) {
+        //this is an external jar
+        if (it.location != TokenType::class.java.location) {
+            logger.info("LOOKING FOR JAR WHICH PROVIDES: ${this::class.java} FOUND AT: ${this::class.java.location}")
+            it.location.readBytes().sha256()
+        } else {
+            TokenType::class.java.location.readBytes().sha256()
+        }
+    }
+}
+

@@ -70,3 +70,4 @@ fun <T : TokenType> Iterable<StateAndRef<FungibleToken<T>>>.filterTokenStateAndR
 ): List<StateAndRef<FungibleToken<T>>> {
     return filter { it.state.data.amount.token.issuer == issuer }
 }
+

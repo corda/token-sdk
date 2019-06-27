@@ -4,6 +4,7 @@ import com.r3.corda.lib.tokens.contracts.commands.TokenCommand
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.LedgerTransaction.InOutGroup
@@ -24,7 +25,8 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
     override fun verifyIssue(
             issueCommand: CommandWithParties<TokenCommand<T>>,
             inputs: List<NonFungibleToken<T>>,
-            outputs: List<NonFungibleToken<T>>
+            outputs: List<NonFungibleToken<T>>,
+            attachments: List<Attachment>
     ) {
         require(inputs.isEmpty()) { "When issuing non fungible tokens, there cannot be any input states." }
         require(outputs.size == 1) { "When issuing non fungible tokens, there must be a single output state." }
@@ -44,7 +46,8 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
     override fun verifyMove(
             moveCommands: List<CommandWithParties<TokenCommand<T>>>,
             inputs: List<NonFungibleToken<T>>,
-            outputs: List<NonFungibleToken<T>>
+            outputs: List<NonFungibleToken<T>>,
+            attachments: List<Attachment>
     ) {
         // There must be inputs and outputs present.
         require(inputs.isNotEmpty()) { "When moving a non fungible token, there must be one input state present." }
@@ -67,7 +70,8 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
     override fun verifyRedeem(
             redeemCommand: CommandWithParties<TokenCommand<T>>,
             inputs: List<NonFungibleToken<T>>,
-            outputs: List<NonFungibleToken<T>>
+            outputs: List<NonFungibleToken<T>>,
+            attachments: List<Attachment>
     ) {
         // There must be inputs and outputs present.
         require(outputs.isEmpty()) { "When redeeming an owned token, there must be no output." }

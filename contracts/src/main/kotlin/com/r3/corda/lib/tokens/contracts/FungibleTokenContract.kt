@@ -7,6 +7,7 @@ import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStatesOrZero
 import net.corda.core.contracts.Amount
+import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.identity.Party
 import net.corda.core.transactions.LedgerTransaction
@@ -40,7 +41,8 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
     override fun verifyIssue(
             issueCommand: CommandWithParties<TokenCommand<T>>,
             inputs: List<FungibleToken<T>>,
-            outputs: List<FungibleToken<T>>
+            outputs: List<FungibleToken<T>>,
+            attachments: List<Attachment>
     ) {
         val issuedToken: IssuedTokenType<T> = issueCommand.value.token
         require(inputs.isEmpty()) { "When issuing tokens, there cannot be any input states." }
@@ -62,12 +64,14 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
                 "The issuer must be the only signing party when an amount of tokens are issued."
             }
         }
+
     }
 
     override fun verifyMove(
             moveCommands: List<CommandWithParties<TokenCommand<T>>>,
             inputs: List<FungibleToken<T>>,
-            outputs: List<FungibleToken<T>>
+            outputs: List<FungibleToken<T>>,
+            attachments: List<Attachment>
     ) {
         // Commands are grouped by Token Type, so we just need a token reference.
         val issuedToken: IssuedTokenType<T> = moveCommands.first().value.token
@@ -94,12 +98,15 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
             "There are required signers missing or some of the specified signers are not required. A transaction " +
                     "to move token amounts must be signed by ONLY ALL the owners of ALL the input token amounts."
         }
+
+
     }
 
     override fun verifyRedeem(
             redeemCommand: CommandWithParties<TokenCommand<T>>,
             inputs: List<FungibleToken<T>>,
-            outputs: List<FungibleToken<T>>
+            outputs: List<FungibleToken<T>>,
+            attachments: List<Attachment>
     ) {
         val issuedToken: IssuedTokenType<T> = redeemCommand.value.token
         // There can be at most one output treated as a change paid back to the owner. Issuer is used to group states,
@@ -137,6 +144,9 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
                 "Owners of redeemed states must be the signing parties."
             }
         }
+
+
     }
+
 
 }

@@ -31,7 +31,7 @@ import net.corda.core.schemas.QueryableState
  * @param T the [TokenType] this [FungibleToken] state is in respect of.
  */
 @BelongsToContract(FungibleTokenContract::class)
-open class FungibleToken<T : TokenType>(
+class FungibleToken<T : TokenType>(
         override val amount: Amount<IssuedTokenType<T>>,
         override val holder: AbstractParty
 ) : FungibleState<IssuedTokenType<T>>, AbstractToken<T>, QueryableState {

@@ -6,6 +6,7 @@ import com.r3.corda.lib.tokens.contracts.commands.RedeemTokenCommand
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.withNotary
+import com.r3.corda.lib.tokens.workflows.flows.issue.addTransactionDependencies
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
 import com.r3.corda.lib.tokens.workflows.utilities.addNotaryWithCheck
 import com.r3.corda.lib.tokens.workflows.utilities.ownedTokenCriteria
@@ -43,6 +44,8 @@ fun <T : TokenType> generateMoveNonFungible(
         queryCriteria: QueryCriteria?
 ): TransactionBuilder {
     val (input, output) = generateMoveNonFungible(partyAndToken, vaultService, queryCriteria)
+    addTransactionDependencies(input, transactionBuilder)
+    addTransactionDependencies(output, transactionBuilder)
     val notary = input.state.notary
     addNotaryWithCheck(transactionBuilder, notary)
     val signingKey = input.state.data.holder.owningKey
@@ -54,10 +57,12 @@ fun <T : TokenType> generateMoveNonFungible(
     }
 }
 
+
 // All check should be performed before.
 @Suspendable
 fun <T : TokenType> generateExitNonFungible(txBuilder: TransactionBuilder, moveStateAndRef: StateAndRef<NonFungibleToken<T>>) {
     val nonFungibleToken = moveStateAndRef.state.data // TODO What if redeeming many non-fungible assets.
+    addTransactionDependencies(nonFungibleToken, txBuilder)
     val issuerKey = nonFungibleToken.token.issuer.owningKey
     val moveKey = nonFungibleToken.holder.owningKey
     val redeemCommand = RedeemTokenCommand(nonFungibleToken.token)

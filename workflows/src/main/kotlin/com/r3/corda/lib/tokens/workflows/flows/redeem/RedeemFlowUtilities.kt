@@ -6,6 +6,7 @@ import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
+import com.r3.corda.lib.tokens.workflows.flows.issue.addTransactionDependencies
 import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer
 import com.r3.corda.lib.tokens.workflows.internal.checkSameNotary
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
@@ -50,8 +51,12 @@ fun <T : TokenType> addFungibleTokensToRedeem(
         if (changeOutput != null) addOutputState(changeOutput)
         addCommand(redeemCommand, issuerKey, moveKey)
     }
+
+    addTransactionDependencies(inputs, transactionBuilder)
+    changeOutput?.let { addTransactionDependencies(it, transactionBuilder) }
     return transactionBuilder
 }
+
 
 /**
  * Redeem non-fungible [ownedToken] issued by the [issuer] and add it to the [transactionBuilder].
