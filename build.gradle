@@ -91,6 +91,7 @@ subprojects {
 // Don't publish an empty "modules" JAR.
 def publishProjects = [
         project(":modules:money"),
+        project(":modules:test-contracts"),
         project(":contracts"),
         project(":workflows")
 ]

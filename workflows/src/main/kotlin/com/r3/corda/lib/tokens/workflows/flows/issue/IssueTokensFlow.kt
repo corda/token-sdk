@@ -97,7 +97,10 @@ constructor(
 
 fun addTransactionDependencies(tokens: List<AbstractToken<*>>, transactionBuilder: TransactionBuilder) {
     tokens.forEach {
-        transactionBuilder.addAttachment(it.tokenTypeJarHash())
+        val hash = it.tokenTypeJarHash()
+        if (!transactionBuilder.attachments().contains(hash)) {
+            transactionBuilder.addAttachment(hash)
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-package com.r3.corda.lib.tokens.workflows.contracts
+package com.r3.corda.lib.tokens.testing.contracts
 
 import com.r3.corda.lib.tokens.contracts.EvolvableTokenContract
 import net.corda.core.contracts.Contract

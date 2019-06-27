@@ -16,7 +16,6 @@ import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.internal.location
 import net.corda.core.utilities.contextLogger
-import java.util.concurrent.ConcurrentHashMap
 
 class TokenUtilities {
     companion object {
@@ -67,16 +66,18 @@ val AbstractToken<*>.holderString: String
 
 inline infix fun <reified T : TokenType> AbstractToken<T>.withNewHolder(newHolder: AbstractParty) = withNewHolder(newHolder)
 
-val attachmentCache = ConcurrentHashMap<Class<*>, SecureHash>()
+val attachmentCache = HashMap<Class<*>, SecureHash>()
 fun TokenType.getAttachmentIdForGenericParam(): SecureHash {
-    return attachmentCache.computeIfAbsent(this.javaClass) {
-        //this is an external jar
-        if (it.location != TokenType::class.java.location) {
-            logger.info("LOOKING FOR JAR WHICH PROVIDES: ${this::class.java} FOUND AT: ${this::class.java.location}")
-            it.location.readBytes().sha256()
-        } else {
-            TokenType::class.java.location.readBytes().sha256()
+    synchronized(attachmentCache) {
+        if (this.javaClass.location == TokenType::class.java.location) {
+            logger.info("${this.javaClass} is provided by tokens-sdk")
         }
+        if (!attachmentCache.containsKey(this.javaClass)) {
+            logger.info("LOOKING FOR JAR WHICH PROVIDES: ${this::class.java} FOUND AT: ${this::class.java.location.path}")
+            attachmentCache[this.javaClass] = this.javaClass.location.readBytes().sha256()
+        }
+        return attachmentCache[this.javaClass]!!
     }
+
 }
 
