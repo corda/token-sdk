@@ -2,6 +2,7 @@ package com.r3.corda.lib.tokens.contracts.utilities
 
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
+import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.ContractState
@@ -84,7 +85,7 @@ internal val attachmentCache = HashMap<Class<*>, SecureHash>()
 fun TokenType.getAttachmentIdForGenericParam(): SecureHash? {
     synchronized(attachmentCache) {
         var classToSearch: Class<*> = this.javaClass
-        while (classToSearch != this.tokenClass) {
+        while (classToSearch != this.tokenClass && classToSearch != TokenPointer::class.java) {
             classToSearch = this.tokenClass
         }
         // The TokenType is a TokenPointer provided by com.r3.corda.lib.tokens.contracts which is already attached to

@@ -371,8 +371,6 @@ class FungibleTokenTests : ContractTestCommon() {
             attachment(RUB.importAttachment(aliceServices.attachments))
 
             this.failsWith("There must only be one Jar (Hash) providing TokenType: GBP")
-
-
         }
     }
 }
