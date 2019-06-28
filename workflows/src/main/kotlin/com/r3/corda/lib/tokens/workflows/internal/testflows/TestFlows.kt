@@ -6,6 +6,8 @@ import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.money.FiatCurrency
 import com.r3.corda.lib.tokens.testing.statesAndContracts.House
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.RedeemFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.RedeemNonFungibleTokens
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistributionList
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
@@ -96,5 +98,28 @@ class CheckTokenPointer(val housePtr: TokenPointer<House>) : FlowLogic<House>() 
     @Suspendable
     override fun call(): House {
         return housePtr.pointer.resolve(serviceHub).state.data
+    }
+}
+
+// TODO This is hack that will be removed after fix in Corda 5. startFlowDynamic doesn't handle type parameters properly.
+@StartableByRPC
+class RedeemNonFungibleHouse(
+        val housePtr: TokenPointer<House>,
+        val issuerParty: Party
+): FlowLogic<SignedTransaction>() {
+    @Suspendable
+    override fun call(): SignedTransaction {
+        return subFlow(RedeemNonFungibleTokens(housePtr, issuerParty, emptyList()))
+    }
+}
+
+@StartableByRPC
+class RedeemFungibleGBP(
+        val amount: Amount<FiatCurrency>,
+        val issuerParty: Party
+): FlowLogic<SignedTransaction>() {
+    @Suspendable
+    override fun call(): SignedTransaction {
+        return subFlow(RedeemFungibleTokens(amount, issuerParty, emptyList()))
     }
 }

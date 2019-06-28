@@ -14,14 +14,15 @@ import com.r3.corda.lib.tokens.workflows.flows.evolvable.CreateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
-import com.r3.corda.lib.tokens.workflows.flows.rpc.RedeemFungibleTokens
-import com.r3.corda.lib.tokens.workflows.flows.rpc.RedeemNonFungibleTokens
 import com.r3.corda.lib.tokens.workflows.internal.testflows.CheckTokenPointer
 import com.r3.corda.lib.tokens.workflows.internal.testflows.DvPFlow
 import com.r3.corda.lib.tokens.workflows.internal.testflows.GetDistributionList
+import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemFungibleGBP
+import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemNonFungibleHouse
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
 import com.r3.corda.lib.tokens.workflows.utilities.ownedTokenCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
+import net.corda.core.CordaRuntimeException
 import net.corda.core.contracts.Amount
 import net.corda.core.identity.Party
 import net.corda.core.internal.concurrent.transpose
@@ -39,6 +40,7 @@ import net.corda.testing.driver.driver
 import net.corda.testing.driver.internal.incrementalPortAllocation
 import net.corda.testing.node.TestCordapp
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.Test
 
 class TokenDriverTest {
@@ -120,36 +122,30 @@ class TokenDriverTest {
             assertThat(houseA.valuation).isEqualTo(800_000L.GBP)
             assertThat(houseB.valuation).isEqualTo(800_000L.GBP)
 
-//            assertThatExceptionOfType(CordaRuntimeException::class.java).isThrownBy {
-//                nodeA.rpc.startFlowDynamic(
-//                        RedeemNonFungibleTokens::class.java,
-//                        housePtr,
-//                        issuerParty,
-//                        emptyList<Party>()
-//                ).returnValue.getOrThrow()
-//            }.withMessageContaining("Exactly one owned token of a particular type")
-//             NodeB redeems house with the issuer (notice that issuer doesn't know about NodeB confidential identity used for the move with NodeA).
-            // <-- GOES WRONG HERE
-            val redeemHouseTx = nodeB.rpc.startFlow(
-                    ::RedeemNonFungibleTokens,
+            assertThatExceptionOfType(CordaRuntimeException::class.java).isThrownBy {
+                nodeA.rpc.startFlowDynamic(
+                        RedeemNonFungibleHouse::class.java,
+                        housePtr,
+                        issuerParty
+                ).returnValue.getOrThrow()
+            }.withMessageContaining("Exactly one owned token of a particular type")
+            // NodeB redeems house with the issuer (notice that issuer doesn't know about NodeB confidential identity used for the move with NodeA).
+            val redeemHouseTx = nodeB.rpc.startFlowDynamic(
+                    RedeemNonFungibleHouse::class.java,
                     housePtr,
-                    issuerParty,
-                    emptyList()
+                    issuerParty
             ).returnValue.getOrThrow()
             nodeB.rpc.watchForTransaction(redeemHouseTx).getOrThrow(5.seconds)
             assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken<TokenPointer<House>>>(ownedTokenCriteria(housePtr)).states).isEmpty()
             // NodeA redeems 1_100_000L.GBP with the issuer, check it received 800_000L change, check, that issuer didn't record cash.
             val redeemGBPTx = nodeA.rpc.startFlowDynamic(
-                    RedeemFungibleTokens::class.java,
+                    RedeemFungibleGBP::class.java,
                     1_100_000L.GBP,
-                    issuerParty,
-                    emptyList<Party>()
+                    issuerParty
             ).returnValue.getOrThrow()
             nodeA.rpc.watchForTransaction(redeemGBPTx).getOrThrow(5.seconds)
             assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(800_000L.GBP issuedBy issuerParty)
             assertThat(issuer.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
         }
     }
-
-
 }
