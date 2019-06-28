@@ -6,9 +6,9 @@ import com.r3.corda.lib.tokens.contracts.commands.RedeemTokenCommand
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.withNotary
-import com.r3.corda.lib.tokens.workflows.flows.issue.addTokenTypeJar
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
 import com.r3.corda.lib.tokens.workflows.utilities.addNotaryWithCheck
+import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
 import com.r3.corda.lib.tokens.workflows.utilities.ownedTokenCriteria
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.node.services.VaultService
@@ -44,9 +44,8 @@ fun <T : TokenType> generateMoveNonFungible(
         queryCriteria: QueryCriteria?
 ): TransactionBuilder {
     val (input, output) = generateMoveNonFungible(partyAndToken, vaultService, queryCriteria)
-    addTokenTypeJar(input, transactionBuilder)
-    addTokenTypeJar(output, transactionBuilder)
     val notary = input.state.notary
+    addTokenTypeJar(listOf(input.state.data, output), transactionBuilder)
     addNotaryWithCheck(transactionBuilder, notary)
     val signingKey = input.state.data.holder.owningKey
     val command = MoveTokenCommand(output.token)

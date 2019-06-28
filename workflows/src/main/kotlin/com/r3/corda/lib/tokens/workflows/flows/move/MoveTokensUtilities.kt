@@ -5,11 +5,11 @@ import com.r3.corda.lib.tokens.contracts.commands.MoveTokenCommand
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.workflows.flows.issue.addTokenTypeJar
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateMoveNonFungible
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
+import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowLogic
@@ -52,8 +52,7 @@ fun <T : TokenType> addMoveTokens(
         }
     }
 
-    addTokenTypeJar(inputs, transactionBuilder)
-    addTokenTypeJar(outputs, transactionBuilder)
+    addTokenTypeJar(inputs.map { it.state.data } + outputs, transactionBuilder)
 
     return transactionBuilder
 }

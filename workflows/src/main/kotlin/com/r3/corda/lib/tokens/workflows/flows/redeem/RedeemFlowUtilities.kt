@@ -6,12 +6,12 @@ import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
-import com.r3.corda.lib.tokens.workflows.flows.issue.addTokenTypeJar
 import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer
 import com.r3.corda.lib.tokens.workflows.internal.checkSameNotary
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateExitNonFungible
 import com.r3.corda.lib.tokens.workflows.utilities.addNotaryWithCheck
+import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
 import com.r3.corda.lib.tokens.workflows.utilities.ownedTokensByTokenIssuer
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountWithIssuerCriteria
 import net.corda.core.contracts.Amount
@@ -50,9 +50,8 @@ fun <T : TokenType> addTokensToRedeem(
         if (changeOutput != null) addOutputState(changeOutput)
         addCommand(redeemCommand, issuerKey, moveKey)
     }
-
-    addTokenTypeJar(inputs, transactionBuilder)
-    changeOutput?.let { addTokenTypeJar(it, transactionBuilder) }
+    val states = inputs.map { it.state.data } + if (changeOutput == null) emptyList() else listOf(changeOutput)
+    addTokenTypeJar(states, transactionBuilder)
     return transactionBuilder
 }
 

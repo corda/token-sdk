@@ -123,7 +123,7 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
 
     private fun verifyAllTokensUseSameTypeJar(inputs: List<AbstractToken<T>>, outputs: List<AbstractToken<T>>): SecureHash? {
         val inputsAndOutputs = inputs + outputs
-        val tokenType = inputsAndOutputs.map(AbstractToken<*>::tokenType).toSet()
+        val tokenType = inputsAndOutputs.map(AbstractToken<*>::tokenType).toSet().single()
         return if (tokenType is TokenPointer<*>) {
             // The TokenPointer is implemented in the tokens-contracts JAR which is already attached!
             null

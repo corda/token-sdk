@@ -1,10 +1,12 @@
 package com.r3.corda.lib.tokens.workflows.utilities
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.hasDistributionRecord
 import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
@@ -13,6 +15,7 @@ import net.corda.core.identity.Party
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.IdentityService
 import net.corda.core.transactions.LedgerTransaction
+import net.corda.core.transactions.TransactionBuilder
 import java.security.PublicKey
 
 /**
@@ -81,5 +84,29 @@ fun IdentityService.requireKnownConfidentialIdentity(party: AbstractParty): Part
     return wellKnownPartyFromAnonymous(party)
             ?: throw IllegalArgumentException("Called flow with anonymous party that node doesn't know about. " +
                     "Make sure that RequestConfidentialIdentity flow is called before.")
+}
+
+// Utilities for ensuring that the correct JAR which implements TokenType is added to the transaction.
+
+fun addTokenTypeJar(tokens: List<AbstractToken<*>>, transactionBuilder: TransactionBuilder) {
+    tokens.forEach {
+        // If there's no JAR hash then we don't need to do anything.
+        val hash = it.tokenTypeJarHash ?: return
+        if (!transactionBuilder.attachments().contains(hash)) {
+            transactionBuilder.addAttachment(hash)
+        }
+    }
+}
+
+fun addTokenTypeJar(tokens: Iterable<StateAndRef<AbstractToken<*>>>, transactionBuilder: TransactionBuilder) {
+    addTokenTypeJar(tokens.map { it.state.data }, transactionBuilder)
+}
+
+fun addTokenTypeJar(changeOutput: AbstractToken<*>, transactionBuilder: TransactionBuilder) {
+    addTokenTypeJar(listOf(changeOutput), transactionBuilder)
+}
+
+fun addTokenTypeJar(input: StateAndRef<AbstractToken<*>>, transactionBuilder: TransactionBuilder) {
+    addTokenTypeJar(input.state.data, transactionBuilder)
 }
 

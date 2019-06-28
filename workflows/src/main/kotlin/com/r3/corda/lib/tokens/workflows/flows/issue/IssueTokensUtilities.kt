@@ -5,7 +5,6 @@ import com.r3.corda.lib.tokens.contracts.commands.IssueTokenCommand
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import net.corda.core.contracts.StateAndRef
 import net.corda.core.identity.Party
 import net.corda.core.transactions.TransactionBuilder
 
@@ -46,28 +45,4 @@ fun addIssueTokens(transactionBuilder: TransactionBuilder, vararg outputs: Abstr
 @Suspendable
 fun addIssueTokens(transactionBuilder: TransactionBuilder, output: AbstractToken<*>): TransactionBuilder {
     return addIssueTokens(transactionBuilder, listOf(output))
-}
-
-// Utilities for ensuring that the correct JAR which implements TokenType is added to the transaction.
-
-fun addTokenTypeJar(tokens: List<AbstractToken<*>>, transactionBuilder: TransactionBuilder) {
-    tokens.forEach {
-        // If there's no JAR hash then we don't need to do anything.
-        val hash = it.tokenTypeJarHash ?: return
-        if (!transactionBuilder.attachments().contains(hash)) {
-            transactionBuilder.addAttachment(hash)
-        }
-    }
-}
-
-fun addTokenTypeJar(tokens: Iterable<StateAndRef<AbstractToken<*>>>, transactionBuilder: TransactionBuilder) {
-    addTokenTypeJar(tokens.map { it.state.data }, transactionBuilder)
-}
-
-fun addTokenTypeJar(changeOutput: AbstractToken<*>, transactionBuilder: TransactionBuilder) {
-    addTokenTypeJar(listOf(changeOutput), transactionBuilder)
-}
-
-fun addTokenTypeJar(input: StateAndRef<AbstractToken<*>>, transactionBuilder: TransactionBuilder) {
-    addTokenTypeJar(input.state.data, transactionBuilder)
 }
