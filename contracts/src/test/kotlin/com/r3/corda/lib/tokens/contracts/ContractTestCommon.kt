@@ -81,9 +81,10 @@ private infix fun <T : TokenType> IssuedTokenType<T>._heldBy(owner: AbstractPart
 
 fun TokenType.importAttachment(storage: MockAttachmentStorage): SecureHash {
     val hash = this.getAttachmentIdForGenericParam()
+            ?: throw IllegalStateException("Null should never be returned when testing as TokenTypes are always " +
+                    "defined in separate JARs.")
     if (!storage.hasAttachment(hash)) {
         storage.importAttachment(this.javaClass.location.openStream(), DEPLOYED_CORDAPP_UPLOADER, this.javaClass.location.file)
     }
-
     return hash
 }

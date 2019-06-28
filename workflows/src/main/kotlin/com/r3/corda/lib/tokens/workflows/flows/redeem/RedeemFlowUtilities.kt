@@ -6,7 +6,7 @@ import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
-import com.r3.corda.lib.tokens.workflows.flows.issue.addTransactionDependencies
+import com.r3.corda.lib.tokens.workflows.flows.issue.addTokenTypeJar
 import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer
 import com.r3.corda.lib.tokens.workflows.internal.checkSameNotary
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
@@ -51,8 +51,8 @@ fun <T : TokenType> addTokensToRedeem(
         addCommand(redeemCommand, issuerKey, moveKey)
     }
 
-    addTransactionDependencies(inputs, transactionBuilder)
-    changeOutput?.let { addTransactionDependencies(it, transactionBuilder) }
+    addTokenTypeJar(inputs, transactionBuilder)
+    changeOutput?.let { addTokenTypeJar(it, transactionBuilder) }
     return transactionBuilder
 }
 

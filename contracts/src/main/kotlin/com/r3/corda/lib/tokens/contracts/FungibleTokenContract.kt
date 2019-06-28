@@ -144,9 +144,5 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
                 "Owners of redeemed states must be the signing parties."
             }
         }
-
-
     }
-
-
 }
