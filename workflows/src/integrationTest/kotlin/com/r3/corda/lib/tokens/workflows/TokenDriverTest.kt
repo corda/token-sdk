@@ -160,7 +160,8 @@ class TokenDriverTest {
                     RedeemFungibleTokens::class.java,
                     1_100_000L.GBP,
                     issuerParty,
-                    emptyList<Party>()
+                    emptyList<Party>(),
+                    null
             ).returnValue.getOrThrow()
             nodeA.rpc.watchForTransaction(redeemGBPTx).getOrThrow(5.seconds)
             assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(800_000L.GBP issuedBy issuerParty)

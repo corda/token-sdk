@@ -4,7 +4,7 @@ import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.money.CHF
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
-import com.r3.corda.lib.tokens.workflows.flows.move.addMoveTokens
+import com.r3.corda.lib.tokens.workflows.flows.move.addMoveFungibleTokens
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import net.corda.core.transactions.TransactionBuilder
@@ -86,7 +86,7 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         )
 
         A.transaction {
-            addMoveTokens(transactionBuilder, A.services, moves, A.legalIdentity())
+            addMoveFungibleTokens(transactionBuilder, A.services, moves, A.legalIdentity())
         }
         println(transactionBuilder.toWireTransaction(A.services))
         // Just using this to check and see if the output is as expected.
