@@ -24,15 +24,6 @@
   default token selection method but in a future release CorDapp developers
   will be able to choose between database or in memory selection.
 * Changes to how how change parties are generated and used:
-
-    * RC03:
-
-      * All move and redeem flows specified `changeHolder` as a
-        nullable parameter. If it was set to null then the token selection
-        mechanism would always generate a new confidential identity for
-        the change holder. This behaviour is a little counter-intuitive so
-        it has been changed in RC-03.
-
     * V1:
 
         * The issuance flows don't require any change outputs
