@@ -3,7 +3,11 @@ package com.r3.corda.lib.tokens.workflows
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.testing.states.DiamondGradingReport
+import net.corda.core.internal.DEPLOYED_CORDAPP_UPLOADER
+import net.corda.core.internal.location
 import net.corda.core.utilities.getOrThrow
+import net.corda.node.services.persistence.AttachmentStorageInternal
+import net.corda.nodeapi.exceptions.DuplicateAttachmentException
 import net.corda.testing.node.StartedMockNode
 import org.junit.Test
 import java.time.Duration
@@ -35,6 +39,14 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      */
     @Test
     fun `lifecycle example`() {
+
+        listOf(gic, denise, alice, bob, charlie).forEach {
+            try {
+                (it.services.attachments as AttachmentStorageInternal).privilegedImportAttachment(DiamondGradingReport::class.java.location.openStream(), DEPLOYED_CORDAPP_UPLOADER, "test-contracts-cordapp.jar")
+            } catch (e: DuplicateAttachmentException) {
+            }
+        }
+
         // STEP 01: GIC publishes the diamond certificate
         // GIC publishes and shares with Denise
         val diamond = DiamondGradingReport("1.0", DiamondGradingReport.ColorScale.A, DiamondGradingReport.ClarityScale.A, DiamondGradingReport.CutScale.A, gic.legalIdentity(), denise.legalIdentity())

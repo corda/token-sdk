@@ -102,8 +102,9 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
                         "to one group of tokens in a transaction."
                 )
                 // No commands in this group.
-                matchedCommandValues.isEmpty() ->
+                matchedCommandValues.isEmpty() -> {
                     throw IllegalArgumentException("There is a token group with no assigned command!")
+                }
                 // This should never fail due to the above check.
                 // Handle each group individually. Although it is possible, there would not usually be a move group and
                 // an issue group in the same transaction. It doesn't make sense for privacy reasons. However, it is
@@ -118,7 +119,7 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
     }
 
     fun verifyAllTokensUseSameTypeJar(inputs: List<AbstractToken<T>>, outputs: List<AbstractToken<T>>): SecureHash {
-        val jarHashes = (inputs + outputs).map { it.tokenTypeJarHash() }.toSet()
+        val jarHashes = (inputs + outputs).map { it.tokenTypeJarHash }.toSet()
         require(jarHashes.size == 1) { "There must only be one Jar (Hash) providing TokenType: ${outputs.first().tokenType.tokenIdentifier}" }
         return jarHashes.single()
     }

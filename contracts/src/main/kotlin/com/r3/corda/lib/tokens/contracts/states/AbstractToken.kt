@@ -2,7 +2,6 @@ package com.r3.corda.lib.tokens.contracts.states
 
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.contracts.utilities.getAttachmentIdForGenericParam
 import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
@@ -36,5 +35,5 @@ interface AbstractToken<T : TokenType> : ContractState {
     /** For creating a copy of an existing [AbstractToken] with a new holder. */
     fun withNewHolder(newHolder: AbstractParty): AbstractToken<T>
 
-    fun tokenTypeJarHash(): SecureHash = tokenType.getAttachmentIdForGenericParam()
+    val tokenTypeJarHash: SecureHash
 }

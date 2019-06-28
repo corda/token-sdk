@@ -130,11 +130,11 @@ class TokenDriverTest {
 //            }.withMessageContaining("Exactly one owned token of a particular type")
 //             NodeB redeems house with the issuer (notice that issuer doesn't know about NodeB confidential identity used for the move with NodeA).
             // <-- GOES WRONG HERE
-            val redeemHouseTx = nodeB.rpc.startFlowDynamic(
-                    RedeemNonFungibleTokens::class.java,
+            val redeemHouseTx = nodeB.rpc.startFlow(
+                    ::RedeemNonFungibleTokens,
                     housePtr,
                     issuerParty,
-                    emptyList<Party>()
+                    emptyList()
             ).returnValue.getOrThrow()
             nodeB.rpc.watchForTransaction(redeemHouseTx).getOrThrow(5.seconds)
             assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken<TokenPointer<House>>>(ownedTokenCriteria(housePtr)).states).isEmpty()

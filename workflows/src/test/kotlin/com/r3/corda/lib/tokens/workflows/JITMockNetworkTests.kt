@@ -4,8 +4,11 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.testing.common.internal.testNetworkParameters
-import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
+import net.corda.testing.node.TestCordapp
+import net.corda.testing.node.internal.InternalMockNetwork
+import net.corda.testing.node.internal.TestCordappInternal
+import net.corda.testing.node.internal.TestStartedNode
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -27,14 +30,13 @@ abstract class JITMockNetworkTests(val names: List<CordaX500Name> = emptyList())
 
     constructor(numberOfNodes: Int) : this(*(1..numberOfNodes).map { "Party${it.toChar() + 64}" }.toTypedArray())
 
-    protected val network = MockNetwork(
-            cordappPackages = listOf(
-                    "com.r3.corda.lib.tokens.money",
-                    "com.r3.corda.lib.tokens.contracts",
-                    "com.r3.corda.lib.tokens.workflows"
-            ),
+    protected val network = InternalMockNetwork(
+            cordappsForAllNodes = listOf(TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")) as List<TestCordappInternal>,
             threadPerNode = true,
-            networkParameters = testNetworkParameters(minimumPlatformVersion = 4)
+            initialNetworkParameters = testNetworkParameters(minimumPlatformVersion = 4)
     )
 
     /** The nodes which makes up the network. */
@@ -45,7 +47,7 @@ abstract class JITMockNetworkTests(val names: List<CordaX500Name> = emptyList())
     }
 
     fun node(name: CordaX500Name): StartedMockNode {
-        return nodes.getOrPut(name) { network.createPartyNode(name) }
+        return nodes.getOrPut(name) { convertToStartedMockNode(network.createPartyNode(name)) }
     }
 
     fun identity(organisation: String, locality: String = DEFAULT_LOCALITY, country: String = DEFAULT_COUNTRY): Party {
@@ -53,7 +55,7 @@ abstract class JITMockNetworkTests(val names: List<CordaX500Name> = emptyList())
     }
 
     fun identity(name: CordaX500Name): Party {
-        return nodes.getOrPut(name) { network.createPartyNode(name) }.legalIdentity()
+        return nodes.getOrPut(name) { convertToStartedMockNode(network.createPartyNode(name)) }.legalIdentity()
     }
 
     @Before
@@ -72,7 +74,7 @@ abstract class JITMockNetworkTests(val names: List<CordaX500Name> = emptyList())
         startNetwork()
     }
 
-    protected val notary: StartedMockNode get() = network.defaultNotaryNode
+    protected val notary: StartedMockNode get() = convertToStartedMockNode(network.defaultNotaryNode)
 
     protected val notaryIdentity: Party get() = notary.legalIdentity()
 
@@ -85,4 +87,11 @@ abstract class JITMockNetworkTests(val names: List<CordaX500Name> = emptyList())
      * Smart helper for [assertNotHasTransaction] that passes in the test suite's network.
      */
     protected fun assertNotHasTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode) = assertNotHasTransaction(tx, network, *nodes)
+
+}
+
+fun convertToStartedMockNode(createPartyNode: TestStartedNode): StartedMockNode {
+    val declaredConstructor = StartedMockNode::class.java.getDeclaredConstructor(TestStartedNode::class.java)
+    declaredConstructor.isAccessible = true
+    return declaredConstructor.newInstance(createPartyNode)
 }

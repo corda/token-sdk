@@ -4,7 +4,6 @@ import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.crypto.SecureHash
 import net.corda.core.internal.concurrent.doneFuture
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.node.services.Vault
@@ -12,13 +11,9 @@ import net.corda.core.node.services.queryBy
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.toFuture
 import net.corda.core.transactions.SignedTransaction
-import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
-import java.time.Duration
-import java.util.concurrent.TimeoutException
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import net.corda.testing.node.internal.InternalMockNetwork
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -58,6 +53,20 @@ fun assertHasTransaction(tx: SignedTransaction, network: MockNetwork, vararg nod
     network.waitQuiescent()
     nodes.forEach {
         assertNotNull(it.services.validatedTransactions.getTransaction(tx.id), "Could not find ${tx.id} in ${it.legalIdentity()} validated transactions")
+    }
+}
+
+fun assertHasTransaction(tx: SignedTransaction, network: InternalMockNetwork, vararg nodes: StartedMockNode) {
+    network.waitQuiescent()
+    nodes.forEach {
+        assertNotNull(it.services.validatedTransactions.getTransaction(tx.id), "Could not find ${tx.id} in ${it.legalIdentity()} validated transactions")
+    }
+}
+
+fun assertNotHasTransaction(tx: SignedTransaction, network: InternalMockNetwork, vararg nodes: StartedMockNode) {
+    network.waitQuiescent()
+    nodes.forEach {
+        assertNull(it.services.validatedTransactions.getTransaction(tx.id), "Found ${tx.id} in ${it.legalIdentity()} validated transactions")
     }
 }
 

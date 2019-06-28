@@ -69,15 +69,20 @@ inline infix fun <reified T : TokenType> AbstractToken<T>.withNewHolder(newHolde
 val attachmentCache = HashMap<Class<*>, SecureHash>()
 fun TokenType.getAttachmentIdForGenericParam(): SecureHash {
     synchronized(attachmentCache) {
-        if (this.javaClass.location == TokenType::class.java.location) {
+
+        var classToSearch: Class<*> = this.javaClass
+        while (classToSearch != this.tokenClass) {
+            classToSearch = this.tokenClass
+        }
+        if (classToSearch.location == TokenType::class.java.location) {
             logger.info("${this.javaClass} is provided by tokens-sdk")
         }
-        if (!attachmentCache.containsKey(this.javaClass)) {
-            logger.info("LOOKING FOR JAR WHICH PROVIDES: ${this::class.java} FOUND AT: ${this::class.java.location.path}")
-            attachmentCache[this.javaClass] = this.javaClass.location.readBytes().sha256()
+        if (!attachmentCache.containsKey(classToSearch)) {
+            val hash = classToSearch.location.readBytes().sha256()
+            logger.info("looking for jar which provides: $classToSearch FOUND AT: ${classToSearch.location.path} with hash $hash")
+            attachmentCache[classToSearch] = hash
         }
-        return attachmentCache[this.javaClass]!!
+        return attachmentCache[classToSearch]!!
     }
-
 }
 

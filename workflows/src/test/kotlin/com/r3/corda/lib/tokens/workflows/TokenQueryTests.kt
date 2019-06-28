@@ -2,12 +2,12 @@ package com.r3.corda.lib.tokens.workflows
 
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokensOrThrow
 import com.r3.corda.lib.tokens.money.BTC
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
+import com.r3.corda.lib.tokens.testing.states.Appartment
 import com.r3.corda.lib.tokens.workflows.utilities.*
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.queryBy
@@ -38,14 +38,9 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     private val btcTokens = listOf(500.BTC)
     private val allTokens = gbpTokens + usdTokens + btcTokens
 
-    private data class SomeNonFungibleToken(
-            override val tokenIdentifier: String = "FOO",
-            override val fractionDigits: Int = 0
-    ) : TokenType
-
-    private val fooToken = SomeNonFungibleToken("FOO")
-    private val barToken = SomeNonFungibleToken("BAR")
-    private val bazToken = SomeNonFungibleToken("BAZ")
+    private val fooToken = Appartment("FOO")
+    private val barToken = Appartment("BAR")
+    private val bazToken = Appartment("BAZ")
     private val allOtherTokens = listOf(fooToken, barToken, bazToken)
 
     @Before
