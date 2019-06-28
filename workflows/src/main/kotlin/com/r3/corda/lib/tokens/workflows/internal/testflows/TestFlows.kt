@@ -120,6 +120,6 @@ class RedeemFungibleGBP(
 ): FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
-        return subFlow(RedeemFungibleTokens(amount, issuerParty, emptyList()))
+        return subFlow(RedeemFungibleTokens(amount, issuerParty, emptyList(), null))
     }
 }
