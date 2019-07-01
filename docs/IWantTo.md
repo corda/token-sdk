@@ -140,14 +140,15 @@ and issue that token on ledger.
 
 All the common flows that come with `token-sdk` have different versions. We tried to
 predict most common use cases for issue, move and redeem. So all of the flows below come in fungible and non-fungible,
-confidential, inlined and initiating versions (only redeem has slightly different form, it doesn't have confidential non-fungible flow).
+confidential, inlined and initiating versions (only redeem has slightly different form, it doesn't have confidential non-fungible flow
+as there are never any change outputs to handle).
 
 Let's take a look how these behaviours are different. While fungible and non-fungible versions are straightforward we need some more
 explanation about inline and initiating flows.
-When do we use them? General rule is that when a flow is called from another flow as a subflow, then we need to pass already
-opened sessions to it - you should use inline versions, especially when there was already communication between parties.
+When do we use them? General rule is that when a flow is a part of more complicated business logic that involves opening many
+sessions before it's called, then we could reuse already opened sessions, you should use inline versions of that flow.
 If you use wrong initiating version of the flow, you will get an error message indicating that there was mismatch in expected
-`send`/`receive` order. Initiating flows start sessions with counterparties after passing them as parameters.
+`send`/`receive` order. Initiating flows start sessions with counterparties after passing the `Party` objects as parameters.
 
 Additionally, all flows take observer sessions (or observer parties in initiating versions). Observers become important in
 transaction finalisation step. Transaction will be broadcasted to the participants as well as to the observers to be recorded
@@ -174,7 +175,7 @@ What it does internally is pretty simple, all the flows below construct an issua
 and finalise it with participants and possible observers. Distribution lists get updated after finalisation.
 Call these flows for one `TokenType` at a time. If you need to do multiple token types in one transaction then create a new
 flow, calling `addIssueTokens` for each token type.
-Confidential versions additionally generate new keys for the output holders.
+Confidential versions additionally request that the recipients generate new keys for the output holders.
 
 **Initiating**
 
@@ -251,8 +252,6 @@ This family of flows chooses owned amount of given token from vault. If you want
 come only from one issuer) use `queryCriteria`. `QueryUtilities` module provides many useful helpers i.e. `tokenAmountWithIssuerCriteria`.
 You can move many tokens to different parties in one transaction, to do so specify map of `partiesAndAmounts` respectively.
 As usual you can provide additional observers parties/sessions for finalization with other interested parties on the network.
-
-// TODO changeHolder PR
 
 **Initiating**
 
