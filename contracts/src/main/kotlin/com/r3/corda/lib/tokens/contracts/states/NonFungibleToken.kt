@@ -39,7 +39,7 @@ open class NonFungibleToken<T : TokenType>(
         val token: IssuedTokenType<T>,
         override val holder: AbstractParty,
         override val linearId: UniqueIdentifier,
-        override val tokenTypeJarHash: SecureHash = token.tokenType.getAttachmentIdForGenericParam()
+        override val tokenTypeJarHash: SecureHash? = token.tokenType.getAttachmentIdForGenericParam()
 ) : AbstractToken<T>, QueryableState, LinearState {
 
     override val issuedTokenType: IssuedTokenType<T> get() = token

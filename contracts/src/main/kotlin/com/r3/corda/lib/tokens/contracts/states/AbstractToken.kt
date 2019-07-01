@@ -35,5 +35,6 @@ interface AbstractToken<T : TokenType> : ContractState {
     /** For creating a copy of an existing [AbstractToken] with a new holder. */
     fun withNewHolder(newHolder: AbstractParty): AbstractToken<T>
 
-    val tokenTypeJarHash: SecureHash
+    /** The hash of a CorDapp JAR which implements the [TokenType] specified by the type parameter [T]. */
+    val tokenTypeJarHash: SecureHash?
 }

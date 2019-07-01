@@ -36,7 +36,7 @@ import net.corda.core.schemas.QueryableState
 class FungibleToken<T : TokenType>(
         override val amount: Amount<IssuedTokenType<T>>,
         override val holder: AbstractParty,
-        override val tokenTypeJarHash: SecureHash = amount.token.tokenType.getAttachmentIdForGenericParam()
+        override val tokenTypeJarHash: SecureHash? = amount.token.tokenType.getAttachmentIdForGenericParam()
 ) : FungibleState<IssuedTokenType<T>>, AbstractToken<T>, QueryableState {
 
     override val tokenType: T get() = amount.token.tokenType

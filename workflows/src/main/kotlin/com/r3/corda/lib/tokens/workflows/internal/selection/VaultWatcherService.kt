@@ -52,10 +52,7 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
                 }
             } else {
                 { _, _ ->
-                    //                    val kms = appServiceHub.keyManagementService as KeyManagementServiceInternal
-//                    kms.externalIdForPublicKey(stateAndRef.state.data.holder.owningKey)?:"UNKNOWN"
-
-                    "UNKNOWN"
+                    throw IllegalStateException("Only IndexingType.PUBLIC_KEY available on Corda V4")
                 }
             }
 
@@ -66,15 +63,15 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
                     paging = PageSpecification(pageNumber = currentPage, pageSize = pageSize),
                     criteria = QueryCriteria.VaultQueryCriteria(),
                     sorting = sortByStateRefAscending())
-            val listOfThings = mutableListOf<StateAndRef<FungibleToken<TokenType>>>()
+            val statesToProcess = mutableListOf<StateAndRef<FungibleToken<TokenType>>>()
             while (existingStates.states.isNotEmpty()) {
-                listOfThings.addAll(uncheckedCast(existingStates.states))
+                statesToProcess.addAll(uncheckedCast(existingStates.states))
                 existingStates = appServiceHub.vaultService.queryBy(
                         contractStateType = FungibleToken::class.java,
                         paging = PageSpecification(pageNumber = ++currentPage, pageSize = pageSize)
                 )
             }
-            return TokenObserver(listOfThings, uncheckedCast(observable), ownerProvider)
+            return TokenObserver(statesToProcess, uncheckedCast(observable), ownerProvider)
         }
 
         fun processToken(token: FungibleToken<*>): TokenIndex {

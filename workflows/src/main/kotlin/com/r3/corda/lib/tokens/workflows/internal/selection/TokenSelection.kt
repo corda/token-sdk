@@ -7,8 +7,8 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
-import com.r3.corda.lib.tokens.workflows.flows.issue.addTransactionDependencies
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
+import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
 import com.r3.corda.lib.tokens.workflows.utilities.sortByStateRefAscending
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
 import net.corda.core.contracts.Amount
@@ -249,10 +249,8 @@ class TokenSelection(
         val firstState = exitStates.first().state.data
         // Choose states to cover amount - return ones used, and change output
         val changeOutput = change(exitStates, amount, changeOwner)
-
-        addTransactionDependencies(firstState, builder)
-        changeOutput?.let { addTransactionDependencies(changeOutput, builder) }
-
+        val states = listOf(firstState) + if (changeOutput == null) emptyList() else listOf(changeOutput)
+        addTokenTypeJar(states, builder)
         val moveKey = firstState.holder.owningKey
         val issuerKey = firstState.amount.token.issuer.owningKey
         val redeemCommand = RedeemTokenCommand(firstState.amount.token)

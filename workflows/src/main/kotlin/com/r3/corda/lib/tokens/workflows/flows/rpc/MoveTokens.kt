@@ -24,15 +24,17 @@ class MoveFungibleTokens<T : TokenType>
 constructor(
         val partiesAndAmounts: List<PartyAndAmount<T>>,
         val observers: List<Party> = emptyList(),
-        val queryCriteria: QueryCriteria? = null
+        val queryCriteria: QueryCriteria? = null,
+        val changeHolder: AbstractParty? = null
 ) : FlowLogic<SignedTransaction>() {
 
     @JvmOverloads
     constructor(
             partyAndAmount: PartyAndAmount<T>,
             observers: List<Party> = emptyList(),
-            queryCriteria: QueryCriteria? = null
-    ) : this(listOf(partyAndAmount), observers, queryCriteria)
+            queryCriteria: QueryCriteria? = null,
+            changeHolder: AbstractParty? = null
+    ) : this(listOf(partyAndAmount), observers, queryCriteria, changeHolder)
 
     constructor(amount: Amount<T>, holder: AbstractParty) : this(PartyAndAmount(holder, amount), emptyList())
 
@@ -45,7 +47,8 @@ constructor(
                 partiesAndAmounts = partiesAndAmounts,
                 participantSessions = participantSessions,
                 observerSessions = observerSessions,
-                queryCriteria = queryCriteria
+                queryCriteria = queryCriteria,
+                changeHolder = changeHolder
         ))
     }
 }
@@ -105,27 +108,30 @@ class MoveNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Un
 class ConfidentialMoveFungibleTokens<T : TokenType>(
         val partiesAndAmounts: List<PartyAndAmount<T>>,
         val observers: List<Party>,
-        val queryCriteria: QueryCriteria? = null
+        val queryCriteria: QueryCriteria? = null,
+        val changeHolder: AbstractParty? = null
 ) : FlowLogic<SignedTransaction>() {
 
     constructor(
             partyAndAmount: PartyAndAmount<T>,
             observers: List<Party>,
-            queryCriteria: QueryCriteria? = null
-    ) : this(listOf(partyAndAmount), observers, queryCriteria)
+            queryCriteria: QueryCriteria? = null,
+            changeHolder: AbstractParty? = null
+    ) : this(listOf(partyAndAmount), observers, queryCriteria, changeHolder)
 
     @Suspendable
     override fun call(): SignedTransaction {
         val participants = partiesAndAmounts.map(PartyAndAmount<*>::party)
         val observerSessions = sessionsForParties(observers)
         val participantSessions = sessionsForParties(participants)
-        val changeHolder = serviceHub.keyManagementService.freshKeyAndCert(ourIdentityAndCert, false).party.anonymise()
+        val confidentialHolder = changeHolder
+                ?: serviceHub.keyManagementService.freshKeyAndCert(ourIdentityAndCert, false).party.anonymise()
         return subFlow(ConfidentialMoveFungibleTokensFlow(
                 partiesAndAmounts = partiesAndAmounts,
                 participantSessions = participantSessions,
                 observerSessions = observerSessions,
                 queryCriteria = queryCriteria,
-                changeHolder = changeHolder
+                changeHolder = confidentialHolder
         ))
     }
 }

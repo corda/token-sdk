@@ -85,5 +85,4 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
             "Holders of redeemed states must be the signing parties."
         }
     }
-
 }

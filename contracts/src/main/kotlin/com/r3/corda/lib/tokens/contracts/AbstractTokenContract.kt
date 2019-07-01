@@ -30,24 +30,24 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
      * inputs and outputs are required to verify issuances, moves and redemptions. Attachments and the timestamp
      * are not provided.
      */
-    open fun dispatchOnCommand(commands: List<CommandWithParties<TokenCommand<T>>>, inputs: List<AbstractToken<*>>, outputs: List<AbstractToken<*>>, attachments: List<Attachment>) {
-        val jarHash = verifyAllTokensUseSameTypeJar(inputs = inputs, outputs = outputs)
-        verifyTypeJarPresentInTransaction(jarHash, attachments)
+    open fun dispatchOnCommand(
+            commands: List<CommandWithParties<TokenCommand<T>>>,
+            inputs: List<U>,
+            outputs: List<U>,
+            attachments: List<Attachment>
+    ) {
+        // Get the JAR which implements the TokenType for this group.
+        val jarHash: SecureHash? = verifyAllTokensUseSameTypeJar(inputs = inputs, outputs = outputs)
+        // This group involves a custom TokenType, so we need to check the correct JAR is attached.
+        jarHash?.let { verifyTypeJarPresentInTransaction(jar = jarHash, attachments = attachments) }
         when (commands.first().value) {
-
             //verify the type jar presence and correctness
             // Issuances should only contain one issue command.
-            is IssueTokenCommand<*> -> {
-                verifyIssue(commands.single(), inputs as List<U>, outputs as List<U>, attachments)
-            }
+            is IssueTokenCommand<*> -> verifyIssue(commands.single(), inputs, outputs, attachments)
             // Moves may contain more than one move command.
-            is MoveTokenCommand<*> -> {
-                verifyMove(commands, inputs as List<U>, outputs as List<U>, attachments)
-            }
+            is MoveTokenCommand<*> -> verifyMove(commands, inputs, outputs, attachments)
             // Redeems must only contain one redeem command.
-            is RedeemTokenCommand<*> -> {
-                verifyRedeem(commands.single(), inputs as List<U>, outputs as List<U>, attachments)
-            }
+            is RedeemTokenCommand<*> -> verifyRedeem(commands.single(), inputs, outputs, attachments)
         }
     }
 
@@ -110,19 +110,19 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
         }
     }
 
-    fun verifyTypeJarPresentInTransaction(jar: SecureHash, attachments: List<Attachment>) {
+    private fun verifyTypeJarPresentInTransaction(jar: SecureHash, attachments: List<Attachment>) {
         require(jar in attachments.map { it.id }) { "Expected to find type jar: $jar in transaction attachment list, but did not" }
     }
 
-    fun verifyAllTokensUseSameTypeJar(inputs: List<AbstractToken<*>>, outputs: List<AbstractToken<*>>): SecureHash {
+    private fun verifyAllTokensUseSameTypeJar(inputs: List<AbstractToken<*>>, outputs: List<AbstractToken<*>>): SecureHash? {
         val jarHashes = (inputs + outputs).map { it.tokenTypeJarHash }.toSet()
         require(jarHashes.size == 1) { "There must only be one Jar (Hash) providing TokenType: ${outputs.first().tokenType.tokenIdentifier}" }
         return jarHashes.single()
     }
 
-    fun groupStates(tx: LedgerTransaction, selector: (TransactionState<AbstractToken<*>>) -> TokenInfo): List<InOutGroup<AbstractToken<*>, TokenInfo>> {
-        val inputs: List<TransactionState<AbstractToken<*>>> = tx.inputs.map { it.state }.mapNotNull(::castIfPossible)
-        val outputs: List<TransactionState<AbstractToken<*>>> = tx.outputs.mapNotNull(::castIfPossible)
+    private fun groupStates(tx: LedgerTransaction, selector: (TransactionState<U>) -> TokenInfo): List<InOutGroup<U, TokenInfo>> {
+        val inputs: List<TransactionState<U>> = tx.inputs.map { it.state }.mapNotNull(::castIfPossible)
+        val outputs: List<TransactionState<U>> = tx.outputs.mapNotNull(::castIfPossible)
 
         val inGroups = inputs.groupBy(selector)
         val outGroups = outputs.groupBy(selector)
@@ -134,13 +134,13 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
         return groups
     }
 
-    data class TokenInfo(val c: Class<*>, val issuedTokenType: IssuedTokenType<TokenType>, val cc: ContractClassName)
+    private data class TokenInfo(val c: Class<*>, val issuedTokenType: IssuedTokenType<TokenType>, val cc: ContractClassName)
 
     //This function checks that the underlying State is of a specific type, whilst returning the TransactionState that wraps it
-    //it also enforces the fact that each
-    private fun castIfPossible(input: (TransactionState<ContractState>)): TransactionState<AbstractToken<*>>? {
+    //it also enforces the fact that each state is of a type accepted by the current concrete contract class
+    private fun castIfPossible(input: (TransactionState<ContractState>)): TransactionState<U>? {
         return if (AbstractToken::class.java.isInstance(input.data) && accepts.isInstance(input.data)) {
-            input as TransactionState<AbstractToken<*>>
+            input as TransactionState<U>
         } else {
             null
         }

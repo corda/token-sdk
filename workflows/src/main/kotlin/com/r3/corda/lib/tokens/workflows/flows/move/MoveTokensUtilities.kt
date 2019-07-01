@@ -5,11 +5,11 @@ import com.r3.corda.lib.tokens.contracts.commands.MoveTokenCommand
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.workflows.flows.issue.addTransactionDependencies
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateMoveNonFungible
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
+import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowLogic
@@ -52,8 +52,7 @@ fun <T : TokenType> addMoveTokens(
         }
     }
 
-    addTransactionDependencies(inputs, transactionBuilder)
-    addTransactionDependencies(outputs, transactionBuilder)
+    addTokenTypeJar(inputs.map { it.state.data } + outputs, transactionBuilder)
 
     return transactionBuilder
 }
@@ -72,12 +71,12 @@ fun <T : TokenType> addMoveTokens(
 
 /**
  * Adds multiple token moves to transaction. [partiesAndAmounts] parameter specify which parties should receive amounts of the token.
- * With possible change paid to [changeHolder].
- * Provide optional [queryCriteria] for move generation.
+ * With possible change paid to [changeHolder]. This method will combine multiple token amounts from different issuers if needed.
+ * If you would like to choose only tokens from one issuer you can provide optional [queryCriteria] for move generation.
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addMoveTokens(
+fun <T : TokenType> addMoveFungibleTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         partiesAndAmounts: List<PartyAndAmount<T>>,
@@ -96,11 +95,12 @@ fun <T : TokenType> addMoveTokens(
 
 /**
  * Add single move of [amount] of token to the new [holder]. Possible change output will be paid to [changeHolder].
- * Provide optional [queryCriteria] for move generation.
+ * This method will combine multiple token amounts from different issuers if needed.
+ * If you would like to choose only tokens from one issuer you can provide optional [queryCriteria] for move generation.
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addMoveTokens(
+fun <T : TokenType> addMoveFungibleTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         amount: Amount<T>,
@@ -108,7 +108,7 @@ fun <T : TokenType> addMoveTokens(
         changeHolder: AbstractParty,
         queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    return addMoveTokens(
+    return addMoveFungibleTokens(
             transactionBuilder = transactionBuilder,
             serviceHub = serviceHub,
             partyAndAmount = PartyAndAmount(holder, amount),
@@ -117,20 +117,22 @@ fun <T : TokenType> addMoveTokens(
     )
 }
 
+// TODO don't need it
 /**
  * Add single move of amount of token to the new holder specified by [partyAndAmount] parameter. Possible change output will be paid to [changeHolder].
- * Provide optional [queryCriteria] for move generation.
+ * This method will combine multiple token amounts from different issuers if needed.
+ * If you would like to choose only tokens from one issuer you can provide optional [queryCriteria] for move generation.
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addMoveTokens(
+fun <T : TokenType> addMoveFungibleTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         partyAndAmount: PartyAndAmount<T>,
         changeHolder: AbstractParty,
         queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    return addMoveTokens(
+    return addMoveFungibleTokens(
             transactionBuilder = transactionBuilder,
             serviceHub = serviceHub,
             partiesAndAmounts = listOf(partyAndAmount),
@@ -147,7 +149,7 @@ fun <T : TokenType> addMoveTokens(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addMoveTokens(
+fun <T : TokenType> addMoveNonFungibleTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         token: T,
@@ -157,13 +159,14 @@ fun <T : TokenType> addMoveTokens(
     return generateMoveNonFungible(transactionBuilder, PartyAndToken(holder, token), serviceHub.vaultService, queryCriteria)
 }
 
+// TODO don't need it
 /**
  * Add single move of token to the new holder specified using [partyAndToken] parameter.
  * Provide optional [queryCriteria] for move generation.
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addMoveTokens(
+fun <T : TokenType> addMoveNonFungibleTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         partyAndToken: PartyAndToken<T>,
@@ -185,7 +188,7 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         partyAndToken: PartyAndToken<T>,
         queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    return addMoveTokens(transactionBuilder, serviceHub, partyAndToken, queryCriteria)
+    return addMoveNonFungibleTokens(transactionBuilder, serviceHub, partyAndToken, queryCriteria)
 }
 
 /**
@@ -200,12 +203,13 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         holder: AbstractParty,
         queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    return addMoveTokens(transactionBuilder, serviceHub, token, holder, queryCriteria)
+    return addMoveNonFungibleTokens(transactionBuilder, serviceHub, token, holder, queryCriteria)
 }
 
 /**
  * Add single move of [amount] of token to the new [holder]. Possible change output will be paid to [changeHolder].
- * Provide optional [queryCriteria] for move generation.
+ * This method will combine multiple token amounts from different issuers if needed.
+ * If you would like to choose only tokens from one issuer you can provide optional [queryCriteria] for move generation.
  */
 @Suspendable
 @JvmOverloads
@@ -216,12 +220,13 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         changeHolder: AbstractParty,
         queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    return addMoveTokens(transactionBuilder, serviceHub, amount, holder, changeHolder, queryCriteria)
+    return addMoveFungibleTokens(transactionBuilder, serviceHub, amount, holder, changeHolder, queryCriteria)
 }
 
 /**
  * Add single move of amount of token to the new holder specified by [partyAndAmount] parameter. Possible change output will be paid to [changeHolder].
- * Provide optional [queryCriteria] for move generation.
+ * This method will combine multiple token amounts from different issuers if needed.
+ * If you would like to choose only tokens from one issuer you can provide optional [queryCriteria] for move generation.
  */
 @Suspendable
 @JvmOverloads
@@ -231,13 +236,14 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         changeHolder: AbstractParty,
         queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    return addMoveTokens(transactionBuilder, serviceHub, partyAndAmount, changeHolder, queryCriteria)
+    return addMoveFungibleTokens(transactionBuilder, serviceHub, partyAndAmount, changeHolder, queryCriteria)
 }
 
 /**
  * Adds multiple token moves to transaction. [partiesAndAmounts] parameter specify which parties should receive amounts of the token.
  * With possible change paid to [changeHolder].
- * Provide optional [queryCriteria] for move generation.
+ * This method will combine multiple token amounts from different issuers if needed.
+ * If you would like to choose only tokens from one issuer you can provide optional [queryCriteria] for move generation.
  */
 @Suspendable
 @JvmOverloads
@@ -247,5 +253,5 @@ fun <T : TokenType> FlowLogic<*>.addMoveTokens(
         changeHolder: AbstractParty,
         queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    return addMoveTokens(transactionBuilder, serviceHub, partiesAndAmounts, changeHolder, queryCriteria)
+    return addMoveFungibleTokens(transactionBuilder, serviceHub, partiesAndAmounts, changeHolder, queryCriteria)
 }

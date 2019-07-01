@@ -5,16 +5,12 @@ import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.contracts.utilities.TokenUtilities.Companion.logger
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionState
-import net.corda.core.crypto.SecureHash
-import net.corda.core.crypto.sha256
 import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
-import net.corda.core.internal.location
 import net.corda.core.utilities.contextLogger
 
 class TokenUtilities {
@@ -65,24 +61,3 @@ val AbstractToken<*>.holderString: String
         (holder as? Party)?.name?.organisation ?: holder.owningKey.toStringShort().substring(0, 16)
 
 inline infix fun <reified T : TokenType> AbstractToken<T>.withNewHolder(newHolder: AbstractParty) = withNewHolder(newHolder)
-
-val attachmentCache = HashMap<Class<*>, SecureHash>()
-fun TokenType.getAttachmentIdForGenericParam(): SecureHash {
-    synchronized(attachmentCache) {
-
-        var classToSearch: Class<*> = this.javaClass
-        while (classToSearch != this.tokenClass) {
-            classToSearch = this.tokenClass
-        }
-        if (classToSearch.location == TokenType::class.java.location) {
-            logger.info("${this.javaClass} is provided by tokens-sdk")
-        }
-        if (!attachmentCache.containsKey(classToSearch)) {
-            val hash = classToSearch.location.readBytes().sha256()
-            logger.info("looking for jar which provides: $classToSearch FOUND AT: ${classToSearch.location.path} with hash $hash")
-            attachmentCache[classToSearch] = hash
-        }
-        return attachmentCache[classToSearch]!!
-    }
-}
-
