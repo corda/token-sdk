@@ -1,7 +1,7 @@
-package com.r3.corda.lib.tokens.workflows.contracts
+package com.r3.corda.lib.tokens.testing.contracts
 
 import com.r3.corda.lib.tokens.contracts.EvolvableTokenContract
-import com.r3.corda.lib.tokens.workflows.states.DiamondGradingReport
+import com.r3.corda.lib.tokens.testing.states.DiamondGradingReport
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.requireThat
 import net.corda.core.transactions.LedgerTransaction

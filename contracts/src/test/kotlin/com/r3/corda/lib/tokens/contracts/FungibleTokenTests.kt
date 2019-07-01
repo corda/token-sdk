@@ -3,11 +3,14 @@ package com.r3.corda.lib.tokens.contracts
 import com.r3.corda.lib.tokens.contracts.commands.IssueTokenCommand
 import com.r3.corda.lib.tokens.contracts.commands.MoveTokenCommand
 import com.r3.corda.lib.tokens.contracts.commands.RedeemTokenCommand
+import com.r3.corda.lib.tokens.contracts.states.FungibleToken
+import com.r3.corda.lib.tokens.contracts.utilities.getAttachmentIdForGenericParam
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
+import com.r3.corda.lib.tokens.testing.states.RUB
 import net.corda.core.contracts.Amount
 import org.junit.Test
 
@@ -16,10 +19,13 @@ class FungibleTokenTests : ContractTestCommon() {
 
     @Test
     fun `issue token tests`() {
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
+
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
             // Start with only one output.
             output(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+            attachment(gbpHash)
             // No command fails.
             tweak {
                 this `fails with` "A transaction must contain at least one command"
@@ -106,11 +112,15 @@ class FungibleTokenTests : ContractTestCommon() {
 
     @Test
     fun `move token tests`() {
+
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
+
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
             // Start with a basic move which moves 10 tokens in entirety from ALICE to BOB.
             input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
             output(FungibleTokenContract.contractId, 10 of issuedToken heldBy BOB.party)
+            attachment(gbpHash)
 
             // Add the move command, signed by ALICE.
             tweak {
@@ -228,11 +238,13 @@ class FungibleTokenTests : ContractTestCommon() {
 
     @Test
     fun `redeem token tests`() {
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
         val issuedToken = GBP issuedBy ISSUER.party
         val otherIssuerToken = GBP issuedBy BOB.party
         transaction {
             // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
             input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+            attachment(gbpHash)
 
             // Add the redeem command, signed by the ISSUER.
             tweak {
@@ -328,6 +340,37 @@ class FungibleTokenTests : ContractTestCommon() {
                 command(listOf(BOB.publicKey, ALICE.publicKey), RedeemTokenCommand(otherIssuerToken))
                 this `fails with` "When redeeming tokens an amount > ZERO must be redeemed."
             }
+        }
+    }
+
+    @Test
+    fun `should enforce the presence of the token type jar`() {
+        val issuedToken = GBP issuedBy ISSUER.party
+        transaction {
+            output(FungibleTokenContract.contractId, 10 of issuedToken heldBy BOB.party)
+            command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
+            this.failsWith("Expected to find type jar:")
+
+
+            tweak {
+                attachment(GBP.importAttachment(aliceServices.attachments))
+                verifies()
+            }
+        }
+    }
+
+    @Test
+    fun `should enforce that the hash providing the token type cannot change during a transaction`() {
+        val issuedToken = GBP issuedBy ISSUER.party
+        transaction {
+            input(FungibleTokenContract.contractId, 10 of issuedToken heldBy BOB.party)
+            output(FungibleTokenContract.contractId, FungibleToken(10 of issuedToken, BOB.party, RUB.getAttachmentIdForGenericParam()))
+            command(BOB.party.owningKey, MoveTokenCommand(issuedToken))
+
+            attachment(GBP.importAttachment(aliceServices.attachments))
+            attachment(RUB.importAttachment(aliceServices.attachments))
+
+            this.failsWith("There must only be one Jar (Hash) providing TokenType: GBP")
         }
     }
 }

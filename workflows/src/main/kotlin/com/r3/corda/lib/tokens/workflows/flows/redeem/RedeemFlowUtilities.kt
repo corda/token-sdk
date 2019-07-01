@@ -11,6 +11,7 @@ import com.r3.corda.lib.tokens.workflows.internal.checkSameNotary
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateExitNonFungible
 import com.r3.corda.lib.tokens.workflows.utilities.addNotaryWithCheck
+import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
 import com.r3.corda.lib.tokens.workflows.utilities.ownedTokensByTokenIssuer
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountWithIssuerCriteria
 import net.corda.core.contracts.Amount
@@ -49,8 +50,11 @@ fun <T : TokenType> addTokensToRedeem(
         if (changeOutput != null) addOutputState(changeOutput)
         addCommand(redeemCommand, issuerKey, moveKey)
     }
+    val states = inputs.map { it.state.data } + if (changeOutput == null) emptyList() else listOf(changeOutput)
+    addTokenTypeJar(states, transactionBuilder)
     return transactionBuilder
 }
+
 
 /**
  * Redeem non-fungible [ownedToken] issued by the [issuer] and add it to the [transactionBuilder].

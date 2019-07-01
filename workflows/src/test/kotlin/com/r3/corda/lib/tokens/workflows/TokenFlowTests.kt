@@ -6,11 +6,11 @@ import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.contracts.utilities.sumIssuedTokensOrNull
 import com.r3.corda.lib.tokens.money.GBP
+import com.r3.corda.lib.tokens.testing.statesAndContracts.House
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveFungibleTokens
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistributionList
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
-import com.r3.corda.lib.tokens.workflows.statesAndContracts.House
 import com.r3.corda.lib.tokens.workflows.utilities.getLinearStateById
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountsByToken
 import com.r3.corda.lib.tokens.workflows.utilities.tokenBalance

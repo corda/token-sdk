@@ -6,11 +6,13 @@ import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentNonFungibleT
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.contracts.utilities.getAttachmentIdForGenericParam
 import com.r3.corda.lib.tokens.contracts.utilities.holderString
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
@@ -36,19 +38,20 @@ import net.corda.core.schemas.QueryableState
 open class NonFungibleToken<T : TokenType>(
         val token: IssuedTokenType<T>,
         override val holder: AbstractParty,
-        override val linearId: UniqueIdentifier
+        override val linearId: UniqueIdentifier,
+        override val tokenTypeJarHash: SecureHash? = token.tokenType.getAttachmentIdForGenericParam()
 ) : AbstractToken<T>, QueryableState, LinearState {
 
     override val issuedTokenType: IssuedTokenType<T> get() = token
 
-    override val tokenType: T get() = token.tokenType
+    final override val tokenType: T get() = token.tokenType
 
     override val issuer: Party get() = token.issuer
 
     override fun toString(): String = "$token owned by $holderString"
 
     override fun withNewHolder(newHolder: AbstractParty): NonFungibleToken<T> {
-        return NonFungibleToken(token = token, holder = newHolder, linearId = linearId)
+        return NonFungibleToken(token = token, holder = newHolder, linearId = linearId, tokenTypeJarHash = tokenTypeJarHash)
     }
 
     override fun generateMappedObject(schema: MappedSchema): PersistentState = when (schema) {

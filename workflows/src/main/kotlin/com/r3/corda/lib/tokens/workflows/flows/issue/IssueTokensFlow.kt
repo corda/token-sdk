@@ -9,6 +9,7 @@ import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
+import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
 import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
@@ -79,6 +80,7 @@ constructor(
         val transactionBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
         // Add all the specified tokensToIssue to the transaction. The correct commands and signing keys are also added.
         addIssueTokens(transactionBuilder, tokensToIssue)
+        addTokenTypeJar(tokensToIssue, transactionBuilder)
         // Create new participantSessions if this is started as a top level flow.
         val signedTransaction = subFlow(
                 ObserverAwareFinalityFlow(

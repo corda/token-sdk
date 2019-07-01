@@ -1,12 +1,12 @@
 package com.r3.corda.lib.tokens.workflows
 
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.money.FiatCurrency
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
+import com.r3.corda.lib.tokens.testing.states.Appartment
 import com.r3.corda.lib.tokens.workflows.utilities.ownedTokenAmountCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.ownedTokensByToken
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountsByToken
@@ -26,13 +26,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     lateinit var B: StartedMockNode
     lateinit var I: StartedMockNode
 
-    // TODO Refactor to test utils. It's used in other tests too.
-    private data class SomeNonFungibleToken(
-            override val tokenIdentifier: String = "FOO",
-            override val fractionDigits: Int = 0
-    ) : TokenType
-
-    private val fooToken = SomeNonFungibleToken("FOO")
+    private val fooToken = Appartment("FOO")
 
     @Before
     override fun initialiseNodes() {

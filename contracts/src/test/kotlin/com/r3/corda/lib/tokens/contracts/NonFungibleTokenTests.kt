@@ -2,21 +2,20 @@ package com.r3.corda.lib.tokens.contracts
 
 import com.r3.corda.lib.tokens.contracts.commands.IssueTokenCommand
 import com.r3.corda.lib.tokens.contracts.commands.MoveTokenCommand
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.contracts.utilities.withNewHolder
+import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
+import com.r3.corda.lib.tokens.testing.states.PTK
+import com.r3.corda.lib.tokens.testing.states.RUB
 import org.junit.Test
 
 // TODO: Some of these tests are testing AbstractToken and duplicate those in FungibleTokenTests. Move to superclass.
 class NonFungibleTokenTests : ContractTestCommon() {
 
-    object PTK : TokenType {
-        override val tokenIdentifier: String = "PTK"
-        override val fractionDigits: Int = 0
-    }
+
 
     private val issuedToken = PTK issuedBy ISSUER.party
 
@@ -25,6 +24,8 @@ class NonFungibleTokenTests : ContractTestCommon() {
         transaction {
             // Start with only one output.
             output(NonFungibleTokenContract.contractId, issuedToken heldBy ALICE.party)
+            attachment(issuedToken.tokenType.importAttachment(aliceServices.attachments))
+            attachment(GBP.importAttachment(aliceServices.attachments))
             // No command fails.
             tweak {
                 this `fails with` "A transaction must contain at least one command"
@@ -97,11 +98,14 @@ class NonFungibleTokenTests : ContractTestCommon() {
 
     @Test
     fun `move non fungible token tests`() {
-        val heldToken = issuedToken heldBy ALICE.party
+        val heldByAlice = issuedToken heldBy ALICE.party
+        val heldByBob = heldByAlice withNewHolder BOB.party
         transaction {
             // Start with a basic move which moves 10 tokens in entirety from ALICE to BOB.
-            input(NonFungibleTokenContract.contractId, heldToken)
-            output(NonFungibleTokenContract.contractId, heldToken withNewHolder BOB.party)
+            input(NonFungibleTokenContract.contractId, heldByAlice)
+            output(NonFungibleTokenContract.contractId, heldByBob)
+            attachment(PTK.importAttachment(aliceServices.attachments))
+            attachment(USD.importAttachment(aliceServices.attachments))
 
             // Add the move command, signed by ALICE.
             tweak {
@@ -120,7 +124,8 @@ class NonFungibleTokenTests : ContractTestCommon() {
 
             // Input missing.
             tweak {
-                output(FungibleTokenContract.contractId, issuedToken issuedBy BOB.party heldBy BOB.party)
+                val output = issuedToken issuedBy BOB.party heldBy BOB.party
+                output(FungibleTokenContract.contractId, output)
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken issuedBy BOB.party))
                 // Command for the move.
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken))
@@ -138,7 +143,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
 
             // Two moves (two different groups).
             tweak {
-                val anotherIssuedToken = PTK issuedBy CHARLIE.party
+                val anotherIssuedToken = RUB issuedBy CHARLIE.party
                 val anotherIssuedTokenHeldByAlice = anotherIssuedToken heldBy ALICE.party
                 input(NonFungibleTokenContract.contractId, anotherIssuedTokenHeldByAlice)
                 output(NonFungibleTokenContract.contractId, anotherIssuedTokenHeldByAlice withNewHolder BOB.party)

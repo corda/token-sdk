@@ -3,11 +3,11 @@ package com.r3.corda.lib.tokens.contracts
 import com.r3.corda.lib.tokens.contracts.commands.Create
 import com.r3.corda.lib.tokens.contracts.commands.IssueTokenCommand
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
+import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
-import com.r3.corda.lib.tokens.contracts.utilities.heldBy
-import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
-import com.r3.corda.lib.tokens.contracts.utilities.of
-import com.r3.corda.lib.tokens.contracts.utilities.singleOutput
+import com.r3.corda.lib.tokens.contracts.utilities.*
+import com.r3.corda.lib.tokens.money.FiatCurrency
+import com.r3.corda.lib.tokens.money.GBP
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SignableData
 import net.corda.core.crypto.SignatureMetadata
@@ -52,5 +52,14 @@ class TokenPointerTests : ContractTestCommon() {
         val ledgerTransaction = testTransaction.toLedgerTransaction(aliceServices)
         val fungibleToken = ledgerTransaction.singleOutput<FungibleToken<TokenPointer<TestEvolvableTokenType>>>()
         assertEquals(fungibleToken.tokenType.pointer.resolve(ledgerTransaction), outputStateAndRef)
+    }
+
+    @Test
+    fun `tokenTypeJarHash must be not null if tokenType is not a pointer`() {
+        val pointer: TokenPointer<TestEvolvableTokenType> = TestEvolvableTokenType(listOf(ALICE.party)).toPointer()
+        val pointerToken: NonFungibleToken<TokenPointer<TestEvolvableTokenType>> = pointer issuedBy ISSUER.party heldBy ALICE.party
+        val staticToken: NonFungibleToken<FiatCurrency> = GBP issuedBy ISSUER.party heldBy ALICE.party
+        assertEquals(pointerToken.tokenTypeJarHash, null)
+        assertEquals(staticToken.tokenTypeJarHash, GBP.getAttachmentIdForGenericParam())
     }
 }

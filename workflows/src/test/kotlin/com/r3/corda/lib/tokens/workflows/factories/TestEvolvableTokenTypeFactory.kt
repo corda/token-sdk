@@ -1,7 +1,7 @@
 package com.r3.corda.lib.tokens.workflows.factories
 
+import com.r3.corda.lib.tokens.testing.states.TestEvolvableTokenType
 import com.r3.corda.lib.tokens.workflows.JITMockNetworkTests
-import com.r3.corda.lib.tokens.workflows.states.TestEvolvableTokenType
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.Party
 

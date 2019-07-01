@@ -1,7 +1,7 @@
-package com.r3.corda.lib.tokens.workflows.states
+package com.r3.corda.lib.tokens.testing.states
 
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
-import com.r3.corda.lib.tokens.workflows.contracts.DiamondGradingReportContract
+import com.r3.corda.lib.tokens.testing.contracts.DiamondGradingReportContract
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.Party

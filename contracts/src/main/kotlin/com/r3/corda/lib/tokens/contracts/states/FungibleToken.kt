@@ -6,10 +6,12 @@ import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleToke
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.contracts.utilities.getAttachmentIdForGenericParam
 import com.r3.corda.lib.tokens.contracts.utilities.holderString
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.FungibleState
+import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
@@ -31,9 +33,10 @@ import net.corda.core.schemas.QueryableState
  * @param T the [TokenType] this [FungibleToken] state is in respect of.
  */
 @BelongsToContract(FungibleTokenContract::class)
-open class FungibleToken<T : TokenType>(
+class FungibleToken<T : TokenType>(
         override val amount: Amount<IssuedTokenType<T>>,
-        override val holder: AbstractParty
+        override val holder: AbstractParty,
+        override val tokenTypeJarHash: SecureHash? = amount.token.tokenType.getAttachmentIdForGenericParam()
 ) : FungibleState<IssuedTokenType<T>>, AbstractToken<T>, QueryableState {
 
     override val tokenType: T get() = amount.token.tokenType
@@ -45,7 +48,7 @@ open class FungibleToken<T : TokenType>(
     override fun toString(): String = "$amount owned by $holderString"
 
     override fun withNewHolder(newHolder: AbstractParty): FungibleToken<T> {
-        return FungibleToken(amount = amount, holder = newHolder)
+        return FungibleToken(amount = amount, holder = newHolder, tokenTypeJarHash = tokenTypeJarHash)
     }
 
     override fun generateMappedObject(schema: MappedSchema): PersistentState = when (schema) {

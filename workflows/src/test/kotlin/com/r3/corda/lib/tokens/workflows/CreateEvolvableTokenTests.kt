@@ -1,8 +1,8 @@
 package com.r3.corda.lib.tokens.workflows
 
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
+import com.r3.corda.lib.tokens.testing.states.TestEvolvableTokenType
 import com.r3.corda.lib.tokens.workflows.factories.TestEvolvableTokenTypeFactory
-import com.r3.corda.lib.tokens.workflows.states.TestEvolvableTokenType
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
 import org.junit.Test

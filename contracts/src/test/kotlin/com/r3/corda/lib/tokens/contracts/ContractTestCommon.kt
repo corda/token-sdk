@@ -6,10 +6,14 @@ import com.nhaarman.mockito_kotlin.whenever
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.contracts.utilities.getAttachmentIdForGenericParam
 import net.corda.core.contracts.TypeOnlyCommandData
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.CordaX500Name
+import net.corda.core.internal.DEPLOYED_CORDAPP_UPLOADER
+import net.corda.core.internal.location
 import net.corda.core.node.NotaryInfo
 import net.corda.node.services.api.IdentityServiceInternal
 import net.corda.testing.common.internal.testNetworkParameters
@@ -21,6 +25,7 @@ import net.corda.testing.dsl.TransactionDSL
 import net.corda.testing.dsl.TransactionDSLInterpreter
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.transaction
+import net.corda.testing.services.MockAttachmentStorage
 import org.junit.Rule
 
 abstract class ContractTestCommon {
@@ -70,4 +75,16 @@ infix fun <T : TokenType> IssuedTokenType<T>.heldBy(owner: AbstractParty): NonFu
 
 private infix fun <T : TokenType> IssuedTokenType<T>._heldBy(owner: AbstractParty): NonFungibleToken<T> {
     return NonFungibleToken(this, owner, UniqueIdentifier())
+
+
+}
+
+fun TokenType.importAttachment(storage: MockAttachmentStorage): SecureHash {
+    val hash = this.getAttachmentIdForGenericParam()
+            ?: throw IllegalStateException("Null should never be returned when testing as TokenTypes are always " +
+                    "defined in separate JARs.")
+    if (!storage.hasAttachment(hash)) {
+        storage.importAttachment(this.javaClass.location.openStream(), DEPLOYED_CORDAPP_UPLOADER, this.javaClass.location.file)
+    }
+    return hash
 }

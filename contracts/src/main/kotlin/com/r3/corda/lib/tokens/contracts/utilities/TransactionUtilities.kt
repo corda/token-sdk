@@ -2,11 +2,15 @@ package com.r3.corda.lib.tokens.contracts.utilities
 
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
+import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
+import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.sha256
 import net.corda.core.identity.Party
+import net.corda.core.internal.location
 import net.corda.core.transactions.LedgerTransaction
 
 // Transaction helpers.
@@ -69,4 +73,34 @@ fun <T : TokenType> Iterable<StateAndRef<FungibleToken<T>>>.filterTokenStateAndR
         issuer: Party
 ): List<StateAndRef<FungibleToken<T>>> {
     return filter { it.state.data.amount.token.issuer == issuer }
+}
+
+// Utilities for ensuring that the JAR which implements the specified TokenType is added to the transaction.
+
+internal val attachmentCache = HashMap<Class<*>, SecureHash>()
+
+/**
+ * If the [TokenType] is not a [TokenPointer] this function discovers the JAR which implements the receiving [TokenType].
+ */
+fun TokenType.getAttachmentIdForGenericParam(): SecureHash? {
+    synchronized(attachmentCache) {
+        var classToSearch: Class<*> = this.javaClass
+        while (classToSearch != this.tokenClass && classToSearch != TokenPointer::class.java) {
+            classToSearch = this.tokenClass
+        }
+        // The TokenType is a TokenPointer provided by com.r3.corda.lib.tokens.contracts which is already attached to
+        // the transaction.
+        if (classToSearch.location == TokenType::class.java.location) {
+            TokenUtilities.logger.info("${this.javaClass} is provided by tokens-sdk")
+            return null
+        }
+        // The TokenType is implemented in another JAR. Record it.
+        if (!attachmentCache.containsKey(classToSearch)) {
+            val hash = classToSearch.location.readBytes().sha256()
+            TokenUtilities.logger.info("looking for jar which provides: $classToSearch FOUND AT: " +
+                    "${classToSearch.location.path} with hash $hash")
+            attachmentCache[classToSearch] = hash
+        }
+        return attachmentCache[classToSearch]!!
+    }
 }

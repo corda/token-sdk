@@ -1,4 +1,4 @@
-package com.r3.corda.lib.tokens.workflows.statesAndContracts
+package com.r3.corda.lib.tokens.testing.statesAndContracts
 
 import com.r3.corda.lib.tokens.contracts.EvolvableTokenContract
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType

@@ -2,7 +2,7 @@ package com.r3.corda.lib.tokens.workflows
 
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
-import com.r3.corda.lib.tokens.workflows.states.DiamondGradingReport
+import com.r3.corda.lib.tokens.testing.states.DiamondGradingReport
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
 import org.junit.Test
@@ -35,6 +35,7 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      */
     @Test
     fun `lifecycle example`() {
+
         // STEP 01: GIC publishes the diamond certificate
         // GIC publishes and shares with Denise
         val diamond = DiamondGradingReport("1.0", DiamondGradingReport.ColorScale.A, DiamondGradingReport.ClarityScale.A, DiamondGradingReport.CutScale.A, gic.legalIdentity(), denise.legalIdentity())

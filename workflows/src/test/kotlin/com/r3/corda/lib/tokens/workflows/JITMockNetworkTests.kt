@@ -5,7 +5,10 @@ import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.node.MockNetwork
+import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
+import net.corda.testing.node.TestCordapp
+import net.corda.testing.node.internal.TestStartedNode
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -27,14 +30,14 @@ abstract class JITMockNetworkTests(val names: List<CordaX500Name> = emptyList())
 
     constructor(numberOfNodes: Int) : this(*(1..numberOfNodes).map { "Party${it.toChar() + 64}" }.toTypedArray())
 
-    protected val network = MockNetwork(
-            cordappPackages = listOf(
-                    "com.r3.corda.lib.tokens.money",
-                    "com.r3.corda.lib.tokens.contracts",
-                    "com.r3.corda.lib.tokens.workflows"
-            ),
+    protected val network = MockNetwork(parameters = MockNetworkParameters(
+            cordappsForAllNodes = listOf(TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")),
             threadPerNode = true,
             networkParameters = testNetworkParameters(minimumPlatformVersion = 4)
+    )
     )
 
     /** The nodes which makes up the network. */
@@ -85,4 +88,11 @@ abstract class JITMockNetworkTests(val names: List<CordaX500Name> = emptyList())
      * Smart helper for [assertNotHasTransaction] that passes in the test suite's network.
      */
     protected fun assertNotHasTransaction(tx: SignedTransaction, vararg nodes: StartedMockNode) = assertNotHasTransaction(tx, network, *nodes)
+
+}
+
+fun convertToStartedMockNode(createPartyNode: TestStartedNode): StartedMockNode {
+    val declaredConstructor = StartedMockNode::class.java.getDeclaredConstructor(TestStartedNode::class.java)
+    declaredConstructor.isAccessible = true
+    return declaredConstructor.newInstance(createPartyNode)
 }

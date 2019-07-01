@@ -4,7 +4,9 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.internal.chooseIdentity
 import net.corda.testing.node.MockNetwork
+import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
+import net.corda.testing.node.TestCordapp
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -20,14 +22,14 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
 
     constructor(numberOfNodes: Int) : this(*(1..numberOfNodes).map { "Party${it.toChar() + 64}" }.toTypedArray())
 
-    protected val network = MockNetwork(
-            cordappPackages = listOf(
-                    "com.r3.corda.lib.tokens.money",
-                    "com.r3.corda.lib.tokens.contracts",
-                    "com.r3.corda.lib.tokens.workflows"
-            ),
+    protected val network = MockNetwork(parameters = MockNetworkParameters(
+            cordappsForAllNodes = listOf(TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")),
             threadPerNode = true,
             networkParameters = testNetworkParameters(minimumPlatformVersion = 4)
+    )
     )
 
     /** The nodes which makes up the network. */
@@ -55,5 +57,4 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
     }
 
     protected val NOTARY: StartedMockNode get() = network.defaultNotaryNode
-
 }

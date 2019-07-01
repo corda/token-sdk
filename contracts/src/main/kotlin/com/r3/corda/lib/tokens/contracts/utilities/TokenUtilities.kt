@@ -11,6 +11,14 @@ import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
+import net.corda.core.utilities.contextLogger
+
+class TokenUtilities {
+    companion object {
+        val logger = contextLogger()
+
+    }
+}
 
 // ------------------------------------------------------
 // Creates a tokens from (amounts of) issued token types.
