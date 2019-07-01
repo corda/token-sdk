@@ -8,6 +8,12 @@ open class Ruble : TokenType {
         get() = "рубль"
     override val fractionDigits: Int
         get() = 0
+
+    override fun toString(): String {
+        return "Ruble(tokenIdentifier: ${tokenIdentifier}, fractionDigits: ${fractionDigits})"
+    }
+
+
 }
 
 object RUB : Ruble()
@@ -16,6 +22,11 @@ object RUB : Ruble()
 open class THING : TokenType {
     override val tokenIdentifier: String = "PTK"
     override val fractionDigits: Int = 0
+
+    override fun toString(): String {
+        return "THING(tokenIdentifier: ${tokenIdentifier}, fractionDigits: ${fractionDigits})"
+    }
+
 }
 
 object PTK : THING()
