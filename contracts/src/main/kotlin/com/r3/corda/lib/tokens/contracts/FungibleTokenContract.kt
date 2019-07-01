@@ -90,9 +90,8 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
         // or all the public keys might be listed within one command.
         val inputOwningKeys: Set<PublicKey> = inputs.map { it.holder.owningKey }.toSet()
         val signers: Set<PublicKey> = moveCommands.flatMap(CommandWithParties<TokenCommand<T>>::signers).toSet()
-        require(inputOwningKeys == signers) {
-            "There are required signers missing or some of the specified signers are not required. A transaction " +
-                    "to move token amounts must be signed by ONLY ALL the owners of ALL the input token amounts."
+        require(signers.containsAll(inputOwningKeys)) {
+            "Required signers does not contain all the current owners of the tokens being moved"
         }
 
 

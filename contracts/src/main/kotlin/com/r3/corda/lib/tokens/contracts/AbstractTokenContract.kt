@@ -6,6 +6,7 @@ import com.r3.corda.lib.tokens.contracts.commands.RedeemTokenCommand
 import com.r3.corda.lib.tokens.contracts.commands.TokenCommand
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
+import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.*
 import net.corda.core.crypto.SecureHash
@@ -114,10 +115,23 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
         require(jar in attachments.map { it.id }) { "Expected to find type jar: $jar in transaction attachment list, but did not" }
     }
 
-    private fun verifyAllTokensUseSameTypeJar(inputs: List<AbstractToken<*>>, outputs: List<AbstractToken<*>>): SecureHash? {
-        val jarHashes = (inputs + outputs).map { it.tokenTypeJarHash }.toSet()
-        require(jarHashes.size == 1) { "There must only be one Jar (Hash) providing TokenType: ${outputs.first().tokenType.tokenIdentifier}" }
-        return jarHashes.single()
+    private fun verifyAllTokensUseSameTypeJar(inputs: List<AbstractToken<T>>, outputs: List<AbstractToken<T>>): SecureHash? {
+        val inputsAndOutputs = inputs + outputs
+        val tokenTypes = inputsAndOutputs.map(AbstractToken<*>::tokenType).toSet()
+
+        require(tokenTypes.size == 1) { "There should only be one TokenType per group" }
+        val tokenType = tokenTypes.single()
+        return if (tokenType is TokenPointer<*>) {
+            // The TokenPointer is implemented in the tokens-contracts JAR which is already attached!
+            null
+        } else {
+            // Ensure there is a single JAR implementing the TokenType and return the hash of it.
+            val jarHashes = inputsAndOutputs.map(AbstractToken<*>::tokenTypeJarHash).toSet()
+            require(jarHashes.size == 1) {
+                "There must only be one Jar (Hash) providing TokenType: ${outputs.first().tokenType.tokenIdentifier}"
+            }
+            jarHashes.single()
+        }
     }
 
     private fun groupStates(tx: LedgerTransaction, selector: (TransactionState<U>) -> TokenInfo): List<InOutGroup<U, TokenInfo>> {
@@ -134,7 +148,7 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
         return groups
     }
 
-    private data class TokenInfo(val c: Class<*>, val issuedTokenType: IssuedTokenType<TokenType>, val cc: ContractClassName)
+    private data class TokenInfo(val concreteClass: Class<*>, val issuedTokenType: IssuedTokenType<TokenType>, val contractClass: ContractClassName)
 
     //This function checks that the underlying State is of a specific type, whilst returning the TransactionState that wraps it
     //it also enforces the fact that each state is of a type accepted by the current concrete contract class
