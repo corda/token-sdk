@@ -17,6 +17,15 @@
   take `TransactionBuilder` as the first argument. Thanks to Ian Lloyd
   for the contribution.
 * Added tests for `NonFungibleTokens`.
+* Fixed a bug in the contract code whereby the `TokenType` was not "pinned"
+  to a `NonFungibleToken` or `FungibleToken` state. The `AbstractTokenContract`
+  now checks that an attachment that implements the intended `TokenType`
+  is attached to a transaction involving `AbstractToken`s. The `TokenType`
+  attachments are now pinned by storing the attachment hash in the `AbstractToken`
+  state. The hash is propagated to future versions of the state. The attachment
+  cannot change during the life of the token, thus the `TokenType` cannot
+  change. However, the token can be redeemed and re-issued, thus allowing
+  the `TokenType` to be changed.
 
 #### Workflows
 
@@ -24,18 +33,17 @@
   default token selection method but in a future release CorDapp developers
   will be able to choose between database or in memory selection.
 * Changes to how how change parties are generated and used:
-    * V1:
+  * The issuance flows don't require any change outputs
+  * The non-confidential move and redeem token flows now default
+    the change party to be the calling node's identity.
+  * The confidential redeem flow requires that the issuer request
+    a new key from the redeeming party.
+  * The confidential move token flow requires that a change party
+    is generated prior and passed into the confidential move
+    tokens flow.
+* The issue tokens flows now resolve the attachments implementing the
+  specified `TokenType` and ensure it is added to the issue transaction.
 
-        * The issuance flows don't require any change outputs
-        * The non-confidential move and redeem token flows now default
-          the change party to be the calling node's identity.
-        * The confidential redeem flow requires that the issuer request
-          a new key from the redeeming party.
-        * The confidential move token flow requires that a change party
-          is generated prior and passed into the confidential move
-          tokens flow.
-          
-          
 ### Release candidate 3
 
 #### General
