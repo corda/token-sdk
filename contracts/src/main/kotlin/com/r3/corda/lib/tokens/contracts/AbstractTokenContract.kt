@@ -104,7 +104,7 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
 
         val allMatchedCommands = groupsAndCommands.map { it.first.first() }.toSet()
         require(allMatchedCommands == tokenCommands.toSet()) {
-            "There is an unmatched token command in the transaction: ${allMatchedCommands.subtract(tokenCommands.toSet())}"
+            "There is an unmatched token command in the transaction: ${allMatchedCommands.subtract(tokenCommands.toSet()) + tokenCommands.subtract(allMatchedCommands.toSet())}"
         }
     }
 

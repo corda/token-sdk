@@ -48,11 +48,13 @@ fun <T : TokenType> generateMoveNonFungible(
     addTokenTypeJar(listOf(input.state.data, output), transactionBuilder)
     addNotaryWithCheck(transactionBuilder, notary)
     val signingKey = input.state.data.holder.owningKey
-    val command = MoveTokenCommand(output.token)
+
     return transactionBuilder.apply {
+        val currentInputSize = inputStates().size
+        val currentOutputSize = outputStates().size
         addInputState(input)
-        addCommand(command, signingKey)
         addOutputState(state = output withNotary notary)
+        addCommand(MoveTokenCommand(output.token, inputs = listOf(currentInputSize), outputs = listOf(currentOutputSize)), signingKey)
     }
 }
 
@@ -64,9 +66,9 @@ fun <T : TokenType> generateExitNonFungible(txBuilder: TransactionBuilder, moveS
     addTokenTypeJar(nonFungibleToken, txBuilder)
     val issuerKey = nonFungibleToken.token.issuer.owningKey
     val moveKey = nonFungibleToken.holder.owningKey
-    val redeemCommand = RedeemTokenCommand(nonFungibleToken.token)
     txBuilder.apply {
+        val currentInputSize = inputStates().size
         addInputState(moveStateAndRef)
-        addCommand(redeemCommand, issuerKey, moveKey)
+        addCommand(RedeemTokenCommand(nonFungibleToken.token, listOf(currentInputSize)), issuerKey, moveKey)
     }
 }

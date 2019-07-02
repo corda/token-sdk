@@ -30,7 +30,7 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
         // There can only be one issuer per group as the issuer is part of the token which is used to group states.
         // If there are multiple issuers for the same tokens then there will be a group for each issued token. So,
         // the line below should never fail on single().
-        require(issueCommand.signers.singleOrNull { it == output.state.data.holder.owningKey } != null) {
+        require(issueCommand.signers.singleOrNull { it == output.state.data.issuer.owningKey } != null) {
             "The issuer must be the only signing party when a token is issued."
         }
     }

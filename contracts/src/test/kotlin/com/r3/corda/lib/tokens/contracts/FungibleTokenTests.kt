@@ -35,12 +35,12 @@ class FungibleTokenTests : ContractTestCommon() {
             }
             // Signed by a party other than the issuer.
             tweak {
-                command(BOB.publicKey, IssueTokenCommand(issuedToken))
+                command(BOB.publicKey, IssueTokenCommand(issuedToken, listOf(0)))
                 this `fails with` "The issuer must be the only signing party when an amount of tokens are issued."
             }
             // Non issuer signature present.
             tweak {
-                command(listOf(BOB.publicKey, BOB.publicKey), IssueTokenCommand(issuedToken))
+                command(listOf(BOB.publicKey, BOB.publicKey), IssueTokenCommand(issuedToken, listOf(0)))
                 this `fails with` "The issuer must be the only signing party when an amount of tokens are issued."
             }
             // With an incorrect command.
@@ -50,43 +50,42 @@ class FungibleTokenTests : ContractTestCommon() {
             }
             // With different command types for one group.
             tweak {
-                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
-                command(ISSUER.publicKey, MoveTokenCommand(issuedToken))
-                this `fails with` "There must be exactly one TokenCommand type per group! For example: You cannot " +
-                        "map an Issue AND a Move command to one group of tokens in a transaction."
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken, listOf(0)))
+                command(ISSUER.publicKey, MoveTokenCommand(issuedToken, listOf(0)))
+                this `fails with` " There is an unmatched token command in the transaction"
             }
             // Includes a group with no assigned command.
             tweak {
                 output(FungibleTokenContract.contractId, 10.USD issuedBy ISSUER.party heldBy ALICE.party)
-                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken, listOf(0)))
                 this `fails with` "There is a token group with no assigned command!"
             }
             // With a zero amount in another group.
             tweak {
                 val otherToken = USD issuedBy ISSUER.party
                 output(FungibleTokenContract.contractId, 0 of otherToken heldBy ALICE.party)
-                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
-                command(ISSUER.publicKey, IssueTokenCommand(otherToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken, listOf(0)))
+                command(ISSUER.publicKey, IssueTokenCommand(otherToken, listOf(1)))
                 this `fails with` "When issuing tokens an amount > ZERO must be issued."
             }
             // With some input states.
             tweak {
                 input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
                 command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
-                this `fails with` "When issuing tokens, there cannot be any input states."
+                this `fails with` "There is a token group with no assigned command"
             }
             // Includes a zero output.
             tweak {
                 output(FungibleTokenContract.contractId, 0 of issuedToken heldBy ALICE.party)
                 command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
-                this `fails with` "You cannot issue tokens with a zero amount."
+                this `fails with` "There is a token group with no assigned command"
             }
             // Includes another token type and a matching command.
             tweak {
                 val otherToken = USD issuedBy ISSUER.party
                 output(FungibleTokenContract.contractId, 10 of otherToken heldBy ALICE.party)
-                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
-                command(ISSUER.publicKey, IssueTokenCommand(otherToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken, listOf(0)))
+                command(ISSUER.publicKey, IssueTokenCommand(otherToken, listOf(1)))
                 verifies()
             }
             // Includes more output states of the same token type.
@@ -94,20 +93,20 @@ class FungibleTokenTests : ContractTestCommon() {
                 output(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
                 output(FungibleTokenContract.contractId, 100 of issuedToken heldBy ALICE.party)
                 output(FungibleTokenContract.contractId, 1000 of issuedToken heldBy ALICE.party)
-                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken, listOf(0, 1, 2, 3)))
                 verifies()
             }
             // Includes the same token issued by a different issuer.
             // You wouldn't usually do this but it is possible.
             tweak {
                 output(FungibleTokenContract.contractId, 1.GBP issuedBy BOB.party heldBy ALICE.party)
-                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
-                command(BOB.publicKey, IssueTokenCommand(GBP issuedBy BOB.party))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken, listOf(0)))
+                command(BOB.publicKey, IssueTokenCommand(GBP issuedBy BOB.party, listOf(1)))
                 verifies()
             }
             // With the correct command and signed by the issuer.
             tweak {
-                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken, listOf(0)))
                 verifies()
             }
         }
@@ -123,38 +122,37 @@ class FungibleTokenTests : ContractTestCommon() {
             // Start with a basic move which moves 10 tokens in entirety from ALICE to BOB.
             input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
             output(FungibleTokenContract.contractId, 10 of issuedToken heldBy BOB.party)
+            //move command with indicies
+            command(ALICE.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
             attachment(gbpHash)
 
             // Add the move command, signed by ALICE.
             tweak {
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 verifies()
             }
 
             // Move coupled with an issue.
             tweak {
                 output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
-                command(BOB.publicKey, IssueTokenCommand(USD issuedBy BOB.party))
-                // Command for the move.
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
+                //the issue token is added after the move tokens, so it will have index(1)
+                command(BOB.publicKey, IssueTokenCommand(USD issuedBy BOB.party, outputs = listOf(1)))
+
                 verifies()
             }
 
             // Input missing.
             tweak {
                 output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy BOB.party)
-                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
-                // Command for the move.
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party, outputs = listOf(1)))
+
                 this `fails with` "When moving tokens, there must be input states present."
             }
 
             // Output missing.
             tweak {
                 input(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
-                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
-                // Command for the move.
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party, inputs = listOf(1)))
+
                 this `fails with` "When moving tokens, there must be output states present."
             }
 
@@ -163,9 +161,8 @@ class FungibleTokenTests : ContractTestCommon() {
                 input(FungibleTokenContract.contractId, 0.USD issuedBy BOB.party heldBy ALICE.party)
                 input(FungibleTokenContract.contractId, 0.USD issuedBy BOB.party heldBy ALICE.party)
                 output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy BOB.party)
-                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
+                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party, inputs = listOf(1, 2), outputs = listOf(1)))
                 // Command for the move.
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 this `fails with` "In move groups there must be an amount of input tokens > ZERO."
             }
 
@@ -174,9 +171,8 @@ class FungibleTokenTests : ContractTestCommon() {
                 input(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
                 output(FungibleTokenContract.contractId, 0.USD issuedBy BOB.party heldBy BOB.party)
                 output(FungibleTokenContract.contractId, 0.USD issuedBy BOB.party heldBy BOB.party)
-                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
+                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party, inputs = listOf(1), outputs = listOf(1, 2)))
                 // Command for the move.
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 this `fails with` "In move groups there must be an amount of output tokens > ZERO."
             }
 
@@ -184,9 +180,8 @@ class FungibleTokenTests : ContractTestCommon() {
             tweak {
                 input(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
                 output(FungibleTokenContract.contractId, 11.USD issuedBy BOB.party heldBy BOB.party)
-                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
+                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party, inputs = listOf(1), outputs = listOf(1)))
                 // Command for the move.
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 this `fails with` "In move groups the amount of input tokens MUST EQUAL the amount of output tokens. " +
                         "In other words, you cannot create or destroy value when moving tokens."
             }
@@ -195,9 +190,8 @@ class FungibleTokenTests : ContractTestCommon() {
                 input(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
                 output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy BOB.party)
                 output(FungibleTokenContract.contractId, 0.USD issuedBy BOB.party heldBy BOB.party)
-                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
+                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party, inputs = listOf(1), outputs = listOf(1, 2)))
                 // Command for the move.
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 this `fails with` "You cannot create output token amounts with a ZERO amount."
             }
 
@@ -205,25 +199,33 @@ class FungibleTokenTests : ContractTestCommon() {
             tweak {
                 input(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
                 output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy BOB.party)
-                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party))
+                command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party, inputs = listOf(1), outputs = listOf(1)))
                 // Command for the move.
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 verifies()
             }
 
             // Two moves (one group).
             tweak {
-                // Add a basic move from Peter to Paul.
-                input(FungibleTokenContract.contractId, 20 of issuedToken heldBy CHARLIE.party)
-                output(FungibleTokenContract.contractId, 20 of issuedToken heldBy DAENERYS.party)
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
-                command(CHARLIE.publicKey, MoveTokenCommand(issuedToken))
+                input(FungibleTokenContract.contractId, 20 of GBP issuedBy CHARLIE.party heldBy CHARLIE.party)
+                output(FungibleTokenContract.contractId, 20 of GBP issuedBy CHARLIE.party heldBy DAENERYS.party)
+
+                input(FungibleTokenContract.contractId, 20 of RUB issuedBy CHARLIE.party heldBy CHARLIE.party)
+                output(FungibleTokenContract.contractId, 10 of RUB issuedBy CHARLIE.party heldBy CHARLIE.party)
+                output(FungibleTokenContract.contractId, 10 of RUB issuedBy CHARLIE.party heldBy CHARLIE.party)
+
+                attachment(RUB.importAttachment(aliceServices.attachments))
+
+                command(CHARLIE.publicKey, MoveTokenCommand(GBP issuedBy CHARLIE.party, inputs = listOf(1), outputs = listOf(1)))
+                command(CHARLIE.publicKey, MoveTokenCommand(RUB issuedBy CHARLIE.party, inputs = listOf(2), outputs = listOf(2, 3)))
                 verifies()
             }
 
             // Wrong public key.
             tweak {
-                command(BOB.publicKey, MoveTokenCommand(issuedToken))
+                attachment(RUB.importAttachment(aliceServices.attachments))
+                input(FungibleTokenContract.contractId, 20 of RUB issuedBy CHARLIE.party heldBy CHARLIE.party)
+                output(FungibleTokenContract.contractId, 20 of RUB issuedBy CHARLIE.party heldBy DAENERYS.party)
+                command(BOB.publicKey, MoveTokenCommand(RUB issuedBy CHARLIE.party, inputs = listOf(1), outputs = listOf(1)))
                 this `fails with` "Required signers does not contain all the current owners of the tokens being moved"
             }
         }
