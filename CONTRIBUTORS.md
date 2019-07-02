@@ -8,6 +8,7 @@ Some people have moved to a different organisation since their contribution. Ple
 * Clinton Alexander (R3) https://github.com/Clintonio
 * Joel Dudley (R3) https://github.com/joeldudleyr3
 * Ian Lloyd (?) https://github.com/illoyd
+* Tudor Malene (R3) https://github.com/tudor-malene
 * Katarzyna Streich (R3) https://github.com/kasiastreich
 * Jose Coll (R3) https://github.com/josecoll
 * Ross Nicoll (Dapper Labs) https://github.com/rnicoll
@@ -16,12 +17,12 @@ Some people have moved to a different organisation since their contribution. Ple
 * Patrick Kuo (R3) https://github.com/patrickkuo
 * Richard Green (Blocksure) https://github.com/ragmondo
 * Chris Rankin (R3) https://github.com/chrisr3
-* unknown (?) https://github.com/willhr3
+* Will Hester (R3) https://github.com/willhr3
 * Alex Koller (R3) https://github.com/Alex-Koller-R3
 * Rick Parker (R3) https://github.com/rick-r3
-* Maksymilian Pawlak (?) https://github.com/m4ksio
+* Maksymilian Pawlak (B3i) https://github.com/m4ksio
 * Shams Asari (R3) https://github.com/shamsasari
-* Alex Goldvarg (?) https://github.com/agoldvarg
+* Alex Goldvarg (Giant Machines) https://github.com/agoldvarg
 * David Lee (BCS Consulting) https://github.com/davidleeuk
 * Stefano Franz (R3) https://github.com/roastario
 * Dominic Fox (R3) https://github.com/r3domfox
@@ -40,3 +41,6 @@ Some people have moved to a different organisation since their contribution. Ple
 * Philipp Küng (SDX) https://github.com/philippkueng
 * Jonathan Lodge (SDX)
 * Janis Okekss (Accenture)
+* David Nicol (R3)
+* Antony Lewis (R3)
+* Richard Brown (R3)
