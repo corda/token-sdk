@@ -33,7 +33,7 @@ import net.corda.core.schemas.QueryableState
  * @param T the [TokenType] this [FungibleToken] state is in respect of.
  */
 @BelongsToContract(FungibleTokenContract::class)
-class FungibleToken<T : TokenType>(
+open class FungibleToken<T : TokenType>(
         override val amount: Amount<IssuedTokenType<T>>,
         override val holder: AbstractParty,
         override val tokenTypeJarHash: SecureHash? = amount.token.tokenType.getAttachmentIdForGenericParam()
@@ -66,15 +66,20 @@ class FungibleToken<T : TokenType>(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is FungibleToken<*>) return false
+        if (javaClass != other?.javaClass) return false
+        other as FungibleToken<*>
         if (amount != other.amount) return false
         if (holder != other.holder) return false
+        if (tokenTypeJarHash != other.tokenTypeJarHash) return false
+
         return true
     }
 
     override fun hashCode(): Int {
         var result = amount.hashCode()
         result = 31 * result + holder.hashCode()
+        result = 31 * result + (tokenTypeJarHash?.hashCode() ?: 0)
         return result
     }
+
 }

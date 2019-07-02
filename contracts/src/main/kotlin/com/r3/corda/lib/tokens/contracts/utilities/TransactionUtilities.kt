@@ -78,29 +78,32 @@ fun <T : TokenType> Iterable<StateAndRef<FungibleToken<T>>>.filterTokenStateAndR
 // Utilities for ensuring that the JAR which implements the specified TokenType is added to the transaction.
 
 internal val attachmentCache = HashMap<Class<*>, SecureHash>()
+internal val NULL_SECURE_HASH = SecureHash.zeroHash
 
 /**
  * If the [TokenType] is not a [TokenPointer] this function discovers the JAR which implements the receiving [TokenType].
  */
 fun TokenType.getAttachmentIdForGenericParam(): SecureHash? {
-    synchronized(attachmentCache) {
-        var classToSearch: Class<*> = this.javaClass
-        while (classToSearch != this.tokenClass && classToSearch != TokenPointer::class.java) {
-            classToSearch = this.tokenClass
+    val computedValue = synchronized(attachmentCache) {
+        attachmentCache.computeIfAbsent(this.javaClass) { clazz ->
+            var classToSearch: Class<*> = clazz
+            while (classToSearch != this.tokenClass && classToSearch != TokenPointer::class.java) {
+                classToSearch = this.tokenClass
+            }
+            if (classToSearch.location == TokenType::class.java.location) {
+                TokenUtilities.logger.debug("${this.javaClass} is provided by tokens-sdk")
+                NULL_SECURE_HASH
+            } else {
+                val hash = classToSearch.location.readBytes().sha256()
+                TokenUtilities.logger.debug("looking for jar which provides: $classToSearch FOUND AT: " +
+                        "${classToSearch.location.path} with hash $hash")
+                hash
+            }
         }
-        // The TokenType is a TokenPointer provided by com.r3.corda.lib.tokens.contracts which is already attached to
-        // the transaction.
-        if (classToSearch.location == TokenType::class.java.location) {
-            TokenUtilities.logger.info("${this.javaClass} is provided by tokens-sdk")
-            return null
-        }
-        // The TokenType is implemented in another JAR. Record it.
-        if (!attachmentCache.containsKey(classToSearch)) {
-            val hash = classToSearch.location.readBytes().sha256()
-            TokenUtilities.logger.info("looking for jar which provides: $classToSearch FOUND AT: " +
-                    "${classToSearch.location.path} with hash $hash")
-            attachmentCache[classToSearch] = hash
-        }
-        return attachmentCache[classToSearch]!!
+    }
+    return if (computedValue == NULL_SECURE_HASH) {
+        null
+    } else {
+        computedValue
     }
 }

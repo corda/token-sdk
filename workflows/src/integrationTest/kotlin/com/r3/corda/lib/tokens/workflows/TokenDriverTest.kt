@@ -14,11 +14,7 @@ import com.r3.corda.lib.tokens.workflows.flows.evolvable.CreateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
-import com.r3.corda.lib.tokens.workflows.internal.testflows.CheckTokenPointer
-import com.r3.corda.lib.tokens.workflows.internal.testflows.DvPFlow
-import com.r3.corda.lib.tokens.workflows.internal.testflows.GetDistributionList
-import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemFungibleGBP
-import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemNonFungibleHouse
+import com.r3.corda.lib.tokens.workflows.internal.testflows.*
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
 import com.r3.corda.lib.tokens.workflows.utilities.ownedTokenCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
