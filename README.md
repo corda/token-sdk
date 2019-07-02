@@ -3,7 +3,7 @@
 </p>
 
 # Corda Token SDK
-
+ 
 ## Reminder
 
 This project is open source under an Apache 2.0 licence. That means you
