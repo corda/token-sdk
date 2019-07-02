@@ -85,6 +85,7 @@ subprojects {
     
     tasks.withType(Test){
         forkEvery = 1
+        ignoreFailures = true
     }
 }
 
