@@ -37,10 +37,8 @@ private class DvPNotification(val amount: Amount<FiatCurrency>)
 class DvPFlow(val house: House, val newOwner: Party) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
-        val houseStateRef = serviceHub.vaultService.ownedTokensByToken(house.toPointer<House>()).states.singleOrNull()
-                ?: throw IllegalArgumentException("Couldn't find house state: $house in the vault.")
         val txBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
-        addMoveNonFungibleTokens(txBuilder, serviceHub, houseStateRef.state.data.token.tokenType, newOwner)
+        addMoveNonFungibleTokens(txBuilder, serviceHub, house.toPointer<House>(), newOwner)
         val session = initiateFlow(newOwner)
         // Ask for input stateAndRefs - send notification with the amount to exchange.
         session.send(DvPNotification(house.valuation))

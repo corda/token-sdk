@@ -25,7 +25,6 @@ import net.corda.core.internal.concurrent.transpose
 import net.corda.core.messaging.startFlow
 import net.corda.core.messaging.vaultQueryBy
 import net.corda.core.utilities.getOrThrow
-import net.corda.core.utilities.seconds
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.BOC_NAME
 import net.corda.testing.core.DUMMY_BANK_A_NAME
