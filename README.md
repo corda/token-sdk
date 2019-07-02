@@ -121,8 +121,6 @@ publish binaries to your local maven repository:
 
 [Simple delivery versus payment tutorial](docs/DvPTutorial.md)
 
-[Using evolvable tokens](docs/EvolvableTokens.md)
-
 [Most common tasks](docs/IWantTo.md)
 
 ## Other useful links
