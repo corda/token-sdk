@@ -10,6 +10,7 @@ import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.*
 import net.corda.core.crypto.SecureHash
+import net.corda.core.internal.uncheckedCast
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.LedgerTransaction.InOutGroup
 
@@ -154,7 +155,7 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
     //it also enforces the fact that each state is of a type accepted by the current concrete contract class
     private fun castIfPossible(input: (TransactionState<ContractState>)): TransactionState<U>? {
         return if (AbstractToken::class.java.isInstance(input.data) && accepts.isInstance(input.data)) {
-            input as TransactionState<U>
+            uncheckedCast(input)
         } else {
             null
         }

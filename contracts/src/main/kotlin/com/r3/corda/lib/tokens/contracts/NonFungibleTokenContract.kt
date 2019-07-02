@@ -5,14 +5,14 @@ import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.CommandWithParties
+import net.corda.core.internal.uncheckedCast
 
 /**
  * See kdoc for [FungibleTokenContract].
  */
 class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFungibleToken<T>>() {
 
-    override val accepts: Class<NonFungibleToken<T>>
-        get() = NonFungibleToken::class.java as Class<NonFungibleToken<T>>
+    override val accepts: Class<NonFungibleToken<T>> get() = uncheckedCast(NonFungibleToken::class.java)
 
     companion object {
         val contractId = this::class.java.enclosingClass.canonicalName
