@@ -36,8 +36,8 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
 
     override fun verifyIssue(
             issueCommand: CommandWithParties<TokenCommand<T>>,
-            inputs: List<FungibleToken<T>>,
-            outputs: List<FungibleToken<T>>,
+            inputs: List<IndexedState<FungibleToken<T>>>,
+            outputs: List<IndexedState<FungibleToken<T>>>,
             attachments: List<Attachment>
     ) {
         val issuedToken: IssuedTokenType<T> = issueCommand.value.token
@@ -46,15 +46,15 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
             require(isNotEmpty()) { "When issuing tokens, there must be output states." }
             // We don't care about the token as the grouping function ensures that all the outputs are of the same
             // token.
-            require(sumTokenStatesOrZero(issuedToken) > Amount.zero(issuedToken)) {
+            require(this.map { it.state.data }.sumTokenStatesOrZero(issuedToken) > Amount.zero(issuedToken)) {
                 "When issuing tokens an amount > ZERO must be issued."
             }
-            val hasZeroAmounts = any { it.amount == Amount.zero(issuedToken) }
+            val hasZeroAmounts = any { it.state.data.amount == Amount.zero(issuedToken) }
             require(hasZeroAmounts.not()) { "You cannot issue tokens with a zero amount." }
             // There can only be one issuer per group as the issuer is part of the token which is used to group states.
             // If there are multiple issuers for the same tokens then there will be a group for each issued token. So,
             // the line below should never fail on single().
-            val issuer: Party = map(AbstractToken<T>::issuer).toSet().single()
+            val issuer: Party = this.map { it.state.data }.map(AbstractToken<T>::issuer).toSet().single()
             // Only the issuer should be signing the issuer command.
             require(issueCommand.signers.singleOrNull { it == issuer.owningKey } != null) {
                 "The issuer must be the only signing party when an amount of tokens are issued."
@@ -65,8 +65,8 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
 
     override fun verifyMove(
             moveCommands: List<CommandWithParties<TokenCommand<T>>>,
-            inputs: List<FungibleToken<T>>,
-            outputs: List<FungibleToken<T>>,
+            inputs: List<IndexedState<FungibleToken<T>>>,
+            outputs: List<IndexedState<FungibleToken<T>>>,
             attachments: List<Attachment>
     ) {
         // Commands are grouped by Token Type, so we just need a token reference.
@@ -75,20 +75,20 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
         require(inputs.isNotEmpty()) { "When moving tokens, there must be input states present." }
         require(outputs.isNotEmpty()) { "When moving tokens, there must be output states present." }
         // Sum the amount of input and output tokens.
-        val inputAmount: Amount<IssuedTokenType<T>> = inputs.sumTokenStatesOrZero(issuedToken)
+        val inputAmount: Amount<IssuedTokenType<T>> = inputs.map { it.state.data }.sumTokenStatesOrZero(issuedToken)
         require(inputAmount > Amount.zero(issuedToken)) { "In move groups there must be an amount of input tokens > ZERO." }
-        val outputAmount: Amount<IssuedTokenType<T>> = outputs.sumTokenStatesOrZero(issuedToken)
+        val outputAmount: Amount<IssuedTokenType<T>> = outputs.map { it.state.data }.sumTokenStatesOrZero(issuedToken)
         require(outputAmount > Amount.zero(issuedToken)) { "In move groups there must be an amount of output tokens > ZERO." }
         // Input and output amounts must be equal.
         require(inputAmount == outputAmount) {
             "In move groups the amount of input tokens MUST EQUAL the amount of output tokens. In other words, you " +
                     "cannot create or destroy value when moving tokens."
         }
-        val hasZeroAmounts = outputs.any { it.amount == Amount.zero(issuedToken) }
+        val hasZeroAmounts = outputs.any { it.state.data == Amount.zero(issuedToken) }
         require(hasZeroAmounts.not()) { "You cannot create output token amounts with a ZERO amount." }
         // There can be different owners in each move group. There may be one command for each of the signers publickey
         // or all the public keys might be listed within one command.
-        val inputOwningKeys: Set<PublicKey> = inputs.map { it.holder.owningKey }.toSet()
+        val inputOwningKeys: Set<PublicKey> = inputs.map { it.state.data.holder.owningKey }.toSet()
         val signers: Set<PublicKey> = moveCommands.flatMap(CommandWithParties<TokenCommand<T>>::signers).toSet()
         require(signers.containsAll(inputOwningKeys)) {
             "Required signers does not contain all the current owners of the tokens being moved"
@@ -99,8 +99,8 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
 
     override fun verifyRedeem(
             redeemCommand: CommandWithParties<TokenCommand<T>>,
-            inputs: List<FungibleToken<T>>,
-            outputs: List<FungibleToken<T>>,
+            inputs: List<IndexedState<FungibleToken<T>>>,
+            outputs: List<IndexedState<FungibleToken<T>>>,
             attachments: List<Attachment>
     ) {
         val issuedToken: IssuedTokenType<T> = redeemCommand.value.token
@@ -109,7 +109,7 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
         outputs.apply {
             require(size <= 1) { "When redeeming tokens, there must be zero or one output state." }
             if (isNotEmpty()) {
-                val amount = single().amount
+                val amount = single().state.data.amount
                 require(amount > Amount.zero(issuedToken)) { "If there is an output, it must have a value greater than zero." }
             }
             // Outputs can be paid to any anonymous public key, so we cannot compare keys here.
@@ -118,19 +118,20 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
             // There must be inputs present.
             require(isNotEmpty()) { "When redeeming tokens, there must be input states present." }
             // We don't care about the token as the grouping function ensures all the inputs are of the same token.
-            val inputSum: Amount<IssuedTokenType<T>> = sumTokenStatesOrZero(issuedToken)
+            val inputSum: Amount<IssuedTokenType<T>> = this.map { it.state.data }.sumTokenStatesOrZero(issuedToken)
             require(inputSum > Amount.zero(issuedToken)) {
                 "When redeeming tokens an amount > ZERO must be redeemed."
             }
-            val outSum: Amount<IssuedTokenType<T>> = outputs.firstOrNull()?.amount ?: Amount.zero(issuedToken)
+            val outSum: Amount<IssuedTokenType<T>> = outputs.firstOrNull()?.state?.data?.amount
+                    ?: Amount.zero(issuedToken)
             // We can't pay back more than redeeming.
             // Additionally, it doesn't make sense to run redeem and pay exact change.
             require(inputSum > outSum) { "Change shouldn't exceed amount redeemed." }
             // There can only be one issuer per group as the issuer is part of the token which is used to group states.
             // If there are multiple issuers for the same tokens then there will be a group for each issued token. So,
             // the line below should never fail on single().
-            val issuerKey: PublicKey = inputs.map(FungibleToken<T>::issuer).toSet().single().owningKey
-            val ownersKeys: List<PublicKey> = inputs.map { it.holder.owningKey }
+            val issuerKey: PublicKey = inputs.map { it.state.data }.map(FungibleToken<T>::issuer).toSet().single().owningKey
+            val ownersKeys: List<PublicKey> = inputs.map { it.state.data.holder.owningKey }
             val signers = redeemCommand.signers
             require(issuerKey in signers) {
                 "The issuer must be the signing party when an amount of tokens are redeemed."
