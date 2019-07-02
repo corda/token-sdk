@@ -44,7 +44,7 @@ class TokenDriverTest {
     fun `beefy tokens integration test`() {
         driver(DriverParameters(
                 portAllocation = incrementalPortAllocation(20000),
-                startNodesInProcess = true, //todo false
+                startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
@@ -76,10 +76,10 @@ class TokenDriverTest {
                     emptyList<Party>() // TODO this should be handled by JvmOverloads on the constructor, but for some reason corda doesn't see the second constructor
             ).returnValue.getOrThrow()
             // Issue some fungible GBP cash to NodeA, NodeB.
-            issuer.rpc.run {
-                startFlowDynamic(IssueTokens::class.java, 1_000_000.GBP, issuerParty, nodeAParty, emptyList<Party>()).returnValue.getOrThrow()
-                startFlowDynamic(IssueTokens::class.java, 900_000.GBP, issuerParty, nodeBParty, emptyList<Party>()).returnValue.getOrThrow()
-            }
+            val issueA = issuer.rpc.startFlowDynamic(IssueTokens::class.java, 1_000_000.GBP, issuerParty, nodeAParty, emptyList<Party>()).returnValue.getOrThrow()
+            val issueB = issuer.rpc.startFlowDynamic(IssueTokens::class.java, 900_000.GBP, issuerParty, nodeBParty, emptyList<Party>()).returnValue.getOrThrow()
+            nodeA.rpc.watchForTransaction(issueA).getOrThrow()
+            nodeB.rpc.watchForTransaction(issueB).getOrThrow()
             // Check that node A has cash and house.
             assertThat(nodeA.rpc.vaultQuery(House::class.java).states).isNotEmpty
             assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
@@ -95,8 +95,8 @@ class TokenDriverTest {
             ).returnValue.getOrThrow()
 
             // Wait for both nodes to record the transaction.
-            nodeA.rpc.watchForTransaction(dvpTx).getOrThrow(5.seconds)
-            nodeB.rpc.watchForTransaction(dvpTx).getOrThrow(5.seconds)
+            nodeA.rpc.watchForTransaction(dvpTx).getOrThrow()
+            nodeB.rpc.watchForTransaction(dvpTx).getOrThrow()
             // NodeB has house, NodeA doesn't.
             assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken<TokenPointer<House>>>(ownedTokenCriteria(housePtr)).states).isNotEmpty
             assertThat(nodeA.rpc.vaultQueryBy<NonFungibleToken<TokenPointer<House>>>(ownedTokenCriteria(housePtr)).states).isEmpty()
@@ -111,8 +111,8 @@ class TokenDriverTest {
             val newHouse = oldHouse.state.data.copy(valuation = 800_000L.GBP)
             val houseUpdateTx = issuer.rpc.startFlowDynamic(UpdateEvolvableToken::class.java, oldHouse, newHouse).returnValue.getOrThrow()
             // Check that both nodeA and B got update.
-            nodeA.rpc.watchForTransaction(houseUpdateTx).getOrThrow(5.seconds)
-            nodeB.rpc.watchForTransaction(houseUpdateTx).getOrThrow(5.seconds)
+            nodeA.rpc.watchForTransaction(houseUpdateTx).getOrThrow()
+            nodeB.rpc.watchForTransaction(houseUpdateTx).getOrThrow()
             val houseA = nodeA.rpc.startFlow(::CheckTokenPointer, housePtr).returnValue.getOrThrow()
             val houseB = nodeB.rpc.startFlow(::CheckTokenPointer, housePtr).returnValue.getOrThrow()
             assertThat(houseA.valuation).isEqualTo(800_000L.GBP)
@@ -131,7 +131,7 @@ class TokenDriverTest {
                     housePtr,
                     issuerParty
             ).returnValue.getOrThrow()
-            nodeB.rpc.watchForTransaction(redeemHouseTx).getOrThrow(5.seconds)
+            nodeB.rpc.watchForTransaction(redeemHouseTx).getOrThrow()
             assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken<TokenPointer<House>>>(ownedTokenCriteria(housePtr)).states).isEmpty()
             // NodeA redeems 1_100_000L.GBP with the issuer, check it received 800_000L change, check, that issuer didn't record cash.
             val redeemGBPTx = nodeA.rpc.startFlowDynamic(
@@ -139,7 +139,7 @@ class TokenDriverTest {
                     1_100_000L.GBP,
                     issuerParty
             ).returnValue.getOrThrow()
-            nodeA.rpc.watchForTransaction(redeemGBPTx).getOrThrow(5.seconds)
+            nodeA.rpc.watchForTransaction(redeemGBPTx).getOrThrow()
             assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(800_000L.GBP issuedBy issuerParty)
             assertThat(issuer.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
         }

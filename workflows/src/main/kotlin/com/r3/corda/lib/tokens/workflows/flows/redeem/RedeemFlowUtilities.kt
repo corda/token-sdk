@@ -109,33 +109,3 @@ fun <T : TokenType> addFungibleTokensToRedeem(
     )
     return transactionBuilder
 }
-
-// Extensions on FlowLogic.
-
-/**
- *  Redeem non-fungible [ownedToken] issued by the [issuer] and add it to the [transactionBuilder].
- */
-@Suspendable
-fun <T : TokenType> FlowLogic<*>.addRedeemTokens(
-        transactionBuilder: TransactionBuilder,
-        ownedToken: T,
-        issuer: Party
-): TransactionBuilder {
-    return addNonFungibleTokensToRedeem(transactionBuilder, serviceHub, ownedToken, issuer)
-}
-
-/**
- * Redeem amount of certain type of the token issued by [issuer]. Pay possible change to the [changeOwner] - it can be confidential identity.
- * Additional query criteria can be provided using [additionalQueryCriteria].
- */
-@Suspendable
-@JvmOverloads
-fun <T : TokenType> FlowLogic<*>.addRedeemTokens(
-        transactionBuilder: TransactionBuilder,
-        amount: Amount<T>,
-        issuer: Party,
-        changeOwner: AbstractParty,
-        additionalQueryCriteria: QueryCriteria? = null
-): TransactionBuilder {
-    return addFungibleTokensToRedeem(transactionBuilder, serviceHub, amount, issuer, changeOwner, additionalQueryCriteria)
-}

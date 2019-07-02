@@ -5,6 +5,7 @@ import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.money.FiatCurrency
 import com.r3.corda.lib.tokens.testing.states.House
+import com.r3.corda.lib.tokens.workflows.flows.move.addMoveNonFungibleTokens
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.RedeemFungibleTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.RedeemNonFungibleTokens
@@ -39,7 +40,7 @@ class DvPFlow(val house: House, val newOwner: Party) : FlowLogic<SignedTransacti
         val houseStateRef = serviceHub.vaultService.ownedTokensByToken(house.toPointer<House>()).states.singleOrNull()
                 ?: throw IllegalArgumentException("Couldn't find house state: $house in the vault.")
         val txBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
-        addMoveTokens(txBuilder, houseStateRef.state.data.token.tokenType, newOwner)
+        addMoveNonFungibleTokens(txBuilder, serviceHub, houseStateRef.state.data.token.tokenType, newOwner)
         val session = initiateFlow(newOwner)
         // Ask for input stateAndRefs - send notification with the amount to exchange.
         session.send(DvPNotification(house.valuation))
