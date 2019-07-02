@@ -2,24 +2,20 @@ package com.r3.corda.lib.tokens.contracts
 
 import com.r3.corda.lib.tokens.contracts.commands.TokenCommand
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
-import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.CommandWithParties
-import net.corda.core.transactions.LedgerTransaction
-import net.corda.core.transactions.LedgerTransaction.InOutGroup
 
 /**
  * See kdoc for [FungibleTokenContract].
  */
 class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFungibleToken<T>>() {
 
+    override val accepts: Class<NonFungibleToken<T>>
+        get() = NonFungibleToken::class.java as Class<NonFungibleToken<T>>
+
     companion object {
         val contractId = this::class.java.enclosingClass.canonicalName
-    }
-
-    override fun groupStates(tx: LedgerTransaction): List<InOutGroup<NonFungibleToken<T>, IssuedTokenType<T>>> {
-        return tx.groupStates { state -> state.issuedTokenType }
     }
 
     override fun verifyIssue(

@@ -10,7 +10,10 @@ import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
+import com.r3.corda.lib.tokens.testing.states.DodgeToken
+import com.r3.corda.lib.tokens.testing.states.DodgeTokenContract
 import com.r3.corda.lib.tokens.testing.states.RUB
+import com.r3.corda.lib.tokens.testing.states.RubleToken
 import net.corda.core.contracts.Amount
 import org.junit.Test
 
@@ -221,17 +224,54 @@ class FungibleTokenTests : ContractTestCommon() {
             // Wrong public key.
             tweak {
                 command(BOB.publicKey, MoveTokenCommand(issuedToken))
-                this `fails with` "There are required signers missing or some of the specified signers are not " +
-                        "required. A transaction to move token amounts must be signed by ONLY ALL the owners " +
-                        "of ALL the input token amounts."
+                this `fails with` "Required signers does not contain all the current owners of the tokens being moved"
             }
+        }
+    }
 
-            // Includes an incorrect public with the correct key still being present.
+    @Test
+    fun `should prevent moving of tokens to a subclass`() {
+        val issuedToken = RUB issuedBy ISSUER.party
+        val amount = 10 of issuedToken
+        transaction {
+            // Start with a basic move which moves 10 tokens in entirety from ALICE to BOB.
+            input(FungibleTokenContract.contractId, amount heldBy ALICE.party)
+            attachment(RUB.importAttachment(aliceServices.attachments))
             tweak {
-                command(listOf(BOB.publicKey, ALICE.publicKey), MoveTokenCommand(issuedToken))
-                this `fails with` "There are required signers missing or some of the specified signers are not " +
-                        "required. A transaction to move token amounts must be signed by ONLY ALL the owners " +
-                        "of ALL the input token amounts."
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
+                output(FungibleTokenContract.contractId, RubleToken(amount, BOB.party))
+                this `fails with` ("When moving tokens, there must be output states present")
+            }
+            tweak {
+                // 10 FT (Alice) -> 10 FT (BOB)
+                // 10 RT (BOB) -> 10 RT (BOB)
+                //add an input of the RubleToken owned by BOB
+                input(FungibleTokenContract.contractId, RubleToken(amount, BOB.party))
+
+                //add an output of normal FungibleToken owned by BOB
+                output(FungibleTokenContract.contractId, FungibleToken(amount, BOB.party))
+                //add an output of Ruble owned by Alice
+                output(FungibleTokenContract.contractId, RubleToken(amount, ALICE.party))
+
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
+                command(BOB.publicKey, MoveTokenCommand(issuedToken))
+                verifies()
+            }
+        }
+    }
+
+    @Test
+    fun `should prevent moving of tokens to a class controlled by different contract`() {
+        val issuedToken = RUB issuedBy ISSUER.party
+        val amount = 10 of issuedToken
+        transaction {
+            // Start with a basic move which moves 10 tokens in entirety from ALICE to BOB.
+            input(FungibleTokenContract.contractId, amount heldBy ALICE.party)
+            attachment(RUB.importAttachment(aliceServices.attachments))
+            tweak {
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
+                output(DodgeTokenContract::class.qualifiedName!!, DodgeToken(amount, BOB.party))
+                this `fails with` ("When moving tokens, there must be output states present")
             }
         }
     }

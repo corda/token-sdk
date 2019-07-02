@@ -65,18 +65,27 @@ open class NonFungibleToken<T : TokenType>(
     }
 
     override fun supportedSchemas() = listOf(NonFungibleTokenSchemaV1)
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is NonFungibleToken<*>) return false
+        if (javaClass != other?.javaClass) return false
+
+        other as NonFungibleToken<*>
+
         if (token != other.token) return false
         if (holder != other.holder) return false
+        if (linearId != other.linearId) return false
+        if (tokenTypeJarHash != other.tokenTypeJarHash) return false
+
         return true
     }
 
     override fun hashCode(): Int {
         var result = token.hashCode()
         result = 31 * result + holder.hashCode()
+        result = 31 * result + linearId.hashCode()
+        result = 31 * result + (tokenTypeJarHash?.hashCode() ?: 0)
         return result
     }
+
+
 }

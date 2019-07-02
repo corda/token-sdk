@@ -10,8 +10,6 @@ import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.identity.Party
-import net.corda.core.transactions.LedgerTransaction
-import net.corda.core.transactions.LedgerTransaction.InOutGroup
 import java.security.PublicKey
 
 /**
@@ -29,14 +27,12 @@ import java.security.PublicKey
  */
 open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, FungibleToken<T>>() {
 
+    override val accepts: Class<FungibleToken<T>>
+        get() = FungibleToken::class.java as Class<FungibleToken<T>>
+
     companion object {
         val contractId = this::class.java.enclosingClass.canonicalName
     }
-
-    override fun groupStates(tx: LedgerTransaction): List<InOutGroup<FungibleToken<T>, IssuedTokenType<T>>> {
-        return tx.groupStates { state -> state.issuedTokenType }
-    }
-
 
     override fun verifyIssue(
             issueCommand: CommandWithParties<TokenCommand<T>>,
@@ -94,9 +90,8 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
         // or all the public keys might be listed within one command.
         val inputOwningKeys: Set<PublicKey> = inputs.map { it.holder.owningKey }.toSet()
         val signers: Set<PublicKey> = moveCommands.flatMap(CommandWithParties<TokenCommand<T>>::signers).toSet()
-        require(inputOwningKeys == signers) {
-            "There are required signers missing or some of the specified signers are not required. A transaction " +
-                    "to move token amounts must be signed by ONLY ALL the owners of ALL the input token amounts."
+        require(signers.containsAll(inputOwningKeys)) {
+            "Required signers does not contain all the current owners of the tokens being moved"
         }
 
 

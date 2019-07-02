@@ -124,7 +124,8 @@ class ConfidentialMoveFungibleTokens<T : TokenType>(
         val participants = partiesAndAmounts.map(PartyAndAmount<*>::party)
         val observerSessions = sessionsForParties(observers)
         val participantSessions = sessionsForParties(participants)
-        val confidentialHolder = changeHolder ?: serviceHub.keyManagementService.freshKeyAndCert(ourIdentityAndCert, false).party.anonymise()
+        val confidentialHolder = changeHolder
+                ?: serviceHub.keyManagementService.freshKeyAndCert(ourIdentityAndCert, false).party.anonymise()
         return subFlow(ConfidentialMoveFungibleTokensFlow(
                 partiesAndAmounts = partiesAndAmounts,
                 participantSessions = participantSessions,

@@ -106,7 +106,7 @@ class CheckTokenPointer(val housePtr: TokenPointer<House>) : FlowLogic<House>() 
 class RedeemNonFungibleHouse(
         val housePtr: TokenPointer<House>,
         val issuerParty: Party
-): FlowLogic<SignedTransaction>() {
+) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
         return subFlow(RedeemNonFungibleTokens(housePtr, issuerParty, emptyList()))
@@ -117,7 +117,7 @@ class RedeemNonFungibleHouse(
 class RedeemFungibleGBP(
         val amount: Amount<FiatCurrency>,
         val issuerParty: Party
-): FlowLogic<SignedTransaction>() {
+) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
         return subFlow(RedeemFungibleTokens(amount, issuerParty, emptyList(), null))
