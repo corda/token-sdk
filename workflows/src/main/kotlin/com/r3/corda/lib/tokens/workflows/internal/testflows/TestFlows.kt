@@ -4,7 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.money.FiatCurrency
-import com.r3.corda.lib.tokens.testing.statesAndContracts.House
+import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.RedeemFungibleTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.RedeemNonFungibleTokens

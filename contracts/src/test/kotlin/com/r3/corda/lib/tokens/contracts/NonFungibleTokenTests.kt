@@ -2,6 +2,7 @@ package com.r3.corda.lib.tokens.contracts
 
 import com.r3.corda.lib.tokens.contracts.commands.IssueTokenCommand
 import com.r3.corda.lib.tokens.contracts.commands.MoveTokenCommand
+import com.r3.corda.lib.tokens.contracts.commands.RedeemTokenCommand
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
@@ -14,8 +15,6 @@ import org.junit.Test
 
 // TODO: Some of these tests are testing AbstractToken and duplicate those in FungibleTokenTests. Move to superclass.
 class NonFungibleTokenTests : ContractTestCommon() {
-
-
 
     private val issuedToken = PTK issuedBy ISSUER.party
 
@@ -101,7 +100,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
         val heldByAlice = issuedToken heldBy ALICE.party
         val heldByBob = heldByAlice withNewHolder BOB.party
         transaction {
-            // Start with a basic move which moves 10 tokens in entirety from ALICE to BOB.
+            // Start with a basic move a PTK from ALICE to BOB.
             input(NonFungibleTokenContract.contractId, heldByAlice)
             output(NonFungibleTokenContract.contractId, heldByBob)
             attachment(PTK.importAttachment(aliceServices.attachments))
@@ -177,5 +176,55 @@ class NonFungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    // TODO: Add redeem tests.
+    @Test
+    fun `redeem non fungible token tests`() {
+        val heldByAlice = issuedToken heldBy ALICE.party
+        transaction {
+            // Start with a basic move which redeems a non fungible token.
+            input(NonFungibleTokenContract.contractId, heldByAlice)
+            attachment(PTK.importAttachment(aliceServices.attachments))
+
+            // Add the redeem command, signed by ALICE but not the issuer.
+            tweak {
+                command(ALICE.publicKey, RedeemTokenCommand(issuedToken))
+                this `fails with` "The issuer must be the signing party when an amount of tokens are redeemed."
+            }
+
+            // Add the redeem command, signed by the issuer but not alice.
+            tweak {
+                command(ISSUER.publicKey, RedeemTokenCommand(issuedToken))
+                this `fails with` "Holders of redeemed states must be the signing parties."
+            }
+
+            // Add the issuer's and alice's public key. Will verify.
+            tweak {
+                command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken))
+                verifies()
+            }
+
+            // Spurious output.
+            tweak {
+                command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken))
+                output(NonFungibleTokenContract.contractId, issuedToken heldBy ALICE.party)
+                this `fails with` "When redeeming an owned token, there must be no output."
+            }
+
+            // Additional input.
+            tweak {
+                command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken))
+                input(NonFungibleTokenContract.contractId, heldByAlice)
+                this `fails with` "When redeeming an owned token, there must be only one input."
+            }
+
+            // Two redeem groups. This technically won't happen, as you won't redeem a token from two different issuers
+            // at the same time but the contract does support it.
+            tweak {
+                val otherIssuedToken = PTK issuedBy BOB.party
+                input(NonFungibleTokenContract.contractId, otherIssuedToken heldBy ALICE.party)
+                command(listOf(ALICE.publicKey, BOB.publicKey), RedeemTokenCommand(otherIssuedToken))
+                command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken))
+                verifies()
+            }
+        }
+    }
 }

@@ -75,16 +75,19 @@ infix fun <T : TokenType> IssuedTokenType<T>.heldBy(owner: AbstractParty): NonFu
 
 private infix fun <T : TokenType> IssuedTokenType<T>._heldBy(owner: AbstractParty): NonFungibleToken<T> {
     return NonFungibleToken(this, owner, UniqueIdentifier())
-
-
 }
 
+/** Used for importing the correct attachment associated with a specified [TokenType]. */
 fun TokenType.importAttachment(storage: MockAttachmentStorage): SecureHash {
     val hash = this.getAttachmentIdForGenericParam()
             ?: throw IllegalStateException("Null should never be returned when testing as TokenTypes are always " +
                     "defined in separate JARs.")
     if (!storage.hasAttachment(hash)) {
-        storage.importAttachment(this.javaClass.location.openStream(), DEPLOYED_CORDAPP_UPLOADER, this.javaClass.location.file)
+        storage.importAttachment(
+                jar = this.javaClass.location.openStream(),
+                uploader = DEPLOYED_CORDAPP_UPLOADER,
+                filename = this.javaClass.location.file
+        )
     }
     return hash
 }

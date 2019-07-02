@@ -119,9 +119,9 @@ publish binaries to your local maven repository:
 
 [Introduction to token SDK](docs/OVERVIEW.md)
 
-[Simple delivery versus payment tutorial](docs/DvPTutorial.md)
-
 [Most common tasks](docs/IWantTo.md)
+
+[Simple delivery versus payment tutorial](docs/DvPTutorial.md)
 
 ## Other useful links
 

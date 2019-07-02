@@ -10,6 +10,7 @@ import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.identity.Party
+import net.corda.core.internal.uncheckedCast
 import java.security.PublicKey
 
 /**
@@ -27,8 +28,7 @@ import java.security.PublicKey
  */
 open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, FungibleToken<T>>() {
 
-    override val accepts: Class<FungibleToken<T>>
-        get() = FungibleToken::class.java as Class<FungibleToken<T>>
+    override val accepts: Class<FungibleToken<T>> get() = uncheckedCast(FungibleToken::class.java)
 
     companion object {
         val contractId = this::class.java.enclosingClass.canonicalName

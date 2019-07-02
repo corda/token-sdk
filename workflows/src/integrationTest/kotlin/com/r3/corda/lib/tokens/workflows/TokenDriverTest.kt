@@ -9,7 +9,7 @@ import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefsOrZero
 import com.r3.corda.lib.tokens.contracts.utilities.withNotary
 import com.r3.corda.lib.tokens.money.FiatCurrency
 import com.r3.corda.lib.tokens.money.GBP
-import com.r3.corda.lib.tokens.testing.statesAndContracts.House
+import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.workflows.flows.evolvable.CreateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
