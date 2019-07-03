@@ -1,4 +1,4 @@
-package src.test.kotlin.com.r3.corda.lib.tokens.integrationTest
+package com.r3.corda.lib.tokens.integrationTest
 
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
