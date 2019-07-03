@@ -31,12 +31,12 @@ class NonFungibleTokenTests : ContractTestCommon() {
             }
             // Signed by a party other than the issuer.
             tweak {
-                command(BOB.publicKey, IssueTokenCommand(issuedToken))
+                command(BOB.publicKey, IssueTokenCommand(issuedToken, outputs = listOf(0)))
                 this `fails with` "The issuer must be the only signing party when a token is issued."
             }
             // Non issuer signature present.
             tweak {
-                command(listOf(BOB.publicKey, BOB.publicKey), IssueTokenCommand(issuedToken))
+                command(listOf(BOB.publicKey, BOB.publicKey), IssueTokenCommand(issuedToken, outputs = listOf(0)))
                 this `fails with` "The issuer must be the only signing party when a token is issued."
             }
             // With an incorrect command.
@@ -46,50 +46,50 @@ class NonFungibleTokenTests : ContractTestCommon() {
             }
             // With different command types for one group.
             tweak {
-                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
-                command(ISSUER.publicKey, MoveTokenCommand(issuedToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken, outputs = listOf(0)))
+                command(ISSUER.publicKey, MoveTokenCommand(issuedToken, outputs = listOf(0)))
                 this `fails with` "There must be exactly one TokenCommand type per group! For example: You cannot " +
                         "map an Issue AND a Move command to one group of tokens in a transaction."
             }
             // Includes a group with no assigned command.
             tweak {
                 output(FungibleTokenContract.contractId, 10.USD issuedBy ISSUER.party heldBy ALICE.party)
-                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken, outputs = listOf(0)))
                 this `fails with` "There is a token group with no assigned command!"
             }
             // With some input states.
             tweak {
                 input(NonFungibleTokenContract.contractId, issuedToken heldBy ALICE.party)
-                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
-                this `fails with` "When issuing non fungible tokens, there cannot be any input states."
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken, outputs = listOf(0)))
+                this `fails with` "There is a token group with no assigned command"
             }
 
             // Includes another token type and a matching command.
             tweak {
                 val otherToken = USD issuedBy ISSUER.party
                 output(FungibleTokenContract.contractId, 10 of otherToken heldBy ALICE.party)
-                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
-                command(ISSUER.publicKey, IssueTokenCommand(otherToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken, outputs = listOf(0)))
+                command(ISSUER.publicKey, IssueTokenCommand(otherToken, outputs = listOf(1)))
                 verifies()
             }
             // Includes more output states of the same token type.
             tweak {
                 output(NonFungibleTokenContract.contractId, issuedToken heldBy ALICE.party)
                 output(NonFungibleTokenContract.contractId, issuedToken heldBy ALICE.party)
-                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken, outputs = listOf(0, 1, 2)))
                 this `fails with` "When issuing non fungible tokens, there must be a single output state."
             }
             // Includes the same token issued by a different issuer.
             // You wouldn't usually do this but it is possible.
             tweak {
                 output(NonFungibleTokenContract.contractId, issuedToken issuedBy BOB.party heldBy ALICE.party)
-                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
-                command(BOB.publicKey, IssueTokenCommand(issuedToken issuedBy BOB.party))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken, outputs = listOf(0)))
+                command(BOB.publicKey, IssueTokenCommand(issuedToken issuedBy BOB.party, outputs = listOf(1)))
                 verifies()
             }
             // With the correct command and signed by the issuer.
             tweak {
-                command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
+                command(ISSUER.publicKey, IssueTokenCommand(issuedToken, outputs = listOf(0)))
                 verifies()
             }
         }
@@ -108,16 +108,16 @@ class NonFungibleTokenTests : ContractTestCommon() {
 
             // Add the move command, signed by ALICE.
             tweak {
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
                 verifies()
             }
 
             // Move coupled with an issue.
             tweak {
                 output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
-                command(BOB.publicKey, IssueTokenCommand(USD issuedBy BOB.party))
+                command(BOB.publicKey, IssueTokenCommand(USD issuedBy BOB.party, outputs = listOf(1)))
                 // Command for the move.
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
                 verifies()
             }
 
@@ -125,18 +125,18 @@ class NonFungibleTokenTests : ContractTestCommon() {
             tweak {
                 val output = issuedToken issuedBy BOB.party heldBy BOB.party
                 output(FungibleTokenContract.contractId, output)
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken issuedBy BOB.party))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken issuedBy BOB.party, outputs = listOf(1)))
                 // Command for the move.
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
                 this `fails with` "When moving a non fungible token, there must be one input state present."
             }
 
             // Output missing.
             tweak {
                 input(NonFungibleTokenContract.contractId, issuedToken issuedBy BOB.party heldBy ALICE.party)
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken issuedBy BOB.party))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken issuedBy BOB.party, inputs = listOf(1)))
                 // Command for the move.
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
                 this `fails with` "When moving a non fungible token, there must be one output state present."
             }
 
@@ -144,33 +144,35 @@ class NonFungibleTokenTests : ContractTestCommon() {
             tweak {
                 val anotherIssuedToken = RUB issuedBy CHARLIE.party
                 val anotherIssuedTokenHeldByAlice = anotherIssuedToken heldBy ALICE.party
+
                 input(NonFungibleTokenContract.contractId, anotherIssuedTokenHeldByAlice)
                 output(NonFungibleTokenContract.contractId, anotherIssuedTokenHeldByAlice withNewHolder BOB.party)
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
+
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
                 // Command for the move.
-                command(ALICE.publicKey, MoveTokenCommand(anotherIssuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(anotherIssuedToken, inputs = listOf(1), outputs = listOf(1)))
                 verifies()
             }
 
             // Two moves (one group).
             tweak {
-                // Add a basic move from Peter to Paul.
+                //This is now possible with the indexed commands
                 input(FungibleTokenContract.contractId, 20 of issuedToken heldBy CHARLIE.party)
                 output(FungibleTokenContract.contractId, 20 of issuedToken heldBy DAENERYS.party)
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
-                command(CHARLIE.publicKey, MoveTokenCommand(issuedToken))
-                this `fails with` "There should be only one move command per group when moving non fungible tokens."
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
+                command(CHARLIE.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(1), outputs = listOf(1)))
+                verifies()
             }
 
             // Wrong public key.
             tweak {
-                command(BOB.publicKey, MoveTokenCommand(issuedToken))
+                command(BOB.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
                 this `fails with` "The current holder must be the only signing party when a non-fungible (discrete) token is moved."
             }
 
             // Includes an incorrect public with the correct key still being present.
             tweak {
-                command(listOf(BOB.publicKey, ALICE.publicKey), MoveTokenCommand(issuedToken))
+                command(listOf(BOB.publicKey, ALICE.publicKey), MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
                 this `fails with` "The current holder must be the only signing party when a non-fungible (discrete) token is moved."
             }
         }
@@ -186,32 +188,32 @@ class NonFungibleTokenTests : ContractTestCommon() {
 
             // Add the redeem command, signed by ALICE but not the issuer.
             tweak {
-                command(ALICE.publicKey, RedeemTokenCommand(issuedToken))
-                this `fails with` "The issuer must be the signing party when an amount of tokens are redeemed."
+                command(ALICE.publicKey, RedeemTokenCommand(issuedToken, inputs = listOf(0)))
+                this `fails with` "The issuer must be a signing party when an amount of tokens are redeemed"
             }
 
             // Add the redeem command, signed by the issuer but not alice.
             tweak {
-                command(ISSUER.publicKey, RedeemTokenCommand(issuedToken))
+                command(ISSUER.publicKey, RedeemTokenCommand(issuedToken, inputs = listOf(0)))
                 this `fails with` "Holders of redeemed states must be the signing parties."
             }
 
             // Add the issuer's and alice's public key. Will verify.
             tweak {
-                command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken))
+                command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0)))
                 verifies()
             }
 
             // Spurious output.
             tweak {
-                command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken))
+                command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
                 output(NonFungibleTokenContract.contractId, issuedToken heldBy ALICE.party)
                 this `fails with` "When redeeming an owned token, there must be no output."
             }
 
             // Additional input.
             tweak {
-                command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken))
+                command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0, 1)))
                 input(NonFungibleTokenContract.contractId, heldByAlice)
                 this `fails with` "When redeeming an owned token, there must be only one input."
             }
@@ -221,8 +223,8 @@ class NonFungibleTokenTests : ContractTestCommon() {
             tweak {
                 val otherIssuedToken = PTK issuedBy BOB.party
                 input(NonFungibleTokenContract.contractId, otherIssuedToken heldBy ALICE.party)
-                command(listOf(ALICE.publicKey, BOB.publicKey), RedeemTokenCommand(otherIssuedToken))
-                command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken))
+                command(listOf(ALICE.publicKey, BOB.publicKey), RedeemTokenCommand(otherIssuedToken, inputs = listOf(1)))
+                command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0)))
                 verifies()
             }
         }

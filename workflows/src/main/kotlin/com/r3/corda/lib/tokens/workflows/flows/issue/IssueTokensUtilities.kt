@@ -21,8 +21,12 @@ fun addIssueTokens(transactionBuilder: TransactionBuilder, outputs: List<Abstrac
             val issuers = states.map { it.issuer }.toSet()
             require(issuers.size == 1) { "All tokensToIssue must have the same issuer." }
             val issuer = issuers.single()
-            addCommand(IssueTokenCommand(issuedTokenType), issuer.owningKey)
-            states.forEach { state -> addOutputState(state) }
+            var startingIndex = outputStates().size
+            val indexesAdded = states.map { state ->
+                addOutputState(state)
+                startingIndex++
+            }
+            addCommand(IssueTokenCommand(issuedTokenType, indexesAdded), issuer.owningKey)
         }
     }
 }

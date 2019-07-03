@@ -20,8 +20,8 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
 
     override fun verifyIssue(
             issueCommand: CommandWithParties<TokenCommand<T>>,
-            inputs: List<NonFungibleToken<T>>,
-            outputs: List<NonFungibleToken<T>>,
+            inputs: List<IndexedState<NonFungibleToken<T>>>,
+            outputs: List<IndexedState<NonFungibleToken<T>>>,
             attachments: List<Attachment>
     ) {
         require(inputs.isEmpty()) { "When issuing non fungible tokens, there cannot be any input states." }
@@ -30,7 +30,7 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
         // There can only be one issuer per group as the issuer is part of the token which is used to group states.
         // If there are multiple issuers for the same tokens then there will be a group for each issued token. So,
         // the line below should never fail on single().
-        require(issueCommand.signers.singleOrNull { it == output.issuer.owningKey } != null) {
+        require(issueCommand.signers.singleOrNull { it == output.state.data.issuer.owningKey } != null) {
             "The issuer must be the only signing party when a token is issued."
         }
     }
@@ -41,8 +41,8 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
     // groups.
     override fun verifyMove(
             moveCommands: List<CommandWithParties<TokenCommand<T>>>,
-            inputs: List<NonFungibleToken<T>>,
-            outputs: List<NonFungibleToken<T>>,
+            inputs: List<IndexedState<NonFungibleToken<T>>>,
+            outputs: List<IndexedState<NonFungibleToken<T>>>,
             attachments: List<Attachment>
     ) {
         // There must be inputs and outputs present.
@@ -51,22 +51,22 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
         // Sum the amount of input and output tokens.
         val input = inputs.single()
         val output = outputs.single()
-        require(input.token == output.token) {
+        require(input.state.data.token == output.state.data.token) {
             "When moving a token, there must be an input and corresponding output for that token."
         }
         // There should only be one move command with one signature.
         require(moveCommands.size == 1) { "There should be only one move command per group when moving non fungible tokens." }
-        require(input.linearId == output.linearId) { "The linear ID must not change." }
+        require(input.state.data.linearId == output.state.data.linearId) { "The linear ID must not change." }
         val moveCommand: CommandWithParties<TokenCommand<T>> = moveCommands.single()
-        require(moveCommand.signers.toSet() == setOf(input.holder.owningKey)) {
+        require(moveCommand.signers.toSet() == setOf(input.state.data.holder.owningKey)) {
             "The current holder must be the only signing party when a non-fungible (discrete) token is moved."
         }
     }
 
     override fun verifyRedeem(
             redeemCommand: CommandWithParties<TokenCommand<T>>,
-            inputs: List<NonFungibleToken<T>>,
-            outputs: List<NonFungibleToken<T>>,
+            inputs: List<IndexedState<NonFungibleToken<T>>>,
+            outputs: List<IndexedState<NonFungibleToken<T>>>,
             attachments: List<Attachment>
     ) {
         // There must be inputs and outputs present.
@@ -75,11 +75,11 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
         val ownedToken = inputs.single()
         // Only the issuer and holders should be signing the redeem command.
         // There will only ever be one issuer as the issuer forms part of the grouping key.
-        val issuerKey = ownedToken.token.issuer.owningKey
-        val holdersKeys = inputs.map { it.holder.owningKey }
+        val issuerKey = ownedToken.state.data.token.issuer.owningKey
+        val holdersKeys = inputs.map { it.state.data.holder.owningKey }
         val signers = redeemCommand.signers
         require(issuerKey in signers) {
-            "The issuer must be the signing party when an amount of tokens are redeemed."
+            "The issuer must be a signing party when an amount of tokens are redeemed."
         }
         require(signers.containsAll(holdersKeys)) {
             "Holders of redeemed states must be the signing parties."

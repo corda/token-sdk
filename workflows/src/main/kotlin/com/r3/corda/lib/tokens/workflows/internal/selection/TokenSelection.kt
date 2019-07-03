@@ -1,14 +1,12 @@
 package com.r3.corda.lib.tokens.workflows.internal.selection
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.lib.tokens.contracts.commands.RedeemTokenCommand
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
-import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
 import com.r3.corda.lib.tokens.workflows.utilities.sortByStateRefAscending
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
 import net.corda.core.contracts.Amount
@@ -241,24 +239,13 @@ class TokenSelection(
     // For example we assume that existStates have same issuer.
     @Suspendable
     fun <T : TokenType> generateExit(
-            builder: TransactionBuilder,
             exitStates: List<StateAndRef<FungibleToken<T>>>,
             amount: Amount<T>,
             changeOwner: AbstractParty
-    ) {
-        val firstState = exitStates.first().state.data
+    ): Pair<List<StateAndRef<FungibleToken<T>>>, FungibleToken<T>?> {
         // Choose states to cover amount - return ones used, and change output
         val changeOutput = change(exitStates, amount, changeOwner)
-        val states = listOf(firstState) + if (changeOutput == null) emptyList() else listOf(changeOutput)
-        addTokenTypeJar(states, builder)
-        val moveKey = firstState.holder.owningKey
-        val issuerKey = firstState.amount.token.issuer.owningKey
-        val redeemCommand = RedeemTokenCommand(firstState.amount.token)
-        builder.apply {
-            exitStates.forEach { addInputState(it) }
-            if (changeOutput != null) addOutputState(changeOutput)
-            addCommand(redeemCommand, issuerKey, moveKey)
-        }
+        return Pair(exitStates, changeOutput)
     }
 
     private fun <T : TokenType> change(
