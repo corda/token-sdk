@@ -51,7 +51,7 @@ class FungibleTokenTests : ContractTestCommon() {
             tweak {
                 command(ISSUER.publicKey, IssueTokenCommand(issuedToken, listOf(0)))
                 command(ISSUER.publicKey, MoveTokenCommand(issuedToken, listOf(0)))
-                this `fails with` " There is an unmatched token command in the transaction"
+                verifies()
             }
             // Includes a group with no assigned command.
             tweak {
