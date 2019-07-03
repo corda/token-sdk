@@ -10,6 +10,7 @@ import com.r3.corda.lib.tokens.money.FiatCurrency
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
+import net.corda.core.contracts.UniqueIdentifier
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -29,7 +30,7 @@ class Examples : LedgerTestWithPersistence() {
 
     @Test
     fun `evolvable token definition`() {
-        val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(BOB.party))
+        val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(BOB.party), linearId = UniqueIdentifier())
         val housePointer: TokenPointer<House> = house.toPointer()
         val houseIssuedByBob: IssuedTokenType<TokenPointer<House>> = housePointer issuedBy BOB.party
         houseIssuedByBob heldBy ALICE.party

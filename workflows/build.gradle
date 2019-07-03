@@ -62,16 +62,16 @@ dependencies {
     testCompile "junit:junit:$junit_version"
 
     // CorDapp dependencies.
-    cordapp project(":contracts")
-    cordapp project(":modules:money")
-    cordapp project(":modules:test-contracts")
+    cordaCompile project(":contracts")
+    cordaCompile project(":modules:money")
+    cordaCompile project(":modules:contracts-for-testing")
+}
+
+jar {
+    baseName "tokens-workflows"
 }
 
 task integrationTest(type: Test, dependsOn: []) {
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
-}
-
-jar {
-    baseName "tokens-workflows"
 }

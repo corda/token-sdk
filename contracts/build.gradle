@@ -32,7 +32,7 @@ dependencies {
     testCompile "junit:junit:$junit_version"
     testCompile "$corda_release_group:corda-node-driver:$corda_release_version"
     testCompile project(":modules:money")
-    testCompile project(":modules:test-contracts")
+    testCompile project(":modules:contracts-for-testing")
 }
 
 cordapp {

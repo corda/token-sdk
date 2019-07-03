@@ -1,4 +1,4 @@
-package com.r3.corda.lib.tokens.workflows
+package src.test.kotlin.com.r3.corda.lib.tokens.integrationTest
 
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
@@ -15,11 +15,14 @@ import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.internal.testflows.*
+import com.r3.corda.lib.tokens.workflows.singleOutput
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
 import com.r3.corda.lib.tokens.workflows.utilities.ownedTokenCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
+import com.r3.corda.lib.tokens.workflows.watchForTransaction
 import net.corda.core.CordaRuntimeException
 import net.corda.core.contracts.Amount
+import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.Party
 import net.corda.core.internal.concurrent.transpose
 import net.corda.core.messaging.startFlow
@@ -39,7 +42,7 @@ import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.Test
 
 class TokenDriverTest {
-    @Test(timeout = 300_000)
+    @Test
     fun `beefy tokens integration test`() {
         driver(DriverParameters(
                 portAllocation = incrementalPortAllocation(20000),
@@ -51,7 +54,8 @@ class TokenDriverTest {
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")
                 ),
                 // TODO this should be default to 4 in main corda no?
-                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList()),
+                isDebug = true
         )) {
             val (issuer, nodeA, nodeB) = listOf(
                     startNode(providedName = BOC_NAME),
@@ -62,37 +66,44 @@ class TokenDriverTest {
             val nodeAParty = nodeA.nodeInfo.singleIdentity()
             val nodeBParty = nodeB.nodeInfo.singleIdentity()
             // Create evolvable house state.
-            val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(issuerParty))
+            println("ONE")
+            val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(issuerParty), linearId = UniqueIdentifier())
             val housePublishTx = issuer.rpc.startFlowDynamic(
                     CreateEvolvableToken::class.java,
                     house withNotary defaultNotaryIdentity
             ).returnValue.getOrThrow() // TODO test choosing getPreferredNotary
             // Issue non-fungible evolvable state to node A using confidential identities.
             val housePtr = house.toPointer<House>()
+            println("TWO")
             issuer.rpc.startFlowDynamic(
                     ConfidentialIssueTokens::class.java,
                     listOf(housePtr issuedBy issuerParty heldBy nodeAParty),
                     emptyList<Party>() // TODO this should be handled by JvmOverloads on the constructor, but for some reason corda doesn't see the second constructor
             ).returnValue.getOrThrow()
+            println("THREE")
             // Issue some fungible GBP cash to NodeA, NodeB.
             val issueA = issuer.rpc.startFlowDynamic(IssueTokens::class.java, 1_000_000.GBP, issuerParty, nodeAParty, emptyList<Party>()).returnValue.getOrThrow()
             val issueB = issuer.rpc.startFlowDynamic(IssueTokens::class.java, 900_000.GBP, issuerParty, nodeBParty, emptyList<Party>()).returnValue.getOrThrow()
+            println("ISSUES DONE")
             nodeA.rpc.watchForTransaction(issueA).getOrThrow()
             nodeB.rpc.watchForTransaction(issueB).getOrThrow()
             // Check that node A has cash and house.
+            println("VAULT QUERY HOUSE TYPE")
             assertThat(nodeA.rpc.vaultQuery(House::class.java).states).isNotEmpty
+            println("VAULT QUERY DONE")
             assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
                     .isEqualTo(1_000_000L.GBP issuedBy issuerParty)
             assertThat(nodeB.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
                     .isEqualTo(900_000L.GBP issuedBy issuerParty)
             // Move house to Node B using conf identities in exchange for cash using DvP flow.
             // TODO use conf identities
-            val dvpTx = nodeA.rpc.startFlowDynamic(
-                    DvPFlow::class.java,
+            println("FOUR HALF")
+            val dvpTx = nodeA.rpc.startFlow(
+                    ::DvPFlow,
                     house,
                     nodeBParty
             ).returnValue.getOrThrow()
-
+            println("FIVE")
             // Wait for both nodes to record the transaction.
             nodeA.rpc.watchForTransaction(dvpTx).getOrThrow()
             nodeB.rpc.watchForTransaction(dvpTx).getOrThrow()

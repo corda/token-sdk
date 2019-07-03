@@ -16,6 +16,7 @@ import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountsByToken
 import com.r3.corda.lib.tokens.workflows.utilities.tokenBalance
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.internal.chooseIdentityAndCert
@@ -45,7 +46,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     @Test
     fun `create evolvable token`() {
         // Create new token.
-        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()), linearId = UniqueIdentifier())
         val tx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         val token = tx.singleOutput<House>()
         assertEquals(house, token.state.data)
@@ -54,7 +55,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     @Test
     fun `create and update evolvable token`() {
         // Create new token.
-        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()), linearId = UniqueIdentifier())
         val tx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         val oldToken = tx.singleOutput<House>()
         // Propose an update to the token.
@@ -86,7 +87,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     @Test
     fun `create evolvable token, then issue evolvable token`() {
         // Create new token.
-        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()), linearId = UniqueIdentifier())
         val createTokenTx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         val token = createTokenTx.singleOutput<House>()
         // Issue amount of the token.
@@ -103,7 +104,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     @Test
     fun `check token recipient also receives token`() {
         // Create new token.
-        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()), linearId = UniqueIdentifier())
         val createTokenTx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         val houseToken: StateAndRef<House> = createTokenTx.singleOutput()
         // Issue amount of the token.
@@ -117,7 +118,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     @Test
     fun `create evolvable token, then issue tokens, then update token`() {
         // Create new token.
-        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()), linearId = UniqueIdentifier())
         val createTokenTx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         val token = createTokenTx.singleOutput<House>()
         // Issue amount of the token.
@@ -135,7 +136,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     @Test
     fun `create evolvable token, then issue and move`() {
         // Create new token.
-        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()), linearId = UniqueIdentifier())
         I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         // Issue amount of the token.
         val housePointer: TokenPointer<House> = house.toPointer()
@@ -152,7 +153,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     @Test
     fun `create evolvable token and issue to multiple nodes`() {
         // Create new token.
-        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()), linearId = UniqueIdentifier())
         val housePointer: TokenPointer<House> = house.toPointer()
         val tx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         val token = tx.singleOutput<House>()
@@ -172,7 +173,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     @Test
     fun `moving evolvable token updates distribution list`() {
         //Create evolvable token with 2 maintainers
-        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity(), I2.legalIdentity()))
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity(), I2.legalIdentity()), linearId = UniqueIdentifier())
         val housePointer: TokenPointer<House> = house.toPointer()
         val tx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         val token = tx.singleOutput<House>()
@@ -235,7 +236,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     @Test
     fun `create evolvable token, then issue to the same node twice, expecting only one distribution record`() {
         // Create new token.
-        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()))
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()), linearId = UniqueIdentifier())
         val housePointer: TokenPointer<House> = house.toPointer()
         // Create evolvable token on ledger.
         I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
