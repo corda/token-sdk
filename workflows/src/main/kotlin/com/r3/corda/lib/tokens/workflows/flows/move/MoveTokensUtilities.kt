@@ -45,9 +45,21 @@ fun <T : TokenType> addMoveTokens(
             val inputGroup = inputGroups[issuedTokenType]
                     ?: throw IllegalArgumentException("No corresponding inputs for the outputs issued token type: $issuedTokenType")
             val keys = inputGroup.map { it.state.data.holder.owningKey }
-            addCommand(MoveTokenCommand(issuedTokenType), keys)
-            inputGroup.forEach { addInputState(it) }
-            outputStates.forEach { addOutputState(it) }
+
+            var inputStartingIdx = inputStates().size
+            var outputStartingIdx = outputStates().size
+
+            val inputIdx = inputGroup.map {
+                addInputState(it)
+                inputStartingIdx++
+            }
+
+            val outputIdx = outputStates.map {
+                addOutputState(it)
+                outputStartingIdx++
+            }
+
+            addCommand(MoveTokenCommand(issuedTokenType, inputs = inputIdx, outputs = outputIdx), keys)
         }
     }
 

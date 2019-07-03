@@ -84,9 +84,17 @@ subprojects {
             exclude "**/log4j2*.xml"
         }
     }
-    
+
+    tasks.withType(Test) {
+        forkEvery = 10
+        ignoreFailures = true
+        maxParallelForks = (System.env.CORDA_TESTING_FORKS == null) ? 1 :  "$System.env.CORDA_TESTING_FORKS".toInteger()
+    }
+
     tasks.withType(Test){
-        forkEvery = 1
+        if (name.contains("integrationTest")){
+            maxParallelForks = 1
+        }
     }
 }
 

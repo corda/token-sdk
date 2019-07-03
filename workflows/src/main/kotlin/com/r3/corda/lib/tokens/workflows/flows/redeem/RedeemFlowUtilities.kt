@@ -44,11 +44,21 @@ fun <T : TokenType> addTokensToRedeem(
     addNotaryWithCheck(transactionBuilder, firstState.notary)
     val moveKey = firstState.data.holder.owningKey
     val issuerKey = firstState.data.issuer.owningKey
-    val redeemCommand = RedeemTokenCommand(firstState.data.issuedTokenType)
+
+    var inputIdx = transactionBuilder.inputStates().size
+    val outputIdx = transactionBuilder.outputStates().size
     transactionBuilder.apply {
-        inputs.forEach { addInputState(it) }
-        if (changeOutput != null) addOutputState(changeOutput)
-        addCommand(redeemCommand, issuerKey, moveKey)
+        val inputIndicies = inputs.map {
+            addInputState(it)
+            inputIdx++
+        }
+        val outputs = if (changeOutput != null) {
+            addOutputState(changeOutput)
+            listOf(outputIdx)
+        } else {
+            emptyList()
+        }
+        transactionBuilder.addCommand(RedeemTokenCommand(firstState.data.issuedTokenType, inputIndicies, outputs), issuerKey, moveKey)
     }
     val states = inputs.map { it.state.data } + if (changeOutput == null) emptyList() else listOf(changeOutput)
     addTokenTypeJar(states, transactionBuilder)
@@ -101,11 +111,11 @@ fun <T : TokenType> addFungibleTokensToRedeem(
     val notary = fungibleStates.first().state.notary
     addNotaryWithCheck(transactionBuilder, notary)
     // TODO unify it, probably need to move generate exit to redeem utils
-    tokenSelection.generateExit(
-            builder = transactionBuilder,
+    val (exitStates, change) = tokenSelection.generateExit(
             exitStates = fungibleStates,
             amount = amount,
             changeOwner = changeOwner
     )
+    addTokensToRedeem(transactionBuilder, exitStates, change)
     return transactionBuilder
 }

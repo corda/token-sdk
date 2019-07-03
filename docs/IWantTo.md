@@ -274,7 +274,7 @@ MoveFungibleTokens(
 
 _Responder flow:_ `MoveFungibleTokensHandler`
 
-_Conidential version:_ `ConfidentialMoveFungibleTokens`, _responder_: `ConfidentialMoveFungibleTokensHandler`
+_Confidential version:_ `ConfidentialMoveFungibleTokens`, _responder_: `ConfidentialMoveFungibleTokensHandler`
 
 **Inline**
 
@@ -316,7 +316,7 @@ Similar to previous examples you can provide `queryCriteria` and list of observe
 
 _Responder flow:_ `MoveNonFungibleTokensHandler`
 
-_Conidential version:_ `ConfidentialMoveNonFungibleTokens`, _responder_: `ConfidentialMoveNonFungibleTokensHandler`
+_Confidential version:_ `ConfidentialMoveNonFungibleTokens`, _responder_: `ConfidentialMoveNonFungibleTokensHandler`
 
 **Inline**
 
@@ -368,7 +368,7 @@ RedeemFungibleTokens(amount = amountToRedeem, issuer = issuerParty, observers = 
 
 _Responder flow:_ `RedeemFungibleTokensHandler`
 
-_Conidential version:_ `ConfidentialRedeemFungibleTokens`, _responder_: `ConfidentialRedeemFungibleTokensHandler`
+_Confidential version:_ `ConfidentialRedeemFungibleTokens`, _responder_: `ConfidentialRedeemFungibleTokensHandler`
 
 **Inline**
 
@@ -387,7 +387,7 @@ subFlow(RedeemFungibleTokensFlow(
 
 _Responder flow:_ `RedeemTokensFlowHandler`
 
-_Conidential version:_ `ConfidentialRedeemFungibleTokensFlow`,
+_Confidential version:_ `ConfidentialRedeemFungibleTokensFlow`,
  
  _responder_: `ConfidentialRedeemFungibleTokensFlowHandler`
 
