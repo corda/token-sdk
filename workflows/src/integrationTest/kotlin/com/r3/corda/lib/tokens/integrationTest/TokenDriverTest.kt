@@ -54,8 +54,7 @@ class TokenDriverTest {
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")
                 ),
                 // TODO this should be default to 4 in main corda no?
-                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList()),
-                isDebug = true
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
         )) {
             val (issuer, nodeA, nodeB) = listOf(
                     startNode(providedName = BOC_NAME),
