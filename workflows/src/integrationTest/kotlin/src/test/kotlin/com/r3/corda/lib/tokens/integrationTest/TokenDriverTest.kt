@@ -66,7 +66,6 @@ class TokenDriverTest {
             val nodeAParty = nodeA.nodeInfo.singleIdentity()
             val nodeBParty = nodeB.nodeInfo.singleIdentity()
             // Create evolvable house state.
-            println("ONE")
             val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(issuerParty), linearId = UniqueIdentifier())
             val housePublishTx = issuer.rpc.startFlowDynamic(
                     CreateEvolvableToken::class.java,
@@ -74,36 +73,29 @@ class TokenDriverTest {
             ).returnValue.getOrThrow() // TODO test choosing getPreferredNotary
             // Issue non-fungible evolvable state to node A using confidential identities.
             val housePtr = house.toPointer<House>()
-            println("TWO")
             issuer.rpc.startFlowDynamic(
                     ConfidentialIssueTokens::class.java,
                     listOf(housePtr issuedBy issuerParty heldBy nodeAParty),
                     emptyList<Party>() // TODO this should be handled by JvmOverloads on the constructor, but for some reason corda doesn't see the second constructor
             ).returnValue.getOrThrow()
-            println("THREE")
             // Issue some fungible GBP cash to NodeA, NodeB.
             val issueA = issuer.rpc.startFlowDynamic(IssueTokens::class.java, 1_000_000.GBP, issuerParty, nodeAParty, emptyList<Party>()).returnValue.getOrThrow()
             val issueB = issuer.rpc.startFlowDynamic(IssueTokens::class.java, 900_000.GBP, issuerParty, nodeBParty, emptyList<Party>()).returnValue.getOrThrow()
-            println("ISSUES DONE")
             nodeA.rpc.watchForTransaction(issueA).getOrThrow()
             nodeB.rpc.watchForTransaction(issueB).getOrThrow()
             // Check that node A has cash and house.
-            println("VAULT QUERY HOUSE TYPE")
             assertThat(nodeA.rpc.vaultQuery(House::class.java).states).isNotEmpty
-            println("VAULT QUERY DONE")
             assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
                     .isEqualTo(1_000_000L.GBP issuedBy issuerParty)
             assertThat(nodeB.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
                     .isEqualTo(900_000L.GBP issuedBy issuerParty)
             // Move house to Node B using conf identities in exchange for cash using DvP flow.
             // TODO use conf identities
-            println("FOUR HALF")
             val dvpTx = nodeA.rpc.startFlow(
                     ::DvPFlow,
                     house,
                     nodeBParty
             ).returnValue.getOrThrow()
-            println("FIVE")
             // Wait for both nodes to record the transaction.
             nodeA.rpc.watchForTransaction(dvpTx).getOrThrow()
             nodeB.rpc.watchForTransaction(dvpTx).getOrThrow()
