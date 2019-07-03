@@ -135,27 +135,18 @@ Flow takes house to sell and new owner party. Let's define price notification to
     data class PriceNotification(val amount: Amount<FiatCurrency>)
 ```
 
-First we need to extract house state from the vault. We can use `ownedTokensByToken` utility function:
+Then construct transaction builder with house move to the new owner:
 
 ```kotlin
     @Suspendable
     override fun call(): SignedTransaction {
         val housePtr = house.toPointer<House>()
-        val houseStateRef = serviceHub.vaultService.ownedTokensByToken(housePtr).states.singleOrNull()
-                            ?: throw IllegalArgumentException("Couldn't find house state: $house in the vault.")
+        // We can specify preferred notary in cordapp config file, otherwise the first one from network parameters is chosen.
+        val txBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
+        addMoveTokens(txBuilder, housePointer, newOwner)
         ...
     }
 ```
-
-Then construct transaction builder with house move to the new owner:
-
-```kotlin
-        ...
-        // We can specify preferred notary in cordapp config file, otherwise the first one from network parameters is chosen.
-        val txBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
-        addMoveTokens(txBuilder, houseStateRef.state.data.token.tokenType, newOwner)
-        ...
-``` 
 
 Time to contact the counterparty to collect `GBP` states in exchange for house:
 

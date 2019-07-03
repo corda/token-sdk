@@ -68,6 +68,8 @@ subprojects {
         maven { url "https://repo.gradle.org/gradle/libs-releases-local/" }
     }
 
+    apply plugin: 'kotlin'
+
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
         kotlinOptions {
             languageVersion = "1.2"
@@ -99,13 +101,11 @@ subprojects {
 // Don't publish an empty "modules" JAR.
 def publishProjects = [
         project(":modules:money"),
-        project(":modules:test-contracts"),
         project(":contracts"),
         project(":workflows")
 ]
 
 configure(publishProjects) { subproject ->
-    apply plugin: 'kotlin'
     apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.artifactory'
 

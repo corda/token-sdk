@@ -5,6 +5,7 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AbstractParty
+import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.TransactionBuilder
 
@@ -42,8 +43,9 @@ constructor(
 
     @Suspendable
     override fun addMove(transactionBuilder: TransactionBuilder) {
-        addMoveTokens(
+        addMoveFungibleTokens(
                 transactionBuilder = transactionBuilder,
+                serviceHub = serviceHub,
                 partiesAndAmounts = partiesAndAmounts,
                 changeHolder = changeHolder ?: ourIdentity,
                 queryCriteria = queryCriteria

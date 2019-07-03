@@ -29,8 +29,9 @@ constructor(
 ) : AbstractRedeemTokensFlow() {
     @Suspendable
     override fun generateExit(transactionBuilder: TransactionBuilder) {
-        addRedeemTokens(
+        addFungibleTokensToRedeem(
                 transactionBuilder = transactionBuilder,
+                serviceHub = serviceHub,
                 amount = amount,
                 issuer = issuerSession.counterparty,
                 changeOwner = changeOwner ?: ourIdentity,

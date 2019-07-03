@@ -15,5 +15,5 @@ data class House(
         val valuation: Amount<FiatCurrency>,
         override val maintainers: List<Party>,
         override val fractionDigits: Int = 5,
-        override val linearId: UniqueIdentifier = UniqueIdentifier()
+        override val linearId: UniqueIdentifier
 ) : EvolvableTokenType()

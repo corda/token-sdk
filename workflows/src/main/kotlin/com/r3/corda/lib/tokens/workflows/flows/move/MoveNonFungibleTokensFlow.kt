@@ -29,6 +29,6 @@ constructor(
 ) : AbstractMoveTokensFlow() {
     @Suspendable
     override fun addMove(transactionBuilder: TransactionBuilder) {
-        addMoveTokens(transactionBuilder, partyAndToken, queryCriteria)
+        addMoveNonFungibleTokens(transactionBuilder, serviceHub, partyAndToken, queryCriteria)
     }
 }
