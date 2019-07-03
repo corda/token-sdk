@@ -1,4 +1,4 @@
-package src.test.kotlin.com.r3.corda.lib.tokens.integrationTest
+package com.r3.corda.lib.tokens.integrationTest
 
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
@@ -54,8 +54,7 @@ class TokenDriverTest {
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")
                 ),
                 // TODO this should be default to 4 in main corda no?
-                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList()),
-                isDebug = true
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
         )) {
             val (issuer, nodeA, nodeB) = listOf(
                     startNode(providedName = BOC_NAME),
