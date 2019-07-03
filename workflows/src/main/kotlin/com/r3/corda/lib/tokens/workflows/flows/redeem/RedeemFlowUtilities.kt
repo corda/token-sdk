@@ -46,7 +46,7 @@ fun <T : TokenType> addTokensToRedeem(
     val issuerKey = firstState.data.issuer.owningKey
 
     var inputIdx = transactionBuilder.inputStates().size
-    var outputIdx = transactionBuilder.outputStates().size
+    val outputIdx = transactionBuilder.outputStates().size
     transactionBuilder.apply {
         val inputIndicies = inputs.map {
             addInputState(it)

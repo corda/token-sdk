@@ -11,6 +11,7 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.*
 import net.corda.core.crypto.SecureHash
 import net.corda.core.transactions.LedgerTransaction
+import net.corda.core.utilities.loggerFor
 
 /**
  * This is an abstract contract which contains common functionality used by [FungibleTokenContract] and
@@ -103,9 +104,11 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
 
 
         val allMatchedCommands = groupsAndCommands.map { it.first.first() }.toSet()
-        require(allMatchedCommands == tokenCommands.toSet()) {
-            "There is an unmatched token command in the transaction: ${allMatchedCommands.subtract(tokenCommands.toSet()) + tokenCommands.subtract(allMatchedCommands.toSet())}"
+        val extraCommands = (tokenCommands - allMatchedCommands).toSet()
+        if (extraCommands.isNotEmpty()) {
+            loggerFor<AbstractTokenContract<T, U>>().warn("Unprocessed commands: ${extraCommands}")
         }
+
     }
 
     private fun groupMatchesCommand(it: CommandWithParties<TokenCommand<T>>, group: IndexedInOutGroup<U, TokenInfo>): Boolean {

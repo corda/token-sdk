@@ -14,7 +14,6 @@ import com.r3.corda.lib.tokens.testing.states.DodgeToken
 import com.r3.corda.lib.tokens.testing.states.DodgeTokenContract
 import com.r3.corda.lib.tokens.testing.states.RUB
 import com.r3.corda.lib.tokens.testing.states.RubleToken
-import net.corda.core.contracts.Amount
 import org.junit.Test
 
 // TODO: Some of these tests are testing AbstractToken and should be moved into the super-class.
@@ -237,16 +236,16 @@ class FungibleTokenTests : ContractTestCommon() {
         val amount = 10 of issuedToken
         transaction {
             // Start with a basic move which moves 10 tokens in entirety from ALICE to BOB.
-            input(FungibleTokenContract.contractId, amount heldBy ALICE.party)
+            input(FungibleTokenContract.contractId, FungibleToken(amount, ALICE.party))
             attachment(RUB.importAttachment(aliceServices.attachments))
             tweak {
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 output(FungibleTokenContract.contractId, RubleToken(amount, BOB.party))
-                this `fails with` ("When moving tokens, there must be output states present")
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
+                this `fails with` ("There is a token group with no assigned command")
             }
             tweak {
                 // 10 FT (Alice) -> 10 FT (BOB)
-                // 10 RT (BOB) -> 10 RT (BOB)
+                // 10 RT (BOB) -> 10 RT (ALICE)
                 //add an input of the RubleToken owned by BOB
                 input(FungibleTokenContract.contractId, RubleToken(amount, BOB.party))
 
@@ -255,8 +254,8 @@ class FungibleTokenTests : ContractTestCommon() {
                 //add an output of Ruble owned by Alice
                 output(FungibleTokenContract.contractId, RubleToken(amount, ALICE.party))
 
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
-                command(BOB.publicKey, MoveTokenCommand(issuedToken))
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
+                command(BOB.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(1), outputs = listOf(1)))
                 verifies()
             }
         }
@@ -271,117 +270,206 @@ class FungibleTokenTests : ContractTestCommon() {
             input(FungibleTokenContract.contractId, amount heldBy ALICE.party)
             attachment(RUB.importAttachment(aliceServices.attachments))
             tweak {
-                command(ALICE.publicKey, MoveTokenCommand(issuedToken))
                 output(DodgeTokenContract::class.qualifiedName!!, DodgeToken(amount, BOB.party))
-                this `fails with` ("When moving tokens, there must be output states present")
+                command(ALICE.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
+                this `fails with` ("There is a token group with no assigned command")
             }
         }
     }
 
+
     @Test
-    fun `redeem token tests`() {
+    fun `should be possible to redeem single token without change output`() {
         val gbpHash = GBP.importAttachment(aliceServices.attachments)
         val issuedToken = GBP issuedBy ISSUER.party
-        val otherIssuerToken = GBP issuedBy BOB.party
         transaction {
             // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
             input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
             attachment(gbpHash)
+            command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0)))
+            verifies()
+        }
+    }
 
-            // Add the redeem command, signed by the ISSUER.
-            tweak {
-                command(ISSUER.publicKey, RedeemTokenCommand(issuedToken))
-                this `fails with` "Contract verification failed: Owners of redeemed states must be the signing parties."
-            }
-            // Add the redeem command, signed by the holder but not issuer.
-            tweak {
-                command(ALICE.publicKey, RedeemTokenCommand(issuedToken))
-                this `fails with` "Contract verification failed: The issuer must be the signing party when an amount of tokens are redeemed."
-            }
-            // Add the redeem command, signed by the ISSUER and ALICE - owner. Zero outputs.
-            tweak {
-                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
-                verifies()
-            }
+    @Test
+    fun `should be possible to redeem single token with change output`() {
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
+        val issuedToken = GBP issuedBy ISSUER.party
+        transaction {
+            // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
+            input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+            output(FungibleTokenContract.contractId, 5 of issuedToken heldBy ALICE.party)
+            attachment(gbpHash)
+            command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
+            verifies()
+        }
+    }
 
-            // Add additional input to redeem, by different issuer. Fails because it requires command signed by that issuer.
-            tweak {
-                input(FungibleTokenContract.contractId, 10 of otherIssuerToken heldBy ALICE.party)
-                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(otherIssuerToken))
-                this `fails with` "There is a token group with no assigned command!"
-            }
+    @Test
+    fun `should not be possible to redeem single token without owner signature`() {
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
+        val issuedToken = GBP issuedBy ISSUER.party
+        transaction {
+            // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
+            input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+            attachment(gbpHash)
+            command(listOf(ISSUER.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0)))
+            this `fails with` "Contract verification failed: Owners of redeemed states must be the signing parties."
+        }
+    }
 
-            // Two redeem groups verify.
-            tweak {
-                input(FungibleTokenContract.contractId, 10 of otherIssuerToken heldBy ALICE.party)
-                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
-                command(listOf(BOB.publicKey, ALICE.publicKey), RedeemTokenCommand(otherIssuerToken))
-                verifies()
-            }
+    @Test
+    fun `should not be possible to redeem single token without issuer signature`() {
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
+        val issuedToken = GBP issuedBy ISSUER.party
+        transaction {
+            // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
+            input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+            attachment(gbpHash)
+            command(listOf(ALICE.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0)))
+            this `fails with` "The issuer must be the signing party when an amount of tokens are redeemed."
+        }
+    }
 
-            // Add the redeem command, signed by the ISSUER and ALICE - owner. One output.
-            tweak {
-                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
-                // Return change back to Alice.
-                output(FungibleTokenContract.contractId, 5 of issuedToken heldBy ALICE.party)
-                verifies()
-            }
+    @Test
+    fun `should not be possible to redeem multiple tokens with different issuers without all issuer signatures`() {
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
+        val issuedToken = GBP issuedBy ISSUER.party
+        transaction {
+            // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
+            input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+            input(FungibleTokenContract.contractId, 10 of GBP issuedBy BOB.party heldBy ALICE.party)
+            attachment(gbpHash)
+            command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0)))
+            command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(GBP issuedBy BOB.party, inputs = listOf(1)))
+            this `fails with` "The issuer must be the signing party when an amount of tokens are redeemed."
+        }
+    }
 
-            // Add the redeem command, signed by the ISSUER and ALICE - owner. One output - but different owner, can happen with anonymous keys.
-            tweak {
-                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
-                // Return change back to BOB.
-                output(FungibleTokenContract.contractId, 5 of issuedToken heldBy BOB.party)
-                verifies()
-            }
+    @Test
+    fun `should fail to redeem token group if an unmatched group is also provided`() {
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
+        val issuedToken = GBP issuedBy ISSUER.party
+        transaction {
+            // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
+            input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+            input(FungibleTokenContract.contractId, 10 of GBP issuedBy BOB.party heldBy ALICE.party)
+            attachment(gbpHash)
+            command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0)))
+            this `fails with` "There is a token group with no assigned command!"
+        }
+    }
 
-            // Add the redeem command, signed by the ISSUER and ALICE - owner. Output too big.
-            tweak {
-                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
-                // Return change back to Alice.
-                output(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
-                this `fails with` "Change shouldn't exceed amount redeemed."
-            }
 
-            // Add the redeem command, signed by the ISSUER and ALICE - owner. Output is zero.
-            tweak {
-                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
-                // Return change back to Alice.
-                output(FungibleTokenContract.contractId, Amount.zero(issuedToken) heldBy ALICE.party)
-                this `fails with` "If there is an output, it must have a value greater than zero."
-            }
+    @Test
+    fun `should allow redemption of two separate groups`() {
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
+        val issuedToken = GBP issuedBy ISSUER.party
+        transaction {
+            // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
+            input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+            input(FungibleTokenContract.contractId, 10 of GBP issuedBy BOB.party heldBy ALICE.party)
+            attachment(gbpHash)
+            command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0)))
+            command(listOf(ALICE.publicKey, BOB.publicKey), RedeemTokenCommand(GBP issuedBy BOB.party, inputs = listOf(1)))
+            verifies()
+        }
+    }
 
-            // Add the redeem command, signed by the ISSUER and ALICE - owner. Too many outputs.
-            tweak {
-                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
-                // Return change back to Alice.
-                output(FungibleTokenContract.contractId, 2 of issuedToken heldBy ALICE.party)
-                output(FungibleTokenContract.contractId, 2 of issuedToken heldBy ALICE.party)
-                this `fails with` "When redeeming tokens, there must be zero or one output state."
-            }
+    @Test
+    fun `should allow redemption with change to different owner`() {
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
+        val issuedToken = GBP issuedBy ISSUER.party
+        transaction {
+            // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
+            input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+            output(FungibleTokenContract.contractId, 5 of issuedToken heldBy BOB.party)
+            attachment(gbpHash)
+            command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
+            verifies()
+        }
+    }
 
-            // Add the redeem command, signed by the ISSUER and ALICE - owner. No input for one group.
-            // The commands signed by BOB and ALICE is ignored as there are no tokens issued by BOB in this transaction.
-            tweak {
-                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
-                command(listOf(BOB.publicKey, ALICE.publicKey), RedeemTokenCommand(otherIssuerToken))
-                verifies()
-            }
+    @Test
+    fun `should not allow redemption if change is equal to input`() {
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
+        val issuedToken = GBP issuedBy ISSUER.party
+        transaction {
+            // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
+            input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+            output(FungibleTokenContract.contractId, 10 of issuedToken heldBy BOB.party)
+            attachment(gbpHash)
+            command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
+            this `fails with` "Change shouldn't exceed amount redeemed"
+        }
+    }
 
-            tweak {
-                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
-                command(listOf(BOB.publicKey, ALICE.publicKey), RedeemTokenCommand(otherIssuerToken))
-                output(FungibleTokenContract.contractId, 2 of otherIssuerToken heldBy ALICE.party)
-                this `fails with` " When redeeming tokens, there must be input states present."
-            }
+    @Test
+    fun `should not allow redemption if change is greater than input`() {
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
+        val issuedToken = GBP issuedBy ISSUER.party
+        transaction {
+            // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
+            input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+            output(FungibleTokenContract.contractId, 11 of issuedToken heldBy BOB.party)
+            attachment(gbpHash)
+            command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
+            this `fails with` "Change shouldn't exceed amount redeemed"
+        }
+    }
 
-            // Zero amount input - fail.
-            tweak {
-                input(FungibleTokenContract.contractId, Amount.zero(otherIssuerToken) heldBy ALICE.party)
-                command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken))
-                command(listOf(BOB.publicKey, ALICE.publicKey), RedeemTokenCommand(otherIssuerToken))
-                this `fails with` "When redeeming tokens an amount > ZERO must be redeemed."
-            }
+    @Test
+    fun `should not allow redemption if change is zero`() {
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
+        val issuedToken = GBP issuedBy ISSUER.party
+        transaction {
+            // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
+            input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+            output(FungibleTokenContract.contractId, 0 of issuedToken heldBy BOB.party)
+            attachment(gbpHash)
+            command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
+            this `fails with` "If there is an output, it must have a value greater than zero"
+        }
+    }
+
+    @Test
+    fun `should not allow redemption if more than one change output is present`() {
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
+        val issuedToken = GBP issuedBy ISSUER.party
+        transaction {
+            // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
+            input(FungibleTokenContract.contractId, 10 of issuedToken heldBy ALICE.party)
+            output(FungibleTokenContract.contractId, 1 of issuedToken heldBy BOB.party)
+            output(FungibleTokenContract.contractId, 9 of issuedToken heldBy BOB.party)
+            attachment(gbpHash)
+            command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0, 1)))
+            this `fails with` "When redeeming tokens, there must be zero or one output state"
+        }
+    }
+
+    @Test
+    fun `should not allow redemption if no input states present`() {
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
+        val issuedToken = GBP issuedBy ISSUER.party
+        transaction {
+            // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
+            output(FungibleTokenContract.contractId, 1 of issuedToken heldBy BOB.party)
+            attachment(gbpHash)
+            command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken, outputs = listOf(0)))
+            this `fails with` " When redeeming tokens, there must be input states present"
+        }
+    }
+
+    @Test
+    fun `should not allow redemption if zero valued inputs`() {
+        val gbpHash = GBP.importAttachment(aliceServices.attachments)
+        val issuedToken = GBP issuedBy ISSUER.party
+        transaction {
+            // Start with a basic redeem which redeems 10 tokens in entirety from ALICE .
+            input(FungibleTokenContract.contractId, 0 of issuedToken heldBy ALICE.party)
+            attachment(gbpHash)
+            command(listOf(ISSUER.publicKey, ALICE.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0)))
+            this `fails with` " When redeeming tokens an amount > ZERO must be redeemed"
         }
     }
 
@@ -390,7 +478,7 @@ class FungibleTokenTests : ContractTestCommon() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
             output(FungibleTokenContract.contractId, 10 of issuedToken heldBy BOB.party)
-            command(ISSUER.publicKey, IssueTokenCommand(issuedToken))
+            command(ISSUER.publicKey, IssueTokenCommand(issuedToken, outputs = listOf(0)))
             this.failsWith("Expected to find type jar:")
 
 
@@ -407,7 +495,7 @@ class FungibleTokenTests : ContractTestCommon() {
         transaction {
             input(FungibleTokenContract.contractId, 10 of issuedToken heldBy BOB.party)
             output(FungibleTokenContract.contractId, FungibleToken(10 of issuedToken, BOB.party, RUB.getAttachmentIdForGenericParam()))
-            command(BOB.party.owningKey, MoveTokenCommand(issuedToken))
+            command(BOB.party.owningKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
 
             attachment(GBP.importAttachment(aliceServices.attachments))
             attachment(RUB.importAttachment(aliceServices.attachments))
