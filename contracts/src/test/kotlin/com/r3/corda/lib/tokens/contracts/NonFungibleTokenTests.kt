@@ -7,7 +7,6 @@ import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.contracts.utilities.withNewHolder
-import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.testing.states.PTK
 import com.r3.corda.lib.tokens.testing.states.RUB
@@ -24,7 +23,6 @@ class NonFungibleTokenTests : ContractTestCommon() {
             // Start with only one output.
             output(NonFungibleTokenContract.contractId, issuedToken heldBy ALICE.party)
             attachment(issuedToken.tokenType.importAttachment(aliceServices.attachments))
-            attachment(GBP.importAttachment(aliceServices.attachments))
             // No command fails.
             tweak {
                 this `fails with` "A transaction must contain at least one command"
@@ -104,7 +102,6 @@ class NonFungibleTokenTests : ContractTestCommon() {
             input(NonFungibleTokenContract.contractId, heldByAlice)
             output(NonFungibleTokenContract.contractId, heldByBob)
             attachment(PTK.importAttachment(aliceServices.attachments))
-            attachment(USD.importAttachment(aliceServices.attachments))
 
             // Add the move command, signed by ALICE.
             tweak {

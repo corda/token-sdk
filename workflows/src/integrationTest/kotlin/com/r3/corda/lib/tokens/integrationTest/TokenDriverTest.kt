@@ -9,7 +9,6 @@ import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefsOrZero
 import com.r3.corda.lib.tokens.contracts.utilities.withNotary
-import com.r3.corda.lib.tokens.money.FiatCurrency
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.testing.states.Ruble
@@ -141,9 +140,9 @@ class TokenDriverTest {
             nodeB.rpc.watchForTransaction(issueB).getOrThrow()
             // Check that node A has cash and house.
             assertThat(nodeA.rpc.vaultQuery(House::class.java).states).isNotEmpty
-            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
+            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
                     .isEqualTo(1_000_000L.GBP issuedBy issuerParty)
-            assertThat(nodeB.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
+            assertThat(nodeB.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
                     .isEqualTo(900_000L.GBP issuedBy issuerParty)
             // Move house to Node B using conf identities in exchange for cash using DvP flow.
             // TODO use conf identities
@@ -159,8 +158,8 @@ class TokenDriverTest {
             assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken<TokenPointer<House>>>(ownedTokenCriteria(housePtr)).states).isNotEmpty
             assertThat(nodeA.rpc.vaultQueryBy<NonFungibleToken<TokenPointer<House>>>(ownedTokenCriteria(housePtr)).states).isEmpty()
             // NodeA has cash, B doesn't
-            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(1_900_000L.GBP issuedBy issuerParty)
-            assertThat(nodeB.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
+            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(1_900_000L.GBP issuedBy issuerParty)
+            assertThat(nodeB.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
             // Check that dist list was updated at issuer node.
             val distributionList = issuer.rpc.startFlow(::GetDistributionList, housePtr).returnValue.getOrThrow()
             assertThat(distributionList.map { it.party }).containsExactly(nodeAParty, nodeBParty)
@@ -198,8 +197,8 @@ class TokenDriverTest {
                     issuerParty
             ).returnValue.getOrThrow()
             nodeA.rpc.watchForTransaction(redeemGBPTx).getOrThrow()
-            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(800_000L.GBP issuedBy issuerParty)
-            assertThat(issuer.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
+            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(800_000L.GBP issuedBy issuerParty)
+            assertThat(issuer.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
         }
     }
 }

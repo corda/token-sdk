@@ -3,7 +3,7 @@ package com.r3.corda.lib.tokens.workflows.internal.testflows
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
-import com.r3.corda.lib.tokens.money.FiatCurrency
+import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveNonFungibleTokens
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveTokens
@@ -18,7 +18,6 @@ import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
-import com.r3.corda.lib.tokens.workflows.utilities.ownedTokensByToken
 import net.corda.confidential.IdentitySyncFlow
 import net.corda.core.contracts.Amount
 import net.corda.core.flows.*
@@ -30,7 +29,7 @@ import net.corda.core.utilities.unwrap
 
 // This is very simple test flow for DvP.
 @CordaSerializable
-private class DvPNotification(val amount: Amount<FiatCurrency>)
+private class DvPNotification(val amount: Amount<TokenType>)
 
 @StartableByRPC
 @InitiatingFlow
@@ -43,9 +42,9 @@ class DvPFlow(val house: House, val newOwner: Party) : FlowLogic<SignedTransacti
         // Ask for input stateAndRefs - send notification with the amount to exchange.
         session.send(DvPNotification(house.valuation))
         // TODO add some checks for inputs and outputs
-        val inputs = subFlow(ReceiveStateAndRefFlow<FungibleToken<FiatCurrency>>(session))
+        val inputs = subFlow(ReceiveStateAndRefFlow<FungibleToken<TokenType>>(session))
         // Receive outputs (this is just quick and dirty, we could calculate them on our side of the flow).
-        val outputs = session.receive<List<FungibleToken<FiatCurrency>>>().unwrap { it }
+        val outputs = session.receive<List<FungibleToken<TokenType>>>().unwrap { it }
         addMoveTokens(txBuilder, inputs, outputs)
         // Synchronise any confidential identities
         subFlow(IdentitySyncFlow.Send(session, txBuilder.toWireTransaction(serviceHub)))
@@ -114,7 +113,7 @@ class RedeemNonFungibleHouse(
 
 @StartableByRPC
 class RedeemFungibleGBP(
-        val amount: Amount<FiatCurrency>,
+        val amount: Amount<TokenType>,
         val issuerParty: Party
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable

@@ -125,19 +125,19 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
         val tokenTypes = inputsAndOutputs.map(AbstractToken<*>::tokenType).toSet()
 
         require(tokenTypes.size == 1) { "There should only be one TokenType per group" }
-        val tokenType = tokenTypes.single()
-        return if (tokenType is TokenPointer<*> || tokenType.javaClass == TokenType::class.java) {
-            // The TokenPointer is implemented in the tokens-contracts JAR which is already attached!
-            // If this is an inline defied token type, IE it just instantiates TokenType with parameters, do not require an attachment
-            null
-        } else {
-            // Ensure there is a single JAR implementing the TokenType and return the hash of it.
-            val jarHashes = inputsAndOutputs.mapNotNull(AbstractToken<*>::tokenTypeJarHash).toSet()
-            require(jarHashes.size == 1) {
-                "There must be exactly one Jar (Hash) providing extended TokenType: ${outputs.first().tokenType.tokenIdentifier} / ${outputs.first().tokenType.javaClass}"
-            }
-            jarHashes.single()
+        val jarHashes = inputsAndOutputs.map(AbstractToken<*>::tokenTypeJarHash).toSet()
+        require(jarHashes.size == 1) {
+            "There must be exactly one Jar (Hash) providing extended TokenType: ${outputs.first().tokenType.tokenIdentifier} / ${outputs.first().tokenType.javaClass}"
         }
+
+        if (jarHashes.single() == null) {
+            //all token types in this group seem to be non-extended types
+            require(tokenTypes.single().javaClass == TokenType::class.java || tokenTypes.single().javaClass == TokenPointer::class.java) {
+                "Extended TokenType: ${tokenTypes.single().javaClass} has been used, whilst no jarHash has been provided to pin the providing jar"
+            }
+        }
+
+        return jarHashes.single()
     }
 
     private fun groupStates(tx: LedgerTransaction, selector: (IndexedState<U>) -> TokenInfo): List<IndexedInOutGroup<U, TokenInfo>> {

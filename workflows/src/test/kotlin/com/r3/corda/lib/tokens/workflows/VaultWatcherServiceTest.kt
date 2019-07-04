@@ -4,7 +4,6 @@ import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.money.BTC
-import com.r3.corda.lib.tokens.money.FiatCurrency
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.internal.selection.InsufficientBalanceException
@@ -335,7 +334,7 @@ class VaultWatcherServiceTest {
 
 
         private fun createNewFiatCurrencyTokenRef(amountToIssue: Long, owner: PublicKey, notary: Party,
-                                                  observable: PublishSubject<Vault.Update<FungibleToken<out TokenType>>>? = null): StateAndRef<FungibleToken<FiatCurrency>> {
+                                                  observable: PublishSubject<Vault.Update<FungibleToken<out TokenType>>>? = null): StateAndRef<FungibleToken<TokenType>> {
             val amount = Amount(amountToIssue, IssuedTokenType(issuer1, GBP))
             return createNewTokenRef(amount, owner, notary, observable)
         }

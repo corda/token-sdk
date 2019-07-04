@@ -10,11 +10,12 @@ import java.util.*
  *
  * @property currency the java.util.Currency which this token type should wrap.
  */
-class FiatCurrency(private val currency: Currency) : TokenType(currency.currencyCode, currency.defaultFractionDigits) {
-    override fun toString(): String = tokenIdentifier
-
+class FiatCurrency {
     companion object {
         // Uses the java money registry.
-        fun getInstance(currencyCode: String) = FiatCurrency(Currency.getInstance(currencyCode))
+        fun getInstance(currencyCode: String): TokenType {
+            val currency = Currency.getInstance(currencyCode)
+            return TokenType(currency.currencyCode, currency.defaultFractionDigits)
+        }
     }
 }
