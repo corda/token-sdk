@@ -9,7 +9,7 @@ import net.corda.core.node.services.IdentityService
 
 // Check that all states share the same notary.
 @Suspendable
-internal fun <T : TokenType> checkSameNotary(stateAndRefs: List<StateAndRef<AbstractToken<T>>>) {
+internal fun <T : TokenType> checkSameNotary(stateAndRefs: List<StateAndRef<AbstractToken>>) {
     val notary = stateAndRefs.first().state.notary
     check(stateAndRefs.all { it.state.notary == notary }) {
         "All states should have the same notary. Automatic notary change isn't supported for now."
@@ -20,7 +20,7 @@ internal fun <T : TokenType> checkSameNotary(stateAndRefs: List<StateAndRef<Abst
 // were issued by this issuer.
 @Suspendable
 internal fun <T : TokenType> checkSameIssuer(
-        stateAndRefs: List<StateAndRef<AbstractToken<T>>>,
+        stateAndRefs: List<StateAndRef<AbstractToken>>,
         issuer: Party? = null
 ) {
     val issuerToCheck = issuer ?: stateAndRefs.first().state.data.issuer
@@ -34,7 +34,7 @@ internal fun <T : TokenType> checkSameIssuer(
 @Suspendable
 internal fun <T : TokenType> checkOwner(
         identityService: IdentityService,
-        stateAndRefs: List<StateAndRef<AbstractToken<T>>>,
+        stateAndRefs: List<StateAndRef<AbstractToken>>,
         counterparty: Party
 ) {
     val owners = stateAndRefs.map { identityService.wellKnownPartyFromAnonymous(it.state.data.holder) }

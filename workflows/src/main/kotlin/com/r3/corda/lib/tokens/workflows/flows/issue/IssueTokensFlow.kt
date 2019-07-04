@@ -6,7 +6,6 @@ import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
@@ -44,10 +43,10 @@ import net.corda.core.transactions.TransactionBuilder
  * @property participantSessions a list of flow participantSessions for the transaction participants.
  * @property observerSessions a list of flow participantSessions for the transaction observers.
  */
-class IssueTokensFlow<T : TokenType>
+class IssueTokensFlow
 @JvmOverloads
 constructor(
-        val tokensToIssue: List<AbstractToken<T>>,
+        val tokensToIssue: List<AbstractToken>,
         val participantSessions: List<FlowSession>,
         val observerSessions: List<FlowSession> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
@@ -55,24 +54,24 @@ constructor(
     /** Issue a single [FungibleToken]. */
     @JvmOverloads
     constructor(
-            token: FungibleToken<T>,
+            token: FungibleToken,
             participantSessions: List<FlowSession>,
             observerSessions: List<FlowSession> = emptyList()
     ) : this(listOf(token), participantSessions, observerSessions)
 
     /** Issue a single [FungibleToken] to self with no observers. */
-    constructor(token: FungibleToken<T>) : this(listOf(token), emptyList(), emptyList())
+    constructor(token: FungibleToken) : this(listOf(token), emptyList(), emptyList())
 
     /** Issue a single [NonFungibleToken]. */
     @JvmOverloads
     constructor(
-            token: NonFungibleToken<T>,
+            token: NonFungibleToken,
             participantSessions: List<FlowSession>,
             observerSessions: List<FlowSession> = emptyList()
     ) : this(listOf(token), participantSessions, observerSessions)
 
     /** Issue a single [NonFungibleToken] to self with no observers. */
-    constructor(token: NonFungibleToken<T>) : this(listOf(token), emptyList(), emptyList())
+    constructor(token: NonFungibleToken) : this(listOf(token), emptyList(), emptyList())
 
     @Suspendable
     override fun call(): SignedTransaction {

@@ -7,7 +7,6 @@ import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.TransactionState
-import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.transactions.SignedTransaction
@@ -29,9 +28,9 @@ class UpdateDistributionListFlow(val signedTransaction: SignedTransaction) : Flo
     @Suspendable
     override fun call() {
         val tx = signedTransaction.tx
-        val tokensWithTokenPointers: List<AbstractToken<TokenPointer<*>>> = tx.outputs
+        val tokensWithTokenPointers: List<AbstractToken>> = tx.outputs
                 .map(TransactionState<*>::data)
-                .filterIsInstance<AbstractToken<TokenPointer<*>>>()
+                .filterIsInstance<AbstractToken> > ()
                 .filter { it.tokenType is TokenPointer<*> } // IntelliJ bug?? Check is not always true!
         // There are no evolvable tokens so we don't need to update any distribution lists. Otherwise, carry on.
         if (tokensWithTokenPointers.isEmpty()) return
@@ -48,7 +47,7 @@ class UpdateDistributionListFlow(val signedTransaction: SignedTransaction) : Flo
             // update their local distribution list with the parties that have been just issued tokens.
             val issueTypes: List<TokenPointer<*>> = issueCmds.map { it.token.tokenType }
             progressTracker.currentStep = ADD_DIST_LIST
-            val issueStates: List<AbstractToken<TokenPointer<*>>> = tokensWithTokenPointers.filter {
+            val issueStates: List<AbstractToken>> = tokensWithTokenPointers.filter {
                 it.tokenType in issueTypes
             }
             addToDistributionList(issueStates)

@@ -12,28 +12,28 @@ import java.math.BigDecimal
 // -------------------------------------------------------------------------------
 
 /** For creating [Int] quantities of [TokenType]s. */
-fun <T : TokenType> amount(amount: Int, token: T): Amount<T> = amount(amount.toLong(), token)
+fun amount(amount: Int, token: TokenType): Amount<TokenType> = amount(amount.toLong(), token)
 
 /** For creating [Long] quantities of [TokenType]s. */
-fun <T : TokenType> amount(amount: Long, token: T): Amount<T> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
+fun amount(amount: Long, token: TokenType): Amount<TokenType> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
 
 /** For creating [Double] quantities of [TokenType]s.  */
-fun <T : TokenType> amount(amount: Double, token: T): Amount<T> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
+fun amount(amount: Double, token: TokenType): Amount<TokenType> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
 
 /** For creating [BigDecimal] quantities of [TokenType]s. */
-fun <T : TokenType> amount(amount: BigDecimal, token: T): Amount<T> = Amount.fromDecimal(amount, token)
+fun amount(amount: BigDecimal, token: TokenType): Amount<TokenType> = Amount.fromDecimal(amount, token)
 
 // ---------------------------------------------------------------------------------------
 // Helpers for creating an amount of a token using some quantity and an issued token type.
 // ---------------------------------------------------------------------------------------
 
 /** For parsing [Int] quantities of [IssuedTokenType]s. */
-fun <T : TokenType> amount(amount: Int, token: IssuedTokenType<T>): Amount<IssuedTokenType<T>> {
+fun <T : TokenType> amount(amount: Int, token: IssuedTokenType): Amount<IssuedTokenType> {
     return amount(amount.toLong(), token)
 }
 
 /** For parsing [Long] quantities of [IssuedTokenType]s. */
-fun <T : TokenType> amount(amount: Long, token: IssuedTokenType<T>): Amount<IssuedTokenType<T>> {
+fun <T : TokenType> amount(amount: Long, token: IssuedTokenType<T>): Amount<IssuedTokenType> {
     return Amount.fromDecimal(BigDecimal.valueOf(amount), token)
 }
 

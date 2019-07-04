@@ -130,7 +130,7 @@ is. This can be done using the `heldBy` syntax:
     // Adding a holder to an amount of a token type, creates a fungible token.
     val fungibleToken: FungibleToken<MyTokenType> = tenOfMyIssuedTokenType heldBy holder
     // Adding a holder to a token type, creates a non-fungible token.
-    val nonFungibleToken: NonFungibleToken<MyTokenType> = myIssuedTokenType heldBy holder
+    val nonFungibleToken: NonFungibleToken = myIssuedTokenType heldBy holder
 ```
 
 Once you have a `FungibleToken` or a `NonFungibleToken`, you can then go
@@ -182,7 +182,7 @@ Confidential versions additionally request that the recipients generate new keys
 ```kotlin
 // As in previous examples
 val fungibleToken: FungibleToken<MyTokenType> = ...
-val nonFungibleToken: NonFungibleToken<MyTokenType> = ...
+val nonFungibleToken: NonFungibleToken = ...
 // Start flows via RPC or as a subFlow (it starts a new session with a holder of the token!)
 // All of the below flows can take a list of observer parties.
 // Fungible

@@ -16,7 +16,6 @@ import com.r3.corda.lib.tokens.workflows.utilities.ownedTokensByTokenIssuer
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountWithIssuerCriteria
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.ServiceHub
@@ -30,8 +29,8 @@ import net.corda.core.transactions.TransactionBuilder
 @JvmOverloads
 fun <T : TokenType> addTokensToRedeem(
         transactionBuilder: TransactionBuilder,
-        inputs: List<StateAndRef<AbstractToken<T>>>,
-        changeOutput: AbstractToken<T>? = null
+        inputs: List<StateAndRef<AbstractToken>>,
+        changeOutput: AbstractToken? = null
 ): TransactionBuilder {
     checkSameIssuer(inputs, changeOutput?.issuer)
     checkSameNotary(inputs)

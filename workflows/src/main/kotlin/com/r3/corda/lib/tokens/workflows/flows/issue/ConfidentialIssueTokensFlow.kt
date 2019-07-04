@@ -21,7 +21,7 @@ import net.corda.core.transactions.SignedTransaction
 class ConfidentialIssueTokensFlow<T : TokenType>
 @JvmOverloads
 constructor(
-        val tokens: List<AbstractToken<T>>,
+        val tokens: List<AbstractToken>,
         val participantSessions: List<FlowSession>,
         val observerSessions: List<FlowSession> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
@@ -40,13 +40,13 @@ constructor(
     /** Issue a single [NonFungibleToken]. */
     @JvmOverloads
     constructor(
-            token: NonFungibleToken<T>,
+            token: NonFungibleToken,
             participantSessions: List<FlowSession>,
             observerSessions: List<FlowSession> = emptyList()
     ) : this(listOf(token), participantSessions, observerSessions)
 
     /** Issue a single [NonFungibleToken] to self with no observers. */
-    constructor(token: NonFungibleToken<T>) : this(listOf(token), emptyList(), emptyList())
+    constructor(token: NonFungibleToken) : this(listOf(token), emptyList(), emptyList())
 
     @Suspendable
     override fun call(): SignedTransaction {

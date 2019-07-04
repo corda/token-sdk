@@ -2,7 +2,6 @@ package com.r3.corda.lib.tokens.contracts
 
 import com.r3.corda.lib.tokens.contracts.commands.TokenCommand
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.internal.uncheckedCast
@@ -10,18 +9,18 @@ import net.corda.core.internal.uncheckedCast
 /**
  * See kdoc for [FungibleTokenContract].
  */
-class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFungibleToken<T>>() {
+class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>() {
 
-    override val accepts: Class<NonFungibleToken<T>> get() = uncheckedCast(NonFungibleToken::class.java)
+    override val accepts: Class<NonFungibleToken> get() = uncheckedCast(NonFungibleToken::class.java)
 
     companion object {
         val contractId = this::class.java.enclosingClass.canonicalName
     }
 
     override fun verifyIssue(
-            issueCommand: CommandWithParties<TokenCommand<T>>,
-            inputs: List<IndexedState<NonFungibleToken<T>>>,
-            outputs: List<IndexedState<NonFungibleToken<T>>>,
+            issueCommand: CommandWithParties<TokenCommand>,
+            inputs: List<IndexedState<NonFungibleToken>>,
+            outputs: List<IndexedState<NonFungibleToken>>,
             attachments: List<Attachment>
     ) {
         require(inputs.isEmpty()) { "When issuing non fungible tokens, there cannot be any input states." }
@@ -40,9 +39,9 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
     // Even if we have two tokens containing the same info, they will have different linear IDs so end up in different
     // groups.
     override fun verifyMove(
-            moveCommands: List<CommandWithParties<TokenCommand<T>>>,
-            inputs: List<IndexedState<NonFungibleToken<T>>>,
-            outputs: List<IndexedState<NonFungibleToken<T>>>,
+            moveCommands: List<CommandWithParties<TokenCommand>>,
+            inputs: List<IndexedState<NonFungibleToken>>,
+            outputs: List<IndexedState<NonFungibleToken>>,
             attachments: List<Attachment>
     ) {
         // There must be inputs and outputs present.
@@ -57,16 +56,16 @@ class NonFungibleTokenContract<T : TokenType> : AbstractTokenContract<T, NonFung
         // There should only be one move command with one signature.
         require(moveCommands.size == 1) { "There should be only one move command per group when moving non fungible tokens." }
         require(input.state.data.linearId == output.state.data.linearId) { "The linear ID must not change." }
-        val moveCommand: CommandWithParties<TokenCommand<T>> = moveCommands.single()
+        val moveCommand: CommandWithParties<TokenCommand> = moveCommands.single()
         require(moveCommand.signers.toSet() == setOf(input.state.data.holder.owningKey)) {
             "The current holder must be the only signing party when a non-fungible (discrete) token is moved."
         }
     }
 
     override fun verifyRedeem(
-            redeemCommand: CommandWithParties<TokenCommand<T>>,
-            inputs: List<IndexedState<NonFungibleToken<T>>>,
-            outputs: List<IndexedState<NonFungibleToken<T>>>,
+            redeemCommand: CommandWithParties<TokenCommand>,
+            inputs: List<IndexedState<NonFungibleToken>>,
+            outputs: List<IndexedState<NonFungibleToken>>,
             attachments: List<Attachment>
     ) {
         // There must be inputs and outputs present.

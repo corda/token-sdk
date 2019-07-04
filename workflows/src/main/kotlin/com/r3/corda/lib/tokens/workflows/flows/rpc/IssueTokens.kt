@@ -27,7 +27,7 @@ import net.corda.core.transactions.SignedTransaction
 class IssueTokens<T : TokenType>
 @JvmOverloads
 constructor(
-        val tokensToIssue: List<AbstractToken<T>>,
+        val tokensToIssue: List<AbstractToken>,
         val observers: List<Party> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
 
@@ -59,7 +59,7 @@ class IssueTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
 class ConfidentialIssueTokens<T : TokenType>
 @JvmOverloads
 constructor(
-        val tokensToIssue: List<AbstractToken<T>>,
+        val tokensToIssue: List<AbstractToken>,
         val observers: List<Party> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable

@@ -77,7 +77,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
                 contractStateTypes = setOf(NonFungibleToken::class.java),
                 relevancyStatus = Vault.RelevancyStatus.RELEVANT
         )
-        val states = A.services.vaultService.queryBy<NonFungibleToken<*>>(query).states
+        val states = A.services.vaultService.queryBy<NonFungibleToken>(query).states
         assertEquals(allOtherTokens.size, states.size)
     }
 

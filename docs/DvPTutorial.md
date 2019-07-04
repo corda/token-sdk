@@ -94,7 +94,7 @@ Let's issue `NonFungibleToken` referencing `House` owned by Alice party.
     val issuerParty: Party = ourIdentity
     val housePtr = house.toPointer<House>()
     // Create NonFungibleToken referencing house with Alice party as an owner.
-    val houseToken: NonFungibleToken<TokenPointer<House>> = housePtr issuedBy issuerParty heldBy aliceParty
+    val houseToken: NonFungibleToken> = housePtr issuedBy issuerParty heldBy aliceParty
     subFlow(ConfidentialIssueTokens(listOf(houseToken)))
 ```
 

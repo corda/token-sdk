@@ -2,11 +2,7 @@ package com.r3.corda.lib.tokens.workflows.internal.flows.distribution
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
-import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
-import com.r3.corda.lib.tokens.workflows.utilities.addPartyToDistributionList
-import com.r3.corda.lib.tokens.workflows.utilities.requireKnownConfidentialIdentity
-import com.r3.corda.lib.tokens.workflows.utilities.toParty
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.Party
@@ -62,7 +58,7 @@ fun ServiceHub.addPartyToDistributionList(party: Party, linearId: UniqueIdentifi
 }
 
 @Suspendable
-fun FlowLogic<*>.addToDistributionList(tokens: List<AbstractToken<TokenPointer<*>>>) {
+fun FlowLogic<*>.addToDistributionList(tokens: List<AbstractToken>>) {
     tokens.forEach { token ->
         val tokenType = token.tokenType
         val pointer = tokenType.pointer.pointer
@@ -72,7 +68,7 @@ fun FlowLogic<*>.addToDistributionList(tokens: List<AbstractToken<TokenPointer<*
 }
 
 @Suspendable
-fun FlowLogic<*>.updateDistributionList(tokens: List<AbstractToken<TokenPointer<*>>>) {
+fun FlowLogic<*>.updateDistributionList(tokens: List<AbstractToken>>) {
     for (token in tokens) {
         val tokenType = token.tokenType
         val holderParty = serviceHub.identityService.requireKnownConfidentialIdentity(token.holder)

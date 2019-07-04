@@ -25,8 +25,8 @@ import net.corda.core.transactions.TransactionBuilder
 class RedeemTokensFlow<T : TokenType>
 @JvmOverloads
 constructor(
-        val inputs: List<StateAndRef<AbstractToken<T>>>,
-        val changeOutput: AbstractToken<T>?,
+        val inputs: List<StateAndRef<AbstractToken>>,
+        val changeOutput: AbstractToken?,
         override val issuerSession: FlowSession,
         override val observerSessions: List<FlowSession> = emptyList()
 ) : AbstractRedeemTokensFlow() {

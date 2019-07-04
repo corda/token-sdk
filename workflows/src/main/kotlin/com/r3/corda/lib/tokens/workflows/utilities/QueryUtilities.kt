@@ -121,7 +121,7 @@ fun <T : TokenType> VaultService.tokenAmountsByToken(token: T): Vault.Page<Fungi
 }
 
 // Get all owned tokens for a specific token, ignoring the issuer.
-fun <T : TokenType> VaultService.ownedTokensByToken(token: T): Vault.Page<NonFungibleToken<T>> {
+fun <T : TokenType> VaultService.ownedTokensByToken(token: T): Vault.Page<NonFungibleToken> {
     return queryBy(ownedTokenCriteria(token))
 }
 
@@ -146,7 +146,7 @@ fun <T : TokenType> VaultService.tokenBalanceForIssuer(token: T, issuer: Party):
 /* Queries with criteria. Eg. with issuer etc. */
 
 // Get NonFungibleToken with issuer.
-fun <T : TokenType> VaultService.ownedTokensByTokenIssuer(token: T, issuer: Party): Vault.Page<NonFungibleToken<T>> {
+fun <T : TokenType> VaultService.ownedTokensByTokenIssuer(token: T, issuer: Party): Vault.Page<NonFungibleToken> {
     val issuerCriteria = QueryCriteria.VaultCustomQueryCriteria(builder {
         PersistentNonFungibleToken::issuer.equal(issuer)
     })

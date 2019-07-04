@@ -3,7 +3,6 @@ package com.r3.corda.lib.tokens.integrationTest
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
-import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.*
 import com.r3.corda.lib.tokens.money.GBP
@@ -15,7 +14,6 @@ import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.internal.testflows.*
 import com.r3.corda.lib.tokens.workflows.singleOutput
-import com.r3.corda.lib.tokens.workflows.utilities.heldBy
 import com.r3.corda.lib.tokens.workflows.utilities.ownedTokenCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
 import com.r3.corda.lib.tokens.workflows.watchForTransaction
@@ -155,8 +153,8 @@ class TokenDriverTest {
             nodeA.rpc.watchForTransaction(dvpTx).getOrThrow()
             nodeB.rpc.watchForTransaction(dvpTx).getOrThrow()
             // NodeB has house, NodeA doesn't.
-            assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken<TokenPointer<House>>>(ownedTokenCriteria(housePtr)).states).isNotEmpty
-            assertThat(nodeA.rpc.vaultQueryBy<NonFungibleToken<TokenPointer<House>>>(ownedTokenCriteria(housePtr)).states).isEmpty()
+            assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken> > (ownedTokenCriteria(housePtr)).states).isNotEmpty
+            assertThat(nodeA.rpc.vaultQueryBy<NonFungibleToken> > (ownedTokenCriteria(housePtr)).states).isEmpty()
             // NodeA has cash, B doesn't
             assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(1_900_000L.GBP issuedBy issuerParty)
             assertThat(nodeB.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
@@ -189,7 +187,7 @@ class TokenDriverTest {
                     issuerParty
             ).returnValue.getOrThrow()
             nodeB.rpc.watchForTransaction(redeemHouseTx).getOrThrow()
-            assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken<TokenPointer<House>>>(ownedTokenCriteria(housePtr)).states).isEmpty()
+            assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken> > (ownedTokenCriteria(housePtr)).states).isEmpty()
             // NodeA redeems 1_100_000L.GBP with the issuer, check it received 800_000L change, check, that issuer didn't record cash.
             val redeemGBPTx = nodeA.rpc.startFlowDynamic(
                     RedeemFungibleGBP::class.java,
