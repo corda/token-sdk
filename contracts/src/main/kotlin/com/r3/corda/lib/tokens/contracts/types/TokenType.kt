@@ -70,7 +70,7 @@ open class TokenType(
     }
 
     override fun toString(): String {
-        return "TokenType(tokenIdentifier='$tokenIdentifier', fractionDigits=$fractionDigits)"
+        return "${javaClass.simpleName}(tokenIdentifier='$tokenIdentifier', fractionDigits=$fractionDigits)"
     }
 
 

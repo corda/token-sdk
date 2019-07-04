@@ -50,7 +50,7 @@ class TokenDriverTest {
     @Test
     fun `should allow issuance of inline defined token`() {
         driver(DriverParameters(
-                portAllocation = incrementalPortAllocation(10000),
+                portAllocation = incrementalPortAllocation(15000),
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),

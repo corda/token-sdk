@@ -15,9 +15,7 @@ open class RubleToken(override val amount: Amount<IssuedTokenType<RUB>>,
                       override val holder: AbstractParty) : FungibleToken<RUB>(amount, holder)
 
 open class Ruble : TokenType("рубль", 0) {
-    override fun toString(): String {
-        return "Ruble(tokenIdentifier: ${tokenIdentifier}, fractionDigits: ${fractionDigits})"
-    }
+
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -33,10 +31,6 @@ object RUB : Ruble()
 
 
 open class PhoBowl : TokenType("PTK", 0) {
-    override fun toString(): String {
-        return "PhoBowl(tokenIdentifier: ${tokenIdentifier}, fractionDigits: ${fractionDigits})"
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
