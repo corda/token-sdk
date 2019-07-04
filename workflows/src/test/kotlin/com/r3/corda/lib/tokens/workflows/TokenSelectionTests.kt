@@ -1,12 +1,20 @@
 package com.r3.corda.lib.tokens.workflows
 
+import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleToken
+import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
+import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
+import com.r3.corda.lib.tokens.money.BTC
 import com.r3.corda.lib.tokens.money.CHF
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveFungibleTokens
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
+import net.corda.core.identity.Party
+import net.corda.core.node.services.vault.QueryCriteria
+import net.corda.core.node.services.vault.builder
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
@@ -14,6 +22,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import java.util.*
+import java.util.concurrent.CompletableFuture
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
@@ -91,6 +100,37 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         println(transactionBuilder.toWireTransaction(A.services))
         // Just using this to check and see if the output is as expected.
         // TODO: Assert something...
+    }
+
+    fun <T : TokenType> issuerCriteria(token: T, issuer: Party): QueryCriteria {
+        val tokenClassCriteria = QueryCriteria.VaultCustomQueryCriteria(builder { PersistentFungibleToken::tokenClass.equal(token.tokenClass) })
+        val tokenIdentifierCriteria = QueryCriteria.VaultCustomQueryCriteria(builder { PersistentFungibleToken::tokenIdentifier.equal(token.tokenIdentifier) })
+        val issuerCriteria = QueryCriteria.VaultCustomQueryCriteria(builder { PersistentFungibleToken::issuer.equal(issuer) })
+        return tokenClassCriteria.and(tokenIdentifierCriteria).and(issuerCriteria)
+    }
+
+    @Test
+    fun `select tokens by issuer`() {
+        // Issue some more tokens and wait til we are all done.
+        val one = I.issueFungibleTokens(A, 1.BTC).toCompletableFuture()
+        val two = I.issueFungibleTokens(A, 3.BTC).toCompletableFuture()
+        val three = J.issueFungibleTokens(A, 2.BTC).toCompletableFuture()
+        val four = J.issueFungibleTokens(A, 4.BTC).toCompletableFuture()
+        CompletableFuture.allOf(one, two, three, four)
+
+        val tokenSelection = TokenSelection(A.services)
+        val uuid = UUID.randomUUID()
+
+        val resultOne = A.transaction { tokenSelection.attemptSpend(4.BTC, uuid, additionalCriteria = issuerCriteria(BTC, I.legalIdentity())) }
+        assertEquals(4.BTC issuedBy I.legalIdentity(), resultOne.sumTokenStateAndRefs())
+
+        // Not enough tokens as only 4 BTC on issuer I.
+        assertFailsWith<IllegalStateException> {
+            A.transaction { tokenSelection.attemptSpend(5.BTC, uuid, additionalCriteria = issuerCriteria(BTC, I.legalIdentity())) }
+        }
+
+        val resultTwo = A.transaction { tokenSelection.attemptSpend(6.BTC, uuid, additionalCriteria = issuerCriteria(BTC, J.legalIdentity())) }
+        assertEquals(6.BTC issuedBy J.legalIdentity(), resultTwo.sumTokenStateAndRefs())
     }
 
     @Test
