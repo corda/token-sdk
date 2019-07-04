@@ -1,7 +1,5 @@
 package com.r3.corda.lib.tokens.workflows
 
-import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleToken
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
@@ -12,9 +10,7 @@ import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveFungibleTokens
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
-import net.corda.core.identity.Party
-import net.corda.core.node.services.vault.QueryCriteria
-import net.corda.core.node.services.vault.builder
+import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountWithIssuerCriteria
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
@@ -102,13 +98,6 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         // TODO: Assert something...
     }
 
-    fun <T : TokenType> issuerCriteria(token: T, issuer: Party): QueryCriteria {
-        val tokenClassCriteria = QueryCriteria.VaultCustomQueryCriteria(builder { PersistentFungibleToken::tokenClass.equal(token.tokenClass) })
-        val tokenIdentifierCriteria = QueryCriteria.VaultCustomQueryCriteria(builder { PersistentFungibleToken::tokenIdentifier.equal(token.tokenIdentifier) })
-        val issuerCriteria = QueryCriteria.VaultCustomQueryCriteria(builder { PersistentFungibleToken::issuer.equal(issuer) })
-        return tokenClassCriteria.and(tokenIdentifierCriteria).and(issuerCriteria)
-    }
-
     @Test
     fun `select tokens by issuer`() {
         // Issue some more tokens and wait til we are all done.
@@ -121,15 +110,15 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         val tokenSelection = TokenSelection(A.services)
         val uuid = UUID.randomUUID()
 
-        val resultOne = A.transaction { tokenSelection.attemptSpend(4.BTC, uuid, additionalCriteria = issuerCriteria(BTC, I.legalIdentity())) }
+        val resultOne = A.transaction { tokenSelection.attemptSpend(4.BTC, uuid, additionalCriteria = tokenAmountWithIssuerCriteria(BTC, I.legalIdentity())) }
         assertEquals(4.BTC issuedBy I.legalIdentity(), resultOne.sumTokenStateAndRefs())
 
         // Not enough tokens as only 4 BTC on issuer I.
         assertFailsWith<IllegalStateException> {
-            A.transaction { tokenSelection.attemptSpend(5.BTC, uuid, additionalCriteria = issuerCriteria(BTC, I.legalIdentity())) }
+            A.transaction { tokenSelection.attemptSpend(5.BTC, uuid, additionalCriteria = tokenAmountWithIssuerCriteria(BTC, I.legalIdentity())) }
         }
 
-        val resultTwo = A.transaction { tokenSelection.attemptSpend(6.BTC, uuid, additionalCriteria = issuerCriteria(BTC, J.legalIdentity())) }
+        val resultTwo = A.transaction { tokenSelection.attemptSpend(6.BTC, uuid, additionalCriteria = tokenAmountWithIssuerCriteria(BTC, J.legalIdentity())) }
         assertEquals(6.BTC issuedBy J.legalIdentity(), resultTwo.sumTokenStateAndRefs())
     }
 
