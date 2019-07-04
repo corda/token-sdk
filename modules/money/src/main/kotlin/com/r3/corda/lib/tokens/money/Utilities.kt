@@ -1,5 +1,6 @@
 package com.r3.corda.lib.tokens.money
 
+import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.amount
 import net.corda.core.contracts.Amount
 
@@ -88,18 +89,18 @@ val Double.NZD: Amount<FiatCurrency> get() = NZD(this)
 // Bitcoin.
 val BTC = DigitalCurrency.getInstance("BTC")
 
-fun BTC(amount: Int): Amount<DigitalCurrency> = amount(amount, BTC)
-fun BTC(amount: Long): Amount<DigitalCurrency> = amount(amount, BTC)
-fun BTC(amount: Double): Amount<DigitalCurrency> = amount(amount, BTC)
-val Int.BTC: Amount<DigitalCurrency> get() = BTC(this)
-val Long.BTC: Amount<DigitalCurrency> get() = BTC(this)
-val Double.BTC: Amount<DigitalCurrency> get() = BTC(this)
+fun BTC(amount: Int): Amount<TokenType> = amount(amount, BTC)
+fun BTC(amount: Long): Amount<TokenType> = amount(amount, BTC)
+fun BTC(amount: Double): Amount<TokenType> = amount(amount, BTC)
+val Int.BTC: Amount<TokenType> get() = BTC(this)
+val Long.BTC: Amount<TokenType> get() = BTC(this)
+val Double.BTC: Amount<TokenType> get() = BTC(this)
 
 val XRP = DigitalCurrency.getInstance("XRP")
 
-fun XRP(amount: Int): Amount<DigitalCurrency> = amount(amount, XRP)
-fun XRP(amount: Long): Amount<DigitalCurrency> = amount(amount, XRP)
-fun XRP(amount: Double): Amount<DigitalCurrency> = amount(amount, XRP)
-val Int.XRP: Amount<DigitalCurrency> get() = XRP(this)
-val Long.XRP: Amount<DigitalCurrency> get() = XRP(this)
-val Double.XRP: Amount<DigitalCurrency> get() = XRP(this)
+fun XRP(amount: Int): Amount<TokenType> = amount(amount, XRP)
+fun XRP(amount: Long): Amount<TokenType> = amount(amount, XRP)
+fun XRP(amount: Double): Amount<TokenType> = amount(amount, XRP)
+val Int.XRP: Amount<TokenType> get() = XRP(this)
+val Long.XRP: Amount<TokenType> get() = XRP(this)
+val Double.XRP: Amount<TokenType> get() = XRP(this)

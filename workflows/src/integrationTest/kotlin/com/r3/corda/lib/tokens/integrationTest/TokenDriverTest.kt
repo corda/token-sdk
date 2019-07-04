@@ -9,10 +9,10 @@ import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefsOrZero
 import com.r3.corda.lib.tokens.contracts.utilities.withNotary
-import com.r3.corda.lib.tokens.money.DigitalCurrency
 import com.r3.corda.lib.tokens.money.FiatCurrency
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.testing.states.House
+import com.r3.corda.lib.tokens.testing.states.Ruble
 import com.r3.corda.lib.tokens.workflows.flows.evolvable.CreateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
@@ -91,7 +91,7 @@ class TokenDriverTest {
             ).transpose().getOrThrow()
 
             val issuerParty = issuer.nodeInfo.singleIdentity()
-            val issuedTokenType = IssuedTokenType(issuerParty, DigitalCurrency("STL", 9))
+            val issuedTokenType = IssuedTokenType(issuerParty, Ruble())
             val amountToIssue = Amount(100, issuedTokenType)
             val tokenToIssue = FungibleToken(amountToIssue, issuerParty, null)
 
