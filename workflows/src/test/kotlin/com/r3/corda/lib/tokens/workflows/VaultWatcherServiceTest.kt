@@ -3,6 +3,9 @@ package com.r3.corda.lib.tokens.workflows
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.contracts.utilities.heldBy
+import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
+import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.money.BTC
 import com.r3.corda.lib.tokens.money.DigitalCurrency
 import com.r3.corda.lib.tokens.money.FiatCurrency
@@ -302,7 +305,8 @@ class VaultWatcherServiceTest {
         val alice = aliceNode.info.singleIdentity()
         val issuer = issuerNode.info.singleIdentity()
 
-        val resultFuture = issuerNode.services.startFlow(IssueTokens(100000.BTC, issuer, alice)).resultFuture
+        val btc = 100000 of BTC issuedBy issuer heldBy alice
+        val resultFuture = issuerNode.services.startFlow(IssueTokens(listOf(btc))).resultFuture
         mockNet.runNetwork()
         val issueResultTx = resultFuture.get()
         val issuedStateRef = issueResultTx.coreTransaction.outRefsOfType<FungibleToken<TokenType>>().single()

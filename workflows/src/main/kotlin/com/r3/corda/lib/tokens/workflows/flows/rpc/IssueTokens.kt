@@ -44,48 +44,6 @@ constructor(
         val observers: List<Party> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
 
-    /* Fungible token constructors. */
-    @JvmOverloads
-    constructor(token: FungibleToken<T>, observers: List<Party> = emptyList())
-            : this(listOf(token), observers)
-
-    @JvmOverloads
-    constructor(amount: Amount<T>, issuer: Party, holder: Party, observers: List<Party> = emptyList())
-            : this(listOf(amount issuedBy issuer heldBy holder), observers)
-
-    @JvmOverloads
-    constructor(amount: Amount<IssuedTokenType<T>>, holder: AbstractParty, observers: List<Party> = emptyList())
-            : this(listOf(amount heldBy holder), observers)
-
-    @JvmOverloads
-    constructor(amount: Amount<IssuedTokenType<T>>, observers: List<Party> = emptyList())
-            : this(listOf(amount heldBy amount.token.issuer), observers)
-
-    @JvmOverloads
-    constructor(amount: Amount<T>, issuer: Party, observers: List<Party> = emptyList())
-            : this(listOf(amount issuedBy issuer heldBy issuer), observers)
-
-    /* Non-fungible token constructors. */
-    @JvmOverloads
-    constructor(token: NonFungibleToken<T>, observers: List<Party> = emptyList())
-            : this(listOf(token), observers)
-
-    @JvmOverloads
-    constructor(tokenType: T, issuer: Party, holder: AbstractParty, observers: List<Party> = emptyList())
-            : this(listOf(tokenType issuedBy issuer heldBy holder), observers)
-
-    @JvmOverloads
-    constructor(issuedTokenType: IssuedTokenType<T>, holder: AbstractParty, observers: List<Party> = emptyList())
-            : this(listOf(issuedTokenType heldBy holder), observers)
-
-    @JvmOverloads
-    constructor(issuedTokenType: IssuedTokenType<T>, observers: List<Party> = emptyList())
-            : this(listOf(issuedTokenType heldBy issuedTokenType.issuer), observers)
-
-    @JvmOverloads
-    constructor(tokenType: T, issuer: Party, observers: List<Party> = emptyList())
-            : this(listOf(tokenType issuedBy issuer heldBy issuer), observers)
-
     @Suspendable
     override fun call(): SignedTransaction {
         val observerSessions = sessionsForParties(observers)
