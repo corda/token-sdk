@@ -14,12 +14,7 @@ import net.corda.core.transactions.LedgerTransaction
 open class RubleToken(override val amount: Amount<IssuedTokenType<RUB>>,
                       override val holder: AbstractParty) : FungibleToken<RUB>(amount, holder)
 
-open class Ruble : TokenType {
-    override val tokenIdentifier: String
-        get() = "рубль"
-    override val fractionDigits: Int
-        get() = 0
-
+open class Ruble : TokenType("рубль", 0) {
     override fun toString(): String {
         return "Ruble(tokenIdentifier: ${tokenIdentifier}, fractionDigits: ${fractionDigits})"
     }
@@ -28,10 +23,7 @@ open class Ruble : TokenType {
 object RUB : Ruble()
 
 
-open class THING : TokenType {
-    override val tokenIdentifier: String = "PTK"
-    override val fractionDigits: Int = 0
-
+open class THING : TokenType("PTK", 0) {
     override fun toString(): String {
         return "THING(tokenIdentifier: ${tokenIdentifier}, fractionDigits: ${fractionDigits})"
     }
@@ -41,11 +33,7 @@ open class THING : TokenType {
 object PTK : THING()
 
 
-data class Appartment(
-        override val tokenIdentifier: String = "FOO"
-) : TokenType {
-    override val fractionDigits: Int = 0
-}
+class Appartment(val id: String = "Foo") : TokenType(id, 0)
 
 
 @BelongsToContract(DodgeTokenContract::class)

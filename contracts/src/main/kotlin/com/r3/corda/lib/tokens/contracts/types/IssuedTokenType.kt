@@ -22,7 +22,7 @@ import java.math.BigDecimal
  * @param T the [TokenType].
  */
 @CordaSerializable
-data class IssuedTokenType<out T : TokenType>(val issuer: Party, val tokenType: T) : TokenType by tokenType {
+data class IssuedTokenType<out T : TokenType>(val issuer: Party, val tokenType: T) : TokenType(tokenType.tokenIdentifier, tokenType.fractionDigits) {
     override fun toString(): String = "$tokenType issued by ${issuer.name.organisation}"
 
     /**

@@ -85,7 +85,12 @@ internal val NULL_SECURE_HASH = SecureHash.zeroHash
  */
 fun TokenType.getAttachmentIdForGenericParam(): SecureHash? {
     val computedValue = synchronized(attachmentCache) {
-        attachmentCache.computeIfAbsent(this.javaClass) { clazz ->
+        val startingPoint = if (this is IssuedTokenType<*>) {
+            this.tokenType.javaClass
+        } else {
+            this.javaClass
+        }
+        attachmentCache.computeIfAbsent(startingPoint) { clazz ->
             var classToSearch: Class<*> = clazz
             while (classToSearch != this.tokenClass && classToSearch != TokenPointer::class.java) {
                 classToSearch = this.tokenClass

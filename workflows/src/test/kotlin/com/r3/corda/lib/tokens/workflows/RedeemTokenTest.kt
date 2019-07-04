@@ -26,7 +26,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     lateinit var B: StartedMockNode
     lateinit var I: StartedMockNode
 
-    private val fooToken = Appartment("FOO")
+    private val fooToken = Appartment()
 
     @Before
     override fun initialiseNodes() {

@@ -2,11 +2,14 @@ package src.test.kotlin.com.r3.corda.lib.tokens.integrationTest
 
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
+import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
+import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefsOrZero
 import com.r3.corda.lib.tokens.contracts.utilities.withNotary
+import com.r3.corda.lib.tokens.money.DigitalCurrency
 import com.r3.corda.lib.tokens.money.FiatCurrency
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.testing.states.House
@@ -22,6 +25,7 @@ import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
 import com.r3.corda.lib.tokens.workflows.watchForTransaction
 import net.corda.core.CordaRuntimeException
 import net.corda.core.contracts.Amount
+import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.Party
 import net.corda.core.internal.concurrent.transpose
@@ -42,6 +46,59 @@ import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.Test
 
 class TokenDriverTest {
+
+
+    @Test
+    fun `should allow issuance of inline defined token`() {
+        driver(DriverParameters(
+                portAllocation = incrementalPortAllocation(10000),
+                startNodesInProcess = false,
+                cordappsForAllNodes = listOf(
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows")
+                ),
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
+        )) {
+            val (issuer) = listOf(
+                    startNode(providedName = BOC_NAME)
+            ).transpose().getOrThrow()
+
+            val issuerParty = issuer.nodeInfo.singleIdentity()
+
+            val customToken = TokenType("CUSTOM_TOKEN", 3)
+
+            val amountToIssue = Amount(100, customToken)
+
+            val issueA = issuer.rpc.startFlowDynamic(IssueTokens::class.java, amountToIssue, issuerParty, issuerParty, emptyList<Party>()).returnValue.getOrThrow()
+        }
+    }
+
+    @Test(expected = TransactionVerificationException.ContractRejection::class)
+    fun `should prevent issuance of a token with a null jarHash that does use an inline tokenType`() {
+        driver(DriverParameters(
+                portAllocation = incrementalPortAllocation(10000),
+                startNodesInProcess = false,
+                cordappsForAllNodes = listOf(
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")
+                ),
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
+        )) {
+            val (issuer) = listOf(
+                    startNode(providedName = BOC_NAME)
+            ).transpose().getOrThrow()
+
+            val issuerParty = issuer.nodeInfo.singleIdentity()
+            val issuedTokenType = IssuedTokenType(issuerParty, DigitalCurrency("STL", 9))
+            val amountToIssue = Amount(100, issuedTokenType)
+            val tokenToIssue = FungibleToken(amountToIssue, issuerParty, null)
+
+            val issueA = issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(tokenToIssue), emptyList<Party>()).returnValue.getOrThrow()
+        }
+    }
+
     @Test
     fun `beefy tokens integration test`() {
         driver(DriverParameters(
@@ -54,8 +111,7 @@ class TokenDriverTest {
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")
                 ),
                 // TODO this should be default to 4 in main corda no?
-                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList()),
-                isDebug = true
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
         )) {
             val (issuer, nodeA, nodeB) = listOf(
                     startNode(providedName = BOC_NAME),

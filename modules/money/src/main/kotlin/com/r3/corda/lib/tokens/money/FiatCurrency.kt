@@ -1,5 +1,6 @@
 package com.r3.corda.lib.tokens.money
 
+import com.r3.corda.lib.tokens.contracts.types.TokenType
 import java.util.*
 
 /**
@@ -9,26 +10,11 @@ import java.util.*
  *
  * @property currency the java.util.Currency which this token type should wrap.
  */
-class FiatCurrency(private val currency: Currency) : Money {
-    override val tokenIdentifier: String get() = currency.currencyCode
-    override val description: String get() = currency.displayName
-    override val fractionDigits: Int get() = currency.defaultFractionDigits
+class FiatCurrency(private val currency: Currency) : TokenType(currency.currencyCode, currency.defaultFractionDigits) {
     override fun toString(): String = tokenIdentifier
 
     companion object {
         // Uses the java money registry.
         fun getInstance(currencyCode: String) = FiatCurrency(Currency.getInstance(currencyCode))
     }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is FiatCurrency) return false
-        if (currency != other.currency) return false
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return currency.hashCode()
-    }
-
 }

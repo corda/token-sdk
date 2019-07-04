@@ -126,14 +126,15 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
 
         require(tokenTypes.size == 1) { "There should only be one TokenType per group" }
         val tokenType = tokenTypes.single()
-        return if (tokenType is TokenPointer<*>) {
+        return if (tokenType is TokenPointer<*> || tokenType.javaClass == TokenType::class.java) {
             // The TokenPointer is implemented in the tokens-contracts JAR which is already attached!
+            // If this is an inline defied token type, IE it just instantiates TokenType with parameters, do not require an attachment
             null
         } else {
             // Ensure there is a single JAR implementing the TokenType and return the hash of it.
-            val jarHashes = inputsAndOutputs.map(AbstractToken<*>::tokenTypeJarHash).toSet()
+            val jarHashes = inputsAndOutputs.mapNotNull(AbstractToken<*>::tokenTypeJarHash).toSet()
             require(jarHashes.size == 1) {
-                "There must only be one Jar (Hash) providing TokenType: ${outputs.first().tokenType.tokenIdentifier}"
+                "There must be exactly one Jar (Hash) providing extended TokenType: ${outputs.first().tokenType.tokenIdentifier} / ${outputs.first().tokenType.javaClass}"
             }
             jarHashes.single()
         }
