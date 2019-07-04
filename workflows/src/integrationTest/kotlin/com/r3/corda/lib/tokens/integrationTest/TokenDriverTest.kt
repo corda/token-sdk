@@ -5,10 +5,7 @@ import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
-import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
-import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefsOrZero
-import com.r3.corda.lib.tokens.contracts.utilities.withNotary
+import com.r3.corda.lib.tokens.contracts.utilities.*
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.testing.states.Ruble
@@ -65,15 +62,16 @@ class TokenDriverTest {
             val issuerParty = issuer.nodeInfo.singleIdentity()
 
             val customToken = TokenType("CUSTOM_TOKEN", 3)
+            val issuedType = IssuedTokenType(issuerParty, customToken)
+            val amountToIssue = Amount(100, issuedType)
+            val tokenToIssue = FungibleToken(amountToIssue, issuerParty)
 
-            val amountToIssue = Amount(100, customToken)
-
-            val issueA = issuer.rpc.startFlowDynamic(IssueTokens::class.java, amountToIssue, issuerParty, issuerParty, emptyList<Party>()).returnValue.getOrThrow()
+            val issueA = issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(tokenToIssue), emptyList<Party>()).returnValue.getOrThrow()
         }
     }
 
     @Test(expected = TransactionVerificationException.ContractRejection::class)
-    fun `should prevent issuance of a token with a null jarHash that does use an inline tokenType`() {
+    fun `should prevent issuance of a token with a null jarHash that does not use an inline tokenType`() {
         driver(DriverParameters(
                 portAllocation = incrementalPortAllocation(10000),
                 startNodesInProcess = false,
@@ -134,8 +132,10 @@ class TokenDriverTest {
                     emptyList<Party>() // TODO this should be handled by JvmOverloads on the constructor, but for some reason corda doesn't see the second constructor
             ).returnValue.getOrThrow()
             // Issue some fungible GBP cash to NodeA, NodeB.
-            val issueA = issuer.rpc.startFlowDynamic(IssueTokens::class.java, 1_000_000.GBP, issuerParty, nodeAParty, emptyList<Party>()).returnValue.getOrThrow()
-            val issueB = issuer.rpc.startFlowDynamic(IssueTokens::class.java, 900_000.GBP, issuerParty, nodeBParty, emptyList<Party>()).returnValue.getOrThrow()
+            val moneyA = 1000000 of GBP issuedBy issuerParty heldBy nodeAParty
+            val moneyB = 900000 of GBP issuedBy issuerParty heldBy nodeBParty
+            val issueA = issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(moneyA), emptyList<Party>()).returnValue.getOrThrow()
+            val issueB = issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(moneyB), emptyList<Party>()).returnValue.getOrThrow()
             nodeA.rpc.watchForTransaction(issueA).getOrThrow()
             nodeB.rpc.watchForTransaction(issueB).getOrThrow()
             // Check that node A has cash and house.
