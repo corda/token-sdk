@@ -68,4 +68,10 @@ open class TokenType(
         result = 31 * result + fractionDigits
         return result
     }
+
+    override fun toString(): String {
+        return "TokenType(tokenIdentifier='$tokenIdentifier', fractionDigits=$fractionDigits)"
+    }
+
+
 }

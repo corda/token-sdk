@@ -32,23 +32,5 @@ data class IssuedTokenType<out T : TokenType>(val issuer: Party, val tokenType: 
     override val displayTokenSize: BigDecimal get() = tokenType.displayTokenSize
 
     override fun toString(): String = "$tokenType issued by ${issuer.name.organisation}"
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
 
-        other as IssuedTokenType<*>
-
-        if (issuer != other.issuer) return false
-        if (tokenType != other.tokenType) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + issuer.hashCode()
-        result = 31 * result + tokenType.hashCode()
-        return result
-    }
 }

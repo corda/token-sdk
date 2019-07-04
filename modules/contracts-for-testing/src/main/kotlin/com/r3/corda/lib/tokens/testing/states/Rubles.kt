@@ -18,22 +18,38 @@ open class Ruble : TokenType("рубль", 0) {
     override fun toString(): String {
         return "Ruble(tokenIdentifier: ${tokenIdentifier}, fractionDigits: ${fractionDigits})"
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        if (!super.equals(other)) return false
+        return true
+    }
+
+
 }
 
 object RUB : Ruble()
 
 
-open class THING : TokenType("PTK", 0) {
+open class PhoBowl : TokenType("PTK", 0) {
     override fun toString(): String {
-        return "THING(tokenIdentifier: ${tokenIdentifier}, fractionDigits: ${fractionDigits})"
+        return "PhoBowl(tokenIdentifier: ${tokenIdentifier}, fractionDigits: ${fractionDigits})"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        if (!super.equals(other)) return false
+        return true
     }
 
 }
 
-object PTK : THING()
+object PTK : PhoBowl()
 
 
-class Appartment(val id: String = "Foo") : TokenType(id, 0)
+data class Appartment(val id: String = "Foo") : TokenType(id, 0)
 
 
 @BelongsToContract(DodgeTokenContract::class)
