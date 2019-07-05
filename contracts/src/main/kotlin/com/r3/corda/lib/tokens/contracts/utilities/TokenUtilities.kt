@@ -3,10 +3,11 @@ package com.r3.corda.lib.tokens.contracts.utilities
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
+import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionState
+import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
@@ -28,9 +29,9 @@ class TokenUtilities {
  * Creates a [FungibleToken] from an an amount of [IssuedTokenType].
  * E.g. Amount<IssuedTokenType<TokenType>> -> FungibleToken<TokenType>.
  */
-infix fun <T : TokenType> Amount<IssuedTokenType<T>>.heldBy(owner: AbstractParty): FungibleToken<T> = _heldBy(owner)
+infix fun Amount<IssuedTokenType>.heldBy(owner: AbstractParty): FungibleToken = _heldBy(owner)
 
-internal infix fun <T : TokenType> Amount<IssuedTokenType<T>>._heldBy(owner: AbstractParty): FungibleToken<T> {
+internal infix fun Amount<IssuedTokenType>._heldBy(owner: AbstractParty): FungibleToken {
     return FungibleToken(this, owner)
 }
 
@@ -60,4 +61,8 @@ val AbstractToken.holderString: String
     get() =
         (holder as? Party)?.name?.organisation ?: holder.owningKey.toStringShort().substring(0, 16)
 
-infix fun AbstractToken.withNewHolder(newHolder: AbstractParty) = withNewHolder(newHolder)
+infix fun <T : AbstractToken> T.withNewHolder(newHolder: AbstractParty) = withNewHolder(newHolder)
+
+infix fun IssuedTokenType.heldBy(party: Party): NonFungibleToken {
+    return NonFungibleToken(this, party, UniqueIdentifier())
+}

@@ -3,7 +3,6 @@ package com.r3.corda.lib.tokens.workflows.internal.selection
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.utilities.sortByStateRefAscending
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
@@ -46,7 +45,7 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
                 IndexingType.PUBLIC_KEY
             }
 
-            val ownerProvider: ((StateAndRef<FungibleToken<TokenType>>, AppServiceHub) -> Any) = if (indexingType == IndexingType.PUBLIC_KEY) {
+            val ownerProvider: ((StateAndRef<FungibleToken>, AppServiceHub) -> Any) = if (indexingType == IndexingType.PUBLIC_KEY) {
                 { stateAndRef, _ ->
                     stateAndRef.state.data.holder.owningKey
                 }
@@ -63,7 +62,7 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
                     paging = PageSpecification(pageNumber = currentPage, pageSize = pageSize),
                     criteria = QueryCriteria.VaultQueryCriteria(),
                     sorting = sortByStateRefAscending())
-            val statesToProcess = mutableListOf<StateAndRef<FungibleToken<TokenType>>>()
+            val statesToProcess = mutableListOf<StateAndRef<FungibleToken>>()
             while (existingStates.states.isNotEmpty()) {
                 statesToProcess.addAll(uncheckedCast(existingStates.states))
                 existingStates = appServiceHub.vaultService.queryBy(
@@ -74,7 +73,7 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
             return TokenObserver(statesToProcess, uncheckedCast(observable), ownerProvider)
         }
 
-        fun processToken(token: FungibleToken<*>): TokenIndex {
+        fun processToken(token: FungibleToken): TokenIndex {
             val owner = token.holder.owningKey
             val type = token.amount.token.tokenType.tokenClass
             val typeId = token.amount.token.tokenType.tokenIdentifier
@@ -90,12 +89,12 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
         tokenObserver?.source?.subscribe(::onVaultUpdate)
     }
 
-    private fun onVaultUpdate(t: Vault.Update<FungibleToken<in TokenType>>) {
+    private fun onVaultUpdate(t: Vault.Update<FungibleToken>) {
         t.consumed.forEach(::removeTokenFromCache)
         t.produced.forEach(::addTokenToCache)
     }
 
-    private fun removeTokenFromCache(it: StateAndRef<FungibleToken<*>>) {
+    private fun removeTokenFromCache(it: StateAndRef<FungibleToken>) {
         val idx = processToken(it.state.data)
         val tokenSet = getTokenBucket(idx)
         val removeResult = tokenSet.remove(it)
@@ -104,7 +103,7 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
         }
     }
 
-    private fun addTokenToCache(stateAndRef: StateAndRef<FungibleToken<in TokenType>>) {
+    private fun addTokenToCache(stateAndRef: StateAndRef<FungibleToken>) {
         val token = stateAndRef.state.data
 
         val (owner, type, typeId) = processToken(token)
@@ -116,7 +115,7 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
     }
 
     @Suspendable
-    fun lockTokensExternal(list: List<StateAndRef<FungibleToken<in TokenType>>>, knownSelectionId: String) {
+    fun lockTokensExternal(list: List<StateAndRef<FungibleToken>>, knownSelectionId: String) {
         list.forEach {
             val token = it.state.data
             val (owner, type, typeId) = processToken(token)
@@ -126,17 +125,17 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
     }
 
     @Suspendable
-    fun <T : TokenType> selectTokens(
+    fun selectTokens(
             owner: Any,
-            amountRequested: Amount<IssuedTokenType<T>>,
-            predicate: ((StateAndRef<FungibleToken<TokenType>>) -> Boolean) = { true },
+            amountRequested: Amount<IssuedTokenType>,
+            predicate: ((StateAndRef<FungibleToken>) -> Boolean) = { true },
             allowShortfall: Boolean = false,
             autoUnlockDelay: Duration = Duration.ofMinutes(5),
             selectionId: String
-    ): List<StateAndRef<FungibleToken<T>>> {
+    ): List<StateAndRef<FungibleToken>> {
         val set = getTokenBucket(owner, amountRequested.token.tokenType.tokenClass, amountRequested.token.tokenType.tokenIdentifier)
-        val lockedTokens = mutableListOf<StateAndRef<FungibleToken<TokenType>>>()
-        var amountLocked: Amount<IssuedTokenType<T>> = amountRequested.copy(quantity = 0)
+        val lockedTokens = mutableListOf<StateAndRef<FungibleToken>>()
+        var amountLocked: Amount<IssuedTokenType> = amountRequested.copy(quantity = 0)
         for (tokenStateAndRef in set.keys) {
             //does the token satisfy the (optional) predicate?
             if (amountRequested.token.issuer == tokenStateAndRef.state.data.amount.token.issuer && predicate.invoke(tokenStateAndRef)) {
@@ -165,7 +164,7 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
         return uncheckedCast(lockedTokens)
     }
 
-    fun unlockToken(it: StateAndRef<FungibleToken<TokenType>>, selectionId: String) {
+    fun unlockToken(it: StateAndRef<FungibleToken>, selectionId: String) {
         val token = it.state.data
         val idx = processToken(token)
         val tokensForTypeInfo = getTokenBucket(idx)
@@ -184,11 +183,11 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
 
 }
 
-data class TokenObserver(val initialValues: List<StateAndRef<FungibleToken<TokenType>>>,
-                         val source: Observable<Vault.Update<FungibleToken<in TokenType>>>,
-                         val ownerProvider: ((StateAndRef<FungibleToken<TokenType>>, AppServiceHub) -> Any)? = null)
+data class TokenObserver(val initialValues: List<StateAndRef<FungibleToken>>,
+                         val source: Observable<Vault.Update<FungibleToken>>,
+                         val ownerProvider: ((StateAndRef<FungibleToken>, AppServiceHub) -> Any)? = null)
 
-class TokenBucket(private val __backingMap: ConcurrentMap<StateAndRef<FungibleToken<in TokenType>>, String> = ConcurrentHashMap()) : ConcurrentMap<StateAndRef<FungibleToken<in TokenType>>, String> by __backingMap
+class TokenBucket(private val __backingMap: ConcurrentMap<StateAndRef<FungibleToken>, String> = ConcurrentHashMap()) : ConcurrentMap<StateAndRef<FungibleToken>, String> by __backingMap
 
 data class TokenIndex(val owner: Any, val tokenClazz: Class<*>, val tokenIdentifier: String)
 

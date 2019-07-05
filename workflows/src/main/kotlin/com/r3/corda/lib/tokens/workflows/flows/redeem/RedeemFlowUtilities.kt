@@ -27,15 +27,15 @@ import net.corda.core.transactions.TransactionBuilder
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addTokensToRedeem(
+fun addTokensToRedeem(
         transactionBuilder: TransactionBuilder,
         inputs: List<StateAndRef<AbstractToken>>,
         changeOutput: AbstractToken? = null
 ): TransactionBuilder {
     checkSameIssuer(inputs, changeOutput?.issuer)
     checkSameNotary(inputs)
-    if (changeOutput != null && changeOutput is FungibleToken<T>) {
-        check(inputs.filterIsInstance<StateAndRef<FungibleToken<T>>>().sumTokenStateAndRefs() > changeOutput.amount) {
+    if (changeOutput != null && changeOutput is FungibleToken) {
+        check(inputs.filterIsInstance<StateAndRef<FungibleToken>>().sumTokenStateAndRefs() > changeOutput.amount) {
             "Change output should be less than sum of inputs."
         }
     }
@@ -91,10 +91,10 @@ fun <T : TokenType> addNonFungibleTokensToRedeem(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addFungibleTokensToRedeem(
+fun addFungibleTokensToRedeem(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
-        amount: Amount<T>,
+        amount: Amount<TokenType>,
         issuer: Party,
         changeOwner: AbstractParty,
         additionalQueryCriteria: QueryCriteria? = null

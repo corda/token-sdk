@@ -76,7 +76,7 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
 
         // STEP 06: Charlie redeems the token with Denise
         // This should exit the holdable token
-        val charlieDiamond = moveTokenToCharlieTx.tx.outputsOfType<NonFungibleToken> > ().first()
+        val charlieDiamond = moveTokenToCharlieTx.tx.outputsOfType<NonFungibleToken>().first()
         val redeemDiamondTx = charlie.redeemTokens(charlieDiamond.token.tokenType, denise).getOrThrow(Duration.ofSeconds(5))
         assertHasTransaction(redeemDiamondTx, charlie, denise)
         assertNotHasTransaction(redeemDiamondTx, gic, alice, bob)
@@ -94,9 +94,9 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
         assertNotHasStateAndRef(oldDiamond, gic, denise, bob, charlie)
 
         // No one has nonfungible (discrete) tokens
-        assertNotHasStateAndRef(issueTokenTx.singleOutput<NonFungibleToken> > (), gic, denise, alice, bob, charlie)
-        assertNotHasStateAndRef(moveTokenToBobTx.singleOutput<NonFungibleToken> > (), gic, denise, alice, bob, charlie)
-        assertNotHasStateAndRef(moveTokenToCharlieTx.singleOutput<NonFungibleToken> > (), gic, denise, alice, bob, charlie)
+        assertNotHasStateAndRef(issueTokenTx.singleOutput<NonFungibleToken>(), gic, denise, alice, bob, charlie)
+        assertNotHasStateAndRef(moveTokenToBobTx.singleOutput<NonFungibleToken>(), gic, denise, alice, bob, charlie)
+        assertNotHasStateAndRef(moveTokenToCharlieTx.singleOutput<NonFungibleToken>(), gic, denise, alice, bob, charlie)
     }
 
     /**

@@ -6,6 +6,7 @@ import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentNonFungibleT
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.contracts.utilities.getAttachmentIdForGenericParam
 import com.r3.corda.lib.tokens.contracts.utilities.holderString
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.BelongsToContract
@@ -35,13 +36,13 @@ import net.corda.core.schemas.QueryableState
  */
 @BelongsToContract(NonFungibleTokenContract::class)
 open class NonFungibleToken(
-        val token: IssuedTokenType<TokenType>,
+        val token: IssuedTokenType,
         override val holder: AbstractParty,
         override val linearId: UniqueIdentifier,
         override val tokenTypeJarHash: SecureHash? = token.tokenType.getAttachmentIdForGenericParam()
 ) : AbstractToken, QueryableState, LinearState {
 
-    override val issuedTokenType: IssuedTokenType<TokenType> get() = token
+    override val issuedTokenType: IssuedTokenType get() = token
 
     final override val tokenType: TokenType get() = token.tokenType
 

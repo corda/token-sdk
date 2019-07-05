@@ -28,26 +28,26 @@ class UpdateDistributionListFlow(val signedTransaction: SignedTransaction) : Flo
     @Suspendable
     override fun call() {
         val tx = signedTransaction.tx
-        val tokensWithTokenPointers: List<AbstractToken>> = tx.outputs
+        val tokensWithTokenPointers: List<AbstractToken> = tx.outputs
                 .map(TransactionState<*>::data)
-                .filterIsInstance<AbstractToken> > ()
+                .filterIsInstance<AbstractToken>()
                 .filter { it.tokenType is TokenPointer<*> } // IntelliJ bug?? Check is not always true!
         // There are no evolvable tokens so we don't need to update any distribution lists. Otherwise, carry on.
         if (tokensWithTokenPointers.isEmpty()) return
-        val issueCmds: List<IssueTokenCommand<TokenPointer<*>>> = tx.commands
+        val issueCmds: List<IssueTokenCommand> = tx.commands
                 .map(Command<*>::value)
-                .filterIsInstance<IssueTokenCommand<TokenPointer<*>>>()
+                .filterIsInstance<IssueTokenCommand>()
                 .filter { it.token.tokenType is TokenPointer<*> }
-        val moveCmds: List<MoveTokenCommand<TokenPointer<*>>> = tx.commands
+        val moveCmds: List<MoveTokenCommand> = tx.commands
                 .map(Command<*>::value)
-                .filterIsInstance<MoveTokenCommand<TokenPointer<*>>>()
+                .filterIsInstance<MoveTokenCommand>()
                 .filter { it.token.tokenType is TokenPointer<*> }
         if (issueCmds.isNotEmpty()) {
             // If it's an issue transaction then the party calling this flow will be the issuer and they just need to
             // update their local distribution list with the parties that have been just issued tokens.
-            val issueTypes: List<TokenPointer<*>> = issueCmds.map { it.token.tokenType }
+            val issueTypes: List<TokenPointer<*>> = issueCmds.map { it.token.tokenType }.mapNotNull { it as? TokenPointer<*> }
             progressTracker.currentStep = ADD_DIST_LIST
-            val issueStates: List<AbstractToken>> = tokensWithTokenPointers.filter {
+            val issueStates: List<AbstractToken> = tokensWithTokenPointers.filter {
                 it.tokenType in issueTypes
             }
             addToDistributionList(issueStates)

@@ -4,7 +4,6 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.flows.confidential.ConfidentialTokensFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
@@ -18,7 +17,7 @@ import net.corda.core.transactions.SignedTransaction
  * @property participantSessions a list of sessions for the parties being issued tokens.
  * @property observerSessions a list of sessions for any observers.
  */
-class ConfidentialIssueTokensFlow<T : TokenType>
+class ConfidentialIssueTokensFlow
 @JvmOverloads
 constructor(
         val tokens: List<AbstractToken>,
@@ -29,13 +28,13 @@ constructor(
     /** Issue a single [FungibleToken]. */
     @JvmOverloads
     constructor(
-            token: FungibleToken<T>,
+            token: FungibleToken,
             participantSessions: List<FlowSession>,
             observerSessions: List<FlowSession> = emptyList()
     ) : this(listOf(token), participantSessions, observerSessions)
 
     /** Issue a single [FungibleToken] to self with no observers. */
-    constructor(token: FungibleToken<T>) : this(listOf(token), emptyList(), emptyList())
+    constructor(token: FungibleToken) : this(listOf(token), emptyList(), emptyList())
 
     /** Issue a single [NonFungibleToken]. */
     @JvmOverloads

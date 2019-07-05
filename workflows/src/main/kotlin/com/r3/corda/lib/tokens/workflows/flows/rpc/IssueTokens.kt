@@ -2,7 +2,6 @@ package com.r3.corda.lib.tokens.workflows.flows.rpc
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.flows.issue.ConfidentialIssueTokensFlow
 import com.r3.corda.lib.tokens.workflows.flows.issue.ConfidentialIssueTokensFlowHandler
 import com.r3.corda.lib.tokens.workflows.flows.issue.IssueTokensFlow
@@ -24,7 +23,7 @@ import net.corda.core.transactions.SignedTransaction
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
-class IssueTokens<T : TokenType>
+class IssueTokens
 @JvmOverloads
 constructor(
         val tokensToIssue: List<AbstractToken>,
@@ -56,7 +55,7 @@ class IssueTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
-class ConfidentialIssueTokens<T : TokenType>
+class ConfidentialIssueTokens
 @JvmOverloads
 constructor(
         val tokensToIssue: List<AbstractToken>,

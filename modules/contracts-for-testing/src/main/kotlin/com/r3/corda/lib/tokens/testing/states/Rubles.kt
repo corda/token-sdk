@@ -11,8 +11,8 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.transactions.LedgerTransaction
 
 @BelongsToContract(FungibleTokenContract::class)
-open class RubleToken(override val amount: Amount<IssuedTokenType<RUB>>,
-                      override val holder: AbstractParty) : FungibleToken<RUB>(amount, holder)
+open class RubleToken(amount: Amount<IssuedTokenType>,
+                      holder: AbstractParty) : FungibleToken(amount, holder)
 
 open class Ruble : TokenType("рубль", 0) {
 
@@ -47,8 +47,8 @@ data class Appartment(val id: String = "Foo") : TokenType(id, 0)
 
 
 @BelongsToContract(DodgeTokenContract::class)
-open class DodgeToken(override val amount: Amount<IssuedTokenType<RUB>>,
-                      override val holder: AbstractParty) : FungibleToken<RUB>(amount, holder)
+open class DodgeToken(amount: Amount<IssuedTokenType>,
+                      holder: AbstractParty) : FungibleToken(amount, holder)
 
 open class DodgeTokenContract : Contract {
     override fun verify(tx: LedgerTransaction) {

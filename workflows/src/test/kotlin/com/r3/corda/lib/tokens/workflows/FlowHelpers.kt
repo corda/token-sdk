@@ -10,7 +10,6 @@ import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.rpc.*
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
-import com.r3.corda.lib.tokens.workflows.utilities.heldBy
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
@@ -28,9 +27,9 @@ fun <T : EvolvableTokenType> StartedMockNode.updateEvolvableToken(old: StateAndR
     return transaction { startFlow(UpdateEvolvableToken(oldStateAndRef = old, newState = new)) }
 }
 
-fun <T : TokenType> StartedMockNode.issueFungibleTokens(
+fun StartedMockNode.issueFungibleTokens(
         issueTo: StartedMockNode,
-        amount: Amount<T>,
+        amount: Amount<TokenType>,
         anonymous: Boolean = true
 ): CordaFuture<SignedTransaction> {
     return transaction {
@@ -56,8 +55,8 @@ fun <T : TokenType> StartedMockNode.issueNonFungibleTokens(
     }
 }
 
-fun <T : TokenType> StartedMockNode.moveFungibleTokens(
-        amount: Amount<T>,
+fun StartedMockNode.moveFungibleTokens(
+        amount: Amount<TokenType>,
         owner: StartedMockNode,
         anonymous: Boolean = true
 ): CordaFuture<SignedTransaction> {
@@ -84,10 +83,10 @@ fun <T : TokenType> StartedMockNode.moveNonFungibleTokens(
     }
 }
 
-fun <T : TokenType> StartedMockNode.redeemTokens(
-        token: T,
+fun StartedMockNode.redeemTokens(
+        token: TokenType,
         issuer: StartedMockNode,
-        amount: Amount<T>? = null,
+        amount: Amount<TokenType>? = null,
         anonymous: Boolean = true
 ): CordaFuture<SignedTransaction> {
     return if (anonymous && amount != null) {

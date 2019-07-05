@@ -61,7 +61,7 @@ fun <T : TokenType> generateMoveNonFungible(
 
 // All check should be performed before.
 @Suspendable
-fun <T : TokenType> generateExitNonFungible(txBuilder: TransactionBuilder, moveStateAndRef: StateAndRef<NonFungibleToken>) {
+fun generateExitNonFungible(txBuilder: TransactionBuilder, moveStateAndRef: StateAndRef<NonFungibleToken>) {
     val nonFungibleToken = moveStateAndRef.state.data // TODO What if redeeming many non-fungible assets.
     addTokenTypeJar(nonFungibleToken, txBuilder)
     val issuerKey = nonFungibleToken.token.issuer.owningKey

@@ -4,7 +4,6 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.commands.IssueTokenCommand
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.identity.Party
 import net.corda.core.transactions.TransactionBuilder
 
@@ -15,9 +14,9 @@ import net.corda.core.transactions.TransactionBuilder
  */
 @Suspendable
 fun addIssueTokens(transactionBuilder: TransactionBuilder, outputs: List<AbstractToken>): TransactionBuilder {
-    val outputGroups: Map<IssuedTokenType<TokenType>, List<AbstractToken>> = outputs.groupBy { it.issuedTokenType }
+    val outputGroups: Map<IssuedTokenType, List<AbstractToken>> = outputs.groupBy { it.issuedTokenType }
     return transactionBuilder.apply {
-        outputGroups.forEach { (issuedTokenType: IssuedTokenType<TokenType>, states: List<AbstractToken>) ->
+        outputGroups.forEach { (issuedTokenType: IssuedTokenType, states: List<AbstractToken>) ->
             val issuers = states.map { it.issuer }.toSet()
             require(issuers.size == 1) { "All tokensToIssue must have the same issuer." }
             val issuer = issuers.single()

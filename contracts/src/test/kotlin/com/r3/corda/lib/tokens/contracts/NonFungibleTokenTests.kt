@@ -6,7 +6,6 @@ import com.r3.corda.lib.tokens.contracts.commands.RedeemTokenCommand
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
-import com.r3.corda.lib.tokens.contracts.utilities.withNewHolder
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.testing.states.PTK
 import com.r3.corda.lib.tokens.testing.states.RUB
@@ -21,7 +20,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
     fun `issue non fungible token tests`() {
         transaction {
             // Start with only one output.
-            output(NonFungibleTokenContract.contractId, issuedToken heldBy ALICE.party)
+            output(NonFungibleTokenContract.contractId, issuedToken.heldBy(ALICE.party))
             attachment(issuedToken.tokenType.importAttachment(aliceServices.attachments))
             // No command fails.
             tweak {
@@ -96,7 +95,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
     @Test
     fun `move non fungible token tests`() {
         val heldByAlice = issuedToken heldBy ALICE.party
-        val heldByBob = heldByAlice withNewHolder BOB.party
+        val heldByBob = heldByAlice.withNewHolder(BOB.party)
         transaction {
             // Start with a basic move a PTK from ALICE to BOB.
             input(NonFungibleTokenContract.contractId, heldByAlice)
@@ -143,7 +142,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
                 val anotherIssuedTokenHeldByAlice = anotherIssuedToken heldBy ALICE.party
 
                 input(NonFungibleTokenContract.contractId, anotherIssuedTokenHeldByAlice)
-                output(NonFungibleTokenContract.contractId, anotherIssuedTokenHeldByAlice withNewHolder BOB.party)
+                output(NonFungibleTokenContract.contractId, anotherIssuedTokenHeldByAlice.withNewHolder(BOB.party))
 
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
                 // Command for the move.
@@ -227,3 +226,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
         }
     }
 }
+
+
+
+

@@ -22,7 +22,7 @@ import net.corda.core.transactions.TransactionBuilder
  */
 // Called on owner side.
 @InitiatingFlow
-class RedeemTokensFlow<T : TokenType>
+class RedeemTokensFlow
 @JvmOverloads
 constructor(
         val inputs: List<StateAndRef<AbstractToken>>,

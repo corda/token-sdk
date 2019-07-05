@@ -87,10 +87,10 @@ fun <T : TokenType> addMoveTokens(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addMoveFungibleTokens(
+fun addMoveFungibleTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
-        partiesAndAmounts: List<PartyAndAmount<T>>,
+        partiesAndAmounts: List<PartyAndAmount<TokenType>>,
         changeHolder: AbstractParty,
         queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
@@ -111,10 +111,10 @@ fun <T : TokenType> addMoveFungibleTokens(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addMoveFungibleTokens(
+fun addMoveFungibleTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
-        amount: Amount<T>,
+        amount: Amount<TokenType>,
         holder: AbstractParty,
         changeHolder: AbstractParty,
         queryCriteria: QueryCriteria? = null

@@ -49,8 +49,8 @@ class TokenPointerTests : ContractTestCommon() {
         }
         // Check we can resolve the pointer inside the ledger transaction.
         val ledgerTransaction = testTransaction.toLedgerTransaction(aliceServices)
-        val fungibleToken = ledgerTransaction.singleOutput<FungibleToken<TokenPointer<TestEvolvableTokenType>>>()
-        assertEquals(fungibleToken.tokenType.pointer.resolve(ledgerTransaction), outputStateAndRef)
+        val fungibleToken = ledgerTransaction.singleOutput<FungibleToken>()
+        assertEquals(((fungibleToken.tokenType) as TokenPointer<TestEvolvableTokenType>).pointer.resolve(ledgerTransaction), outputStateAndRef)
     }
 
     @Test

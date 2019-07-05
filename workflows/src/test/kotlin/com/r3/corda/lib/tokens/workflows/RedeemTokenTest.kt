@@ -1,7 +1,6 @@
 package com.r3.corda.lib.tokens.workflows
 
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.money.GBP
@@ -52,7 +51,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         val ownedStates = A.services.vaultService.tokenAmountsByToken(GBP).states
         assertThat(ownedStates).isNotEmpty()
         assertThat(ownedStates.sumTokenStateAndRefs()).isEqualTo(20.GBP issuedBy I.legalIdentity())
-        assertThat(I.services.vaultService.queryBy<FungibleToken<TokenType>>(ownedTokenAmountCriteria(GBP, I.legalIdentity())).states).isEmpty()
+        assertThat(I.services.vaultService.queryBy<FungibleToken>(ownedTokenAmountCriteria(GBP, I.legalIdentity())).states).isEmpty()
     }
 
     @Test
