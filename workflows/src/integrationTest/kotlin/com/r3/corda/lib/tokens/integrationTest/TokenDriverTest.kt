@@ -5,15 +5,24 @@ import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.contracts.utilities.*
+import com.r3.corda.lib.tokens.contracts.utilities.heldBy
+import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
+import com.r3.corda.lib.tokens.contracts.utilities.of
+import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
+import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefsOrZero
+import com.r3.corda.lib.tokens.contracts.utilities.withNotary
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.testing.states.Ruble
-import com.r3.corda.lib.tokens.workflows.flows.evolvable.CreateEvolvableToken
-import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
-import com.r3.corda.lib.tokens.workflows.internal.testflows.*
+import com.r3.corda.lib.tokens.workflows.flows.rpc.UpdateEvolvableToken
+import com.r3.corda.lib.tokens.workflows.internal.testflows.CheckTokenPointer
+import com.r3.corda.lib.tokens.workflows.internal.testflows.DvPFlow
+import com.r3.corda.lib.tokens.workflows.internal.testflows.GetDistributionList
+import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemFungibleGBP
+import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemNonFungibleHouse
 import com.r3.corda.lib.tokens.workflows.singleOutput
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
 import com.r3.corda.lib.tokens.workflows.utilities.ownedTokenCriteria
@@ -55,9 +64,7 @@ class TokenDriverTest {
                 ),
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
         )) {
-            val (issuer) = listOf(
-                    startNode(providedName = BOC_NAME)
-            ).transpose().getOrThrow()
+            val issuer = startNode(providedName = BOC_NAME).getOrThrow()
 
             val issuerParty = issuer.nodeInfo.singleIdentity()
 
@@ -66,7 +73,7 @@ class TokenDriverTest {
             val amountToIssue = Amount(100, issuedType)
             val tokenToIssue = FungibleToken(amountToIssue, issuerParty)
 
-            val issueA = issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(tokenToIssue), emptyList<Party>()).returnValue.getOrThrow()
+            issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(tokenToIssue), emptyList<Party>()).returnValue.getOrThrow()
         }
     }
 
@@ -83,16 +90,14 @@ class TokenDriverTest {
                 ),
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
         )) {
-            val (issuer) = listOf(
-                    startNode(providedName = BOC_NAME)
-            ).transpose().getOrThrow()
+            val issuer = startNode(providedName = BOC_NAME).getOrThrow()
 
             val issuerParty = issuer.nodeInfo.singleIdentity()
             val issuedTokenType = IssuedTokenType(issuerParty, Ruble())
             val amountToIssue = Amount(100, issuedTokenType)
             val tokenToIssue = FungibleToken(amountToIssue, issuerParty, null)
 
-            val issueA = issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(tokenToIssue), emptyList<Party>()).returnValue.getOrThrow()
+            issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(tokenToIssue), emptyList<Party>()).returnValue.getOrThrow()
         }
     }
 
