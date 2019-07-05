@@ -1,5 +1,6 @@
 package com.r3.corda.lib.tokens.integrationTest
 
+import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentNonFungibleToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
@@ -25,6 +26,8 @@ import net.corda.core.identity.Party
 import net.corda.core.internal.concurrent.transpose
 import net.corda.core.messaging.startFlow
 import net.corda.core.messaging.vaultQueryBy
+import net.corda.core.node.services.vault.QueryCriteria
+import net.corda.core.node.services.vault.builder
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.BOC_NAME
@@ -37,9 +40,52 @@ import net.corda.testing.driver.internal.incrementalPortAllocation
 import net.corda.testing.node.TestCordapp
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
+import org.hamcrest.CoreMatchers.`is`
+import org.junit.Assert
 import org.junit.Test
 
 class TokenDriverTest {
+
+    @Test
+    fun `should allow querying of tokens by underlying token pointed to`() {
+        driver(DriverParameters(
+                portAllocation = incrementalPortAllocation(15000),
+                startNodesInProcess = false,
+                cordappsForAllNodes = listOf(
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")
+                ),
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
+        )) {
+            val (issuer) = listOf(
+                    startNode(providedName = BOC_NAME)
+            ).transpose().getOrThrow()
+
+            val issuerParty = issuer.nodeInfo.singleIdentity()
+
+            val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(issuerParty), linearId = UniqueIdentifier())
+            val housePublishTx = issuer.rpc.startFlowDynamic(
+                    CreateEvolvableToken::class.java,
+                    house withNotary defaultNotaryIdentity
+            ).returnValue.getOrThrow() // TODO test choosing getPreferredNotary
+            val housePtr = house.toPointer()
+            val houseToken = housePtr issuedBy issuerParty heldBy issuerParty
+            val tokenIssueTx = issuer.rpc.startFlowDynamic(
+                    ConfidentialIssueTokens::class.java,
+                    listOf(houseToken),
+                    emptyList<Party>() // TODO this should be handled by JvmOverloads on the constructor, but for some reason corda doesn't see the second constructor
+            ).returnValue.getOrThrow()
+
+            val tokenClass = builder {
+                PersistentNonFungibleToken::tokenClass.equal(House::class.java)
+            }
+
+            val queriedHouseToken = issuer.rpc.vaultQueryBy<NonFungibleToken>(QueryCriteria.VaultCustomQueryCriteria(tokenClass)).states.singleOrNull()?.state?.data
+            Assert.assertThat(queriedHouseToken, `is`(houseToken))
+        }
+    }
 
 
     @Test
