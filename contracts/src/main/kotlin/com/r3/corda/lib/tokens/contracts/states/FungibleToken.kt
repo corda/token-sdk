@@ -30,7 +30,6 @@ import net.corda.core.schemas.QueryableState
  *
  * @property amount the [Amount] of [IssuedTokenType] represented by this [FungibleToken].
  * @property holder the [AbstractParty] which has a claim on the issuer of the [IssuedTokenType].
- * @param T the [TokenType] this [FungibleToken] state is in respect of.
  */
 @BelongsToContract(FungibleTokenContract::class)
 open class FungibleToken(

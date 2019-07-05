@@ -6,6 +6,7 @@ import com.r3.corda.lib.tokens.contracts.commands.RedeemTokenCommand
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
+import com.r3.corda.lib.tokens.contracts.utilities.withHolder
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.testing.states.PTK
 import com.r3.corda.lib.tokens.testing.states.RUB
@@ -95,7 +96,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
     @Test
     fun `move non fungible token tests`() {
         val heldByAlice = issuedToken heldBy ALICE.party
-        val heldByBob = heldByAlice.withNewHolder(BOB.party)
+        val heldByBob = heldByAlice withHolder (BOB.party)
         transaction {
             // Start with a basic move a PTK from ALICE to BOB.
             input(NonFungibleTokenContract.contractId, heldByAlice)

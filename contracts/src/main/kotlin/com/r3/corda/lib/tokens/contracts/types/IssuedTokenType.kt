@@ -19,7 +19,6 @@ import java.math.BigDecimal
  * the [TokenType] being a depositary receipt, the issuer is NOT the party with the ultimate liability, instead it is
  * always the party which issued the [TokenType] on ledger.
  * @property tokenType the [TokenType] to be associated with an issuing [Party].
- * @param T the [TokenType].
  */
 @CordaSerializable
 data class IssuedTokenType(val issuer: Party, val tokenType: TokenType) : TokenType(tokenType.tokenIdentifier, tokenType.fractionDigits) {

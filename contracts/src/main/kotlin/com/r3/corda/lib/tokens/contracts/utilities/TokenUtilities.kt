@@ -61,7 +61,7 @@ val AbstractToken.holderString: String
     get() =
         (holder as? Party)?.name?.organisation ?: holder.owningKey.toStringShort().substring(0, 16)
 
-infix fun <T : AbstractToken> T.withNewHolder(newHolder: AbstractParty) = withNewHolder(newHolder)
+infix fun <T : AbstractToken> T.withHolder(newHolder: AbstractParty) = withNewHolder(newHolder)
 
 infix fun IssuedTokenType.heldBy(party: Party): NonFungibleToken {
     return NonFungibleToken(this, party, UniqueIdentifier())

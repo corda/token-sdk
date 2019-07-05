@@ -32,6 +32,8 @@ import net.corda.core.schemas.QueryableState
  *
  * @property token the [IssuedTokenType] which this [NonFungibleToken] is in respect of.
  * @property holder the [AbstractParty] which holds the [IssuedTokenType].
+ * @property linearId the [UniqueIdentifier] which will uniquely identify this Token.
+ * @property tokenTypeJarHash the [SecureHash] which will pin the jar that provides the [TokenType].
  * @param TokenType the [TokenType].
  */
 @BelongsToContract(NonFungibleTokenContract::class)
