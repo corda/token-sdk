@@ -72,6 +72,7 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
         // This should be reflected to the report participants
         val updatedDiamond = publishedDiamond.state.data.copy(color = DiamondGradingReport.ColorScale.B)
         val updateDiamondTx = gic.updateEvolvableToken(publishedDiamond, updatedDiamond).getOrThrow(Duration.ofSeconds(5))
+        Thread.sleep(1000)
         assertHasTransaction(updateDiamondTx, gic, denise, bob, charlie)
         assertNotHasTransaction(updateDiamondTx, alice)
 

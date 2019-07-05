@@ -121,8 +121,9 @@ class TokenDriverTest {
             // Create evolvable house state.
             val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(issuerParty), linearId = UniqueIdentifier())
             val housePublishTx = issuer.rpc.startFlowDynamic(
-                    CreateEvolvableToken::class.java,
-                    house withNotary defaultNotaryIdentity
+                    CreateEvolvableTokens::class.java,
+                    house withNotary defaultNotaryIdentity,
+                    emptyList<Party>()
             ).returnValue.getOrThrow() // TODO test choosing getPreferredNotary
             // Issue non-fungible evolvable state to node A using confidential identities.
             val housePtr = house.toPointer<House>()
@@ -166,7 +167,7 @@ class TokenDriverTest {
             // Update that evolvable state on issuer node.
             val oldHouse = housePublishTx.singleOutput<House>()
             val newHouse = oldHouse.state.data.copy(valuation = 800_000L.GBP)
-            val houseUpdateTx = issuer.rpc.startFlowDynamic(UpdateEvolvableToken::class.java, oldHouse, newHouse).returnValue.getOrThrow()
+            val houseUpdateTx = issuer.rpc.startFlowDynamic(UpdateEvolvableToken::class.java, oldHouse, newHouse, emptyList<Party>()).returnValue.getOrThrow()
             // Check that both nodeA and B got update.
             nodeA.rpc.watchForTransaction(houseUpdateTx).getOrThrow()
             nodeB.rpc.watchForTransaction(houseUpdateTx).getOrThrow()
