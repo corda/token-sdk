@@ -2,11 +2,13 @@ package com.r3.corda.lib.tokens.integrationTest
 
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
+import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
+import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.*
-import com.r3.corda.lib.tokens.money.FiatCurrency
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.testing.states.House
+import com.r3.corda.lib.tokens.testing.states.Ruble
 import com.r3.corda.lib.tokens.workflows.flows.evolvable.CreateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
@@ -19,6 +21,7 @@ import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
 import com.r3.corda.lib.tokens.workflows.watchForTransaction
 import net.corda.core.CordaRuntimeException
 import net.corda.core.contracts.Amount
+import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.Party
 import net.corda.core.internal.concurrent.transpose
@@ -39,6 +42,60 @@ import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.Test
 
 class TokenDriverTest {
+
+
+    @Test
+    fun `should allow issuance of inline defined token`() {
+        driver(DriverParameters(
+                portAllocation = incrementalPortAllocation(15000),
+                startNodesInProcess = false,
+                cordappsForAllNodes = listOf(
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows")
+                ),
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
+        )) {
+            val (issuer) = listOf(
+                    startNode(providedName = BOC_NAME)
+            ).transpose().getOrThrow()
+
+            val issuerParty = issuer.nodeInfo.singleIdentity()
+
+            val customToken = TokenType("CUSTOM_TOKEN", 3)
+            val issuedType = IssuedTokenType(issuerParty, customToken)
+            val amountToIssue = Amount(100, issuedType)
+            val tokenToIssue = FungibleToken(amountToIssue, issuerParty)
+
+            val issueA = issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(tokenToIssue), emptyList<Party>()).returnValue.getOrThrow()
+        }
+    }
+
+    @Test(expected = TransactionVerificationException.ContractRejection::class)
+    fun `should prevent issuance of a token with a null jarHash that does not use an inline tokenType`() {
+        driver(DriverParameters(
+                portAllocation = incrementalPortAllocation(10000),
+                startNodesInProcess = false,
+                cordappsForAllNodes = listOf(
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")
+                ),
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
+        )) {
+            val (issuer) = listOf(
+                    startNode(providedName = BOC_NAME)
+            ).transpose().getOrThrow()
+
+            val issuerParty = issuer.nodeInfo.singleIdentity()
+            val issuedTokenType = IssuedTokenType(issuerParty, Ruble())
+            val amountToIssue = Amount(100, issuedTokenType)
+            val tokenToIssue = FungibleToken(amountToIssue, issuerParty, null)
+
+            val issueA = issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(tokenToIssue), emptyList<Party>()).returnValue.getOrThrow()
+        }
+    }
+
     @Test
     fun `beefy tokens integration test`() {
         driver(DriverParameters(
@@ -83,9 +140,9 @@ class TokenDriverTest {
             nodeB.rpc.watchForTransaction(issueB).getOrThrow()
             // Check that node A has cash and house.
             assertThat(nodeA.rpc.vaultQuery(House::class.java).states).isNotEmpty
-            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
+            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
                     .isEqualTo(1_000_000L.GBP issuedBy issuerParty)
-            assertThat(nodeB.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
+            assertThat(nodeB.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
                     .isEqualTo(900_000L.GBP issuedBy issuerParty)
             // Move house to Node B using conf identities in exchange for cash using DvP flow.
             // TODO use conf identities
@@ -101,8 +158,8 @@ class TokenDriverTest {
             assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken<TokenPointer<House>>>(ownedTokenCriteria(housePtr)).states).isNotEmpty
             assertThat(nodeA.rpc.vaultQueryBy<NonFungibleToken<TokenPointer<House>>>(ownedTokenCriteria(housePtr)).states).isEmpty()
             // NodeA has cash, B doesn't
-            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(1_900_000L.GBP issuedBy issuerParty)
-            assertThat(nodeB.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
+            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(1_900_000L.GBP issuedBy issuerParty)
+            assertThat(nodeB.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
             // Check that dist list was updated at issuer node.
             val distributionList = issuer.rpc.startFlow(::GetDistributionList, housePtr).returnValue.getOrThrow()
             assertThat(distributionList.map { it.party }).containsExactly(nodeAParty, nodeBParty)
@@ -140,8 +197,8 @@ class TokenDriverTest {
                     issuerParty
             ).returnValue.getOrThrow()
             nodeA.rpc.watchForTransaction(redeemGBPTx).getOrThrow()
-            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(800_000L.GBP issuedBy issuerParty)
-            assertThat(issuer.rpc.vaultQueryBy<FungibleToken<FiatCurrency>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
+            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(800_000L.GBP issuedBy issuerParty)
+            assertThat(issuer.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
         }
     }
 }

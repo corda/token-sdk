@@ -22,12 +22,15 @@ import java.math.BigDecimal
  * @param T the [TokenType].
  */
 @CordaSerializable
-data class IssuedTokenType<out T : TokenType>(val issuer: Party, val tokenType: T) : TokenType by tokenType {
-    override fun toString(): String = "$tokenType issued by ${issuer.name.organisation}"
+data class IssuedTokenType<out T : TokenType>(val issuer: Party, val tokenType: T) : TokenType(tokenType.tokenIdentifier, tokenType.fractionDigits) {
+
 
     /**
      * This is required by [Amount] to determine the default fraction digits when adding or subtracting amounts of
      * [IssuedTokenType].
      */
     override val displayTokenSize: BigDecimal get() = tokenType.displayTokenSize
+
+    override fun toString(): String = "$tokenType issued by ${issuer.name.organisation}"
+
 }

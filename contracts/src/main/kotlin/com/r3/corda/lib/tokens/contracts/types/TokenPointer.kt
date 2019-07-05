@@ -16,16 +16,10 @@ import net.corda.core.contracts.LinearPointer
  * proxy for an [EvolvableTokenType]).
  * @param T the type of [EvolvableTokenType] which is being pointed to by this [TokenPointer].
  */
-data class TokenPointer<T : EvolvableTokenType>(
+class TokenPointer<T : EvolvableTokenType>(
         val pointer: LinearPointer<T>,
-        override val fractionDigits: Int
-) : TokenType {
-    /**
-     * In the case of a [TokenPointer], the [tokenIdentifier] becomes the linearId of the [EvolvableTokenType] being
-     * pointed to.
-     */
-    override val tokenIdentifier: String get() = pointer.pointer.id.toString()
-
+        fractionDigits: Int
+) : TokenType(pointer.pointer.id.toString(), fractionDigits) {
     /**
      * The fully qualified class name for the [EvolvableTokenType] being pointed to.
      */
