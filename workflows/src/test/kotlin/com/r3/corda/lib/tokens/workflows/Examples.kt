@@ -29,7 +29,7 @@ class Examples : LedgerTestWithPersistence() {
     @Test
     fun `evolvable token definition`() {
         val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(BOB.party), linearId = UniqueIdentifier())
-        val housePointer: TokenPointer<House> = house.toPointer()
+        val housePointer: TokenPointer = house.toPointer()
         val houseIssuedByBob: IssuedTokenType = housePointer issuedBy BOB.party
         houseIssuedByBob heldBy ALICE.party
 

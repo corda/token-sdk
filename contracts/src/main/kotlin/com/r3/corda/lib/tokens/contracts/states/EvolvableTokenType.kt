@@ -38,8 +38,8 @@ abstract class EvolvableTokenType : LinearState {
     abstract val fractionDigits: Int
 
     /** For obtaining a pointer to this [EvolveableTokenType]. */
-    inline fun <reified T : EvolvableTokenType> toPointer(): TokenPointer<T> {
-        val linearPointer = LinearPointer(linearId, T::class.java)
+    fun toPointer(): TokenPointer {
+        val linearPointer = LinearPointer(linearId, EvolvableTokenType::class.java)
         return TokenPointer(linearPointer, fractionDigits)
     }
 }

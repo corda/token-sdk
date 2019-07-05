@@ -30,7 +30,7 @@ class TokenPointerTests : ContractTestCommon() {
             signedTransaction
         }
         val outputStateAndRef = committedTransaction.tx.outRefsOfType<TestEvolvableTokenType>().single()
-        val tokenPointer = evolvableToken.toPointer<TestEvolvableTokenType>()
+        val tokenPointer = evolvableToken.toPointer()
         // Create a transaction which contains a state with a pointer to the above evolvable token type.
         val testTransaction = aliceServices.run {
             val transaction = TransactionBuilder(notary = NOTARY.party).apply {
@@ -50,12 +50,12 @@ class TokenPointerTests : ContractTestCommon() {
         // Check we can resolve the pointer inside the ledger transaction.
         val ledgerTransaction = testTransaction.toLedgerTransaction(aliceServices)
         val fungibleToken = ledgerTransaction.singleOutput<FungibleToken>()
-        assertEquals(((fungibleToken.tokenType) as TokenPointer<TestEvolvableTokenType>).pointer.resolve(ledgerTransaction), outputStateAndRef)
+        assertEquals(((fungibleToken.tokenType) as TokenPointer).pointer.resolve(ledgerTransaction), outputStateAndRef)
     }
 
     @Test
     fun `tokenTypeJarHash must be not null if tokenType is not a pointer`() {
-        val pointer: TokenPointer<TestEvolvableTokenType> = TestEvolvableTokenType(listOf(ALICE.party)).toPointer()
+        val pointer: TokenPointer = TestEvolvableTokenType(listOf(ALICE.party)).toPointer()
         val pointerToken: NonFungibleToken = pointer issuedBy ISSUER.party heldBy ALICE.party
         val staticToken: NonFungibleToken = GBP issuedBy ISSUER.party heldBy ALICE.party
         assertEquals(pointerToken.tokenTypeJarHash, null)

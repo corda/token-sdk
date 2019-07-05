@@ -123,7 +123,7 @@ class TokenDriverTest {
                     house withNotary defaultNotaryIdentity
             ).returnValue.getOrThrow() // TODO test choosing getPreferredNotary
             // Issue non-fungible evolvable state to node A using confidential identities.
-            val housePtr = house.toPointer<House>()
+            val housePtr = house.toPointer()
             issuer.rpc.startFlowDynamic(
                     ConfidentialIssueTokens::class.java,
                     listOf(housePtr issuedBy issuerParty heldBy nodeAParty),

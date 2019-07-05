@@ -63,8 +63,8 @@ fun ServiceHub.addPartyToDistributionList(party: Party, linearId: UniqueIdentifi
 
 @Suspendable
 fun FlowLogic<*>.addToDistributionList(tokens: List<AbstractToken>) {
-    tokens.filter { it.tokenType as? TokenPointer<*> != null }.forEach { token ->
-        val tokenType = token.tokenType as TokenPointer<*>
+    tokens.filter { it.tokenType as? TokenPointer != null }.forEach { token ->
+        val tokenType = token.tokenType as TokenPointer
         val pointer = tokenType.pointer.pointer
         val holder = token.holder.toParty(serviceHub)
         addPartyToDistributionList(holder, pointer)
@@ -73,8 +73,8 @@ fun FlowLogic<*>.addToDistributionList(tokens: List<AbstractToken>) {
 
 @Suspendable
 fun FlowLogic<*>.updateDistributionList(tokens: List<AbstractToken>) {
-    tokens.filter { it.tokenType as? TokenPointer<*> != null }.forEach { token ->
-        val tokenPointer = token.tokenType as TokenPointer<*>
+    tokens.filter { it.tokenType as? TokenPointer != null }.forEach { token ->
+        val tokenPointer = token.tokenType as TokenPointer
         val holderParty = serviceHub.identityService.requireKnownConfidentialIdentity(token.holder)
         val evolvableToken = tokenPointer.pointer.resolve(serviceHub).state.data
         val distributionListUpdate = DistributionListUpdate(ourIdentity, holderParty, evolvableToken.linearId)

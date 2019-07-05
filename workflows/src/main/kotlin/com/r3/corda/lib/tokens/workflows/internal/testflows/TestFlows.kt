@@ -37,7 +37,7 @@ class DvPFlow(val house: House, val newOwner: Party) : FlowLogic<SignedTransacti
     @Suspendable
     override fun call(): SignedTransaction {
         val txBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
-        addMoveNonFungibleTokens(txBuilder, serviceHub, house.toPointer<House>(), newOwner)
+        addMoveNonFungibleTokens(txBuilder, serviceHub, house.toPointer(), newOwner)
         val session = initiateFlow(newOwner)
         // Ask for input stateAndRefs - send notification with the amount to exchange.
         session.send(DvPNotification(house.valuation))
@@ -84,7 +84,7 @@ class DvPFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
 }
 
 @StartableByRPC
-class GetDistributionList(val housePtr: TokenPointer<House>) : FlowLogic<List<DistributionRecord>>() {
+class GetDistributionList(val housePtr: TokenPointer) : FlowLogic<List<DistributionRecord>>() {
     @Suspendable
     override fun call(): List<DistributionRecord> {
         return getDistributionList(serviceHub, housePtr.pointer.pointer)
@@ -92,17 +92,17 @@ class GetDistributionList(val housePtr: TokenPointer<House>) : FlowLogic<List<Di
 }
 
 @StartableByRPC
-class CheckTokenPointer(val housePtr: TokenPointer<House>) : FlowLogic<House>() {
+class CheckTokenPointer(val housePtr: TokenPointer) : FlowLogic<House>() {
     @Suspendable
     override fun call(): House {
-        return housePtr.pointer.resolve(serviceHub).state.data
+        return housePtr.pointer.resolve(serviceHub).state.data as House
     }
 }
 
 // TODO This is hack that will be removed after fix in Corda 5. startFlowDynamic doesn't handle type parameters properly.
 @StartableByRPC
 class RedeemNonFungibleHouse(
-        val housePtr: TokenPointer<House>,
+        val housePtr: TokenPointer,
         val issuerParty: Party
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable

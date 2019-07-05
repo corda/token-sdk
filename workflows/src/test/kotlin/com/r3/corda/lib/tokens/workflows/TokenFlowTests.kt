@@ -91,7 +91,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         val createTokenTx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         val token = createTokenTx.singleOutput<House>()
         // Issue amount of the token.
-        val housePointer: TokenPointer<House> = house.toPointer()
+        val housePointer: TokenPointer = house.toPointer()
         I.issueFungibleTokens(A, 100 of housePointer).getOrThrow()
         network.waitQuiescent()
         // Check to see that A was added to I's distribution list.
@@ -108,7 +108,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         val createTokenTx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         val houseToken: StateAndRef<House> = createTokenTx.singleOutput()
         // Issue amount of the token.
-        val housePointer: TokenPointer<House> = house.toPointer()
+        val housePointer: TokenPointer = house.toPointer()
         I.issueFungibleTokens(A, 100 of housePointer).getOrThrow()
         network.waitQuiescent()
         val houseQuery = A.services.vaultService.queryBy<House>().states
@@ -122,7 +122,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         val createTokenTx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         val token = createTokenTx.singleOutput<House>()
         // Issue amount of the token.
-        val housePointer: TokenPointer<House> = house.toPointer()
+        val housePointer: TokenPointer = house.toPointer()
         I.issueFungibleTokens(A, 100 of housePointer).getOrThrow()
         network.waitQuiescent()
         // Update the token.
@@ -139,7 +139,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()), linearId = UniqueIdentifier())
         I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         // Issue amount of the token.
-        val housePointer: TokenPointer<House> = house.toPointer()
+        val housePointer: TokenPointer = house.toPointer()
         I.issueFungibleTokens(A, 100 of housePointer).getOrThrow()
         network.waitQuiescent()
         A.transaction { A.services.vaultService.getLinearStateById<LinearState>(housePointer.pointer.pointer) }
@@ -154,7 +154,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     fun `create evolvable token and issue to multiple nodes`() {
         // Create new token.
         val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()), linearId = UniqueIdentifier())
-        val housePointer: TokenPointer<House> = house.toPointer()
+        val housePointer: TokenPointer = house.toPointer()
         val tx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         val token = tx.singleOutput<House>()
         assertEquals(house, token.state.data)
@@ -174,7 +174,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     fun `moving evolvable token updates distribution list`() {
         //Create evolvable token with 2 maintainers
         val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity(), I2.legalIdentity()), linearId = UniqueIdentifier())
-        val housePointer: TokenPointer<House> = house.toPointer()
+        val housePointer: TokenPointer = house.toPointer()
         val tx = I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         val token = tx.singleOutput<House>()
         assertEquals(house, token.state.data)
@@ -238,7 +238,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     fun `create evolvable token, then issue to the same node twice, expecting only one distribution record`() {
         // Create new token.
         val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(I.legalIdentity()), linearId = UniqueIdentifier())
-        val housePointer: TokenPointer<House> = house.toPointer()
+        val housePointer: TokenPointer = house.toPointer()
         // Create evolvable token on ledger.
         I.createEvolvableToken(house, NOTARY.legalIdentity()).getOrThrow()
         // Issue token twice.

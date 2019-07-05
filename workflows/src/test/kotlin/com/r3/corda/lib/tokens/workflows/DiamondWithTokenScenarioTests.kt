@@ -45,7 +45,7 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
 
         // STEP 02: Denise creates ownership token
         // Denise issues the token to Alice
-        val diamondPointer = publishedDiamond.state.data.toPointer<DiamondGradingReport>()
+        val diamondPointer = publishedDiamond.state.data.toPointer()
         val issueTokenTx = denise.issueNonFungibleTokens(
                 token = diamondPointer,
                 issueTo = alice,
