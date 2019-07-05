@@ -23,14 +23,14 @@ import net.corda.core.transactions.SignedTransaction
 
 @InitiatingFlow
 @StartableByRPC
-class CreateEvolvableTokens<T : EvolvableTokenType>
+class CreateEvolvableTokens
 @JvmOverloads
 constructor(
-        val transactionStates: List<TransactionState<T>>,
+        val transactionStates: List<TransactionState<EvolvableTokenType>>,
         val observers: List<Party> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
     @JvmOverloads
-    constructor(transactionState: TransactionState<T>, observers: List<Party> = emptyList()) : this(listOf(transactionState), observers)
+    constructor(transactionState: TransactionState<EvolvableTokenType>, observers: List<Party> = emptyList()) : this(listOf(transactionState), observers)
 
     @Suspendable
     override fun call(): SignedTransaction {

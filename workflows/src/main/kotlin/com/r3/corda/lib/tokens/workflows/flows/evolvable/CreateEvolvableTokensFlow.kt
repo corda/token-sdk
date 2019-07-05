@@ -16,15 +16,15 @@ import net.corda.core.transactions.TransactionBuilder
 /**
  * Inline sub-flow for creating multiple tokens of evolvable token type. This is just a simple flow for now.
  */
-class CreateEvolvableTokensFlow<T : EvolvableTokenType>
+class CreateEvolvableTokensFlow
 @JvmOverloads
 constructor(
-        val transactionStates: List<TransactionState<T>>,
+        val transactionStates: List<TransactionState<EvolvableTokenType>>,
         val participantSessions: List<FlowSession>,
         val observerSessions: List<FlowSession> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
     @JvmOverloads
-    constructor(transactionState: TransactionState<T>, participantSessions: List<FlowSession>, observerSessions: List<FlowSession> = emptyList()) :
+    constructor(transactionState: TransactionState<EvolvableTokenType>, participantSessions: List<FlowSession>, observerSessions: List<FlowSession> = emptyList()) :
             this(listOf(transactionState), participantSessions, observerSessions)
 
     @CordaSerializable
@@ -65,7 +65,7 @@ constructor(
         ))
     }
 
-    private fun checkLinearIds(transactionStates: List<TransactionState<T>>) {
+    private fun checkLinearIds(transactionStates: List<TransactionState<EvolvableTokenType>>) {
         check(transactionStates.map { it.data.linearId }.toSet().size == transactionStates.size) {
             "Shouldn't create evolvable tokens with the same linearId."
         }
