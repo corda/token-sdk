@@ -10,8 +10,8 @@ import java.math.BigDecimal
 
 /**
  * Represents a token type or definition which can be embedded within an [NonFungibleToken] or [FungibleToken] state.
- * This interface is implemented by [TokenPointer] and custom token types. Note that [EvolvableTokenType] does NOT
- * implement this interface, as it is represented by proxy through the [TokenPointer].
+ * This class is implemented by [TokenPointer] and custom token types. Note that [EvolvableTokenType] does NOT
+ * implement this class, as it is represented by proxy through the [TokenPointer].
  *
  * Just a quick level-set on terminology here. [TokenType] refers to a "type of thing" as opposed to the vehicle
  * which is used to represent the agreement between an issuer and the holder of tokens. For that we use the

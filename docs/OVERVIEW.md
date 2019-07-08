@@ -14,7 +14,7 @@ perspective.
 There are two types of tokens which are supported by the tokens SDK:
 
 1. Depository receipts (or asset backed tokens) which are claims held by
-   the owner against the issuer to redeem an amount of some underlying
+   the holder against the issuer to redeem an amount of some underlying
    thing/asset/security. In this case, the value exists off-ledger. However,
    the Corda ledger is authoritative regarding the question of which party
    has a valid claim over said off-ledger value.
@@ -53,9 +53,9 @@ ledger. Token types come in two flavours:
 
 1. Fixed token types, which do not change over time, or are not expected
    to change over time. Currency is a good example of a fixed token type.
-   They are represented as a class which implements `TokenType`.
+   They are represented as an instance of `TokenType` class.
 2. Evolvable token types, which are expected to evolve over time. They are
-   represented by the `EvolvableTokenType` interface, which is a `LinearState`.
+   represented by the `EvolvableTokenType` class, which is a `LinearState`.
    CorDapps developers can design their own logic that governs how the
    evolvable token types are updated over time. Evolvable token types
    introduce some additional complexity compared to fixed token types. The
@@ -65,7 +65,7 @@ ledger. Token types come in two flavours:
    We call this pointer a `TokenPointer`.
 
 The token SDK comes with some token types already defined; `FiatCurrency` and
-`DigitalCurrency` which are both of type `Money` and in turn `TokenType`.
+`DigitalCurrency` contain examples of common currency `TokenType`s.
 They are defined within the `money` module.
 
 ## Issued token types
