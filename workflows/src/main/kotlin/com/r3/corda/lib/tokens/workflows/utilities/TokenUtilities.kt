@@ -10,7 +10,7 @@ import net.corda.core.identity.AbstractParty
 /**
  * Creates a [NonFungibleToken] from an [IssuedTokenType].
  * E.g. IssuedTokenType<TokenType> -> NonFungibleToken.
- * This function must exist outside of the contracts module as creating a unique identifier is non deterministic.
+ * This function must exist outside of the contracts module as creating a unique identifier is non-deterministic.
  */
 infix fun IssuedTokenType.heldBy(owner: AbstractParty): NonFungibleToken = _heldBy(owner)
 

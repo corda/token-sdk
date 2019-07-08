@@ -3,11 +3,9 @@ package com.r3.corda.lib.tokens.contracts.utilities
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
-import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionState
-import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
@@ -61,8 +59,4 @@ val AbstractToken.holderString: String
     get() =
         (holder as? Party)?.name?.organisation ?: holder.owningKey.toStringShort().substring(0, 16)
 
-infix fun <T : AbstractToken> T.withHolder(newHolder: AbstractParty) = withNewHolder(newHolder)
-
-infix fun IssuedTokenType.heldBy(party: Party): NonFungibleToken {
-    return NonFungibleToken(this, party, UniqueIdentifier())
-}
+infix fun <T : AbstractToken> T.withNewHolder(newHolder: AbstractParty) = withNewHolder(newHolder)

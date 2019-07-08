@@ -12,6 +12,7 @@ import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.testing.states.TestEvolvableTokenType
+import com.r3.corda.lib.tokens.workflows.utilities.heldBy
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.UniqueIdentifier
 import org.junit.Test
