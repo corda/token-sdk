@@ -7,9 +7,9 @@ import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.testing.states.Appartment
-import com.r3.corda.lib.tokens.workflows.utilities.ownedTokenAmountCriteria
-import com.r3.corda.lib.tokens.workflows.utilities.ownedTokensByToken
-import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountsByToken
+import com.r3.corda.lib.tokens.workflows.utilities.heldAmountsByToken
+import com.r3.corda.lib.tokens.workflows.utilities.heldTokenAmountCriteria
+import com.r3.corda.lib.tokens.workflows.utilities.heldTokensByToken
 import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
@@ -40,8 +40,8 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         network.waitQuiescent()
         A.redeemTokens(GBP, I, 100.GBP, true).getOrThrow()
-        assertThat(A.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
-        assertThat(I.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
+        assertThat(A.services.vaultService.heldAmountsByToken(GBP).states).isEmpty()
+        assertThat(I.services.vaultService.heldAmountsByToken(GBP).states).isEmpty()
     }
 
     @Test
@@ -49,10 +49,10 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         network.waitQuiescent()
         A.redeemTokens(GBP, I, 80.GBP, true).getOrThrow()
-        val ownedStates = A.services.vaultService.tokenAmountsByToken(GBP).states
+        val ownedStates = A.services.vaultService.heldAmountsByToken(GBP).states
         assertThat(ownedStates).isNotEmpty()
         assertThat(ownedStates.sumTokenStateAndRefs()).isEqualTo(20.GBP issuedBy I.legalIdentity())
-        assertThat(I.services.vaultService.queryBy<FungibleToken<TokenType>>(ownedTokenAmountCriteria(GBP, I.legalIdentity())).states).isEmpty()
+        assertThat(I.services.vaultService.queryBy<FungibleToken<TokenType>>(heldTokenAmountCriteria(GBP, I.legalIdentity())).states).isEmpty()
     }
 
     @Test
@@ -79,30 +79,30 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     fun `redeem non-fungible happy path`() {
         I.issueNonFungibleTokens(fooToken, A).getOrThrow()
         network.waitQuiescent()
-        assertThat(A.services.vaultService.ownedTokensByToken(fooToken).states).isNotEmpty()
+        assertThat(A.services.vaultService.heldTokensByToken(fooToken).states).isNotEmpty()
         A.redeemTokens(fooToken, I, null, true).getOrThrow()
-        assertThat(A.services.vaultService.ownedTokensByToken(fooToken).states).isEmpty()
-        assertThat(I.services.vaultService.ownedTokensByToken(fooToken).states).isEmpty()
+        assertThat(A.services.vaultService.heldTokensByToken(fooToken).states).isEmpty()
+        assertThat(I.services.vaultService.heldTokensByToken(fooToken).states).isEmpty()
     }
 
     @Test
     fun `redeem tokens from different issuer - non fungible`() {
         I.issueNonFungibleTokens(fooToken, A).getOrThrow()
         network.waitQuiescent()
-        assertThat(A.services.vaultService.ownedTokensByToken(fooToken).states).isNotEmpty()
+        assertThat(A.services.vaultService.heldTokensByToken(fooToken).states).isNotEmpty()
         Assertions.assertThatThrownBy {
             A.redeemTokens(fooToken, B, null, true).getOrThrow()
-        }.hasMessageContaining("Exactly one owned token of a particular type $fooToken should be in the vault at any one time.")
+        }.hasMessageContaining("Exactly one held token of a particular type $fooToken should be in the vault at any one time.")
     }
 
     @Test
     fun `non fungible two same tokens`() {
         I.issueNonFungibleTokens(fooToken, A).getOrThrow()
         I.issueNonFungibleTokens(fooToken, A).getOrThrow()
-        assertThat(A.services.vaultService.ownedTokensByToken(fooToken).states).isNotEmpty()
+        assertThat(A.services.vaultService.heldTokensByToken(fooToken).states).isNotEmpty()
         Assertions.assertThatThrownBy {
             A.redeemTokens(fooToken, B, null, true).getOrThrow()
-        }.hasMessageContaining("Exactly one owned token of a particular type $fooToken should be in the vault at any one time.")
+        }.hasMessageContaining("Exactly one held token of a particular type $fooToken should be in the vault at any one time.")
     }
 
     @Test
@@ -112,11 +112,11 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         // Check to see that A was added to I's distribution list.
         A.moveFungibleTokens(50.GBP, B, anonymous = true).getOrThrow()
         network.waitQuiescent()
-        val states = B.services.vaultService.tokenAmountsByToken(GBP).states
+        val states = B.services.vaultService.heldAmountsByToken(GBP).states
         assertThat(states.sumTokenStateAndRefs()).isEqualTo(50.GBP issuedBy I.legalIdentity())
         B.redeemTokens(GBP, I, 30.GBP, anonymous = true).getOrThrow()
         network.waitQuiescent()
-        val statesAfterRedeem = B.services.vaultService.tokenAmountsByToken(GBP).states
+        val statesAfterRedeem = B.services.vaultService.heldAmountsByToken(GBP).states
         assertThat(statesAfterRedeem.sumTokenStateAndRefs()).isEqualTo(20.GBP issuedBy I.legalIdentity())
     }
 }

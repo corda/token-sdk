@@ -10,6 +10,7 @@ import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.*
 import net.corda.core.crypto.SecureHash
+import net.corda.core.internal.uncheckedCast
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.utilities.loggerFor
 
@@ -161,7 +162,7 @@ abstract class AbstractTokenContract<T : TokenType, U : AbstractToken<T>> : Cont
         val input = pair.second
         val index = pair.first
         return if (AbstractToken::class.java.isInstance(input.data) && accepts.isInstance(input.data)) {
-            IndexedState(input as TransactionState<U>, index)
+            IndexedState(uncheckedCast(input), index)
         } else {
             null
         }

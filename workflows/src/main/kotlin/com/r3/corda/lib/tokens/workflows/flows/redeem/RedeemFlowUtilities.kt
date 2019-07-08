@@ -12,11 +12,10 @@ import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateExitNonFungible
 import com.r3.corda.lib.tokens.workflows.utilities.addNotaryWithCheck
 import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
-import com.r3.corda.lib.tokens.workflows.utilities.ownedTokensByTokenIssuer
+import com.r3.corda.lib.tokens.workflows.utilities.heldTokensByTokenIssuer
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountWithIssuerCriteria
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.ServiceHub
@@ -67,20 +66,20 @@ fun <T : TokenType> addTokensToRedeem(
 
 
 /**
- * Redeem non-fungible [ownedToken] issued by the [issuer] and add it to the [transactionBuilder].
+ * Redeem non-fungible [heldToken] issued by the [issuer] and add it to the [transactionBuilder].
  */
 @Suspendable
 fun <T : TokenType> addNonFungibleTokensToRedeem(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
-        ownedToken: T,
+        heldToken: T,
         issuer: Party
 ): TransactionBuilder {
-    val ownedTokenStateAndRef = serviceHub.vaultService.ownedTokensByTokenIssuer(ownedToken, issuer).states
-    check(ownedTokenStateAndRef.size == 1) {
-        "Exactly one owned token of a particular type $ownedToken should be in the vault at any one time."
+    val heldTokenStateAndRef = serviceHub.vaultService.heldTokensByTokenIssuer(heldToken, issuer).states
+    check(heldTokenStateAndRef.size == 1) {
+        "Exactly one held token of a particular type $heldToken should be in the vault at any one time."
     }
-    val nonFungibleState = ownedTokenStateAndRef.first()
+    val nonFungibleState = heldTokenStateAndRef.first()
     addNotaryWithCheck(transactionBuilder, nonFungibleState.state.notary)
     generateExitNonFungible(transactionBuilder, nonFungibleState)
     return transactionBuilder

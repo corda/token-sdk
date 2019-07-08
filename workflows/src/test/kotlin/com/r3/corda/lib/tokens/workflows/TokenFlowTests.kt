@@ -12,7 +12,7 @@ import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveFungibleTokens
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistributionList
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.utilities.getLinearStateById
-import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountsByToken
+import com.r3.corda.lib.tokens.workflows.utilities.heldAmountsByToken
 import com.r3.corda.lib.tokens.workflows.utilities.tokenBalance
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
@@ -146,7 +146,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         // Move some of the tokensToIssue.
         A.moveFungibleTokens(50 of housePointer, B, anonymous = true).getOrThrow()
         network.waitQuiescent()
-        val houseAmounts = B.services.vaultService.tokenAmountsByToken(housePointer).states.map { it.state.data.amount }
+        val houseAmounts = B.services.vaultService.heldAmountsByToken(housePointer).states.map { it.state.data.amount }
         assertEquals(houseAmounts.sumIssuedTokensOrNull(), 50 of housePointer issuedBy I.legalIdentity())
     }
 
@@ -161,12 +161,12 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         // Issue to node A.
         I.issueFungibleTokens(A, 50 of housePointer).getOrThrow()
         network.waitQuiescent()
-        val houseAmountsA = A.services.vaultService.tokenAmountsByToken(housePointer).states.map { it.state.data.amount }
+        val houseAmountsA = A.services.vaultService.heldAmountsByToken(housePointer).states.map { it.state.data.amount }
         assertEquals(houseAmountsA.sumIssuedTokensOrNull(), 50 of housePointer issuedBy I.legalIdentity())
         // Issue to node B.
         I.issueFungibleTokens(B, 50 of housePointer).getOrThrow()
         network.waitQuiescent()
-        val houseAmountsB = B.services.vaultService.tokenAmountsByToken(housePointer).states.map { it.state.data.amount }
+        val houseAmountsB = B.services.vaultService.heldAmountsByToken(housePointer).states.map { it.state.data.amount }
         assertEquals(houseAmountsB.sumIssuedTokensOrNull(), 50 of housePointer issuedBy I.legalIdentity())
     }
 

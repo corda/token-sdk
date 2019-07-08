@@ -31,7 +31,7 @@ fun <T : TokenType> Iterable<FungibleToken<T>>.sumTokenStatesOrThrow(): Amount<I
     return map { it.amount }.sumTokensOrThrow()
 }
 
-/** Sums the owned token amounts states in the list, returning null if there are none. */
+/** Sums the held token amounts states in the list, returning null if there are none. */
 fun <T : TokenType> Iterable<FungibleToken<T>>.sumTokenStatesOrNull(): Amount<IssuedTokenType<T>>? {
     return map { it.amount }.sumIssuedTokensOrNull()
 }
@@ -48,13 +48,13 @@ fun <T : TokenType> Iterable<StateAndRef<FungibleToken<T>>>.sumTokenStateAndRefs
     return map { it.state.data.amount }.sumTokensOrThrow()
 }
 
-/** Sums the owned token amount state and refs in the list, returning null if there are none. */
+/** Sums the held token amount state and refs in the list, returning null if there are none. */
 fun <T : TokenType> Iterable<StateAndRef<FungibleToken<T>>>.sumTokenStateAndRefsOrNull(): Amount<IssuedTokenType<T>>? {
     return map { it.state.data.amount }.sumIssuedTokensOrNull()
 }
 
 /**
- * Sums the owned token amounts state and refs in the list, returning zero of the given currency+issuer if there are
+ * Sums the held token amounts state and refs in the list, returning zero of the given currency+issuer if there are
  * none.
  */
 fun <T : TokenType> Iterable<StateAndRef<FungibleToken<T>>>.sumTokenStateAndRefsOrZero(

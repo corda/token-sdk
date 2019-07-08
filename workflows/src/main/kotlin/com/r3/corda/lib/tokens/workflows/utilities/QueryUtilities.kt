@@ -38,7 +38,7 @@ inline fun <reified T : LinearState> VaultService.getLinearStateById(linearId: U
 // TODO: Add queries for getting the balance of all tokens, not just relevant ones.
 // TODO: Allow discrimination by issuer or a set of issuers.
 
-// Returns all owned token amounts of a specified token with given issuer.
+// Returns all held token amounts of a specified token with given issuer.
 // We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
 @Suspendable
 fun <T : TokenType> tokenAmountWithIssuerCriteria(token: T, issuer: Party): QueryCriteria {
@@ -48,14 +48,14 @@ fun <T : TokenType> tokenAmountWithIssuerCriteria(token: T, issuer: Party): Quer
     return tokenAmountCriteria(token).and(issuerCriteria)
 }
 
-fun <T : TokenType> ownedTokenAmountCriteria(token: T, holder: AbstractParty): QueryCriteria {
+fun <T : TokenType> heldTokenAmountCriteria(token: T, holder: AbstractParty): QueryCriteria {
     val holderCriteria = QueryCriteria.VaultCustomQueryCriteria(builder {
         PersistentFungibleToken::holder.equal(holder)
     })
     return tokenAmountCriteria(token).and(holderCriteria)
 }
 
-// Returns all owned token amounts of a specified token.
+// Returns all held token amounts of a specified token.
 // We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
 // TODO should be called token amount criteria (there is no owner selection)
 @Suspendable
@@ -78,7 +78,7 @@ fun sortByStateRefAscending(): Sort {
 }
 
 // TODO: Merge this code with the code above.
-fun <T : TokenType> ownedTokenCriteria(token: T): QueryCriteria {
+fun <T : TokenType> heldTokenCriteria(token: T): QueryCriteria {
     val tokenClass = builder {
         PersistentNonFungibleToken::tokenClass.equal(token.tokenClass)
     }
@@ -115,14 +115,14 @@ fun <T : TokenType> rowsToAmount(token: T, rows: Vault.Page<FungibleToken<T>>): 
 
 /** General queries. */
 
-// Get all owned token amounts for a specific token, ignoring the issuer.
-fun <T : TokenType> VaultService.tokenAmountsByToken(token: T): Vault.Page<FungibleToken<T>> {
+// Get all held token amounts for a specific token, ignoring the issuer.
+fun <T : TokenType> VaultService.heldAmountsByToken(token: T): Vault.Page<FungibleToken<T>> {
     return queryBy(tokenAmountCriteria(token))
 }
 
-// Get all owned tokens for a specific token, ignoring the issuer.
-fun <T : TokenType> VaultService.ownedTokensByToken(token: T): Vault.Page<NonFungibleToken<T>> {
-    return queryBy(ownedTokenCriteria(token))
+// Get all held tokens for a specific token, ignoring the issuer.
+fun <T : TokenType> VaultService.heldTokensByToken(token: T): Vault.Page<NonFungibleToken<T>> {
+    return queryBy(heldTokenCriteria(token))
 }
 
 /** TokenType balances. */
@@ -146,9 +146,9 @@ fun <T : TokenType> VaultService.tokenBalanceForIssuer(token: T, issuer: Party):
 /* Queries with criteria. Eg. with issuer etc. */
 
 // Get NonFungibleToken with issuer.
-fun <T : TokenType> VaultService.ownedTokensByTokenIssuer(token: T, issuer: Party): Vault.Page<NonFungibleToken<T>> {
+fun <T : TokenType> VaultService.heldTokensByTokenIssuer(token: T, issuer: Party): Vault.Page<NonFungibleToken<T>> {
     val issuerCriteria = QueryCriteria.VaultCustomQueryCriteria(builder {
         PersistentNonFungibleToken::issuer.equal(issuer)
     })
-    return queryBy(ownedTokenCriteria(token).and(issuerCriteria))
+    return queryBy(heldTokenCriteria(token).and(issuerCriteria))
 }
