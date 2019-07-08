@@ -248,7 +248,7 @@ As previously confidential versions generate new identities for use in output st
 
 #### Moving tokens fungible tokens
 
-This family of flows chooses held amount of given token from vault. If you want to provide other criteria (for example tokens that
+This family of flows chooses owned amount of given token from vault. If you want to provide other criteria (for example tokens that
 come only from one issuer) use `queryCriteria`. `QueryUtilities` module provides many useful helpers i.e. `tokenAmountWithIssuerCriteria`.
 You can move many tokens to different parties in one transaction, to do so specify map of `partiesAndAmounts` respectively.
 As usual you can provide additional observers parties/sessions for finalization with other interested parties on the network.

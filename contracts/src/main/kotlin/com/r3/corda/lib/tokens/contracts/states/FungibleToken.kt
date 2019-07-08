@@ -45,7 +45,7 @@ open class FungibleToken<T : TokenType>(
 
     override val issuer: Party get() = amount.token.issuer
 
-    override fun toString(): String = "$amount held by $holderString"
+    override fun toString(): String = "$amount owned by $holderString"
 
     override fun withNewHolder(newHolder: AbstractParty): FungibleToken<T> {
         return FungibleToken(amount = amount, holder = newHolder, tokenTypeJarHash = tokenTypeJarHash)

@@ -5,7 +5,7 @@
 ### General
 
 * Java API
-* Add better query utilities for tokens and held tokens.
+* Add better query utilities for tokens and owned tokens.
 
 ### Issuer Workflows
 

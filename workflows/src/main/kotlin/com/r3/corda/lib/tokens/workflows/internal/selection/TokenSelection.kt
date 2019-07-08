@@ -51,7 +51,7 @@ class TokenSelection(
         val logger = contextLogger()
     }
 
-    /** Queries for held token amounts with the specified token to the specified requiredAmount. */
+    /** Queries for owned token amounts with the specified token to the specified requiredAmount. */
     private fun <T : TokenType> executeQuery(
             requiredAmount: Amount<T>,
             lockId: UUID,
@@ -111,7 +111,7 @@ class TokenSelection(
 
     /**
      * Attempt spend of [requiredAmount] of [FungibleToken] T. Returns states that cover given amount. Notice that this
-     * function doesn't calculate change. If query criteria is not specified then only held token amounts are used.
+     * function doesn't calculate change. If query criteria is not specified then only owned token amounts are used.
      *
      * Use [QueryUtilities.tokenAmountWithIssuerCriteria] to specify issuer.
      * Calling attemptSpend multiple time with the same lockId will return next unlocked states.
@@ -151,7 +151,7 @@ class TokenSelection(
 
     /**
      * Generate move of [FungibleToken] T to tokenHolders specified in [PartyAndAmount]. Each party will receive amount
-     * defined by [partyAndAmounts]. If query criteria is not specified then only held token amounts are used. Use
+     * defined by [partyAndAmounts]. If query criteria is not specified then only owned token amounts are used. Use
      * [QueryUtilities.tokenAmountWithIssuerCriteria] to specify issuer. This function mutates [builder] provided as
      * parameter.
      *

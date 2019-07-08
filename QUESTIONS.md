@@ -25,7 +25,7 @@ Performing coin selection must be done in two parts, we need to get the linearID
 querying the vault.
 
 Generic queries don't have to be done in two parts.. We can use JPA to join the evolvable token type's entity to the
-held token amount table.
+owned token amount table.
 
 ## How do we handle new token types?
 

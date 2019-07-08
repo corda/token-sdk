@@ -18,14 +18,14 @@ class Examples : LedgerTestWithPersistence() {
 
     @Test
     fun `creating inlined token definition`() {
-        // Some amount of GBP issued by the Bank of England and held by Alice.
-        val tenPoundsIssuedByIssuerHeldByAlice: FungibleToken<TokenType> = 10.GBP issuedBy ISSUER.party heldBy ALICE.party
+        // Some amount of GBP issued by the Bank of England and owned by Alice.
+        val tenPoundsIssuedByIssuerOwnedByAlice: FungibleToken<TokenType> = 10.GBP issuedBy ISSUER.party heldBy ALICE.party
         // Test everything is assigned correctly.
-        assertEquals(GBP, tenPoundsIssuedByIssuerHeldByAlice.amount.token.tokenType)
-        assertEquals(1000, tenPoundsIssuedByIssuerHeldByAlice.amount.quantity)
-        assertEquals(ISSUER.party, tenPoundsIssuedByIssuerHeldByAlice.amount.token.issuer)
-        assertEquals(ALICE.party, tenPoundsIssuedByIssuerHeldByAlice.holder)
-        println(tenPoundsIssuedByIssuerHeldByAlice)
+        assertEquals(GBP, tenPoundsIssuedByIssuerOwnedByAlice.amount.token.tokenType)
+        assertEquals(1000, tenPoundsIssuedByIssuerOwnedByAlice.amount.quantity)
+        assertEquals(ISSUER.party, tenPoundsIssuedByIssuerOwnedByAlice.amount.token.issuer)
+        assertEquals(ALICE.party, tenPoundsIssuedByIssuerOwnedByAlice.holder)
+        println(tenPoundsIssuedByIssuerOwnedByAlice)
     }
 
     @Test
