@@ -42,4 +42,14 @@ abstract class EvolvableTokenType : LinearState {
         val linearPointer = LinearPointer(linearId, T::class.java)
         return TokenPointer(linearPointer, fractionDigits)
     }
+
+    /**
+     * For obtaining a pointer to this [EvolveableTokenType].
+     *
+     * @param tokenTypeClass the [Class] of the [EvolvableTokenType] being pointed to.
+     */
+    fun <T : EvolvableTokenType> toPointer(tokenTypeClass: Class<T>): TokenPointer<T> {
+        val linearPointer = LinearPointer(linearId, tokenTypeClass)
+        return TokenPointer(linearPointer, fractionDigits)
+    }
 }
