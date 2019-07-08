@@ -9,7 +9,7 @@ import com.r3.corda.lib.tokens.contracts.utilities.withNotary
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
 import com.r3.corda.lib.tokens.workflows.utilities.addNotaryWithCheck
 import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
-import com.r3.corda.lib.tokens.workflows.utilities.ownedTokenCriteria
+import com.r3.corda.lib.tokens.workflows.utilities.heldTokenCriteria
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.node.services.VaultService
 import net.corda.core.node.services.queryBy
@@ -22,8 +22,8 @@ fun <T : TokenType> generateMoveNonFungible(
         vaultService: VaultService,
         queryCriteria: QueryCriteria?
 ): Pair<StateAndRef<NonFungibleToken>, NonFungibleToken> {
-    val query = queryCriteria ?: ownedTokenCriteria(partyAndToken.token)
-    val criteria = ownedTokenCriteria(partyAndToken.token).and(query)
+    val query = queryCriteria ?: heldTokenCriteria(partyAndToken.token)
+    val criteria = heldTokenCriteria(partyAndToken.token).and(query)
     val nonFungibleTokens = vaultService.queryBy<NonFungibleToken>(criteria).states
     // There can be multiple non-fungible tokens of the same TokenType. E.g. There can be multiple House tokens, each
     // with a different address. Whilst they have the same TokenType, they are still non-fungible. Therefore care must

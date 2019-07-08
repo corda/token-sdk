@@ -6,14 +6,14 @@ import net.corda.core.flows.FlowSession
 import net.corda.core.transactions.TransactionBuilder
 
 /**
- * Inlined flow used to redeem [NonFungibleToken] [ownedToken] issued by the particular issuer.
+ * Inlined flow used to redeem [NonFungibleToken] [heldToken] issued by the particular issuer.
  *
- * @param ownedToken non fungible token to redeem
+ * @param heldToken non fungible token to redeem
  * @param issuerSession session with the issuer token should be redeemed with
  * @param observerSessions optional sessions with the observer nodes, to witch the transaction will be broadcasted
  */
 class RedeemNonFungibleTokensFlow<T : TokenType>(
-        val ownedToken: T,
+        val heldToken: T,
         override val issuerSession: FlowSession,
         override val observerSessions: List<FlowSession>
 ) : AbstractRedeemTokensFlow() {
@@ -22,7 +22,7 @@ class RedeemNonFungibleTokensFlow<T : TokenType>(
         addNonFungibleTokensToRedeem(
                 transactionBuilder = transactionBuilder,
                 serviceHub = serviceHub,
-                ownedToken = ownedToken,
+                heldToken = heldToken,
                 issuer = issuerSession.counterparty
         )
     }

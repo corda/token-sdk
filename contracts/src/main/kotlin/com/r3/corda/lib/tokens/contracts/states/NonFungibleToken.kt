@@ -50,7 +50,7 @@ open class NonFungibleToken(
 
     override val issuer: Party get() = token.issuer
 
-    override fun toString(): String = "$token owned by $holderString"
+    override fun toString(): String = "$token held by $holderString"
 
     override fun withNewHolder(newHolder: AbstractParty): NonFungibleToken {
         return NonFungibleToken(token = token, holder = newHolder, linearId = linearId, tokenTypeJarHash = tokenTypeJarHash)

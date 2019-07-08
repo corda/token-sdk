@@ -205,14 +205,14 @@ class NonFungibleTokenTests : ContractTestCommon() {
             tweak {
                 command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
                 output(NonFungibleTokenContract.contractId, issuedToken heldBy ALICE.party)
-                this `fails with` "When redeeming an owned token, there must be no output."
+                this `fails with` "When redeeming a held token, there must be no output."
             }
 
             // Additional input.
             tweak {
                 command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0, 1)))
                 input(NonFungibleTokenContract.contractId, heldByAlice)
-                this `fails with` "When redeeming an owned token, there must be only one input."
+                this `fails with` "When redeeming a held token, there must be only one input."
             }
 
             // Two redeem groups. This technically won't happen, as you won't redeem a token from two different issuers

@@ -15,7 +15,7 @@ import com.r3.corda.lib.tokens.workflows.flows.rpc.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.internal.testflows.*
 import com.r3.corda.lib.tokens.workflows.singleOutput
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
-import com.r3.corda.lib.tokens.workflows.utilities.ownedTokenCriteria
+import com.r3.corda.lib.tokens.workflows.utilities.heldTokenCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
 import com.r3.corda.lib.tokens.workflows.watchForTransaction
 import net.corda.core.CordaRuntimeException
@@ -151,8 +151,8 @@ class TokenDriverTest {
             nodeA.rpc.watchForTransaction(dvpTx).getOrThrow()
             nodeB.rpc.watchForTransaction(dvpTx).getOrThrow()
             // NodeB has house, NodeA doesn't.
-            assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken>(ownedTokenCriteria(housePtr)).states).isNotEmpty
-            assertThat(nodeA.rpc.vaultQueryBy<NonFungibleToken>(ownedTokenCriteria(housePtr)).states).isEmpty()
+            assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken>(heldTokenCriteria(housePtr)).states).isNotEmpty
+            assertThat(nodeA.rpc.vaultQueryBy<NonFungibleToken>(heldTokenCriteria(housePtr)).states).isEmpty()
             // NodeA has cash, B doesn't
             assertThat(nodeA.rpc.vaultQueryBy<FungibleToken>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(1_900_000L.GBP issuedBy issuerParty)
             assertThat(nodeB.rpc.vaultQueryBy<FungibleToken>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
@@ -177,7 +177,7 @@ class TokenDriverTest {
                         housePtr,
                         issuerParty
                 ).returnValue.getOrThrow()
-            }.withMessageContaining("Exactly one owned token of a particular type")
+            }.withMessageContaining("Exactly one held token of a particular type")
             // NodeB redeems house with the issuer (notice that issuer doesn't know about NodeB confidential identity used for the move with NodeA).
             val redeemHouseTx = nodeB.rpc.startFlowDynamic(
                     RedeemNonFungibleHouse::class.java,
@@ -185,7 +185,7 @@ class TokenDriverTest {
                     issuerParty
             ).returnValue.getOrThrow()
             nodeB.rpc.watchForTransaction(redeemHouseTx).getOrThrow()
-            assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken>(ownedTokenCriteria(housePtr)).states).isEmpty()
+            assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken>(heldTokenCriteria(housePtr)).states).isEmpty()
             // NodeA redeems 1_100_000L.GBP with the issuer, check it received 800_000L change, check, that issuer didn't record cash.
             val redeemGBPTx = nodeA.rpc.startFlowDynamic(
                     RedeemFungibleGBP::class.java,

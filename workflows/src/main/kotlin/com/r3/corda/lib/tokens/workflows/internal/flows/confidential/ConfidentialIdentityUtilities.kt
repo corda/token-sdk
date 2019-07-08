@@ -51,7 +51,7 @@ internal fun validateAndRegisterIdentity(
     } catch (ex: SignatureException) {
         throw Exception("Signature does not match the expected identity ownership assertion.", ex)
     }
-    // Validate then store their identity so that we can prove the key in the transaction is owned by the counterparty.
+    // Validate then store their identity so that we can prove the key in the transaction is held by the counterparty.
     serviceHub.identityService.verifyAndRegisterIdentity(theirAnonymousIdentity)
     return theirAnonymousIdentity
 }

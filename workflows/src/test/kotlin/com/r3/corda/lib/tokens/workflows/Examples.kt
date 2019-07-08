@@ -22,14 +22,14 @@ class UsabilityTests : LedgerTestWithPersistence() {
 
     @Test
     fun `create a fungible token of some token type`() {
-        // Some amount of GBP issued by the Bank of England and owned by Alice.
-        val tenPoundsIssuedByIssuerOwnedByAlice: FungibleToken = 10.GBP issuedBy ISSUER.party heldBy ALICE.party
+        // Some amount of GBP issued by the Bank of England and held by Alice.
+        val tenPoundsIssuedByIssuerHeldByAlice: FungibleToken = 10.GBP issuedBy ISSUER.party heldBy ALICE.party
         // Test everything is assigned correctly.
-        assertEquals(GBP, tenPoundsIssuedByIssuerOwnedByAlice.amount.token.tokenType)
-        assertEquals(1000, tenPoundsIssuedByIssuerOwnedByAlice.amount.quantity)
-        assertEquals(ISSUER.party, tenPoundsIssuedByIssuerOwnedByAlice.amount.token.issuer)
-        assertEquals(ALICE.party, tenPoundsIssuedByIssuerOwnedByAlice.holder)
-        println(tenPoundsIssuedByIssuerOwnedByAlice)
+        assertEquals(GBP, tenPoundsIssuedByIssuerHeldByAlice.amount.token.tokenType)
+        assertEquals(1000, tenPoundsIssuedByIssuerHeldByAlice.amount.quantity)
+        assertEquals(ISSUER.party, tenPoundsIssuedByIssuerHeldByAlice.amount.token.issuer)
+        assertEquals(ALICE.party, tenPoundsIssuedByIssuerHeldByAlice.holder)
+        println(tenPoundsIssuedByIssuerHeldByAlice)
     }
 
     @Test

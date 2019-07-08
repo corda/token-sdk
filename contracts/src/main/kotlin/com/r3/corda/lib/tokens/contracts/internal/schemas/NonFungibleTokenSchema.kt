@@ -19,7 +19,7 @@ object NonFungibleTokenSchemaV1 : MappedSchema(
 
 @Entity
 @Table(name = "non_fungible_token", indexes = [
-    Index(name = "owned_token_idx", columnList = "token_class, token_identifier")
+    Index(name = "held_token_idx", columnList = "token_class, token_identifier")
 ])
 class PersistentNonFungibleToken(
         @Column(name = "issuer", nullable = false)

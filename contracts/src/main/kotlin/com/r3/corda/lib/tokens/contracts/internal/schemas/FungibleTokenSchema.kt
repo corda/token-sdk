@@ -20,7 +20,7 @@ object FungibleTokenSchemaV1 : MappedSchema(
 @Entity
 @Table(name = "fungible_token", indexes = [
     Index(name = "amount_idx", columnList = "amount"),
-    Index(name = "owned_token_amount_idx", columnList = "token_class, token_identifier")
+    Index(name = "held_token_amount_idx", columnList = "token_class, token_identifier")
 ])
 class PersistentFungibleToken(
         @Column(name = "issuer", nullable = false)

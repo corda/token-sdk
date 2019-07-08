@@ -36,8 +36,8 @@
             <column name="amount"/>
         </createIndex>
     </changeSet>
-    <changeSet author="R3.Corda" id="owned_token_amount_idx_id">
-        <createIndex indexName="owned_token_amount_idx" tableName="fungible_token">
+    <changeSet author="R3.Corda" id="held_token_amount_idx_id">
+        <createIndex indexName="held_token_amount_idx" tableName="fungible_token">
             <column name="token_class"/>
             <column name="token_identifier"/>
         </createIndex>

@@ -51,15 +51,23 @@ abstract class TokenCommand(open val token: IssuedTokenType, internal val inputI
         return "${this.javaClass.name}(token=$token, inputIndicies=$inputIndicies, outputIndicies=$outputIndicies)"
     }
 
-
 }
 
+/**
+ * Used when issuing [FungibleToken]s or [NonFungibleToken]s.
+ *
+ * @property token the group of [IssuedTokenType]s this command should be tied to.
+ * @property outputs the output state indices this command applies to.
+ * @param T the [TokenType].
+ */
 class IssueTokenCommand(override val token: IssuedTokenType, val outputs: List<Int> = listOf()) : TokenCommand(outputIndicies = outputs, token = token)
 
 /**
  * Used when moving [FungibleToken]s or [NonFungibleToken]s.
  *
  * @property token the group of [IssuedTokenType]s this command should be tied to.
+ * @property inputs the input state indices this command applies to.
+ * @property outputs the output state indices this command applies to.
  * @param T the [TokenType].
  */
 class MoveTokenCommand(override val token: IssuedTokenType, val inputs: List<Int> = listOf(), val outputs: List<Int> = listOf()) : TokenCommand(inputIndicies = inputs, outputIndicies = outputs, token = token)
@@ -68,6 +76,8 @@ class MoveTokenCommand(override val token: IssuedTokenType, val inputs: List<Int
  * Used when redeeming [FungibleToken]s or [NonFungibleToken]s.
  *
  * @property token the group of [IssuedTokenType]s this command should be tied to.
+ * @property inputs the input state indices this command applies to.
+ * @property outputs the output state indices this command applies to.
  * @param T the [TokenType].
  */
 class RedeemTokenCommand(override val token: IssuedTokenType, val inputs: List<Int> = listOf(), val outputs: List<Int> = listOf()) : TokenCommand(inputIndicies = inputs, outputIndicies = outputs, token = token)
