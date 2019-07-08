@@ -19,10 +19,10 @@ import net.corda.core.transactions.SignedTransaction
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
-class MoveFungibleTokens<T : TokenType>
+class MoveFungibleTokens
 @JvmOverloads
 constructor(
-        val partiesAndAmounts: List<PartyAndAmount<T>>,
+        val partiesAndAmounts: List<PartyAndAmount<TokenType>>,
         val observers: List<Party> = emptyList(),
         val queryCriteria: QueryCriteria? = null,
         val changeHolder: AbstractParty? = null
@@ -30,13 +30,13 @@ constructor(
 
     @JvmOverloads
     constructor(
-            partyAndAmount: PartyAndAmount<T>,
+            partyAndAmount: PartyAndAmount<TokenType>,
             observers: List<Party> = emptyList(),
             queryCriteria: QueryCriteria? = null,
             changeHolder: AbstractParty? = null
     ) : this(listOf(partyAndAmount), observers, queryCriteria, changeHolder)
 
-    constructor(amount: Amount<T>, holder: AbstractParty) : this(PartyAndAmount(holder, amount), emptyList())
+    constructor(amount: Amount<TokenType>, holder: AbstractParty) : this(PartyAndAmount(holder, amount), emptyList())
 
     @Suspendable
     override fun call(): SignedTransaction {
@@ -105,15 +105,15 @@ class MoveNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Un
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
-class ConfidentialMoveFungibleTokens<T : TokenType>(
-        val partiesAndAmounts: List<PartyAndAmount<T>>,
+class ConfidentialMoveFungibleTokens(
+        val partiesAndAmounts: List<PartyAndAmount<TokenType>>,
         val observers: List<Party>,
         val queryCriteria: QueryCriteria? = null,
         val changeHolder: AbstractParty? = null
 ) : FlowLogic<SignedTransaction>() {
 
     constructor(
-            partyAndAmount: PartyAndAmount<T>,
+            partyAndAmount: PartyAndAmount<TokenType>,
             observers: List<Party>,
             queryCriteria: QueryCriteria? = null,
             changeHolder: AbstractParty? = null

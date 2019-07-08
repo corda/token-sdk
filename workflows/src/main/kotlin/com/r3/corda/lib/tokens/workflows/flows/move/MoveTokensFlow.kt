@@ -19,18 +19,18 @@ import net.corda.core.transactions.TransactionBuilder
  * @param participantSessions session with the participants of move tokens transaction
  * @param observerSessions session with optional observers of the redeem transaction
  */
-class MoveTokensFlow<T : TokenType>
+class MoveTokensFlow
 @JvmOverloads
 constructor(
-        val inputs: List<StateAndRef<AbstractToken<T>>>,
-        val outputs: List<AbstractToken<T>>,
+        val inputs: List<StateAndRef<AbstractToken>>,
+        val outputs: List<AbstractToken>,
         override val participantSessions: List<FlowSession>,
         override val observerSessions: List<FlowSession> = emptyList()
 ) : AbstractMoveTokensFlow() {
     @JvmOverloads
     constructor(
-            input: StateAndRef<AbstractToken<T>>,
-            output: AbstractToken<T>,
+            input: StateAndRef<AbstractToken>,
+            output: AbstractToken,
             participantSessions: List<FlowSession>,
             observerSessions: List<FlowSession> = emptyList()
     ) : this(listOf(input), listOf(output), participantSessions, observerSessions)

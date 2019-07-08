@@ -30,24 +30,23 @@ import net.corda.core.schemas.QueryableState
  *
  * @property amount the [Amount] of [IssuedTokenType] represented by this [FungibleToken].
  * @property holder the [AbstractParty] which has a claim on the issuer of the [IssuedTokenType].
- * @param T the [TokenType] this [FungibleToken] state is in respect of.
  */
 @BelongsToContract(FungibleTokenContract::class)
-open class FungibleToken<T : TokenType>(
-        override val amount: Amount<IssuedTokenType<T>>,
+open class FungibleToken(
+        override val amount: Amount<IssuedTokenType>,
         override val holder: AbstractParty,
         override val tokenTypeJarHash: SecureHash? = amount.token.tokenType.getAttachmentIdForGenericParam()
-) : FungibleState<IssuedTokenType<T>>, AbstractToken<T>, QueryableState {
+) : FungibleState<IssuedTokenType>, AbstractToken, QueryableState {
 
-    override val tokenType: T get() = amount.token.tokenType
+    override val tokenType: TokenType get() = amount.token.tokenType
 
-    override val issuedTokenType: IssuedTokenType<T> get() = amount.token
+    override val issuedTokenType: IssuedTokenType get() = amount.token
 
     override val issuer: Party get() = amount.token.issuer
 
     override fun toString(): String = "$amount owned by $holderString"
 
-    override fun withNewHolder(newHolder: AbstractParty): FungibleToken<T> {
+    override fun withNewHolder(newHolder: AbstractParty): FungibleToken {
         return FungibleToken(amount = amount, holder = newHolder, tokenTypeJarHash = tokenTypeJarHash)
     }
 
@@ -67,7 +66,7 @@ open class FungibleToken<T : TokenType>(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
-        other as FungibleToken<*>
+        other as FungibleToken
         if (amount != other.amount) return false
         if (holder != other.holder) return false
         if (tokenTypeJarHash != other.tokenTypeJarHash) return false

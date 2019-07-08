@@ -13,10 +13,10 @@ import net.corda.core.transactions.SignedTransaction
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
-class RedeemFungibleTokens<T : TokenType>
+class RedeemFungibleTokens
 @JvmOverloads
 constructor(
-        val amount: Amount<T>,
+        val amount: Amount<TokenType>,
         val issuer: Party,
         val observers: List<Party> = emptyList(),
         val queryCriteria: QueryCriteria? = null
@@ -38,10 +38,10 @@ class RedeemFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Uni
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
-class RedeemNonFungibleTokens<T : TokenType>
+class RedeemNonFungibleTokens
 @JvmOverloads
 constructor(
-        val ownedToken: T,
+        val ownedToken: TokenType,
         val issuer: Party,
         val observers: List<Party> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
@@ -64,10 +64,10 @@ class RedeemNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
-class ConfidentialRedeemFungibleTokens<T : TokenType>
+class ConfidentialRedeemFungibleTokens
 @JvmOverloads
 constructor(
-        val amount: Amount<T>,
+        val amount: Amount<TokenType>,
         val issuer: Party,
         val observers: List<Party> = emptyList(),
         val queryCriteria: QueryCriteria? = null

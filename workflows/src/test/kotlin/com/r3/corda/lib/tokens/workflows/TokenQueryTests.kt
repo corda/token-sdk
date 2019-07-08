@@ -66,7 +66,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
                 contractStateTypes = setOf(FungibleToken::class.java),
                 relevancyStatus = Vault.RelevancyStatus.RELEVANT
         )
-        val states = A.services.vaultService.queryBy<FungibleToken<*>>(query).states
+        val states = A.services.vaultService.queryBy<FungibleToken>(query).states
         assertEquals(allTokens.size, states.size)
     }
 
@@ -77,7 +77,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
                 contractStateTypes = setOf(NonFungibleToken::class.java),
                 relevancyStatus = Vault.RelevancyStatus.RELEVANT
         )
-        val states = A.services.vaultService.queryBy<NonFungibleToken<*>>(query).states
+        val states = A.services.vaultService.queryBy<NonFungibleToken>(query).states
         assertEquals(allOtherTokens.size, states.size)
     }
 
@@ -125,7 +125,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
         I2.issueFungibleTokens(A, 13.GBP).getOrThrow()
         network.waitQuiescent()
         val issuerCriteria = tokenAmountWithIssuerCriteria(GBP, I2.legalIdentity())
-        val gbpI2 = A.services.vaultService.queryBy<FungibleToken<*>>(issuerCriteria).states
+        val gbpI2 = A.services.vaultService.queryBy<FungibleToken>(issuerCriteria).states
         assertEquals(1, gbpI2.size)
         val gbp = gbpI2.first().state.data.amount
         assertEquals(13.GBP issuedBy I2.legalIdentity(), gbp)

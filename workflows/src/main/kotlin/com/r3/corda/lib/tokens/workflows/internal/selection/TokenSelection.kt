@@ -57,7 +57,7 @@ class TokenSelection(
             lockId: UUID,
             additionalCriteria: QueryCriteria,
             sorter: Sort,
-            stateAndRefs: MutableList<StateAndRef<FungibleToken<T>>>,
+            stateAndRefs: MutableList<StateAndRef<FungibleToken>>,
             pageSize: Int = 200,
             softLockingType: QueryCriteria.SoftLockingType = QueryCriteria.SoftLockingType.UNLOCKED_ONLY
     ): Boolean {
@@ -80,7 +80,7 @@ class TokenSelection(
 
         do {
             val pageSpec = PageSpecification(pageNumber = pageNumber, pageSize = pageSize)
-            val results: Vault.Page<FungibleToken<T>> = services.vaultService.queryBy(baseCriteria.and(additionalCriteria), pageSpec, sorter)
+            val results: Vault.Page<FungibleToken> = services.vaultService.queryBy(baseCriteria.and(additionalCriteria), pageSpec, sorter)
 
             for (state in results.states) {
                 stateAndRefs += state
@@ -119,14 +119,14 @@ class TokenSelection(
      * @return List of [FungibleToken]s that satisfy the amount to spend, empty list if none found.
      */
     @Suspendable
-    fun <T : TokenType> attemptSpend(
-            requiredAmount: Amount<T>,
+    fun attemptSpend(
+            requiredAmount: Amount<TokenType>,
             lockId: UUID,
             additionalCriteria: QueryCriteria = tokenAmountCriteria(requiredAmount.token),
             sorter: Sort = sortByStateRefAscending(),
             pageSize: Int = 200
-    ): List<StateAndRef<FungibleToken<T>>> {
-        val stateAndRefs = mutableListOf<StateAndRef<FungibleToken<T>>>()
+    ): List<StateAndRef<FungibleToken>> {
+        val stateAndRefs = mutableListOf<StateAndRef<FungibleToken>>()
         for (retryCount in 1..maxRetries) {
             // TODO: Need to specify exactly why it fails. Locked states or literally _no_ states!
             // No point in retrying if there will never be enough...
@@ -158,12 +158,12 @@ class TokenSelection(
      * @return [TransactionBuilder] and list of all owner keys used in the input states that are going to be moved.
      */
     @Suspendable
-    fun <T : TokenType> generateMove(
+    fun generateMove(
             lockId: UUID,
-            partyAndAmounts: List<PartyAndAmount<T>>,
+            partyAndAmounts: List<PartyAndAmount<TokenType>>,
             changeHolder: AbstractParty,
             queryCriteria: QueryCriteria? = null
-    ): Pair<List<StateAndRef<FungibleToken<T>>>, List<FungibleToken<T>>> {
+    ): Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> {
         // Grab some tokens from the vault and soft-lock.
         // Only supports moves of the same token instance currently.
         // TODO Support spends for different token types, different instances of the same type.
@@ -197,7 +197,7 @@ class TokenSelection(
         }
 
         // Calculate the list of output states making sure that the
-        val outputStates = mutableListOf<FungibleToken<T>>()
+        val outputStates = mutableListOf<FungibleToken>()
         for ((party, paymentAmount) in partyAndAmounts) {
             var remainingToPay = paymentAmount.quantity
             while (remainingToPay > 0) {
@@ -238,21 +238,21 @@ class TokenSelection(
     // Modifies builder in place. All checks for exit states should have been done before.
     // For example we assume that existStates have same issuer.
     @Suspendable
-    fun <T : TokenType> generateExit(
-            exitStates: List<StateAndRef<FungibleToken<T>>>,
-            amount: Amount<T>,
+    fun generateExit(
+            exitStates: List<StateAndRef<FungibleToken>>,
+            amount: Amount<TokenType>,
             changeOwner: AbstractParty
-    ): Pair<List<StateAndRef<FungibleToken<T>>>, FungibleToken<T>?> {
+    ): Pair<List<StateAndRef<FungibleToken>>, FungibleToken?> {
         // Choose states to cover amount - return ones used, and change output
         val changeOutput = change(exitStates, amount, changeOwner)
         return Pair(exitStates, changeOutput)
     }
 
-    private fun <T : TokenType> change(
-            exitStates: List<StateAndRef<FungibleToken<T>>>,
-            amount: Amount<T>,
+    private fun change(
+            exitStates: List<StateAndRef<FungibleToken>>,
+            amount: Amount<TokenType>,
             changeOwner: AbstractParty
-    ): FungibleToken<T>? {
+    ): FungibleToken? {
         val assetsSum = exitStates.sumTokenStateAndRefs()
         val difference = assetsSum - amount.issuedBy(exitStates.first().state.data.amount.token.issuer)
         check(difference.quantity >= 0) {

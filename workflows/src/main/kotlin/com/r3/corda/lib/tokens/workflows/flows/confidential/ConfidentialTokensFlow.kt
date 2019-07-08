@@ -2,7 +2,6 @@ package com.r3.corda.lib.tokens.workflows.flows.confidential
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.internal.flows.confidential.AnonymisePartiesFlow
 import com.r3.corda.lib.tokens.workflows.utilities.toWellKnownParties
 import net.corda.core.flows.FlowLogic
@@ -25,18 +24,18 @@ import net.corda.core.identity.Party
  * @property tokens a list of [AbstractToken]s.
  * @property sessions a list of participants' sessions which may contain sessions for observers.
  */
-class ConfidentialTokensFlow<T : TokenType>(
-        val tokens: List<AbstractToken<T>>,
+class ConfidentialTokensFlow(
+        val tokens: List<AbstractToken>,
         val sessions: List<FlowSession>
-) : FlowLogic<List<AbstractToken<T>>>() {
+) : FlowLogic<List<AbstractToken>>() {
     @Suspendable
-    override fun call(): List<AbstractToken<T>> {
+    override fun call(): List<AbstractToken> {
         // Some holders might be anonymous already. E.g. if some token selection has been performed and a confidential
         // change address was requested.
         val tokensWithWellKnownHolders = tokens.filter { it.holder is Party }
         val tokensWithAnonymousHolders = tokens - tokensWithWellKnownHolders
         val wellKnownTokenHolders = tokensWithWellKnownHolders
-                .map(AbstractToken<T>::holder)
+                .map(AbstractToken::holder)
                 .toWellKnownParties(serviceHub)
         val anonymousParties = subFlow(AnonymisePartiesFlow(wellKnownTokenHolders, sessions))
         // Replace Party with AnonymousParty.

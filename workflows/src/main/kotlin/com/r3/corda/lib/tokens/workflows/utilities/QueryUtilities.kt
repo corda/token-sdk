@@ -102,7 +102,7 @@ fun sumTokenCriteria(): QueryCriteria {
 }
 
 // Abstracts away the nasty 'otherResults' part of the vault query API.
-fun <T : TokenType> rowsToAmount(token: T, rows: Vault.Page<FungibleToken<T>>): Amount<T> {
+fun <T : TokenType> rowsToAmount(token: T, rows: Vault.Page<FungibleToken>): Amount<T> {
     return if (rows.otherResults.isEmpty()) {
         Amount(0L, token)
     } else {
@@ -116,12 +116,12 @@ fun <T : TokenType> rowsToAmount(token: T, rows: Vault.Page<FungibleToken<T>>): 
 /** General queries. */
 
 // Get all owned token amounts for a specific token, ignoring the issuer.
-fun <T : TokenType> VaultService.tokenAmountsByToken(token: T): Vault.Page<FungibleToken<T>> {
+fun <T : TokenType> VaultService.tokenAmountsByToken(token: T): Vault.Page<FungibleToken> {
     return queryBy(tokenAmountCriteria(token))
 }
 
 // Get all owned tokens for a specific token, ignoring the issuer.
-fun <T : TokenType> VaultService.ownedTokensByToken(token: T): Vault.Page<NonFungibleToken<T>> {
+fun <T : TokenType> VaultService.ownedTokensByToken(token: T): Vault.Page<NonFungibleToken> {
     return queryBy(ownedTokenCriteria(token))
 }
 
@@ -130,14 +130,14 @@ fun <T : TokenType> VaultService.ownedTokensByToken(token: T): Vault.Page<NonFun
 // We need to group the sum by the token class and token identifier.
 fun <T : TokenType> VaultService.tokenBalance(token: T): Amount<T> {
     val query = tokenAmountCriteria(token).and(sumTokenCriteria())
-    val result = queryBy<FungibleToken<T>>(query)
+    val result = queryBy<FungibleToken>(query)
     return rowsToAmount(token, result)
 }
 
 // We need to group the sum by the token class and token identifier takes issuer into consideration.
 fun <T : TokenType> VaultService.tokenBalanceForIssuer(token: T, issuer: Party): Amount<T> {
     val query = tokenAmountWithIssuerCriteria(token, issuer).and(sumTokenCriteria())
-    val result = queryBy<FungibleToken<T>>(query)
+    val result = queryBy<FungibleToken>(query)
     return rowsToAmount(token, result)
 }
 
@@ -146,7 +146,7 @@ fun <T : TokenType> VaultService.tokenBalanceForIssuer(token: T, issuer: Party):
 /* Queries with criteria. Eg. with issuer etc. */
 
 // Get NonFungibleToken with issuer.
-fun <T : TokenType> VaultService.ownedTokensByTokenIssuer(token: T, issuer: Party): Vault.Page<NonFungibleToken<T>> {
+fun <T : TokenType> VaultService.ownedTokensByTokenIssuer(token: T, issuer: Party): Vault.Page<NonFungibleToken> {
     val issuerCriteria = QueryCriteria.VaultCustomQueryCriteria(builder {
         PersistentNonFungibleToken::issuer.equal(issuer)
     })

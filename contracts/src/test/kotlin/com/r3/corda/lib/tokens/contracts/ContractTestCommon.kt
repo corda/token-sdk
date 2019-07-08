@@ -68,12 +68,12 @@ abstract class ContractTestCommon {
 
 /**
  * Creates a [NonFungibleToken] from an [IssuedTokenType].
- * E.g. IssuedTokenType<TokenType> -> NonFungibleToken<TokenType>.
- * This function must exist outside of the contracts module as creating a unique identifier is non deterministic.
+ * E.g. IssuedTokenType<TokenType> -> NonFungibleToken.
+ * This function must exist outside of the contracts module as creating a unique identifier is non-deterministic.
  */
-infix fun <T : TokenType> IssuedTokenType<T>.heldBy(owner: AbstractParty): NonFungibleToken<T> = _heldBy(owner)
+infix fun IssuedTokenType.heldBy(owner: AbstractParty): NonFungibleToken = _heldBy(owner)
 
-private infix fun <T : TokenType> IssuedTokenType<T>._heldBy(owner: AbstractParty): NonFungibleToken<T> {
+private infix fun IssuedTokenType._heldBy(owner: AbstractParty): NonFungibleToken {
     return NonFungibleToken(this, owner, UniqueIdentifier())
 }
 

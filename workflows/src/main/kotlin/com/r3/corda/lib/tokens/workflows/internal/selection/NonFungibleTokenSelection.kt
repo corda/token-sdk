@@ -21,10 +21,10 @@ fun <T : TokenType> generateMoveNonFungible(
         partyAndToken: PartyAndToken<T>,
         vaultService: VaultService,
         queryCriteria: QueryCriteria?
-): Pair<StateAndRef<NonFungibleToken<T>>, NonFungibleToken<T>> {
+): Pair<StateAndRef<NonFungibleToken>, NonFungibleToken> {
     val query = queryCriteria ?: ownedTokenCriteria(partyAndToken.token)
     val criteria = ownedTokenCriteria(partyAndToken.token).and(query)
-    val nonFungibleTokens = vaultService.queryBy<NonFungibleToken<T>>(criteria).states
+    val nonFungibleTokens = vaultService.queryBy<NonFungibleToken>(criteria).states
     // There can be multiple non-fungible tokens of the same TokenType. E.g. There can be multiple House tokens, each
     // with a different address. Whilst they have the same TokenType, they are still non-fungible. Therefore care must
     // be taken to ensure that only one token is returned for each query. As non-fungible tokens are also LinearStates,
@@ -61,7 +61,7 @@ fun <T : TokenType> generateMoveNonFungible(
 
 // All check should be performed before.
 @Suspendable
-fun <T : TokenType> generateExitNonFungible(txBuilder: TransactionBuilder, moveStateAndRef: StateAndRef<NonFungibleToken<T>>) {
+fun generateExitNonFungible(txBuilder: TransactionBuilder, moveStateAndRef: StateAndRef<NonFungibleToken>) {
     val nonFungibleToken = moveStateAndRef.state.data // TODO What if redeeming many non-fungible assets.
     addTokenTypeJar(nonFungibleToken, txBuilder)
     val issuerKey = nonFungibleToken.token.issuer.owningKey

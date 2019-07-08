@@ -45,6 +45,21 @@ open class TokenType(
     override val displayTokenSize: BigDecimal get() = BigDecimal.ONE.scaleByPowerOfTen(-fractionDigits)
 
     /**
+     * Returns true if the [TokenType] is an instance of [TokenType].
+     */
+    fun isRegularTokenType() = this.tokenClass == TokenType::class.java
+
+    /**
+     * Returns true if the [TokenType] is a sub-type of [TokenType].
+     */
+    fun isCustomTokenType() = !this.isRegularTokenType() && !this.isPointer()
+
+    /**
+     * Returns true if the [TokenType] is a [TokenPointer].
+     */
+    fun isPointer() = this is TokenPointer<*>
+
+    /**
      * This property is used for when querying the vault for tokens. It allows us to construct an instance of a
      * [TokenType] with a specified [tokenIdentifier], or for [EvolvableTokenType]s, as the [tokenIdentifier] is a
      * linearId, which is opaque, the [tokenClass] provides a bit more context on what is being pointed to.

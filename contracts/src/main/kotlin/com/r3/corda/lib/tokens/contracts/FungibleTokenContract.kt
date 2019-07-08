@@ -4,7 +4,6 @@ import com.r3.corda.lib.tokens.contracts.commands.TokenCommand
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStatesOrZero
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Attachment
@@ -26,21 +25,20 @@ import java.security.PublicKey
  *    to call the super method to handle the existing commands.
  * 3. Add a method to handle the new command in the new sub-class contract.
  */
-open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, FungibleToken<T>>() {
-
-    override val accepts: Class<FungibleToken<T>> get() = uncheckedCast(FungibleToken::class.java)
+open class FungibleTokenContract : AbstractTokenContract<FungibleToken>() {
+    override val accepts: Class<FungibleToken> get() = uncheckedCast(FungibleToken::class.java)
 
     companion object {
         val contractId = this::class.java.enclosingClass.canonicalName
     }
 
     override fun verifyIssue(
-            issueCommand: CommandWithParties<TokenCommand<T>>,
-            inputs: List<IndexedState<FungibleToken<T>>>,
-            outputs: List<IndexedState<FungibleToken<T>>>,
+            issueCommand: CommandWithParties<TokenCommand>,
+            inputs: List<IndexedState<FungibleToken>>,
+            outputs: List<IndexedState<FungibleToken>>,
             attachments: List<Attachment>
     ) {
-        val issuedToken: IssuedTokenType<T> = issueCommand.value.token
+        val issuedToken: IssuedTokenType = issueCommand.value.token
         require(inputs.isEmpty()) { "When issuing tokens, there cannot be any input states." }
         outputs.apply {
             require(isNotEmpty()) { "When issuing tokens, there must be output states." }
@@ -54,7 +52,7 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
             // There can only be one issuer per group as the issuer is part of the token which is used to group states.
             // If there are multiple issuers for the same tokens then there will be a group for each issued token. So,
             // the line below should never fail on single().
-            val issuer: Party = this.map { it.state.data }.map(AbstractToken<T>::issuer).toSet().single()
+            val issuer: Party = this.map { it.state.data }.map(AbstractToken::issuer).toSet().single()
             // Only the issuer should be signing the issuer command.
             require(issueCommand.signers.singleOrNull { it == issuer.owningKey } != null) {
                 "The issuer must be the only signing party when an amount of tokens are issued."
@@ -64,20 +62,20 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
     }
 
     override fun verifyMove(
-            moveCommands: List<CommandWithParties<TokenCommand<T>>>,
-            inputs: List<IndexedState<FungibleToken<T>>>,
-            outputs: List<IndexedState<FungibleToken<T>>>,
+            moveCommands: List<CommandWithParties<TokenCommand>>,
+            inputs: List<IndexedState<FungibleToken>>,
+            outputs: List<IndexedState<FungibleToken>>,
             attachments: List<Attachment>
     ) {
         // Commands are grouped by Token Type, so we just need a token reference.
-        val issuedToken: IssuedTokenType<T> = moveCommands.first().value.token
+        val issuedToken: IssuedTokenType = moveCommands.first().value.token
         // There must be inputs and outputs present.
         require(inputs.isNotEmpty()) { "When moving tokens, there must be input states present." }
         require(outputs.isNotEmpty()) { "When moving tokens, there must be output states present." }
         // Sum the amount of input and output tokens.
-        val inputAmount: Amount<IssuedTokenType<T>> = inputs.map { it.state.data }.sumTokenStatesOrZero(issuedToken)
+        val inputAmount: Amount<IssuedTokenType> = inputs.map { it.state.data }.sumTokenStatesOrZero(issuedToken)
         require(inputAmount > Amount.zero(issuedToken)) { "In move groups there must be an amount of input tokens > ZERO." }
-        val outputAmount: Amount<IssuedTokenType<T>> = outputs.map { it.state.data }.sumTokenStatesOrZero(issuedToken)
+        val outputAmount: Amount<IssuedTokenType> = outputs.map { it.state.data }.sumTokenStatesOrZero(issuedToken)
         require(outputAmount > Amount.zero(issuedToken)) { "In move groups there must be an amount of output tokens > ZERO." }
         // Input and output amounts must be equal.
         require(inputAmount == outputAmount) {
@@ -89,7 +87,7 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
         // There can be different owners in each move group. There may be one command for each of the signers publickey
         // or all the public keys might be listed within one command.
         val inputOwningKeys: Set<PublicKey> = inputs.map { it.state.data.holder.owningKey }.toSet()
-        val signers: Set<PublicKey> = moveCommands.flatMap(CommandWithParties<TokenCommand<T>>::signers).toSet()
+        val signers: Set<PublicKey> = moveCommands.flatMap(CommandWithParties<TokenCommand>::signers).toSet()
         require(signers.containsAll(inputOwningKeys)) {
             "Required signers does not contain all the current owners of the tokens being moved"
         }
@@ -98,12 +96,12 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
     }
 
     override fun verifyRedeem(
-            redeemCommand: CommandWithParties<TokenCommand<T>>,
-            inputs: List<IndexedState<FungibleToken<T>>>,
-            outputs: List<IndexedState<FungibleToken<T>>>,
+            redeemCommand: CommandWithParties<TokenCommand>,
+            inputs: List<IndexedState<FungibleToken>>,
+            outputs: List<IndexedState<FungibleToken>>,
             attachments: List<Attachment>
     ) {
-        val issuedToken: IssuedTokenType<T> = redeemCommand.value.token
+        val issuedToken: IssuedTokenType = redeemCommand.value.token
         // There can be at most one output treated as a change paid back to the owner. Issuer is used to group states,
         // so it will be the same as one for the input states.
         outputs.apply {
@@ -118,11 +116,11 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
             // There must be inputs present.
             require(isNotEmpty()) { "When redeeming tokens, there must be input states present." }
             // We don't care about the token as the grouping function ensures all the inputs are of the same token.
-            val inputSum: Amount<IssuedTokenType<T>> = this.map { it.state.data }.sumTokenStatesOrZero(issuedToken)
+            val inputSum: Amount<IssuedTokenType> = this.map { it.state.data }.sumTokenStatesOrZero(issuedToken)
             require(inputSum > Amount.zero(issuedToken)) {
                 "When redeeming tokens an amount > ZERO must be redeemed."
             }
-            val outSum: Amount<IssuedTokenType<T>> = outputs.firstOrNull()?.state?.data?.amount
+            val outSum: Amount<IssuedTokenType> = outputs.firstOrNull()?.state?.data?.amount
                     ?: Amount.zero(issuedToken)
             // We can't pay back more than redeeming.
             // Additionally, it doesn't make sense to run redeem and pay exact change.
@@ -130,7 +128,7 @@ open class FungibleTokenContract<T : TokenType> : AbstractTokenContract<T, Fungi
             // There can only be one issuer per group as the issuer is part of the token which is used to group states.
             // If there are multiple issuers for the same tokens then there will be a group for each issued token. So,
             // the line below should never fail on single().
-            val issuerKey: PublicKey = inputs.map { it.state.data }.map(FungibleToken<T>::issuer).toSet().single().owningKey
+            val issuerKey: PublicKey = inputs.map { it.state.data }.map(FungibleToken::issuer).toSet().single().owningKey
             val ownersKeys: List<PublicKey> = inputs.map { it.state.data.holder.owningKey }
             val signers = redeemCommand.signers
             require(issuerKey in signers) {

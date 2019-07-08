@@ -21,7 +21,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
     fun `issue non fungible token tests`() {
         transaction {
             // Start with only one output.
-            output(NonFungibleTokenContract.contractId, issuedToken heldBy ALICE.party)
+            output(NonFungibleTokenContract.contractId, issuedToken.heldBy(ALICE.party))
             attachment(issuedToken.tokenType.importAttachment(aliceServices.attachments))
             // No command fails.
             tweak {
@@ -143,7 +143,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
                 val anotherIssuedTokenHeldByAlice = anotherIssuedToken heldBy ALICE.party
 
                 input(NonFungibleTokenContract.contractId, anotherIssuedTokenHeldByAlice)
-                output(NonFungibleTokenContract.contractId, anotherIssuedTokenHeldByAlice withNewHolder BOB.party)
+                output(NonFungibleTokenContract.contractId, anotherIssuedTokenHeldByAlice.withNewHolder(BOB.party))
 
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
                 // Command for the move.
@@ -227,3 +227,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
         }
     }
 }
+
+
+
+

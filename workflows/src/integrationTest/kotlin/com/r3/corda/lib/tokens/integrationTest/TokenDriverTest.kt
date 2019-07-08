@@ -3,14 +3,8 @@ package com.r3.corda.lib.tokens.integrationTest
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
-import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.contracts.utilities.heldBy
-import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
-import com.r3.corda.lib.tokens.contracts.utilities.of
-import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
-import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefsOrZero
-import com.r3.corda.lib.tokens.contracts.utilities.withNotary
+import com.r3.corda.lib.tokens.contracts.utilities.*
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.testing.states.Ruble
@@ -18,11 +12,7 @@ import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.UpdateEvolvableToken
-import com.r3.corda.lib.tokens.workflows.internal.testflows.CheckTokenPointer
-import com.r3.corda.lib.tokens.workflows.internal.testflows.DvPFlow
-import com.r3.corda.lib.tokens.workflows.internal.testflows.GetDistributionList
-import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemFungibleGBP
-import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemNonFungibleHouse
+import com.r3.corda.lib.tokens.workflows.internal.testflows.*
 import com.r3.corda.lib.tokens.workflows.singleOutput
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
 import com.r3.corda.lib.tokens.workflows.utilities.ownedTokenCriteria
@@ -101,7 +91,7 @@ class TokenDriverTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `beefy tokens integration test`() {
         driver(DriverParameters(
                 portAllocation = incrementalPortAllocation(20000),
@@ -146,9 +136,9 @@ class TokenDriverTest {
             nodeB.rpc.watchForTransaction(issueB).getOrThrow()
             // Check that node A has cash and house.
             assertThat(nodeA.rpc.vaultQuery(House::class.java).states).isNotEmpty
-            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
+            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
                     .isEqualTo(1_000_000L.GBP issuedBy issuerParty)
-            assertThat(nodeB.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
+            assertThat(nodeB.rpc.vaultQueryBy<FungibleToken>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
                     .isEqualTo(900_000L.GBP issuedBy issuerParty)
             // Move house to Node B using conf identities in exchange for cash using DvP flow.
             // TODO use conf identities
@@ -161,11 +151,11 @@ class TokenDriverTest {
             nodeA.rpc.watchForTransaction(dvpTx).getOrThrow()
             nodeB.rpc.watchForTransaction(dvpTx).getOrThrow()
             // NodeB has house, NodeA doesn't.
-            assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken<TokenPointer<House>>>(ownedTokenCriteria(housePtr)).states).isNotEmpty
-            assertThat(nodeA.rpc.vaultQueryBy<NonFungibleToken<TokenPointer<House>>>(ownedTokenCriteria(housePtr)).states).isEmpty()
+            assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken>(ownedTokenCriteria(housePtr)).states).isNotEmpty
+            assertThat(nodeA.rpc.vaultQueryBy<NonFungibleToken>(ownedTokenCriteria(housePtr)).states).isEmpty()
             // NodeA has cash, B doesn't
-            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(1_900_000L.GBP issuedBy issuerParty)
-            assertThat(nodeB.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
+            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(1_900_000L.GBP issuedBy issuerParty)
+            assertThat(nodeB.rpc.vaultQueryBy<FungibleToken>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
             // Check that dist list was updated at issuer node.
             val distributionList = issuer.rpc.startFlow(::GetDistributionList, housePtr).returnValue.getOrThrow()
             assertThat(distributionList.map { it.party }).containsExactly(nodeAParty, nodeBParty)
@@ -195,7 +185,7 @@ class TokenDriverTest {
                     issuerParty
             ).returnValue.getOrThrow()
             nodeB.rpc.watchForTransaction(redeemHouseTx).getOrThrow()
-            assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken<TokenPointer<House>>>(ownedTokenCriteria(housePtr)).states).isEmpty()
+            assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken>(ownedTokenCriteria(housePtr)).states).isEmpty()
             // NodeA redeems 1_100_000L.GBP with the issuer, check it received 800_000L change, check, that issuer didn't record cash.
             val redeemGBPTx = nodeA.rpc.startFlowDynamic(
                     RedeemFungibleGBP::class.java,
@@ -203,8 +193,8 @@ class TokenDriverTest {
                     issuerParty
             ).returnValue.getOrThrow()
             nodeA.rpc.watchForTransaction(redeemGBPTx).getOrThrow()
-            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(800_000L.GBP issuedBy issuerParty)
-            assertThat(issuer.rpc.vaultQueryBy<FungibleToken<TokenType>>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
+            assertThat(nodeA.rpc.vaultQueryBy<FungibleToken>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(800_000L.GBP issuedBy issuerParty)
+            assertThat(issuer.rpc.vaultQueryBy<FungibleToken>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
         }
     }
 }

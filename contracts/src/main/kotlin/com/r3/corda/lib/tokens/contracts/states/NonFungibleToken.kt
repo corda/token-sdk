@@ -32,25 +32,27 @@ import net.corda.core.schemas.QueryableState
  *
  * @property token the [IssuedTokenType] which this [NonFungibleToken] is in respect of.
  * @property holder the [AbstractParty] which holds the [IssuedTokenType].
- * @param T the [TokenType].
+ * @property linearId the [UniqueIdentifier] which will uniquely identify this Token.
+ * @property tokenTypeJarHash the [SecureHash] which will pin the jar that provides the [TokenType].
+ * @param TokenType the [TokenType].
  */
 @BelongsToContract(NonFungibleTokenContract::class)
-open class NonFungibleToken<T : TokenType>(
-        val token: IssuedTokenType<T>,
+open class NonFungibleToken(
+        val token: IssuedTokenType,
         override val holder: AbstractParty,
         override val linearId: UniqueIdentifier,
         override val tokenTypeJarHash: SecureHash? = token.tokenType.getAttachmentIdForGenericParam()
-) : AbstractToken<T>, QueryableState, LinearState {
+) : AbstractToken, QueryableState, LinearState {
 
-    override val issuedTokenType: IssuedTokenType<T> get() = token
+    override val issuedTokenType: IssuedTokenType get() = token
 
-    final override val tokenType: T get() = token.tokenType
+    final override val tokenType: TokenType get() = token.tokenType
 
     override val issuer: Party get() = token.issuer
 
     override fun toString(): String = "$token owned by $holderString"
 
-    override fun withNewHolder(newHolder: AbstractParty): NonFungibleToken<T> {
+    override fun withNewHolder(newHolder: AbstractParty): NonFungibleToken {
         return NonFungibleToken(token = token, holder = newHolder, linearId = linearId, tokenTypeJarHash = tokenTypeJarHash)
     }
 
@@ -69,7 +71,7 @@ open class NonFungibleToken<T : TokenType>(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as NonFungibleToken<*>
+        other as NonFungibleToken
 
         if (token != other.token) return false
         if (holder != other.holder) return false

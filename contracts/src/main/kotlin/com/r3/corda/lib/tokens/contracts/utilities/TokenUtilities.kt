@@ -4,7 +4,6 @@ import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.toStringShort
@@ -28,9 +27,9 @@ class TokenUtilities {
  * Creates a [FungibleToken] from an an amount of [IssuedTokenType].
  * E.g. Amount<IssuedTokenType<TokenType>> -> FungibleToken<TokenType>.
  */
-infix fun <T : TokenType> Amount<IssuedTokenType<T>>.heldBy(owner: AbstractParty): FungibleToken<T> = _heldBy(owner)
+infix fun Amount<IssuedTokenType>.heldBy(owner: AbstractParty): FungibleToken = _heldBy(owner)
 
-internal infix fun <T : TokenType> Amount<IssuedTokenType<T>>._heldBy(owner: AbstractParty): FungibleToken<T> {
+internal infix fun Amount<IssuedTokenType>._heldBy(owner: AbstractParty): FungibleToken {
     return FungibleToken(this, owner)
 }
 
@@ -39,9 +38,9 @@ internal infix fun <T : TokenType> Amount<IssuedTokenType<T>>._heldBy(owner: Abs
 // --------------------------
 
 /** Adds a notary [Party] to an [AbstractToken], by wrapping it in a [TransactionState]. */
-infix fun <T : AbstractToken<*>> T.withNotary(notary: Party): TransactionState<T> = _withNotary(notary)
+infix fun <T : AbstractToken> T.withNotary(notary: Party): TransactionState<T> = _withNotary(notary)
 
-internal infix fun <T : AbstractToken<*>> T._withNotary(notary: Party): TransactionState<T> {
+internal infix fun <T : AbstractToken> T._withNotary(notary: Party): TransactionState<T> {
     return TransactionState(data = this, notary = notary)
 }
 
@@ -56,8 +55,8 @@ internal infix fun <T : EvolvableTokenType> T._withNotary(notary: Party): Transa
  * Converts [AbstractToken.holder] into a more friendly string. It uses only the x500 organisation for [Party] objects
  * and shortens the public key for [AnonymousParty]s to the first 16 characters.
  */
-val AbstractToken<*>.holderString: String
+val AbstractToken.holderString: String
     get() =
         (holder as? Party)?.name?.organisation ?: holder.owningKey.toStringShort().substring(0, 16)
 
-inline infix fun <reified T : TokenType> AbstractToken<T>.withNewHolder(newHolder: AbstractParty) = withNewHolder(newHolder)
+infix fun <T : AbstractToken> T.withNewHolder(newHolder: AbstractParty) = withNewHolder(newHolder)

@@ -8,7 +8,7 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 
 /** Contains common token properties and functionality. */
-interface AbstractToken<T : TokenType> : ContractState {
+interface AbstractToken : ContractState {
     /** The [AbstractParty] which is currently holding (some amount of) tokens. */
     val holder: AbstractParty
 
@@ -24,16 +24,16 @@ interface AbstractToken<T : TokenType> : ContractState {
     override val participants: List<AbstractParty> get() = listOf(holder)
 
     /** The [TokenType] this [AbstractToken] is in respect of. */
-    val tokenType: T get() = issuedTokenType.tokenType
+    val tokenType: TokenType get() = issuedTokenType.tokenType
 
     /** The [IssuedTokenType]. */
-    val issuedTokenType: IssuedTokenType<T>
+    val issuedTokenType: IssuedTokenType
 
     /** The issuer [Party]. */
     val issuer: Party get() = issuedTokenType.issuer
 
     /** For creating a copy of an existing [AbstractToken] with a new holder. */
-    fun withNewHolder(newHolder: AbstractParty): AbstractToken<T>
+    fun withNewHolder(newHolder: AbstractParty): AbstractToken
 
     /** The hash of a CorDapp JAR which implements the [TokenType] specified by the type parameter [T]. */
     val tokenTypeJarHash: SecureHash?

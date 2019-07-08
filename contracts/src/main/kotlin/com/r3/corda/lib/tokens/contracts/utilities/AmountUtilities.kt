@@ -12,38 +12,38 @@ import java.math.BigDecimal
 // -------------------------------------------------------------------------------
 
 /** For creating [Int] quantities of [TokenType]s. */
-fun <T : TokenType> amount(amount: Int, token: T): Amount<T> = amount(amount.toLong(), token)
+fun amount(amount: Int, token: TokenType): Amount<TokenType> = amount(amount.toLong(), token)
 
 /** For creating [Long] quantities of [TokenType]s. */
-fun <T : TokenType> amount(amount: Long, token: T): Amount<T> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
+fun amount(amount: Long, token: TokenType): Amount<TokenType> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
 
 /** For creating [Double] quantities of [TokenType]s.  */
-fun <T : TokenType> amount(amount: Double, token: T): Amount<T> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
+fun amount(amount: Double, token: TokenType): Amount<TokenType> = Amount.fromDecimal(BigDecimal.valueOf(amount), token)
 
 /** For creating [BigDecimal] quantities of [TokenType]s. */
-fun <T : TokenType> amount(amount: BigDecimal, token: T): Amount<T> = Amount.fromDecimal(amount, token)
+fun amount(amount: BigDecimal, token: TokenType): Amount<TokenType> = Amount.fromDecimal(amount, token)
 
 // ---------------------------------------------------------------------------------------
 // Helpers for creating an amount of a token using some quantity and an issued token type.
 // ---------------------------------------------------------------------------------------
 
 /** For parsing [Int] quantities of [IssuedTokenType]s. */
-fun <T : TokenType> amount(amount: Int, token: IssuedTokenType<T>): Amount<IssuedTokenType<T>> {
+fun amount(amount: Int, token: IssuedTokenType): Amount<IssuedTokenType> {
     return amount(amount.toLong(), token)
 }
 
 /** For parsing [Long] quantities of [IssuedTokenType]s. */
-fun <T : TokenType> amount(amount: Long, token: IssuedTokenType<T>): Amount<IssuedTokenType<T>> {
+fun amount(amount: Long, token: IssuedTokenType): Amount<IssuedTokenType> {
     return Amount.fromDecimal(BigDecimal.valueOf(amount), token)
 }
 
 /** For parsing [Double] quantities of [IssuedTokenType]s. */
-fun <T : TokenType> amount(amount: Double, token: IssuedTokenType<T>): Amount<IssuedTokenType<T>> {
+fun amount(amount: Double, token: IssuedTokenType): Amount<IssuedTokenType> {
     return Amount.fromDecimal(BigDecimal.valueOf(amount), token)
 }
 
 /** For parsing [BigDecimal] quantities of [IssuedTokenType]s. */
-fun <T : TokenType> amount(amount: BigDecimal, token: IssuedTokenType<T>): Amount<IssuedTokenType<T>> {
+fun amount(amount: BigDecimal, token: IssuedTokenType): Amount<IssuedTokenType> {
     return Amount.fromDecimal(amount, token)
 }
 
@@ -52,32 +52,32 @@ fun <T : TokenType> amount(amount: BigDecimal, token: IssuedTokenType<T>): Amoun
 // ---------------------------------------------------------------------------------------------
 
 /** For creating [Int] quantities of [TokenType]s. */
-infix fun <T : TokenType> Int.of(token: T): Amount<T> = amount(this, token)
+infix fun Int.of(token: TokenType): Amount<TokenType> = amount(this, token)
 
 /** For creating [Long] quantities of [TokenType]s. */
-infix fun <T : TokenType> Long.of(token: T): Amount<T> = amount(this, token)
+infix fun Long.of(token: TokenType): Amount<TokenType> = amount(this, token)
 
 /** For creating [Double] quantities of [TokenType]s. */
-infix fun <T : TokenType> Double.of(token: T): Amount<T> = amount(this, token)
+infix fun Double.of(token: TokenType): Amount<TokenType> = amount(this, token)
 
 /** For creating [BigDecimal] quantities of [TokenType]s. */
-infix fun <T : TokenType> BigDecimal.of(token: T): Amount<T> = amount(this, token)
+infix fun BigDecimal.of(token: TokenType): Amount<TokenType> = amount(this, token)
 
 // ----------------------------------------------------------------------------------------------
 // For creating amounts of token types using a DSL-like infix notation. "1000 of issuedTokenType"
 // ----------------------------------------------------------------------------------------------
 
 /** For creating [Int] quantities of [IssuedTokenType]s. */
-infix fun <T : IssuedTokenType<U>, U : TokenType> Int.of(token: T): Amount<IssuedTokenType<U>> = amount(this, token)
+infix fun Int.of(token: IssuedTokenType): Amount<IssuedTokenType> = amount(this, token)
 
 /** For creating [Long] quantities of [IssuedTokenType]s. */
-infix fun <T : IssuedTokenType<U>, U : TokenType> Long.of(token: T): Amount<IssuedTokenType<U>> = amount(this, token)
+infix fun Long.of(token: IssuedTokenType): Amount<IssuedTokenType> = amount(this, token)
 
 /** For creating [Double] quantities of [IssuedTokenType]s. */
-infix fun <T : IssuedTokenType<U>, U : TokenType> Double.of(token: T): Amount<IssuedTokenType<U>> = amount(this, token)
+infix fun Double.of(token: IssuedTokenType): Amount<IssuedTokenType> = amount(this, token)
 
 /** For creating [BigDecimal] quantities of [IssuedTokenType]s. */
-infix fun <T : IssuedTokenType<U>, U : TokenType> BigDecimal.of(token: T): Amount<IssuedTokenType<U>> {
+infix fun BigDecimal.of(token: IssuedTokenType): Amount<IssuedTokenType> {
     return amount(this, token)
 }
 
@@ -86,35 +86,35 @@ infix fun <T : IssuedTokenType<U>, U : TokenType> BigDecimal.of(token: T): Amoun
 // -------------------------------------------------------------------------------------------------------
 
 /** Wraps a [TokenType] with an [IssuedTokenType]. E.g. Amount<TokenType> -> Amount<IssuedTokenType<TokenType>>. */
-infix fun <T : TokenType> Amount<T>.issuedBy(issuer: Party): Amount<IssuedTokenType<T>> = _issuedBy(issuer)
+infix fun Amount<TokenType>.issuedBy(issuer: Party): Amount<IssuedTokenType> = _issuedBy(issuer)
 
-internal infix fun <T : TokenType> Amount<T>._issuedBy(issuer: Party): Amount<IssuedTokenType<T>> {
+internal infix fun Amount<TokenType>._issuedBy(issuer: Party): Amount<IssuedTokenType> {
     return Amount(quantity, displayTokenSize, uncheckedCast(token.issuedBy(issuer)))
 }
 
 /** Wraps a [TokenType] with an [IssuedTokenType]. E.g. TokenType -> IssuedTokenType<TokenType>. */
-infix fun <T : TokenType> T.issuedBy(issuer: Party): IssuedTokenType<T> = _issuedBy(issuer)
+infix fun TokenType.issuedBy(issuer: Party): IssuedTokenType = _issuedBy(issuer)
 
-internal infix fun <T : TokenType> T._issuedBy(issuer: Party): IssuedTokenType<T> = IssuedTokenType(issuer, this)
+internal infix fun TokenType._issuedBy(issuer: Party): IssuedTokenType = IssuedTokenType(issuer, this)
 
 // ------------------------------------------------------------------
 // Helpers for summing amounts of token types and issued token types.
 // ------------------------------------------------------------------
 
 /** Sums [Amount]s of [IssuedTokenType]s or returns null if list is empty or there is an [IssuedTokenType] mis-match. */
-fun <T : IssuedTokenType<U>, U : TokenType> Iterable<Amount<T>>.sumIssuedTokensOrNull(): Amount<T>? {
+fun <T : TokenType> Iterable<Amount<T>>.sumIssuedTokensOrNull(): Amount<T>? {
     return if (!iterator().hasNext()) null else sumIssuedTokensOrThrow()
 }
 
 /**
  * Sums [Amount]s of [IssuedTokenType]s or throws [IllegalArgumentException] if there is an [IssuedTokenType] mis-match.
  */
-fun <T : IssuedTokenType<U>, U : TokenType> Iterable<Amount<T>>.sumIssuedTokensOrThrow(): Amount<T> {
+fun <T : TokenType> Iterable<Amount<T>>.sumIssuedTokensOrThrow(): Amount<T> {
     return reduce { left, right -> left + right }
 }
 
 /** Sums [Amount]s of [IssuedTokenType]s or returns zero if there is an [IssuedTokenType] mis-match or an empty list. */
-fun <T : IssuedTokenType<U>, U : TokenType> Iterable<Amount<T>>.sumIssuedTokensOrZero(token: T): Amount<T> {
+fun <T : TokenType> Iterable<Amount<T>>.sumIssuedTokensOrZero(token: T): Amount<T> {
     return if (iterator().hasNext()) sumIssuedTokensOrThrow() else Amount.zero(token)
 }
 
@@ -138,6 +138,6 @@ fun <T : TokenType> Iterable<Amount<T>>.sumTokensOrZero(token: T): Amount<T> {
  * This is useful when you are mixing code that cares about specific issuers with code that will accept any, or which is
  * imposing issuer constraints via some other mechanism and the additional type safety is not wanted.
  */
-fun <T : TokenType> Amount<IssuedTokenType<T>>.withoutIssuer(): Amount<T> {
+fun Amount<IssuedTokenType>.withoutIssuer(): Amount<TokenType> {
     return Amount(quantity, displayTokenSize, token.tokenType)
 }
