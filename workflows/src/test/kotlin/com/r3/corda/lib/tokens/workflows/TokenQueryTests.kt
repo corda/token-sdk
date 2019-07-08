@@ -95,9 +95,9 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     @Test(timeout = 120_000)
     fun `query owned tokens by token`() {
         // Perform a custom query for GBP only tokensToIssue.
-        val foo = A.services.vaultService.ownedTokensByToken(fooToken).states
+        val foo = A.services.vaultService.heldTokensByToken(fooToken).states
         assertEquals(1, foo.size)
-        val bar = A.services.vaultService.ownedTokensByToken(barToken).states
+        val bar = A.services.vaultService.heldTokensByToken(barToken).states
         assertEquals(1, bar.size)
     }
 
@@ -134,11 +134,11 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     @Test(timeout = 120_000)
     fun `query owned token with given issuer`() {
         // Non-fungible
-        val fooI2 = A.services.vaultService.ownedTokensByTokenIssuer(fooToken, I2.legalIdentity()).states
+        val fooI2 = A.services.vaultService.heldTokensByTokenIssuer(fooToken, I2.legalIdentity()).states
         assertEquals(0, fooI2.size)
-        val bazI = A.services.vaultService.ownedTokensByTokenIssuer(bazToken, I.legalIdentity()).states
+        val bazI = A.services.vaultService.heldTokensByTokenIssuer(bazToken, I.legalIdentity()).states
         assertEquals(0, bazI.size)
-        val bazI2 = A.services.vaultService.ownedTokensByTokenIssuer(bazToken, I2.legalIdentity()).states
+        val bazI2 = A.services.vaultService.heldTokensByTokenIssuer(bazToken, I2.legalIdentity()).states
         assertEquals(1, bazI2.size)
     }
 }

@@ -41,7 +41,7 @@ class RedeemFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Uni
 class RedeemNonFungibleTokens
 @JvmOverloads
 constructor(
-        val ownedToken: TokenType,
+        val heldToken: TokenType,
         val issuer: Party,
         val observers: List<Party> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
@@ -49,7 +49,7 @@ constructor(
     override fun call(): SignedTransaction {
         val observerSessions = sessionsForParties(observers)
         val issuerSession = initiateFlow(issuer)
-        return subFlow(RedeemNonFungibleTokensFlow(ownedToken, issuerSession, observerSessions))
+        return subFlow(RedeemNonFungibleTokensFlow(heldToken, issuerSession, observerSessions))
     }
 }
 

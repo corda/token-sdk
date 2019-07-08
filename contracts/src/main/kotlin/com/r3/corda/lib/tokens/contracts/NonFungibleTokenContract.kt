@@ -69,12 +69,12 @@ class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>() {
             attachments: List<Attachment>
     ) {
         // There must be inputs and outputs present.
-        require(outputs.isEmpty()) { "When redeeming an owned token, there must be no output." }
-        require(inputs.size == 1) { "When redeeming an owned token, there must be only one input." }
-        val ownedToken = inputs.single()
+        require(outputs.isEmpty()) { "When redeeming a held token, there must be no output." }
+        require(inputs.size == 1) { "When redeeming a held token, there must be only one input." }
+        val heldToken = inputs.single()
         // Only the issuer and holders should be signing the redeem command.
         // There will only ever be one issuer as the issuer forms part of the grouping key.
-        val issuerKey = ownedToken.state.data.token.issuer.owningKey
+        val issuerKey = heldToken.state.data.token.issuer.owningKey
         val holdersKeys = inputs.map { it.state.data.holder.owningKey }
         val signers = redeemCommand.signers
         require(issuerKey in signers) {

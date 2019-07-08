@@ -175,7 +175,7 @@ This release candidate is almost code complete.
 * Addition of kotlin utilities to sum amounts of `IssuedTokenType` and `TokenType`.
 * Addition of kotlin utilities to create a `NonFungibleToken` or `FungibleToken`
   from an `IssuedTokenType` and a `Party` using the following syntax:
-  `issuedTokenType ownedBy party`
+  `issuedTokenType heldBy party`
 * Addition of kotlin utilities to assign a notary to a `NonFungibleToken`
   or `FungibleToken` using the following syntax: `tokens withNotary notary`
 * Addition of utilities for summing lists of `FungibleToken`s.

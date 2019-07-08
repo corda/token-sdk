@@ -31,5 +31,4 @@ data class IssuedTokenType(val issuer: Party, val tokenType: TokenType) : TokenT
     override val displayTokenSize: BigDecimal get() = tokenType.displayTokenSize
 
     override fun toString(): String = "$tokenType issued by ${issuer.name.organisation}"
-
 }
