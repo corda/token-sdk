@@ -1,6 +1,9 @@
 apply plugin: 'kotlin-jpa'
 apply plugin: 'net.corda.plugins.cordapp'
+
+if (!(corda_release_version in ['4.1'])) {
 apply from: "${rootProject.projectDir}/deterministic.gradle"
+}
 
 sourceSets {
     main {

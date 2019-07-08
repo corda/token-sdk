@@ -1,14 +1,14 @@
-//configurations {
-//    compileClasspath { Configuration c -> deterministic(c) }
-//    //runtimeClasspath { Configuration c -> deterministic(c) }
-//}
-//
-//private final void deterministic(Configuration configuration) {
-//    if (configuration.state == Configuration.State.UNRESOLVED) {
-//        // Ensure that this module uses the deterministic Corda artifacts.
-//        configuration.resolutionStrategy.dependencySubstitution {
-//            substitute module("$corda_release_group:corda-serialization:$corda_release_version") with module("$corda_release_group:corda-serialization-deterministic:$corda_release_version")
-//            substitute module("$corda_release_group:corda-core:$corda_release_version") with module("$corda_release_group:corda-core-deterministic:$corda_release_version")
-//        }
-//    }
-//}
+configurations {
+    compileClasspath { Configuration c -> deterministic(c) }
+    //runtimeClasspath { Configuration c -> deterministic(c) }
+}
+
+private final void deterministic(Configuration configuration) {
+    if (configuration.state == Configuration.State.UNRESOLVED) {
+        // Ensure that this module uses the deterministic Corda artifacts.
+        configuration.resolutionStrategy.dependencySubstitution {
+            substitute module("$corda_release_group:corda-serialization:$corda_release_version") with module("$corda_release_group:corda-serialization-deterministic:$corda_release_version")
+            substitute module("$corda_release_group:corda-core:$corda_release_version") with module("$corda_release_group:corda-core-deterministic:$corda_release_version")
+        }
+    }
+}
