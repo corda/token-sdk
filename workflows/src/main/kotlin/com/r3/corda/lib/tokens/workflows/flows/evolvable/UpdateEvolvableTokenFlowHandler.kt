@@ -7,12 +7,11 @@ import net.corda.core.node.StatesToRecord
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.unwrap
 
-@InitiatedBy(CreateEvolvableToken::class)
-class CreateEvolvableTokenResponder(val otherSession: FlowSession) : FlowLogic<SignedTransaction>() {
+class UpdateEvolvableTokenFlowHandler(val otherSession: FlowSession) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
         // Receive the notification
-        val notification = otherSession.receive<CreateEvolvableToken.Notification>().unwrap { it }
+        val notification = otherSession.receive<UpdateEvolvableTokenFlow.Notification>().unwrap { it }
 
         // Sign the transaction proposal, if required
         if (notification.signatureRequired) {
@@ -25,6 +24,6 @@ class CreateEvolvableTokenResponder(val otherSession: FlowSession) : FlowLogic<S
         }
 
         // Resolve the creation transaction.
-        return subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
+        return subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ALL_VISIBLE))
     }
 }
