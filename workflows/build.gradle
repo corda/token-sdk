@@ -12,7 +12,7 @@ cordapp {
         versionId 1
     }
     signing {
-        enabled false
+        enabled true
     }
 }
 
