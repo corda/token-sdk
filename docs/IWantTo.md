@@ -37,7 +37,7 @@ Create an `IssuedTokenType` as follows
 ```kotlin
     // With your own instance of token type.
     val issuer: Party = ...
-    val myTokenType = MyTokenType("TEST", 2)
+    val myTokenType = TokenType("MyToken", 2)
     val issuedTokenType: IssuedTokenType = myTokenType issuedBy issuer
 
     // Or with the built in tokens.
@@ -57,7 +57,7 @@ of it using the `of` syntax. For example:
 
 ```kotlin
     val issuer: Party = ...
-    val myTokenType = MyTokenType("TEST", 2)
+    val myTokenType = TokenType("MyToken", 2)
     val myIssuedTokenType: IssuedTokenType = myTokenType issuedBy issuer
     val tenOfMyIssuedTokenType = 10 of myIssuedTokenType
 ```
@@ -88,7 +88,7 @@ is. This can be done using the `heldBy` syntax:
     val issuer: Party = ...
     val holder: Party = ...
 
-    val myTokenType = MyTokenType("TEST", 2)
+    val myTokenType = TokenType("MyToken", 2)
     val myIssuedTokenType: IssuedTokenType = myTokenType issuedBy issuer
     val tenOfMyIssuedTokenType = 10 of myIssuedTokenType
 
@@ -412,4 +412,42 @@ Simply call at the end of your flow:
 ```kotlin
 val stx: SignedTransaction = ...
 subFlow(UpdateDistributionListFlow(stx))
+```
+
+### Creating your own subtypes of TokenType
+
+If type-safety is required or if you need to define custom properties on
+top of the `tokenIdentifier` and `fractionDigits` then it is still
+possible to create your own `TokenType` sub-type by sub-classing `TokenType`.
+
+```kotlin
+class MyTokenType(override val tokenIdentifier: String, override val fractionDigits: Int = 0) : TokenType
+```
+
+The above defined token type, allows CorDapp developers to create multiple
+instances of the token type with different identifiers, for example:
+
+* `MyTokenType("ABC") -> tokenClass: MyTokenType, tokenIdentifier: ABC`
+* `MyTokenType("XYZ") -> tokenClass: MyTokenType, tokenIdentifier: XYZ`
+
+#### Creating an instance of your new `TokenType`
+
+Create an instance of your new token type like you would a regular object.
+
+```kotlin
+    val myTokenType = MyTokenType("TEST", 2)
+```
+
+This creates a token of
+
+```kotlin
+    val tokenClass: MyTokenType
+    val tokenIdentifier: TEST
+```
+
+Similar to the above you can create `IssuedTokenType` using your new token:
+
+```kotlin
+val issuer: Party = ...
+val issuedTokenType: IssuedTokenType = myTokenType issuedBy issuer
 ```
