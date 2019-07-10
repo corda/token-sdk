@@ -79,7 +79,7 @@ list of repositories for your project:
 Now, you can add the tokens SDK dependencies to the `dependencies` block
 in each module of your CorDapp. For contract modules add:
 
-    cordaCompile "tokens_release_group:tokens-contracts:$tokens_release_version"
+    cordaCompile "$tokens_release_group:tokens-contracts:$tokens_release_version"
 
 In your workflow `build.gradle` add:
 
