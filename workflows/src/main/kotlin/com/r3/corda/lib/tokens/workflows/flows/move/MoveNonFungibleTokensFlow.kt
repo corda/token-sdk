@@ -19,10 +19,10 @@ import net.corda.core.transactions.TransactionBuilder
  * @param observerSessions optional sessions with the observer nodes, to witch the transaction will be broadcasted
  * @param queryCriteria additional criteria for token selection
  */
-class MoveNonFungibleTokensFlow<T : TokenType>
+class MoveNonFungibleTokensFlow
 @JvmOverloads
 constructor(
-        val partyAndToken: PartyAndToken<T>,
+        val partyAndToken: PartyAndToken,
         override val participantSessions: List<FlowSession>,
         override val observerSessions: List<FlowSession> = emptyList(),
         val queryCriteria: QueryCriteria?
