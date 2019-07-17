@@ -3,6 +3,7 @@ package com.r3.corda.lib.tokens.workflows.flows.move
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.flows.confidential.ConfidentialTokensFlow
+import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateMoveNonFungible
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
 import net.corda.core.flows.FlowLogic
@@ -33,6 +34,9 @@ constructor(
     @Suspendable
     override fun call(): SignedTransaction {
         val (input, output) = generateMoveNonFungible(partyAndToken, serviceHub.vaultService, queryCriteria)
+        // TODO Not pretty fix, because we decided to go with sessions approach, we need to make sure that right responders are started depending on observer/participant role
+        participantSessions.forEach { it.send(TransactionRole.PARTICIPANT) }
+        observerSessions.forEach { it.send(TransactionRole.OBSERVER) }
         val confidentialOutput = subFlow(ConfidentialTokensFlow(listOf(output), participantSessions)).single()
         return subFlow(MoveTokensFlow(input, confidentialOutput, participantSessions, observerSessions))
     }

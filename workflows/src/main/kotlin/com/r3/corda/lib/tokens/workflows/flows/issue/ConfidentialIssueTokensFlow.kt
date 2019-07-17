@@ -5,6 +5,7 @@ import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.workflows.flows.confidential.ConfidentialTokensFlow
+import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.transactions.SignedTransaction
@@ -49,6 +50,9 @@ constructor(
 
     @Suspendable
     override fun call(): SignedTransaction {
+        // TODO Not pretty fix, because we decided to go with sessions approach, we need to make sure that right responders are started depending on observer/participant role
+        participantSessions.forEach { it.send(TransactionRole.PARTICIPANT) }
+        observerSessions.forEach { it.send(TransactionRole.OBSERVER) }
         // Request new keys pairs from all proposed token holders.
         val confidentialTokens = subFlow(ConfidentialTokensFlow(tokens, participantSessions))
         // Issue tokens using the existing participantSessions.

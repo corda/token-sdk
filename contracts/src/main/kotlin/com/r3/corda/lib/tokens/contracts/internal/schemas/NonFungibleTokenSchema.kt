@@ -25,8 +25,9 @@ class PersistentNonFungibleToken(
         @Column(name = "issuer", nullable = false)
         var issuer: Party,
 
-        @Column(name = "holder", nullable = false)
-        var holder: AbstractParty,
+        @Column(name = "holder")
+        // TODO deconstruct it into owning key + nullable name
+        var holder: AbstractParty?,
 
         // The fully qualified class name of the class which implements the token tokenType.
         // This is either a fixed token or a evolvable token.
