@@ -87,14 +87,14 @@ a token that references the `EvolvableTokenType` we have to call one of the flow
 This way, the token can evolve independently to which party currently owns (some amount) of the token.
 
 
-Let's issue `NonFungibleToken` referencing `House` owned by Alice party.
+Let's issue `NonFungibleToken` referencing `House` held by Alice party.
 
 ```kotlin
     val aliceParty: Party = ...
     val issuerParty: Party = ourIdentity
     val housePtr = house.toPointer<House>()
     // Create NonFungibleToken referencing house with Alice party as an owner.
-    val houseToken: NonFungibleToken<TokenPointer<House>> = housePtr issuedBy issuerParty heldBy aliceParty
+    val houseToken: NonFungibleToken> = housePtr issuedBy issuerParty heldBy aliceParty
     subFlow(ConfidentialIssueTokens(listOf(houseToken)))
 ```
 

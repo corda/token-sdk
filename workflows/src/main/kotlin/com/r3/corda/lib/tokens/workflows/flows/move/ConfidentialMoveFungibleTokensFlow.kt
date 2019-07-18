@@ -24,10 +24,10 @@ import net.corda.core.transactions.SignedTransaction
  * @param observerSessions optional sessions with the observer nodes, to witch the transaction will be broadcasted
  * @param queryCriteria additional criteria for token selection
  */
-class ConfidentialMoveFungibleTokensFlow<T : TokenType>
+class ConfidentialMoveFungibleTokensFlow
 @JvmOverloads
 constructor(
-        val partiesAndAmounts: List<PartyAndAmount<T>>,
+        val partiesAndAmounts: List<PartyAndAmount<TokenType>>,
         val participantSessions: List<FlowSession>,
         val changeHolder: AbstractParty,
         val observerSessions: List<FlowSession> = emptyList(),
@@ -36,7 +36,7 @@ constructor(
 
     @JvmOverloads
     constructor(
-            partyAndAmount: PartyAndAmount<T>,
+            partyAndAmount: PartyAndAmount<TokenType>,
             participantSessions: List<FlowSession>,
             changeHolder: AbstractParty,
             queryCriteria: QueryCriteria? = null,

@@ -23,13 +23,13 @@ import net.corda.core.transactions.TransactionBuilder
  * Adds a set of token moves to a transaction using specific inputs and outputs.
  */
 @Suspendable
-fun <T : TokenType> addMoveTokens(
+fun addMoveTokens(
         transactionBuilder: TransactionBuilder,
-        inputs: List<StateAndRef<AbstractToken<T>>>,
-        outputs: List<AbstractToken<T>>
+        inputs: List<StateAndRef<AbstractToken>>,
+        outputs: List<AbstractToken>
 ): TransactionBuilder {
-    val outputGroups: Map<IssuedTokenType<T>, List<AbstractToken<T>>> = outputs.groupBy { it.issuedTokenType }
-    val inputGroups: Map<IssuedTokenType<T>, List<StateAndRef<AbstractToken<T>>>> = inputs.groupBy {
+    val outputGroups: Map<IssuedTokenType, List<AbstractToken>> = outputs.groupBy { it.issuedTokenType }
+    val inputGroups: Map<IssuedTokenType, List<StateAndRef<AbstractToken>>> = inputs.groupBy {
         it.state.data.issuedTokenType
     }
 
@@ -41,7 +41,7 @@ fun <T : TokenType> addMoveTokens(
         // Add a notary to the transaction.
         // TODO: Deal with notary change.
         notary = inputs.map { it.state.notary }.toSet().single()
-        outputGroups.forEach { issuedTokenType: IssuedTokenType<T>, outputStates: List<AbstractToken<T>> ->
+        outputGroups.forEach { issuedTokenType: IssuedTokenType, outputStates: List<AbstractToken> ->
             val inputGroup = inputGroups[issuedTokenType]
                     ?: throw IllegalArgumentException("No corresponding inputs for the outputs issued token type: $issuedTokenType")
             val keys = inputGroup.map { it.state.data.holder.owningKey }
@@ -74,8 +74,8 @@ fun <T : TokenType> addMoveTokens(
 @Suspendable
 fun <T : TokenType> addMoveTokens(
         transactionBuilder: TransactionBuilder,
-        input: StateAndRef<AbstractToken<T>>,
-        output: AbstractToken<T>
+        input: StateAndRef<AbstractToken>,
+        output: AbstractToken
 ): TransactionBuilder {
     return addMoveTokens(transactionBuilder = transactionBuilder, inputs = listOf(input), outputs = listOf(output))
 }
@@ -87,10 +87,10 @@ fun <T : TokenType> addMoveTokens(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addMoveFungibleTokens(
+fun addMoveFungibleTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
-        partiesAndAmounts: List<PartyAndAmount<T>>,
+        partiesAndAmounts: List<PartyAndAmount<TokenType>>,
         changeHolder: AbstractParty,
         queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
@@ -111,10 +111,10 @@ fun <T : TokenType> addMoveFungibleTokens(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addMoveFungibleTokens(
+fun addMoveFungibleTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
-        amount: Amount<T>,
+        amount: Amount<TokenType>,
         holder: AbstractParty,
         changeHolder: AbstractParty,
         queryCriteria: QueryCriteria? = null

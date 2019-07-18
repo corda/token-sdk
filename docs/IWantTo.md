@@ -130,7 +130,7 @@ is. This can be done using the `heldBy` syntax:
     // Adding a holder to an amount of a token type, creates a fungible token.
     val fungibleToken: FungibleToken<MyTokenType> = tenOfMyIssuedTokenType heldBy holder
     // Adding a holder to a token type, creates a non-fungible token.
-    val nonFungibleToken: NonFungibleToken<MyTokenType> = myIssuedTokenType heldBy holder
+    val nonFungibleToken: NonFungibleToken = myIssuedTokenType heldBy holder
 ```
 
 Once you have a `FungibleToken` or a `NonFungibleToken`, you can then go
@@ -182,7 +182,7 @@ Confidential versions additionally request that the recipients generate new keys
 ```kotlin
 // As in previous examples
 val fungibleToken: FungibleToken<MyTokenType> = ...
-val nonFungibleToken: NonFungibleToken<MyTokenType> = ...
+val nonFungibleToken: NonFungibleToken = ...
 // Start flows via RPC or as a subFlow (it starts a new session with a holder of the token!)
 // All of the below flows can take a list of observer parties.
 // Fungible
@@ -248,7 +248,7 @@ As previously confidential versions generate new identities for use in output st
 
 #### Moving tokens fungible tokens
 
-This family of flows chooses owned amount of given token from vault. If you want to provide other criteria (for example tokens that
+This family of flows chooses held amount of given token from vault. If you want to provide other criteria (for example tokens that
 come only from one issuer) use `queryCriteria`. `QueryUtilities` module provides many useful helpers i.e. `tokenAmountWithIssuerCriteria`.
 You can move many tokens to different parties in one transaction, to do so specify map of `partiesAndAmounts` respectively.
 As usual you can provide additional observers parties/sessions for finalization with other interested parties on the network.

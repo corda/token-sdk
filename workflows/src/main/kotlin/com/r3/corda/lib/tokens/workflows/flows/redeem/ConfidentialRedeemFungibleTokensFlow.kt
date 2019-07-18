@@ -19,10 +19,10 @@ import net.corda.core.transactions.SignedTransaction
  * @param observerSessions optional sessions with the observer nodes, to witch the transaction will be broadcasted
  * @param additionalQueryCriteria additional criteria for token selection
  */
-class ConfidentialRedeemFungibleTokensFlow<T : TokenType>
+class ConfidentialRedeemFungibleTokensFlow
 @JvmOverloads
 constructor(
-        val amount: Amount<T>,
+        val amount: Amount<TokenType>,
         val issuerSession: FlowSession,
         val observerSessions: List<FlowSession> = emptyList(),
         val additionalQueryCriteria: QueryCriteria? = null

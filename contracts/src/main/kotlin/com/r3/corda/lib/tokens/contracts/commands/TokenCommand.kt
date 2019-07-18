@@ -16,9 +16,8 @@ import net.corda.core.contracts.CommandData
  * [AbstractTokenContract] doesn't allow a group of tokens without an associated [Command].
  *
  * @property token the group of [IssuedTokenType]s this command should be tied to.
- * @param T the [TokenType].
  */
-abstract class TokenCommand<T : TokenType>(open val token: IssuedTokenType<T>, internal val inputIndicies: List<Int> = listOf(), internal val outputIndicies: List<Int> = listOf()) : CommandData {
+abstract class TokenCommand(open val token: IssuedTokenType, internal val inputIndicies: List<Int> = listOf(), internal val outputIndicies: List<Int> = listOf()) : CommandData {
     fun inputIndicies(): List<Int> {
         return inputIndicies.sortedBy { it }
     }
@@ -31,7 +30,7 @@ abstract class TokenCommand<T : TokenType>(open val token: IssuedTokenType<T>, i
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as TokenCommand<*>
+        other as TokenCommand
 
         if (token != other.token) return false
         if (inputIndicies != other.inputIndicies) return false
@@ -51,23 +50,30 @@ abstract class TokenCommand<T : TokenType>(open val token: IssuedTokenType<T>, i
         return "${this.javaClass.name}(token=$token, inputIndicies=$inputIndicies, outputIndicies=$outputIndicies)"
     }
 
-
 }
 
-class IssueTokenCommand<T : TokenType>(override val token: IssuedTokenType<T>, val outputs: List<Int> = listOf()) : TokenCommand<T>(outputIndicies = outputs, token = token)
+/**
+ * Used when issuing [FungibleToken]s or [NonFungibleToken]s.
+ *
+ * @property token the group of [IssuedTokenType]s this command should be tied to.
+ * @property outputs the output state indices this command applies to.
+ */
+class IssueTokenCommand(override val token: IssuedTokenType, val outputs: List<Int> = listOf()) : TokenCommand(outputIndicies = outputs, token = token)
 
 /**
  * Used when moving [FungibleToken]s or [NonFungibleToken]s.
  *
  * @property token the group of [IssuedTokenType]s this command should be tied to.
- * @param T the [TokenType].
+ * @property inputs the input state indices this command applies to.
+ * @property outputs the output state indices this command applies to.
  */
-class MoveTokenCommand<T : TokenType>(override val token: IssuedTokenType<T>, val inputs: List<Int> = listOf(), val outputs: List<Int> = listOf()) : TokenCommand<T>(inputIndicies = inputs, outputIndicies = outputs, token = token)
+class MoveTokenCommand(override val token: IssuedTokenType, val inputs: List<Int> = listOf(), val outputs: List<Int> = listOf()) : TokenCommand(inputIndicies = inputs, outputIndicies = outputs, token = token)
 
 /**
  * Used when redeeming [FungibleToken]s or [NonFungibleToken]s.
  *
  * @property token the group of [IssuedTokenType]s this command should be tied to.
- * @param T the [TokenType].
+ * @property inputs the input state indices this command applies to.
+ * @property outputs the output state indices this command applies to.
  */
-class RedeemTokenCommand<T : TokenType>(override val token: IssuedTokenType<T>, val inputs: List<Int> = listOf(), val outputs: List<Int> = listOf()) : TokenCommand<T>(inputIndicies = inputs, outputIndicies = outputs, token = token)
+class RedeemTokenCommand(override val token: IssuedTokenType, val inputs: List<Int> = listOf(), val outputs: List<Int> = listOf()) : TokenCommand(inputIndicies = inputs, outputIndicies = outputs, token = token)

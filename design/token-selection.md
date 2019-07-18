@@ -22,7 +22,7 @@ that implements the changes described in this document.
 ## Goals
 
 * Provide a **fast** in-memory token selection (in the order of 100's of selections a second)
-* Provide a way for users of tokens-sdk to group together states which are owned by the same externalId, but different public keys
+* Provide a way for users of tokens-sdk to group together states which are held by the same externalId, but different public keys
 * Provide a way for flows to "time out" and release their tokens if they take too long
 * Survive a node-restart on a best effort basis. Tokens that were previously locked by a flow should not be available for newly started flows.
 * Provide a way to combine states that have been split by a spend.

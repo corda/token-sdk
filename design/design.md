@@ -273,7 +273,7 @@ This class is for handling the issuer and holder relationship for non-fungible t
 `TokenPointer`, then the token can evolve independently of who holds it. Otherwise, the class which implements `TokenType` is in-lined into the `NonFungibleToken` and it cannot change. There is no `Amount` property in this class, as the assumption is there is only ever ONE of the `IssuedTokenType` provided. It is up to issuers to ensure that only ONE of a non-fungible token ever issued. All `TokenType`s are wrapped with an `IssuedTokenType` class to add the issuer `Party`. This is necessary so that the `NonFungibleToken` represents an agreement between the issuer and holder. In effect, the `NonFungibleToken` conveys a right for the holder to make a claim on the issuer for whatever the `TokenType` represents. This is the equivalent of **ERC-721**.
 
 ```kotlin
-open class NonFungibleToken<T : TokenType>(
+open class NonFungibleToken(
         val token: IssuedTokenType<T>,
         override val holder: AbstractParty
 ) : AbstractToken(), QueryableState {

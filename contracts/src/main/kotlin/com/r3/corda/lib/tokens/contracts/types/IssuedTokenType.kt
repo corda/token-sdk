@@ -19,15 +19,16 @@ import java.math.BigDecimal
  * the [TokenType] being a depositary receipt, the issuer is NOT the party with the ultimate liability, instead it is
  * always the party which issued the [TokenType] on ledger.
  * @property tokenType the [TokenType] to be associated with an issuing [Party].
- * @param T the [TokenType].
  */
 @CordaSerializable
-data class IssuedTokenType<out T : TokenType>(val issuer: Party, val tokenType: T) : TokenType by tokenType {
-    override fun toString(): String = "$tokenType issued by ${issuer.name.organisation}"
+data class IssuedTokenType(val issuer: Party, val tokenType: TokenType) : TokenType(tokenType.tokenIdentifier, tokenType.fractionDigits) {
+
 
     /**
      * This is required by [Amount] to determine the default fraction digits when adding or subtracting amounts of
      * [IssuedTokenType].
      */
     override val displayTokenSize: BigDecimal get() = tokenType.displayTokenSize
+
+    override fun toString(): String = "$tokenType issued by ${issuer.name.organisation}"
 }

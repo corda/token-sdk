@@ -4,10 +4,13 @@ import com.r3.corda.lib.tokens.contracts.commands.Create
 import com.r3.corda.lib.tokens.contracts.commands.Update
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
 import com.r3.corda.lib.tokens.contracts.utilities.withNotary
+import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistributionList
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionState
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
+import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.TransactionBuilder
 
 /**
@@ -60,4 +63,14 @@ fun addUpdateEvolvableToken(
             .addCommand(data = Update(), keys = signingKeys)
             .addInputState(oldStateAndRef)
             .addOutputState(state = newState, contract = oldStateAndRef.state.contract)
+}
+
+internal fun Iterable<EvolvableTokenType>.maintainers(): Set<Party> = fold(emptySet(), { acc, txState -> acc.plus(txState.maintainers) })
+
+internal fun Iterable<EvolvableTokenType>.participants(): Set<AbstractParty> = fold(emptySet(), { acc, txState -> acc.plus(txState.participants) })
+
+internal fun Iterable<EvolvableTokenType>.otherMaintainers(ourIdentity: Party) = maintainers().minus(ourIdentity)
+
+internal fun subscribersForState(state: EvolvableTokenType, serviceHub: ServiceHub): Set<Party> {
+    return getDistributionList(serviceHub, state.linearId).map { it.party }.toSet()
 }

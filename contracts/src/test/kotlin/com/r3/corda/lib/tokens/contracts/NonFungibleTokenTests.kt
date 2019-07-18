@@ -7,7 +7,6 @@ import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.contracts.utilities.withNewHolder
-import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.testing.states.PTK
 import com.r3.corda.lib.tokens.testing.states.RUB
@@ -22,9 +21,8 @@ class NonFungibleTokenTests : ContractTestCommon() {
     fun `issue non fungible token tests`() {
         transaction {
             // Start with only one output.
-            output(NonFungibleTokenContract.contractId, issuedToken heldBy ALICE.party)
+            output(NonFungibleTokenContract.contractId, issuedToken.heldBy(ALICE.party))
             attachment(issuedToken.tokenType.importAttachment(aliceServices.attachments))
-            attachment(GBP.importAttachment(aliceServices.attachments))
             // No command fails.
             tweak {
                 this `fails with` "A transaction must contain at least one command"
@@ -104,7 +102,6 @@ class NonFungibleTokenTests : ContractTestCommon() {
             input(NonFungibleTokenContract.contractId, heldByAlice)
             output(NonFungibleTokenContract.contractId, heldByBob)
             attachment(PTK.importAttachment(aliceServices.attachments))
-            attachment(USD.importAttachment(aliceServices.attachments))
 
             // Add the move command, signed by ALICE.
             tweak {
@@ -146,7 +143,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
                 val anotherIssuedTokenHeldByAlice = anotherIssuedToken heldBy ALICE.party
 
                 input(NonFungibleTokenContract.contractId, anotherIssuedTokenHeldByAlice)
-                output(NonFungibleTokenContract.contractId, anotherIssuedTokenHeldByAlice withNewHolder BOB.party)
+                output(NonFungibleTokenContract.contractId, anotherIssuedTokenHeldByAlice.withNewHolder(BOB.party))
 
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
                 // Command for the move.
@@ -208,14 +205,14 @@ class NonFungibleTokenTests : ContractTestCommon() {
             tweak {
                 command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
                 output(NonFungibleTokenContract.contractId, issuedToken heldBy ALICE.party)
-                this `fails with` "When redeeming an owned token, there must be no output."
+                this `fails with` "When redeeming a held token, there must be no output."
             }
 
             // Additional input.
             tweak {
                 command(listOf(ALICE.publicKey, ISSUER.publicKey), RedeemTokenCommand(issuedToken, inputs = listOf(0, 1)))
                 input(NonFungibleTokenContract.contractId, heldByAlice)
-                this `fails with` "When redeeming an owned token, there must be only one input."
+                this `fails with` "When redeeming a held token, there must be only one input."
             }
 
             // Two redeem groups. This technically won't happen, as you won't redeem a token from two different issuers
@@ -230,3 +227,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
         }
     }
 }
+
+
+
+

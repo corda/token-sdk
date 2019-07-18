@@ -66,7 +66,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
                 contractStateTypes = setOf(FungibleToken::class.java),
                 relevancyStatus = Vault.RelevancyStatus.RELEVANT
         )
-        val states = A.services.vaultService.queryBy<FungibleToken<*>>(query).states
+        val states = A.services.vaultService.queryBy<FungibleToken>(query).states
         assertEquals(allTokens.size, states.size)
     }
 
@@ -77,7 +77,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
                 contractStateTypes = setOf(NonFungibleToken::class.java),
                 relevancyStatus = Vault.RelevancyStatus.RELEVANT
         )
-        val states = A.services.vaultService.queryBy<NonFungibleToken<*>>(query).states
+        val states = A.services.vaultService.queryBy<NonFungibleToken>(query).states
         assertEquals(allOtherTokens.size, states.size)
     }
 
@@ -95,9 +95,9 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     @Test(timeout = 120_000)
     fun `query owned tokens by token`() {
         // Perform a custom query for GBP only tokensToIssue.
-        val foo = A.services.vaultService.ownedTokensByToken(fooToken).states
+        val foo = A.services.vaultService.heldTokensByToken(fooToken).states
         assertEquals(1, foo.size)
-        val bar = A.services.vaultService.ownedTokensByToken(barToken).states
+        val bar = A.services.vaultService.heldTokensByToken(barToken).states
         assertEquals(1, bar.size)
     }
 
@@ -125,7 +125,7 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
         I2.issueFungibleTokens(A, 13.GBP).getOrThrow()
         network.waitQuiescent()
         val issuerCriteria = tokenAmountWithIssuerCriteria(GBP, I2.legalIdentity())
-        val gbpI2 = A.services.vaultService.queryBy<FungibleToken<*>>(issuerCriteria).states
+        val gbpI2 = A.services.vaultService.queryBy<FungibleToken>(issuerCriteria).states
         assertEquals(1, gbpI2.size)
         val gbp = gbpI2.first().state.data.amount
         assertEquals(13.GBP issuedBy I2.legalIdentity(), gbp)
@@ -134,11 +134,11 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     @Test(timeout = 120_000)
     fun `query owned token with given issuer`() {
         // Non-fungible
-        val fooI2 = A.services.vaultService.ownedTokensByTokenIssuer(fooToken, I2.legalIdentity()).states
+        val fooI2 = A.services.vaultService.heldTokensByTokenIssuer(fooToken, I2.legalIdentity()).states
         assertEquals(0, fooI2.size)
-        val bazI = A.services.vaultService.ownedTokensByTokenIssuer(bazToken, I.legalIdentity()).states
+        val bazI = A.services.vaultService.heldTokensByTokenIssuer(bazToken, I.legalIdentity()).states
         assertEquals(0, bazI.size)
-        val bazI2 = A.services.vaultService.ownedTokensByTokenIssuer(bazToken, I2.legalIdentity()).states
+        val bazI2 = A.services.vaultService.heldTokensByTokenIssuer(bazToken, I2.legalIdentity()).states
         assertEquals(1, bazI2.size)
     }
 }

@@ -88,7 +88,7 @@ fun IdentityService.requireKnownConfidentialIdentity(party: AbstractParty): Part
 
 // Utilities for ensuring that the correct JAR which implements TokenType is added to the transaction.
 
-fun addTokenTypeJar(tokens: List<AbstractToken<*>>, transactionBuilder: TransactionBuilder) {
+fun addTokenTypeJar(tokens: List<AbstractToken>, transactionBuilder: TransactionBuilder) {
     tokens.forEach {
         // If there's no JAR hash then we don't need to do anything.
         val hash = it.tokenTypeJarHash ?: return
@@ -98,15 +98,15 @@ fun addTokenTypeJar(tokens: List<AbstractToken<*>>, transactionBuilder: Transact
     }
 }
 
-fun addTokenTypeJar(tokens: Iterable<StateAndRef<AbstractToken<*>>>, transactionBuilder: TransactionBuilder) {
+fun addTokenTypeJar(tokens: Iterable<StateAndRef<AbstractToken>>, transactionBuilder: TransactionBuilder) {
     addTokenTypeJar(tokens.map { it.state.data }, transactionBuilder)
 }
 
-fun addTokenTypeJar(changeOutput: AbstractToken<*>, transactionBuilder: TransactionBuilder) {
+fun addTokenTypeJar(changeOutput: AbstractToken, transactionBuilder: TransactionBuilder) {
     addTokenTypeJar(listOf(changeOutput), transactionBuilder)
 }
 
-fun addTokenTypeJar(input: StateAndRef<AbstractToken<*>>, transactionBuilder: TransactionBuilder) {
+fun addTokenTypeJar(input: StateAndRef<AbstractToken>, transactionBuilder: TransactionBuilder) {
     addTokenTypeJar(input.state.data, transactionBuilder)
 }
 

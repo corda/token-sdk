@@ -5,7 +5,6 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AbstractParty
-import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.TransactionBuilder
 
@@ -22,10 +21,10 @@ import net.corda.core.transactions.TransactionBuilder
  * @param queryCriteria additional criteria for token selection
  * @param changeHolder optional holder of the change outputs, it can be confidential identity, if not specified it defaults to caller's legal identity
  */
-class MoveFungibleTokensFlow<T : TokenType>
+class MoveFungibleTokensFlow
 @JvmOverloads
 constructor(
-        val partiesAndAmounts: List<PartyAndAmount<T>>,
+        val partiesAndAmounts: List<PartyAndAmount<TokenType>>,
         override val participantSessions: List<FlowSession>,
         override val observerSessions: List<FlowSession> = emptyList(),
         val queryCriteria: QueryCriteria? = null,
@@ -34,7 +33,7 @@ constructor(
 
     @JvmOverloads
     constructor(
-            partyAndAmount: PartyAndAmount<T>,
+            partyAndAmount: PartyAndAmount<TokenType>,
             queryCriteria: QueryCriteria,
             participantSessions: List<FlowSession>,
             observerSessions: List<FlowSession> = emptyList(),

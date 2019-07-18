@@ -2,7 +2,6 @@ package com.r3.corda.lib.tokens.workflows.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.internal.checkOwner
 import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer
 import com.r3.corda.lib.tokens.workflows.internal.checkSameNotary
@@ -29,7 +28,7 @@ class RedeemTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>()
         // Perform all the checks to sign the transaction.
         subFlow(object : SignTransactionFlow(otherSession) {
             override fun checkTransaction(stx: SignedTransaction) {
-                val stateAndRefsToRedeem = stx.toLedgerTransaction(serviceHub, false).inRefsOfType<AbstractToken<TokenType>>()
+                val stateAndRefsToRedeem = stx.toLedgerTransaction(serviceHub, false).inRefsOfType<AbstractToken>()
                 checkSameIssuer(stateAndRefsToRedeem, ourIdentity)
                 checkSameNotary(stateAndRefsToRedeem)
                 checkOwner(serviceHub.identityService, stateAndRefsToRedeem, otherSession.counterparty)

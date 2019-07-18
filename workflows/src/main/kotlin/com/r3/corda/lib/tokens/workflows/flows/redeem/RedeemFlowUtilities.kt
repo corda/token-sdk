@@ -12,11 +12,10 @@ import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateExitNonFungible
 import com.r3.corda.lib.tokens.workflows.utilities.addNotaryWithCheck
 import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
-import com.r3.corda.lib.tokens.workflows.utilities.ownedTokensByTokenIssuer
+import com.r3.corda.lib.tokens.workflows.utilities.heldTokensByTokenIssuer
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountWithIssuerCriteria
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.ServiceHub
@@ -28,15 +27,15 @@ import net.corda.core.transactions.TransactionBuilder
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addTokensToRedeem(
+fun addTokensToRedeem(
         transactionBuilder: TransactionBuilder,
-        inputs: List<StateAndRef<AbstractToken<T>>>,
-        changeOutput: AbstractToken<T>? = null
+        inputs: List<StateAndRef<AbstractToken>>,
+        changeOutput: AbstractToken? = null
 ): TransactionBuilder {
     checkSameIssuer(inputs, changeOutput?.issuer)
     checkSameNotary(inputs)
-    if (changeOutput != null && changeOutput is FungibleToken<T>) {
-        check(inputs.filterIsInstance<StateAndRef<FungibleToken<T>>>().sumTokenStateAndRefs() > changeOutput.amount) {
+    if (changeOutput != null && changeOutput is FungibleToken) {
+        check(inputs.filterIsInstance<StateAndRef<FungibleToken>>().sumTokenStateAndRefs() > changeOutput.amount) {
             "Change output should be less than sum of inputs."
         }
     }
@@ -67,20 +66,20 @@ fun <T : TokenType> addTokensToRedeem(
 
 
 /**
- * Redeem non-fungible [ownedToken] issued by the [issuer] and add it to the [transactionBuilder].
+ * Redeem non-fungible [heldToken] issued by the [issuer] and add it to the [transactionBuilder].
  */
 @Suspendable
 fun <T : TokenType> addNonFungibleTokensToRedeem(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
-        ownedToken: T,
+        heldToken: T,
         issuer: Party
 ): TransactionBuilder {
-    val ownedTokenStateAndRef = serviceHub.vaultService.ownedTokensByTokenIssuer(ownedToken, issuer).states
-    check(ownedTokenStateAndRef.size == 1) {
-        "Exactly one owned token of a particular type $ownedToken should be in the vault at any one time."
+    val heldTokenStateAndRef = serviceHub.vaultService.heldTokensByTokenIssuer(heldToken, issuer).states
+    check(heldTokenStateAndRef.size == 1) {
+        "Exactly one held token of a particular type $heldToken should be in the vault at any one time."
     }
-    val nonFungibleState = ownedTokenStateAndRef.first()
+    val nonFungibleState = heldTokenStateAndRef.first()
     addNotaryWithCheck(transactionBuilder, nonFungibleState.state.notary)
     generateExitNonFungible(transactionBuilder, nonFungibleState)
     return transactionBuilder
@@ -92,10 +91,10 @@ fun <T : TokenType> addNonFungibleTokensToRedeem(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addFungibleTokensToRedeem(
+fun addFungibleTokensToRedeem(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
-        amount: Amount<T>,
+        amount: Amount<TokenType>,
         issuer: Party,
         changeOwner: AbstractParty,
         additionalQueryCriteria: QueryCriteria? = null

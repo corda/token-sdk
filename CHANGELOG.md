@@ -9,7 +9,23 @@
 * The contracts module now builds against core-deterministic. The tokens
   SDK is the FIRST project with a contracts JAR compiled against Corda
   `core-deterministic`.
-* Moved `IssuedTokenType<T>._heldBy(owner: AbstractParty)` and the sister
+* `TokenType` is now a class instead of an interface. This makes it easier
+  and more secure for CorDapp developers to create their own token types
+  by simply just creating an instance of `TokenType` and supplying a 
+  `tokenIdentifier` string and a number of `fractionDigits`. The trade-off
+  with using instances of `TokenType` as opposed to sub-types of `TokenType`
+  is that type-safety is lost and you cannot define any custom properties. 
+  If type-safety is required or if you need to define custom properties on
+  top of the `tokenIdentifier` and `fractionDigits` then it is still
+  possible to create your own `TokenType` sub-type by sub-classing `TokenType`.
+* The Type parameter `T : TokenType` from `FungibleToken` and `NonFungibleToken`
+  has been removed. Here we compromise on type-safety for a more simple 
+  implementation of these classes and the flows which use them. As a consequence
+  the majority of the tokens flows now do not require the use of a type 
+  parameter. Furthermore, when querying tokens from the vault, one can 
+  only query of type `FungibleToken` or `NonFungibleToken`. To specify the
+  exact type, the `tokenClass` and `tokenIdentifier` must be specified. 
+* Moved `IssuedTokenType._heldBy(owner: AbstractParty)` and the sister
   infix function to the `workflows` module as it requires the generation
   of a `UniqueIdentifier` which is not deterministic.
 * `NonFungibleTokens` now must be passed a `UniqueIdentifier` upon creation.
@@ -26,7 +42,10 @@
   cannot change during the life of the token, thus the `TokenType` cannot
   change. However, the token can be redeemed and re-issued, thus allowing
   the `TokenType` to be changed.
-
+* Deterministic compilation of `contracts` has been enalbed for versions 
+  of Corda > 4.1 (this is due to a bug in 4.0 and 4.1 where `StatePointer`
+  was not annotated `KeepForDJVM`.
+ 
 #### Workflows
 
 * Added in memory token selection implementation. It is not currently the
@@ -43,6 +62,9 @@
     tokens flow.
 * The issue tokens flows now resolve the attachments implementing the
   specified `TokenType` and ensure it is added to the issue transaction.
+* The `EvolvableTokenType` flows have been refactored to use the same
+  design as the other tokens flows in that there is a set of inline
+  flows as well as initiating and `StartableByRPC` flows.  
 
 ### Release candidate 3
 
@@ -175,7 +197,7 @@ This release candidate is almost code complete.
 * Addition of kotlin utilities to sum amounts of `IssuedTokenType` and `TokenType`.
 * Addition of kotlin utilities to create a `NonFungibleToken` or `FungibleToken`
   from an `IssuedTokenType` and a `Party` using the following syntax:
-  `issuedTokenType ownedBy party`
+  `issuedTokenType heldBy party`
 * Addition of kotlin utilities to assign a notary to a `NonFungibleToken`
   or `FungibleToken` using the following syntax: `tokens withNotary notary`
 * Addition of utilities for summing lists of `FungibleToken`s.

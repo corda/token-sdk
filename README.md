@@ -63,7 +63,7 @@ First, add a variable for the tokens SDK version you wish to use:
 
     buildscript {
         ext {
-            tokens_release_version = '1.0-RC03'
+            tokens_release_version = '1.0'
             tokens_release_group = 'com.r3.corda.lib.tokens'
         }
     }
@@ -72,13 +72,14 @@ Second, you must add the tokens development artifactory repository to the
 list of repositories for your project:
 
     repositories {
-        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-tokens-dev' }
+        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-lib' }
+        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-lib-dev' }
     }
 
 Now, you can add the tokens SDK dependencies to the `dependencies` block
 in each module of your CorDapp. For contract modules add:
 
-    cordaCompile "tokens_release_group:tokens-contracts:$tokens_release_version"
+    cordaCompile "$tokens_release_group:tokens-contracts:$tokens_release_version"
 
 In your workflow `build.gradle` add:
 

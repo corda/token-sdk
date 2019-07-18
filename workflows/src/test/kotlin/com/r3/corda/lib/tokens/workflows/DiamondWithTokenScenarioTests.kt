@@ -1,7 +1,6 @@
 package com.r3.corda.lib.tokens.workflows
 
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
-import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.testing.states.DiamondGradingReport
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
@@ -77,7 +76,7 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
 
         // STEP 06: Charlie redeems the token with Denise
         // This should exit the holdable token
-        val charlieDiamond = moveTokenToCharlieTx.tx.outputsOfType<NonFungibleToken<TokenPointer<DiamondGradingReport>>>().first()
+        val charlieDiamond = moveTokenToCharlieTx.tx.outputsOfType<NonFungibleToken>().first()
         val redeemDiamondTx = charlie.redeemTokens(charlieDiamond.token.tokenType, denise).getOrThrow(Duration.ofSeconds(5))
         assertHasTransaction(redeemDiamondTx, charlie, denise)
         assertNotHasTransaction(redeemDiamondTx, gic, alice, bob)
@@ -95,9 +94,9 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
         assertNotHasStateAndRef(oldDiamond, gic, denise, bob, charlie)
 
         // No one has nonfungible (discrete) tokens
-        assertNotHasStateAndRef(issueTokenTx.singleOutput<NonFungibleToken<TokenPointer<DiamondGradingReport>>>(), gic, denise, alice, bob, charlie)
-        assertNotHasStateAndRef(moveTokenToBobTx.singleOutput<NonFungibleToken<TokenPointer<DiamondGradingReport>>>(), gic, denise, alice, bob, charlie)
-        assertNotHasStateAndRef(moveTokenToCharlieTx.singleOutput<NonFungibleToken<TokenPointer<DiamondGradingReport>>>(), gic, denise, alice, bob, charlie)
+        assertNotHasStateAndRef(issueTokenTx.singleOutput<NonFungibleToken>(), gic, denise, alice, bob, charlie)
+        assertNotHasStateAndRef(moveTokenToBobTx.singleOutput<NonFungibleToken>(), gic, denise, alice, bob, charlie)
+        assertNotHasStateAndRef(moveTokenToCharlieTx.singleOutput<NonFungibleToken>(), gic, denise, alice, bob, charlie)
     }
 
     /**

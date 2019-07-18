@@ -27,51 +27,51 @@ inline fun <reified T : ContractState> LedgerTransaction.singleOutput() = output
  * otherwise this function will throw an [IllegalArgumentException]. If issuers differ then filter the list before using
  * this function.
  */
-fun <T : TokenType> Iterable<FungibleToken<T>>.sumTokenStatesOrThrow(): Amount<IssuedTokenType<T>> {
+fun Iterable<FungibleToken>.sumTokenStatesOrThrow(): Amount<IssuedTokenType> {
     return map { it.amount }.sumTokensOrThrow()
 }
 
-/** Sums the owned token amounts states in the list, returning null if there are none. */
-fun <T : TokenType> Iterable<FungibleToken<T>>.sumTokenStatesOrNull(): Amount<IssuedTokenType<T>>? {
+/** Sums the held token amounts states in the list, returning null if there are none. */
+fun Iterable<FungibleToken>.sumTokenStatesOrNull(): Amount<IssuedTokenType>? {
     return map { it.amount }.sumIssuedTokensOrNull()
 }
 
 /** Sums the cash states in the list, returning zero of the given currency+issuer if there are none. */
-fun <T : TokenType> Iterable<FungibleToken<T>>.sumTokenStatesOrZero(
-        token: IssuedTokenType<T>
-): Amount<IssuedTokenType<T>> {
+fun Iterable<FungibleToken>.sumTokenStatesOrZero(
+        token: IssuedTokenType
+): Amount<IssuedTokenType> {
     return map { it.amount }.sumIssuedTokensOrZero(token)
 }
 
 /** Sums the token amounts in the list of state and refs. */
-fun <T : TokenType> Iterable<StateAndRef<FungibleToken<T>>>.sumTokenStateAndRefs(): Amount<IssuedTokenType<T>> {
+fun Iterable<StateAndRef<FungibleToken>>.sumTokenStateAndRefs(): Amount<IssuedTokenType> {
     return map { it.state.data.amount }.sumTokensOrThrow()
 }
 
-/** Sums the owned token amount state and refs in the list, returning null if there are none. */
-fun <T : TokenType> Iterable<StateAndRef<FungibleToken<T>>>.sumTokenStateAndRefsOrNull(): Amount<IssuedTokenType<T>>? {
+/** Sums the held token amount state and refs in the list, returning null if there are none. */
+fun Iterable<StateAndRef<FungibleToken>>.sumTokenStateAndRefsOrNull(): Amount<IssuedTokenType>? {
     return map { it.state.data.amount }.sumIssuedTokensOrNull()
 }
 
 /**
- * Sums the owned token amounts state and refs in the list, returning zero of the given currency+issuer if there are
+ * Sums the held token amounts state and refs in the list, returning zero of the given currency+issuer if there are
  * none.
  */
-fun <T : TokenType> Iterable<StateAndRef<FungibleToken<T>>>.sumTokenStateAndRefsOrZero(
-        token: IssuedTokenType<T>
-): Amount<IssuedTokenType<T>> {
+fun Iterable<StateAndRef<FungibleToken>>.sumTokenStateAndRefsOrZero(
+        token: IssuedTokenType
+): Amount<IssuedTokenType> {
     return map { it.state.data.amount }.sumIssuedTokensOrZero(token)
 }
 
 /** Filters a list of tokens of the same type by issuer. */
-fun <T : TokenType> Iterable<FungibleToken<T>>.filterTokensByIssuer(issuer: Party): List<FungibleToken<T>> {
+fun Iterable<FungibleToken>.filterTokensByIssuer(issuer: Party): List<FungibleToken> {
     return filter { it.amount.token.issuer == issuer }
 }
 
 /** Filters a list of token state and refs with the same token type by issuer. */
-fun <T : TokenType> Iterable<StateAndRef<FungibleToken<T>>>.filterTokenStateAndRefsByIssuer(
+fun Iterable<StateAndRef<FungibleToken>>.filterTokenStateAndRefsByIssuer(
         issuer: Party
-): List<StateAndRef<FungibleToken<T>>> {
+): List<StateAndRef<FungibleToken>> {
     return filter { it.state.data.amount.token.issuer == issuer }
 }
 
@@ -85,7 +85,12 @@ internal val NULL_SECURE_HASH = SecureHash.zeroHash
  */
 fun TokenType.getAttachmentIdForGenericParam(): SecureHash? {
     val computedValue = synchronized(attachmentCache) {
-        attachmentCache.computeIfAbsent(this.javaClass) { clazz ->
+        val startingPoint = if (this is IssuedTokenType) {
+            this.tokenType.javaClass
+        } else {
+            this.javaClass
+        }
+        attachmentCache.computeIfAbsent(startingPoint) { clazz ->
             var classToSearch: Class<*> = clazz
             while (classToSearch != this.tokenClass && classToSearch != TokenPointer::class.java) {
                 classToSearch = this.tokenClass

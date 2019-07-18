@@ -3,12 +3,11 @@ package com.r3.corda.lib.tokens.workflows
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
-import com.r3.corda.lib.tokens.money.FiatCurrency
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.testing.states.Appartment
-import com.r3.corda.lib.tokens.workflows.utilities.ownedTokenAmountCriteria
-import com.r3.corda.lib.tokens.workflows.utilities.ownedTokensByToken
+import com.r3.corda.lib.tokens.workflows.utilities.heldTokenAmountCriteria
+import com.r3.corda.lib.tokens.workflows.utilities.heldTokensByToken
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountsByToken
 import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
@@ -26,7 +25,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     lateinit var B: StartedMockNode
     lateinit var I: StartedMockNode
 
-    private val fooToken = Appartment("FOO")
+    private val fooToken = Appartment()
 
     @Before
     override fun initialiseNodes() {
@@ -52,7 +51,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         val ownedStates = A.services.vaultService.tokenAmountsByToken(GBP).states
         assertThat(ownedStates).isNotEmpty()
         assertThat(ownedStates.sumTokenStateAndRefs()).isEqualTo(20.GBP issuedBy I.legalIdentity())
-        assertThat(I.services.vaultService.queryBy<FungibleToken<FiatCurrency>>(ownedTokenAmountCriteria(GBP, I.legalIdentity())).states).isEmpty()
+        assertThat(I.services.vaultService.queryBy<FungibleToken>(heldTokenAmountCriteria(GBP, I.legalIdentity())).states).isEmpty()
     }
 
     @Test
@@ -79,30 +78,30 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     fun `redeem non-fungible happy path`() {
         I.issueNonFungibleTokens(fooToken, A).getOrThrow()
         network.waitQuiescent()
-        assertThat(A.services.vaultService.ownedTokensByToken(fooToken).states).isNotEmpty()
+        assertThat(A.services.vaultService.heldTokensByToken(fooToken).states).isNotEmpty()
         A.redeemTokens(fooToken, I, null, true).getOrThrow()
-        assertThat(A.services.vaultService.ownedTokensByToken(fooToken).states).isEmpty()
-        assertThat(I.services.vaultService.ownedTokensByToken(fooToken).states).isEmpty()
+        assertThat(A.services.vaultService.heldTokensByToken(fooToken).states).isEmpty()
+        assertThat(I.services.vaultService.heldTokensByToken(fooToken).states).isEmpty()
     }
 
     @Test
     fun `redeem tokens from different issuer - non fungible`() {
         I.issueNonFungibleTokens(fooToken, A).getOrThrow()
         network.waitQuiescent()
-        assertThat(A.services.vaultService.ownedTokensByToken(fooToken).states).isNotEmpty()
+        assertThat(A.services.vaultService.heldTokensByToken(fooToken).states).isNotEmpty()
         Assertions.assertThatThrownBy {
             A.redeemTokens(fooToken, B, null, true).getOrThrow()
-        }.hasMessageContaining("Exactly one owned token of a particular type $fooToken should be in the vault at any one time.")
+        }.hasMessageContaining("Exactly one held token of a particular type $fooToken should be in the vault at any one time.")
     }
 
     @Test
     fun `non fungible two same tokens`() {
         I.issueNonFungibleTokens(fooToken, A).getOrThrow()
         I.issueNonFungibleTokens(fooToken, A).getOrThrow()
-        assertThat(A.services.vaultService.ownedTokensByToken(fooToken).states).isNotEmpty()
+        assertThat(A.services.vaultService.heldTokensByToken(fooToken).states).isNotEmpty()
         Assertions.assertThatThrownBy {
             A.redeemTokens(fooToken, B, null, true).getOrThrow()
-        }.hasMessageContaining("Exactly one owned token of a particular type $fooToken should be in the vault at any one time.")
+        }.hasMessageContaining("Exactly one held token of a particular type $fooToken should be in the vault at any one time.")
     }
 
     @Test

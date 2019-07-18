@@ -52,7 +52,7 @@ class ObserverAwareFinalityFlow private constructor(
         val participants: List<AbstractParty> = ledgerTransaction.participants
         val issuers: Set<Party> = ledgerTransaction.commands
                 .map(CommandWithParties<*>::value)
-                .filterIsInstance<RedeemTokenCommand<*>>()
+                .filterIsInstance<RedeemTokenCommand>()
                 .map { it.token.issuer }
                 .toSet()
         val wellKnownParticipantsAndIssuers: Set<Party> = participants.toWellKnownParties(serviceHub).toSet() + issuers

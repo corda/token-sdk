@@ -68,20 +68,19 @@ abstract class ContractTestCommon {
 
 /**
  * Creates a [NonFungibleToken] from an [IssuedTokenType].
- * E.g. IssuedTokenType<TokenType> -> NonFungibleToken<TokenType>.
- * This function must exist outside of the contracts module as creating a unique identifier is non deterministic.
+ * E.g. IssuedTokenType<TokenType> -> NonFungibleToken.
+ * This function must exist outside of the contracts module as creating a unique identifier is non-deterministic.
  */
-infix fun <T : TokenType> IssuedTokenType<T>.heldBy(owner: AbstractParty): NonFungibleToken<T> = _heldBy(owner)
+infix fun IssuedTokenType.heldBy(owner: AbstractParty): NonFungibleToken = _heldBy(owner)
 
-private infix fun <T : TokenType> IssuedTokenType<T>._heldBy(owner: AbstractParty): NonFungibleToken<T> {
+private infix fun IssuedTokenType._heldBy(owner: AbstractParty): NonFungibleToken {
     return NonFungibleToken(this, owner, UniqueIdentifier())
 }
 
 /** Used for importing the correct attachment associated with a specified [TokenType]. */
 fun TokenType.importAttachment(storage: MockAttachmentStorage): SecureHash {
     val hash = this.getAttachmentIdForGenericParam()
-            ?: throw IllegalStateException("Null should never be returned when testing as TokenTypes are always " +
-                    "defined in separate JARs.")
+            ?: throw IllegalStateException("Null should never be returned when testing")
     if (!storage.hasAttachment(hash)) {
         storage.importAttachment(
                 jar = this.javaClass.location.openStream(),

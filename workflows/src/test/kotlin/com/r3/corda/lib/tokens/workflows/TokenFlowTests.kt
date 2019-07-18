@@ -208,8 +208,9 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     @Test
     fun `issue to unknown anonymous party`() {
         val confidentialHolder = A.services.keyManagementService.freshKeyAndCert(A.services.myInfo.chooseIdentityAndCert(), false).party.anonymise()
+        val token = 100 of GBP issuedBy I.legalIdentity() heldBy confidentialHolder
         Assertions.assertThatThrownBy {
-            I.startFlow(IssueTokens(100.GBP issuedBy I.legalIdentity() heldBy confidentialHolder)).getOrThrow()
+            I.startFlow(IssueTokens(listOf(token))).getOrThrow()
         }.hasMessageContaining("Called flow with anonymous party that node doesn't know about. Make sure that RequestConfidentialIdentity flow is called before.")
     }
 
