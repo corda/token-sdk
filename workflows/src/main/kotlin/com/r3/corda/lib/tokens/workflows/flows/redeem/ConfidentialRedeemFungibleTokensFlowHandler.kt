@@ -2,8 +2,10 @@ package com.r3.corda.lib.tokens.workflows.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.workflows.internal.flows.confidential.RequestConfidentialIdentityFlow
+import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
+import net.corda.core.utilities.unwrap
 
 /**
  * Responder flow to [ConfidentialRedeemFungibleTokensFlow].
@@ -11,7 +13,10 @@ import net.corda.core.flows.FlowSession
 class ConfidentialRedeemFungibleTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
-        subFlow(RequestConfidentialIdentityFlow(otherSession))
+        val role = otherSession.receive<TransactionRole>().unwrap { it }
+        if (role == TransactionRole.PARTICIPANT) {
+            subFlow(RequestConfidentialIdentityFlow(otherSession))
+        }
         // Perform checks that the change owner is well known and belongs to the party that inititated the flow
         subFlow(RedeemTokensFlowHandler(otherSession))
     }

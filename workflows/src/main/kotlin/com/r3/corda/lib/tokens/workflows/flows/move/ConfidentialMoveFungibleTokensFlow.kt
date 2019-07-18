@@ -3,6 +3,7 @@ package com.r3.corda.lib.tokens.workflows.flows.move
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.flows.confidential.ConfidentialTokensFlow
+import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import net.corda.core.flows.FlowLogic
@@ -53,6 +54,9 @@ constructor(
                 changeHolder = changeHolder,
                 queryCriteria = queryCriteria
         )
+        // TODO Not pretty fix, because we decided to go with sessions approach, we need to make sure that right responders are started depending on observer/participant role
+        participantSessions.forEach { it.send(TransactionRole.PARTICIPANT) }
+        observerSessions.forEach { it.send(TransactionRole.OBSERVER) }
         val confidentialOutputs = subFlow(ConfidentialTokensFlow(outputs, participantSessions))
         return subFlow(MoveTokensFlow(inputs, confidentialOutputs, participantSessions, observerSessions))
     }

@@ -2,6 +2,7 @@ package com.r3.corda.lib.tokens.workflows.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
+import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
 import net.corda.confidential.IdentitySyncFlow
 import net.corda.core.flows.CollectSignaturesFlow
@@ -43,6 +44,8 @@ abstract class AbstractRedeemTokensFlow : FlowLogic<SignedTransaction>() {
 
     @Suspendable
     override fun call(): SignedTransaction {
+        issuerSession.send(TransactionRole.PARTICIPANT)
+        observerSessions.forEach { it.send(TransactionRole.OBSERVER) }
         val txBuilder = TransactionBuilder()
         progressTracker.currentStep = SELECTING_STATES
         generateExit(txBuilder)

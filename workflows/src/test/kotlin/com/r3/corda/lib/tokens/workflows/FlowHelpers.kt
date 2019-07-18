@@ -29,13 +29,14 @@ fun <T : EvolvableTokenType> StartedMockNode.updateEvolvableToken(old: StateAndR
 fun StartedMockNode.issueFungibleTokens(
         issueTo: StartedMockNode,
         amount: Amount<TokenType>,
-        anonymous: Boolean = true
+        anonymous: Boolean = true,
+        observers: List<Party> = emptyList()
 ): CordaFuture<SignedTransaction> {
     return transaction {
         if (anonymous) {
-            startFlow(ConfidentialIssueTokens(listOf(amount issuedBy legalIdentity() heldBy issueTo.legalIdentity()), emptyList()))
+            startFlow(ConfidentialIssueTokens(listOf(amount issuedBy legalIdentity() heldBy issueTo.legalIdentity()), observers))
         } else {
-            startFlow(IssueTokens(listOf(amount issuedBy legalIdentity() heldBy issueTo.legalIdentity()), emptyList()))
+            startFlow(IssueTokens(listOf(amount issuedBy legalIdentity() heldBy issueTo.legalIdentity()), observers))
         }
     }
 }
@@ -43,13 +44,14 @@ fun StartedMockNode.issueFungibleTokens(
 fun <T : TokenType> StartedMockNode.issueNonFungibleTokens(
         token: T,
         issueTo: StartedMockNode,
-        anonymous: Boolean = true
+        anonymous: Boolean = true,
+        observers: List<Party> = emptyList()
 ): CordaFuture<SignedTransaction> {
     return transaction {
         if (anonymous) {
-            startFlow(ConfidentialIssueTokens(listOf(token issuedBy legalIdentity() heldBy issueTo.legalIdentity()), emptyList()))
+            startFlow(ConfidentialIssueTokens(listOf(token issuedBy legalIdentity() heldBy issueTo.legalIdentity()), observers))
         } else {
-            startFlow(IssueTokens(listOf(token issuedBy legalIdentity() heldBy issueTo.legalIdentity()), emptyList()))
+            startFlow(IssueTokens(listOf(token issuedBy legalIdentity() heldBy issueTo.legalIdentity()), observers))
         }
     }
 }
@@ -57,13 +59,14 @@ fun <T : TokenType> StartedMockNode.issueNonFungibleTokens(
 fun StartedMockNode.moveFungibleTokens(
         amount: Amount<TokenType>,
         owner: StartedMockNode,
-        anonymous: Boolean = true
+        anonymous: Boolean = true,
+        observers: List<Party> = emptyList()
 ): CordaFuture<SignedTransaction> {
     return transaction {
         if (anonymous) {
-            startFlow(ConfidentialMoveFungibleTokens(PartyAndAmount(owner.legalIdentity(), amount), emptyList()))
+            startFlow(ConfidentialMoveFungibleTokens(PartyAndAmount(owner.legalIdentity(), amount), observers))
         } else {
-            startFlow(MoveFungibleTokens(PartyAndAmount(owner.legalIdentity(), amount), emptyList()))
+            startFlow(MoveFungibleTokens(PartyAndAmount(owner.legalIdentity(), amount), observers))
         }
     }
 }
@@ -71,13 +74,14 @@ fun StartedMockNode.moveFungibleTokens(
 fun <T : TokenType> StartedMockNode.moveNonFungibleTokens(
         token: T,
         owner: StartedMockNode,
-        anonymous: Boolean = true
-): CordaFuture<SignedTransaction> {
+        anonymous: Boolean = true,
+        observers: List<Party> = emptyList()
+    ): CordaFuture<SignedTransaction> {
     return transaction {
         if (anonymous) {
-            startFlow(ConfidentialMoveNonFungibleTokens(PartyAndToken(owner.legalIdentity(), token), emptyList()))
+            startFlow(ConfidentialMoveNonFungibleTokens(PartyAndToken(owner.legalIdentity(), token), observers))
         } else {
-            startFlow(MoveNonFungibleTokens(PartyAndToken(owner.legalIdentity(), token), emptyList()))
+            startFlow(MoveNonFungibleTokens(PartyAndToken(owner.legalIdentity(), token), observers))
         }
     }
 }
@@ -86,13 +90,14 @@ fun StartedMockNode.redeemTokens(
         token: TokenType,
         issuer: StartedMockNode,
         amount: Amount<TokenType>? = null,
-        anonymous: Boolean = true
+        anonymous: Boolean = true,
+        observers: List<Party> = emptyList()
 ): CordaFuture<SignedTransaction> {
     return if (anonymous && amount != null) {
-        startFlow(ConfidentialRedeemFungibleTokens(amount, issuer.legalIdentity()))
+        startFlow(ConfidentialRedeemFungibleTokens(amount, issuer.legalIdentity(), observers))
     } else if (amount == null) {
-        startFlow(RedeemNonFungibleTokens(token, issuer.legalIdentity()))
+        startFlow(RedeemNonFungibleTokens(token, issuer.legalIdentity(), observers))
     } else {
-        startFlow(RedeemFungibleTokens(amount, issuer.legalIdentity()))
+        startFlow(RedeemFungibleTokens(amount, issuer.legalIdentity(), observers))
     }
 }
