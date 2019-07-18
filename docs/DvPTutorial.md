@@ -155,7 +155,7 @@ Time to contact the counterparty to collect `GBP` states in exchange for house:
         // Initiate new flow session. If this flow is supposed to be called as inline flow, then session should have been already passed.
         val session = initiateFlow(newOwner)
         // Ask for input stateAndRefs - send notification with the amount to exchange.
-        session.send(DvPNotification(house.valuation))
+        session.send(PriceNotification(house.valuation))
         // Receive GBP states back.
         val inputs = subFlow(ReceiveStateAndRefFlow<FungibleToken<FiatCurrency>>(session))
         // Receive outputs.
@@ -220,13 +220,13 @@ The responder flow is pretty straightforward to write calling corresponding flow
         @Suspendable
         override fun call() {
             // Receive notification with house price.
-            val dvPNotification = otherSession.receive<PriceNotification>().unwrap { it }
+            val priceNotification = otherSession.receive<PriceNotification>().unwrap { it }
             // Generate fresh key, possible change outputs will belong to this key.
             val changeHolder = serviceHub.keyManagementService.freshKeyAndCert(ourIdentityAndCert, false).party.anonymise()
             // Chose state and refs to send back.
             val (inputs, outputs) = TokenSelection(serviceHub).generateMove(
                     lockId = runId.uuid,
-                    partyAndAmounts = listOf(PartyAndAmount(otherSession.counterparty, dvPNotification.amount)),
+                    partyAndAmounts = listOf(PartyAndAmount(otherSession.counterparty, priceNotification.amount)),
                     changeHolder = changeHolder
             )
             subFlow(SendStateAndRefFlow(otherSession, inputs))
