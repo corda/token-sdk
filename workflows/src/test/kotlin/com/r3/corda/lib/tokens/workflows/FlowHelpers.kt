@@ -17,13 +17,13 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.testing.node.StartedMockNode
 
 /** Create an evolvable token. */
-fun <T : EvolvableTokenType> StartedMockNode.createEvolvableToken(evolvableToken: T, notary: Party): CordaFuture<SignedTransaction> {
-    return transaction { startFlow(CreateEvolvableTokens(transactionState = evolvableToken withNotary notary)) }
+fun <T : EvolvableTokenType> StartedMockNode.createEvolvableToken(evolvableToken: T, notary: Party, observers: List<Party> = emptyList()): CordaFuture<SignedTransaction> {
+    return transaction { startFlow(CreateEvolvableTokens(transactionState = evolvableToken withNotary notary, observers = observers)) }
 }
 
 /** Update an evolvable token. */
-fun <T : EvolvableTokenType> StartedMockNode.updateEvolvableToken(old: StateAndRef<T>, new: T): CordaFuture<SignedTransaction> {
-    return transaction { startFlow(UpdateEvolvableToken(oldStateAndRef = old, newState = new)) }
+fun <T : EvolvableTokenType> StartedMockNode.updateEvolvableToken(old: StateAndRef<T>, new: T, observers: List<Party> = emptyList()): CordaFuture<SignedTransaction> {
+    return transaction { startFlow(UpdateEvolvableToken(oldStateAndRef = old, newState = new, observers = observers)) }
 }
 
 fun StartedMockNode.issueFungibleTokens(

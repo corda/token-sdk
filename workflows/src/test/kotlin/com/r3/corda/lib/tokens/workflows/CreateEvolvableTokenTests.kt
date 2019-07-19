@@ -3,6 +3,7 @@ package com.r3.corda.lib.tokens.workflows
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
 import com.r3.corda.lib.tokens.testing.states.TestEvolvableTokenType
 import com.r3.corda.lib.tokens.workflows.factories.TestEvolvableTokenTypeFactory
+import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
 import org.junit.Test
@@ -71,7 +72,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      */
     @Test
     fun `with 1 maintainer and 1 additional participant`() {
-        val token = factory.withOneMaintainerAndOneObserver()
+        val token = factory.withOneMaintainerAndOneParticipant()
 
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
@@ -93,7 +94,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      */
     @Test
     fun `with 1 maintainer and 2 additional participants`() {
-        val token = factory.withOneMaintainerAndTwoObservers()
+        val token = factory.withOneMaintainerAndTwoParticipants()
 
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
@@ -115,7 +116,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      */
     @Test
     fun `with 2 maintainers and 1 additional participant`() {
-        val token = factory.withTwoMaintainersAndOneObserver()
+        val token = factory.withTwoMaintainersAndOneParticipant()
 
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
@@ -137,7 +138,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
      */
     @Test
     fun `with 2 maintainers and 2 additional participants`() {
-        val token = factory.withTwoMaintainersAndTwoObservers()
+        val token = factory.withTwoMaintainersAndTwoParticipants()
 
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
@@ -164,5 +165,66 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         assertFails("When creating an evolvable token all maintainers must also be participants.") {
             alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         }
+    }
+
+    // Flows with observers
+    @Test
+    fun `with unrelated observer`() {
+        // denise as observer
+        val token = factory.withOneMaintainerAndOneParticipant()
+
+        val createTx = alice.createEvolvableToken(token, notaryIdentity, listOf(denise.legalIdentity())).getOrThrow()
+        val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
+
+        // Expect to have one create command with maintainer signature
+        val maintainerKeys = token.maintainers.map { it.owningKey }.toSet()
+        assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
+
+        // Alice, Charlie, Denise should record the transaction
+        assertHasTransaction(createTx, alice, charlie, denise)
+        val aliceToken = alice.services.vaultService.queryBy<TestEvolvableTokenType>().states
+        assertEquals(createdToken, aliceToken.single())
+        val charlieToken = charlie.services.vaultService.queryBy<TestEvolvableTokenType>().states
+        assertEquals(createdToken, charlieToken.single())
+        val deniseQuery = denise.services.vaultService.queryBy<TestEvolvableTokenType>().states
+        assertEquals(createdToken, deniseQuery.single())
+    }
+
+    @Test
+    fun `with observer that is participant`() {
+        val token = factory.withOneMaintainerAndOneParticipant()
+
+        val createTx = alice.createEvolvableToken(token, notaryIdentity, listOf(charlie.legalIdentity())).getOrThrow()
+        val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
+
+        // Expect to have one create command with maintainer signature
+        val maintainerKeys = token.maintainers.map { it.owningKey }.toSet()
+        assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
+
+        // Alice, Charlie, Denise should record the transaction
+        assertHasTransaction(createTx, alice, charlie)
+        val aliceToken = alice.services.vaultService.queryBy<TestEvolvableTokenType>().states
+        assertEquals(createdToken, aliceToken.single())
+        val charlieToken = charlie.services.vaultService.queryBy<TestEvolvableTokenType>().states
+        assertEquals(createdToken, charlieToken.single())
+    }
+
+    @Test
+    fun `with observer that is maintainer`() {
+        val token = factory.withOneMaintainerAndOneParticipant()
+
+        val createTx = alice.createEvolvableToken(token, notaryIdentity, listOf(alice.legalIdentity())).getOrThrow()
+        val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
+
+        // Expect to have one create command with maintainer signature
+        val maintainerKeys = token.maintainers.map { it.owningKey }.toSet()
+        assertEquals(maintainerKeys, createTx.requiredSigningKeys, "Must be signed by all maintainers")
+
+        // Alice, Charlie, Denise should record the transaction
+        assertHasTransaction(createTx, alice, charlie)
+        val aliceToken = alice.services.vaultService.queryBy<TestEvolvableTokenType>().states
+        assertEquals(createdToken, aliceToken.single())
+        val charlieToken = charlie.services.vaultService.queryBy<TestEvolvableTokenType>().states
+        assertEquals(createdToken, charlieToken.single())
     }
 }

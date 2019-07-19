@@ -3,6 +3,7 @@ package com.r3.corda.lib.tokens.workflows
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
 import com.r3.corda.lib.tokens.testing.states.TestEvolvableTokenType
 import com.r3.corda.lib.tokens.workflows.factories.TestEvolvableTokenTypeFactory
+import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
 import org.junit.Test
@@ -82,12 +83,12 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
     @Test
     fun `with 1 maintainer and 1 additional participant`() {
         // Create the token
-        val token = factory.withOneMaintainerAndOneObserver()
+        val token = factory.withOneMaintainerAndOneParticipant()
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
         // Update the token
-        val newToken = factory.withOneMaintainerAndOneObserver(token.linearId)
+        val newToken = factory.withOneMaintainerAndOneParticipant(token.linearId)
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
@@ -109,12 +110,12 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
     @Test
     fun `with 1 maintainer and 2 additional participants`() {
         // Create the token
-        val token = factory.withOneMaintainerAndTwoObservers()
+        val token = factory.withOneMaintainerAndTwoParticipants()
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
         // Update the token
-        val newToken = factory.withOneMaintainerAndTwoObservers(token.linearId)
+        val newToken = factory.withOneMaintainerAndTwoParticipants(token.linearId)
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
@@ -136,12 +137,12 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
     @Test
     fun `with 2 maintainers and 1 additional participant`() {
         // Create the token
-        val token = factory.withTwoMaintainersAndOneObserver()
+        val token = factory.withTwoMaintainersAndOneParticipant()
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
         // Update the token
-        val newToken = factory.withTwoMaintainersAndOneObserver(token.linearId)
+        val newToken = factory.withTwoMaintainersAndOneParticipant(token.linearId)
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
@@ -163,12 +164,12 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
     @Test
     fun `with 2 maintainers and 2 additional participants`() {
         // Create the token
-        val token = factory.withTwoMaintainersAndTwoObservers()
+        val token = factory.withTwoMaintainersAndTwoParticipants()
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
         // Update the token
-        val newToken = factory.withTwoMaintainersAndTwoObservers(token.linearId)
+        val newToken = factory.withTwoMaintainersAndTwoParticipants(token.linearId)
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
@@ -261,14 +262,14 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
      * Participants is a superset of maintainers.
      */
     @Test
-    fun `adding 1 observer`() {
+    fun `adding 1 participant`() {
         // Create the token
         val token = factory.withOneMaintainer()
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
         // Update the token
-        val newToken = factory.withOneMaintainerAndOneObserver(token.linearId)
+        val newToken = factory.withOneMaintainerAndOneParticipant(token.linearId)
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
@@ -288,9 +289,9 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
      * Participants is a superset of maintainers.
      */
     @Test
-    fun `removing 1 observer`() {
+    fun `removing 1 participant`() {
         // Create the token
-        val token = factory.withOneMaintainerAndOneObserver()
+        val token = factory.withOneMaintainerAndOneParticipant()
         val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
@@ -322,7 +323,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
         // Update the token
-        val newToken = factory.withOneMaintainerAndOneObserver(token.linearId, maintainer = denise.legalIdentity())
+        val newToken = factory.withOneMaintainerAndOneParticipant(token.linearId, maintainer = denise.legalIdentity())
         val updateTx = alice.updateEvolvableToken(createdToken, newToken).getOrThrow()
         val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
 
@@ -337,5 +338,79 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         assertHasTransaction(updateTx, alice, denise)
     }
 
+    // Flows with observers
+    @Test
+    fun `with unrelated observer`() {
+        // Create the token
+        val token = factory.withOneMaintainerAndOneParticipant()
+        val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
+        val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
 
+        // Update the token
+        val newToken = factory.withOneMaintainerAndOneParticipant(token.linearId)
+        val updateTx = alice.updateEvolvableToken(createdToken, newToken, listOf(denise.legalIdentity())).getOrThrow()
+        val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
+
+        // Expect to have one update command with maintainer signature
+        val expectedSigningKeys = (token.maintainers + newToken.maintainers + notaryIdentity).map { it.owningKey }.toSet()
+        assertEquals(expectedSigningKeys, updateTx.requiredSigningKeys, "Must be signed by all maintainers and the notary")
+
+        // Alice and Charlie should record the transaction
+        assertHasTransaction(updateTx, alice, charlie, denise)
+
+        val aliceToken = alice.services.vaultService.queryBy<TestEvolvableTokenType>().states
+        assertEquals(updatedToken, aliceToken.single())
+        val charlieToken = charlie.services.vaultService.queryBy<TestEvolvableTokenType>().states
+        assertEquals(updatedToken, charlieToken.single())
+        val deniseQuery = denise.services.vaultService.queryBy<TestEvolvableTokenType>().states
+        assertEquals(updatedToken, deniseQuery.single())
+    }
+
+    @Test
+    fun `with observer that is maintainer`() {
+        // Create the token
+        val token = factory.withOneMaintainerAndOneParticipant()
+        val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
+        val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
+
+        // Update the token
+        val newToken = factory.withOneMaintainerAndOneParticipant(token.linearId)
+        val updateTx = alice.updateEvolvableToken(createdToken, newToken, listOf(alice.legalIdentity())).getOrThrow()
+        val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
+
+        // Expect to have one update command with maintainer signature
+        val expectedSigningKeys = (token.maintainers + newToken.maintainers + notaryIdentity).map { it.owningKey }.toSet()
+        assertEquals(expectedSigningKeys, updateTx.requiredSigningKeys, "Must be signed by all maintainers and the notary")
+
+        // Alice and Charlie should record the transaction
+        assertHasTransaction(updateTx, alice, charlie)
+        val aliceToken = alice.services.vaultService.queryBy<TestEvolvableTokenType>().states
+        assertEquals(updatedToken, aliceToken.single())
+        val charlieToken = charlie.services.vaultService.queryBy<TestEvolvableTokenType>().states
+        assertEquals(updatedToken, charlieToken.single())
+    }
+
+    @Test
+    fun `with observer that is participant`() {
+        // Create the token
+        val token = factory.withOneMaintainerAndOneParticipant()
+        val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
+        val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
+
+        // Update the token
+        val newToken = factory.withOneMaintainerAndOneParticipant(token.linearId)
+        val updateTx = alice.updateEvolvableToken(createdToken, newToken, listOf(charlie.legalIdentity())).getOrThrow()
+        val updatedToken = updateTx.singleOutput<TestEvolvableTokenType>()
+
+        // Expect to have one update command with maintainer signature
+        val expectedSigningKeys = (token.maintainers + newToken.maintainers + notaryIdentity).map { it.owningKey }.toSet()
+        assertEquals(expectedSigningKeys, updateTx.requiredSigningKeys, "Must be signed by all maintainers and the notary")
+
+        // Alice and Charlie should record the transaction
+        assertHasTransaction(updateTx, alice, charlie)
+        val aliceToken = alice.services.vaultService.queryBy<TestEvolvableTokenType>().states
+        assertEquals(updatedToken, aliceToken.single())
+        val charlieToken = charlie.services.vaultService.queryBy<TestEvolvableTokenType>().states
+        assertEquals(updatedToken, charlieToken.single())
+    }
 }
