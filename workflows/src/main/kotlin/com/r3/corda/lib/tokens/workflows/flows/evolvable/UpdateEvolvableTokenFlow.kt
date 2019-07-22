@@ -2,9 +2,9 @@ package com.r3.corda.lib.tokens.workflows.flows.evolvable
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
+import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.CollectSignaturesFlow
-import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AbstractParty
@@ -53,10 +53,7 @@ class UpdateEvolvableTokenFlow(
         val wellKnownObserverSessions = participantSessions.filter { it.counterparty in wellKnownObservers }
         val allObserverSessions = (wellKnownObserverSessions + observerSessions).toSet()
         observerSessions.forEach { it.send(Notification(signatureRequired = false)) }
-        return subFlow(FinalityFlow(
-                transaction = stx,
-                sessions = (otherMaintainerSessions + allObserverSessions)
-        ))
+        return subFlow(ObserverAwareFinalityFlow(signedTransaction = stx, allSessions = otherMaintainerSessions + allObserverSessions))
     }
 
     // TODO Refactor it more.

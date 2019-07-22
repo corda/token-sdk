@@ -2,9 +2,9 @@ package com.r3.corda.lib.tokens.workflows.flows.evolvable
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
+import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
 import net.corda.core.contracts.TransactionState
 import net.corda.core.flows.CollectSignaturesFlow
-import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AbstractParty
@@ -45,24 +45,21 @@ constructor(
         }
 
         // Sign the transaction proposal
-        val stx: SignedTransaction = serviceHub.signInitialTransaction(transactionBuilder)
+        val ptx: SignedTransaction = serviceHub.signInitialTransaction(transactionBuilder)
 
         // Gather signatures from other maintainers
         // Check that we have sessions with all maitainers but not with ourselves
         val otherMaintainerSessions = participantSessions.filter { it.counterparty in evolvableTokens.otherMaintainers(ourIdentity) }
         otherMaintainerSessions.forEach { it.send(Notification(signatureRequired = true)) }
-        val tx = subFlow(CollectSignaturesFlow(
-                partiallySignedTx = stx,
+        val stx = subFlow(CollectSignaturesFlow(
+                partiallySignedTx = ptx,
                 sessionsToCollectFrom = otherMaintainerSessions
         ))
         // Finalise with all participants, including maintainers, participants, and subscribers (via distribution list)
         val wellKnownObserverSessions = participantSessions.filter { it.counterparty in wellKnownObservers }
         val allObserverSessions = (wellKnownObserverSessions + observerSessions).toSet()
         allObserverSessions.forEach { it.send(Notification(signatureRequired = false)) }
-        return subFlow(FinalityFlow(
-                transaction = tx,
-                sessions = (otherMaintainerSessions + allObserverSessions)
-        ))
+        return subFlow(ObserverAwareFinalityFlow(signedTransaction = stx, allSessions = otherMaintainerSessions + allObserverSessions))
     }
 
     private fun checkLinearIds(transactionStates: List<TransactionState<EvolvableTokenType>>) {

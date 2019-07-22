@@ -52,7 +52,7 @@ constructor(
 }
 
 @InitiatedBy(CreateEvolvableTokens::class)
-class CreateEvolvableTokensHandler(val otherSession: FlowSession) : FlowLogic<SignedTransaction>() {
+class CreateEvolvableTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() = subFlow(CreateEvolvableTokensFlowHandler(otherSession))
 }
@@ -91,7 +91,7 @@ constructor(val oldStateAndRef: StateAndRef<EvolvableTokenType>,
 }
 
 @InitiatedBy(UpdateEvolvableToken::class)
-class UpdateEvolvableTokenHandler(val otherSession: FlowSession) : FlowLogic<SignedTransaction>() {
+class UpdateEvolvableTokenHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() = subFlow(UpdateEvolvableTokenFlowHandler(otherSession))
 }
