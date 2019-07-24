@@ -9,6 +9,7 @@ import com.r3.corda.lib.tokens.testing.states.Appartment
 import com.r3.corda.lib.tokens.workflows.utilities.heldTokenAmountCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.heldTokensByToken
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountsByToken
+import net.corda.core.identity.CordaX500Name
 import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
@@ -117,5 +118,23 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         network.waitQuiescent()
         val statesAfterRedeem = B.services.vaultService.tokenAmountsByToken(GBP).states
         assertThat(statesAfterRedeem.sumTokenStateAndRefs()).isEqualTo(20.GBP issuedBy I.legalIdentity())
+    }
+
+    @Test
+    fun `redeem fungible tokens with observers`() {
+        val observer: StartedMockNode = network.createPartyNode(CordaX500Name("Observer", "London", "GB"))
+        val obs = listOf(observer.legalIdentity())
+        // Confidential issue to nodeA with observer
+        val itx = I.issueFungibleTokens(A, 100.GBP, true, obs).getOrThrow()
+        network.waitQuiescent()
+        assertHasTransaction(itx, network, observer)
+        // Confidential move to nodeB with observer
+        val mtx = A.moveFungibleTokens(50.GBP, B, true, obs).getOrThrow()
+        network.waitQuiescent()
+        assertHasTransaction(mtx, network, observer)
+        // redeem with issuer with observer
+        val rtx = B.redeemTokens(GBP, I, 30.GBP, anonymous = true, observers = obs).getOrThrow()
+        network.waitQuiescent()
+        assertHasTransaction(rtx, network, observer)
     }
 }
