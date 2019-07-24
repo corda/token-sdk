@@ -17,8 +17,8 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.TransactionBuilder
 
 @Suspendable
-fun <T : TokenType> generateMoveNonFungible(
-        partyAndToken: PartyAndToken<T>,
+fun generateMoveNonFungible(
+        partyAndToken: PartyAndToken,
         vaultService: VaultService,
         queryCriteria: QueryCriteria?
 ): Pair<StateAndRef<NonFungibleToken>, NonFungibleToken> {
@@ -37,9 +37,9 @@ fun <T : TokenType> generateMoveNonFungible(
 }
 
 @Suspendable
-fun <T : TokenType> generateMoveNonFungible(
+fun generateMoveNonFungible(
         transactionBuilder: TransactionBuilder,
-        partyAndToken: PartyAndToken<T>,
+        partyAndToken: PartyAndToken,
         vaultService: VaultService,
         queryCriteria: QueryCriteria?
 ): TransactionBuilder {

@@ -2,12 +2,22 @@ package com.r3.corda.lib.tokens.workflows.flows.rpc
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.workflows.flows.move.*
+import com.r3.corda.lib.tokens.workflows.flows.move.ConfidentialMoveFungibleTokensFlow
+import com.r3.corda.lib.tokens.workflows.flows.move.ConfidentialMoveNonFungibleTokensFlow
+import com.r3.corda.lib.tokens.workflows.flows.move.ConfidentialMoveTokensFlowHandler
+import com.r3.corda.lib.tokens.workflows.flows.move.MoveFungibleTokensFlow
+import com.r3.corda.lib.tokens.workflows.flows.move.MoveNonFungibleTokensFlow
+import com.r3.corda.lib.tokens.workflows.flows.move.MoveTokensFlowHandler
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
 import com.r3.corda.lib.tokens.workflows.utilities.sessionsForParties
 import net.corda.core.contracts.Amount
-import net.corda.core.flows.*
+import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.FlowSession
+import net.corda.core.flows.InitiatedBy
+import net.corda.core.flows.InitiatingFlow
+import net.corda.core.flows.StartableByRPC
+import net.corda.core.flows.StartableByService
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.services.vault.QueryCriteria
@@ -68,10 +78,10 @@ class MoveFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
-class MoveNonFungibleTokens<T : TokenType>
+class MoveNonFungibleTokens
 @JvmOverloads
 constructor(
-        val partyAndToken: PartyAndToken<T>,
+        val partyAndToken: PartyAndToken,
         val observers: List<Party> = emptyList(),
         val queryCriteria: QueryCriteria? = null
 ) : FlowLogic<SignedTransaction>() {
@@ -151,8 +161,8 @@ class ConfidentialMoveFungibleTokensHandler(val otherSession: FlowSession) : Flo
 @StartableByService
 @StartableByRPC
 @InitiatingFlow
-class ConfidentialMoveNonFungibleTokens<T : TokenType>(
-        val partyAndToken: PartyAndToken<T>,
+class ConfidentialMoveNonFungibleTokens(
+        val partyAndToken: PartyAndToken,
         val observers: List<Party>,
         val queryCriteria: QueryCriteria? = null
 ) : FlowLogic<SignedTransaction>() {

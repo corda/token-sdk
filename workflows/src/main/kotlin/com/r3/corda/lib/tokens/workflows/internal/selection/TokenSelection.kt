@@ -52,8 +52,8 @@ class TokenSelection(
     }
 
     /** Queries for held token amounts with the specified token to the specified requiredAmount. */
-    private fun <T : TokenType> executeQuery(
-            requiredAmount: Amount<T>,
+    private fun executeQuery(
+            requiredAmount: Amount<TokenType>,
             lockId: UUID,
             additionalCriteria: QueryCriteria,
             sorter: Sort,

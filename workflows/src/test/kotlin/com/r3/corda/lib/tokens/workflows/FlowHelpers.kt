@@ -41,8 +41,8 @@ fun StartedMockNode.issueFungibleTokens(
     }
 }
 
-fun <T : TokenType> StartedMockNode.issueNonFungibleTokens(
-        token: T,
+fun StartedMockNode.issueNonFungibleTokens(
+        token: TokenType,
         issueTo: StartedMockNode,
         anonymous: Boolean = true,
         observers: List<Party> = emptyList()
@@ -71,8 +71,8 @@ fun StartedMockNode.moveFungibleTokens(
     }
 }
 
-fun <T : TokenType> StartedMockNode.moveNonFungibleTokens(
-        token: T,
+fun StartedMockNode.moveNonFungibleTokens(
+        token: TokenType,
         owner: StartedMockNode,
         anonymous: Boolean = true,
         observers: List<Party> = emptyList()

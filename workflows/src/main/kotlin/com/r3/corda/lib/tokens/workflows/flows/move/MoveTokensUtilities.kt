@@ -72,7 +72,7 @@ fun addMoveTokens(
  * Adds a single token move to a transaction.
  */
 @Suspendable
-fun <T : TokenType> addMoveTokens(
+fun addMoveTokens(
         transactionBuilder: TransactionBuilder,
         input: StateAndRef<AbstractToken>,
         output: AbstractToken
@@ -136,10 +136,10 @@ fun addMoveFungibleTokens(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addMoveNonFungibleTokens(
+fun addMoveNonFungibleTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
-        token: T,
+        token: TokenType,
         holder: AbstractParty,
         queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
@@ -153,10 +153,10 @@ fun <T : TokenType> addMoveNonFungibleTokens(
  */
 @Suspendable
 @JvmOverloads
-fun <T : TokenType> addMoveNonFungibleTokens(
+fun addMoveNonFungibleTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
-        partyAndToken: PartyAndToken<T>,
+        partyAndToken: PartyAndToken,
         queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
     return generateMoveNonFungible(transactionBuilder, partyAndToken, serviceHub.vaultService, queryCriteria)

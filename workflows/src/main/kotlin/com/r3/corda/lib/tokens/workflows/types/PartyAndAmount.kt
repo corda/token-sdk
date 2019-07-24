@@ -16,4 +16,4 @@ data class PartyAndAmount<T : TokenType>(val party: AbstractParty, val amount: A
  * A simple holder for a (possibly anonymous) [AbstractParty] and a token.
  * Used in [generateMove] to define what token [T] [party] should receive.
  */
-data class PartyAndToken<T : TokenType>(val party: AbstractParty, val token: T)
+data class PartyAndToken(val party: AbstractParty, val token: TokenType)

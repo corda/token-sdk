@@ -12,8 +12,8 @@ import net.corda.core.transactions.TransactionBuilder
  * @param issuerSession session with the issuer token should be redeemed with
  * @param observerSessions optional sessions with the observer nodes, to witch the transaction will be broadcasted
  */
-class RedeemNonFungibleTokensFlow<T : TokenType>(
-        val heldToken: T,
+class RedeemNonFungibleTokensFlow(
+        val heldToken: TokenType,
         override val issuerSession: FlowSession,
         override val observerSessions: List<FlowSession>
 ) : AbstractRedeemTokensFlow() {

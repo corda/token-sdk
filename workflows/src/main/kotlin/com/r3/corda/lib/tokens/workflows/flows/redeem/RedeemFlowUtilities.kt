@@ -69,10 +69,10 @@ fun addTokensToRedeem(
  * Redeem non-fungible [heldToken] issued by the [issuer] and add it to the [transactionBuilder].
  */
 @Suspendable
-fun <T : TokenType> addNonFungibleTokensToRedeem(
+fun addNonFungibleTokensToRedeem(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
-        heldToken: T,
+        heldToken: TokenType,
         issuer: Party
 ): TransactionBuilder {
     val heldTokenStateAndRef = serviceHub.vaultService.heldTokensByTokenIssuer(heldToken, issuer).states
