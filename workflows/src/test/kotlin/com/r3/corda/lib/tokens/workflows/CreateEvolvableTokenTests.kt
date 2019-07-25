@@ -170,7 +170,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
     // Flows with observers
     @Test
     fun `with unrelated observer`() {
-        // denise as observer
+        // Denise as observer, Alice as maintainer and issuer, Charlie as participant in the evolvable state.
         val token = factory.withOneMaintainerAndOneParticipant()
 
         val createTx = alice.createEvolvableToken(token, notaryIdentity, listOf(denise.legalIdentity())).getOrThrow()
@@ -192,6 +192,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
 
     @Test
     fun `with observer that is participant`() {
+        // Charlie as observer and participant, Alice as maintainer and issuer.
         val token = factory.withOneMaintainerAndOneParticipant()
 
         val createTx = alice.createEvolvableToken(token, notaryIdentity, listOf(charlie.legalIdentity())).getOrThrow()
@@ -211,6 +212,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
 
     @Test
     fun `with observer that is maintainer`() {
+        // Charlie as participant, Alice as maintainer, issuer and observer.
         val token = factory.withOneMaintainerAndOneParticipant()
 
         val createTx = alice.createEvolvableToken(token, notaryIdentity, listOf(alice.legalIdentity())).getOrThrow()
