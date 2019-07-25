@@ -1,17 +1,17 @@
 # How do I?
 ## Create fungible and non-fungible tokens
-### Defining a `TokenType`
+### Creating an instance of the `TokenType`
 
-Two `TokenType`s already exist in the token SDK, `FiatCurrency` and
-`DigitalCurrency`. There are easy to use helpers for both, for example:
+Two `TokenType` helpers already exist in the token SDK, `FiatCurrency` and
+`DigitalCurrency`. There are easy to use utilities for both, for example:
 
 ```kotlin
-    val pounds: FiatCurrency = GBP
-    val euros: FiatCurrency = EUR
-    val bitcoin: DigitalCurrency = BTC
+    val pounds: TokenType = GBP
+    val euros: TokenType = EUR
+    val bitcoin: TokenType = BTC
 ```
 
-Creating your own is easy; just sub-class the `TokenType` interface. You 
+Creating your own tokens is easy; just create an instance of `TokenType` class. You 
 will need to specify a `tokenIdentifier` property and how many `fractionDigits` 
 amounts of this token can have. E.g.
 
@@ -22,62 +22,27 @@ amounts of this token can have. E.g.
 You can also add a `toString` override, if you like.
 
 ```kotlin
-    class MyTokenType(override val tokenIdentifier: String, override val fractionDigits: Int = 0) : TokenType
+    val myTokenType: TokenType = TokenType(tokenIdentifier = "TEST", fractionDigits = 2)
 ```
-
 
 The `tokenIdentifier` is used along with the `tokenClass` property (defined
 in `TokenType`) when serializing token types. Two properties are required,
 as with `FiatCurrency` and `DigitalCurrency`, there can be many different
 instances of one `tokenClass`, each with their own `tokenIdentifier`.
 
-The above defined token type, allows CorDapp developers to create multiple
-instances of the token type with different identifiers, for example:
-
-* `MyTokenType("ABC") -> tokenClass: MyTokenType, tokenIdentifier: ABC`
-* `MyTokenType("XYZ") -> tokenClass: MyTokenType, tokenIdentifier: XYZ`
-
-This is particularly useful for things like currencies, where there can be
-many different instances of the same type of thing. Indeed, this is how
-the `FiatCurrency` and `DigitalCurrency` classes work. However, this isn't
-always required. For cases where you'll only ever need a single instance
-of a token type you can create token types like so:
-
-```kotlin
-    object PTK : TokenType {
-        override val tokenIdentifier: String = "PTK"
-        override val fractionDigits: Int = 12
-    }
-```
-
-### Creating an instance of your new `TokenType`
-
-Create an instance of your new token type like you would a regular object.
-
-```kotlin
-    val myTokenType = MyTokenType("TEST", 2)
-```
-
-This creates a token of
-
-```kotlin
-    val tokenClass: MyTokenType
-    val tokenIdentifier: TEST
-```
-
 ### Creating an instance of an `IssuedTokenType`
 
 Create an `IssuedTokenType` as follows
 
 ```kotlin
-    // With your own token type.
+    // With your own instance of token type.
     val issuer: Party = ...
-    val myTokenType = MyTokenType("TEST", 2)
-    val issuedTokenType: IssuedTokenType<MyTokenType> = myTokenType issuedBy issuer
+    val myTokenType = TokenType("MyToken", 2)
+    val issuedTokenType: IssuedTokenType = myTokenType issuedBy issuer
 
-    // Or with the built in types.
-    val issuedGbp: IssuedTokenType<FiatCurrency> = GBP issuedBy issuer
-    val issuedGbp: IssuedTokenType<DigitalCurrency>  = BTC issuedBy issuer
+    // Or with the built in tokens.
+    val issuedGbp: IssuedTokenType = GBP issuedBy issuer
+    val issuedGbp: IssuedTokenType  = BTC issuedBy issuer
 ```
 
 The issuing party must be a `Party` as opposed to an `AbstractParty` or
@@ -92,15 +57,15 @@ of it using the `of` syntax. For example:
 
 ```kotlin
     val issuer: Party = ...
-    val myTokenType = MyTokenType("TEST", 2)
-    val myIssuedTokenType: IssuedTokenType<MyTokenType> = myTokenType issuedBy issuer
+    val myTokenType = TokenType("MyToken", 2)
+    val myIssuedTokenType: IssuedTokenType = myTokenType issuedBy issuer
     val tenOfMyIssuedTokenType = 10 of myIssuedTokenType
 ```
 
 Or:
 
 ```kotlin
-    val tenPounds: Amount<IssuedTokenType<FiatCurrency>> = 10 of GBP issuedBy issuer
+    val tenPounds: Amount<IssuedTokenType> = 10 of GBP issuedBy issuer
 ```
 
 Or:
@@ -109,7 +74,7 @@ Or:
     val tenPounds = 10.GBP issuedBy issuer
 ```
 
-If you do not need to create amounts of your token type because it is always
+If you do not need to create amounts of your token because it is always
 intended to be issued as a `NonFungibleToken` then you don't have to create
 amounts of it.
 
@@ -123,12 +88,12 @@ is. This can be done using the `heldBy` syntax:
     val issuer: Party = ...
     val holder: Party = ...
 
-    val myTokenType = MyTokenType("TEST", 2)
-    val myIssuedTokenType: IssuedTokenType<MyTokenType> = myTokenType issuedBy issuer
+    val myTokenType = TokenType("MyToken", 2)
+    val myIssuedTokenType: IssuedTokenType = myTokenType issuedBy issuer
     val tenOfMyIssuedTokenType = 10 of myIssuedTokenType
 
     // Adding a holder to an amount of a token type, creates a fungible token.
-    val fungibleToken: FungibleToken<MyTokenType> = tenOfMyIssuedTokenType heldBy holder
+    val fungibleToken: FungibleToken = tenOfMyIssuedTokenType heldBy holder
     // Adding a holder to a token type, creates a non-fungible token.
     val nonFungibleToken: NonFungibleToken = myIssuedTokenType heldBy holder
 ```
@@ -173,15 +138,15 @@ the first one will be used.
 For issue tokens we don't differentiate between fungible and non-fungible flows. Issue flows take `AbstractToken` as parameter.
 What it does internally is pretty simple, all the flows below construct an issuance transaction (no inputs, only outputs and `IssueTokenCommand`)
 and finalise it with participants and possible observers. Distribution lists get updated after finalisation.
-Call these flows for one `TokenType` at a time. If you need to do multiple token types in one transaction then create a new
-flow, calling `addIssueTokens` for each token type.
+Call these flows for one instance of `TokenType` at a time. If you need to do multiple instances of token type in one transaction then create a new
+flow, calling `addIssueTokens` for each token.
 Confidential versions additionally request that the recipients generate new keys for the output holders.
 
 **Initiating**
 
 ```kotlin
 // As in previous examples
-val fungibleToken: FungibleToken<MyTokenType> = ...
+val fungibleToken: FungibleToken = ...
 val nonFungibleToken: NonFungibleToken = ...
 // Start flows via RPC or as a subFlow (it starts a new session with a holder of the token!)
 // All of the below flows can take a list of observer parties.
@@ -242,8 +207,8 @@ how states are selected for spend. For more details see `TokenSelection`. The co
 to spend from `Vault`, generating possible change outputs, adding inputs and outputs with new holders to the transaction
 with `MoveTokenCommand`, finalisation and distribution list update. Notary is chosen based on the inputs notary. We don't support
 notary change for now.
-Call these flows for one `TokenType` at a time. If you need to do multiple token types in one transaction then create a new
-flow, calling `addMoveTokens` for each token type.
+Call these flows for one `TokenType` at a time. If you need to do multiple instances of token type in one transaction then create a new
+flow, calling `addMoveTokens` for each token.
 As previously confidential versions generate new identities for use in output states.
 
 #### Moving tokens fungible tokens
@@ -344,8 +309,8 @@ and possible change output to the issuer. Issuer is always a well known party, i
 There is additional step that synchronises any confidential identities from the states to redeem with the issuer (bear in
 mind that issuer usually isn't involved in confidential move of tokens). After that simple collect signatures and finalisation is done.
 
-Call these flows for one `TokenType` at a time. If you need to do multiple token types in one transaction then create a new
-flow, calling `addTokensToRedeem`, `addNonFungibleTokensToRedeem` or`addFungibleTokensToRedeem` for each token type 
+Call these flows for one `TokenType` at a time. If you need to do multiple instances of token type in one transaction then create a new
+flow, calling `addTokensToRedeem`, `addNonFungibleTokensToRedeem` or`addFungibleTokensToRedeem` for each token 
 (see `RedeemFlowUtilities.kt` for more documentation). All of the flows take observer parties/sessions as usual.
 
 The main difference to move flows is that only fungible redeem tokens flows have confidential versions. This is due to 
@@ -382,7 +347,6 @@ subFlow(RedeemFungibleTokensFlow(
     changeOwner = TODO(),
     observerSessions = listOf(observerSession)
 ))
-// TODO sth about query criteria
 ```
 
 _Responder flow:_ `RedeemTokensFlowHandler`
@@ -396,7 +360,7 @@ _Confidential version:_ `ConfidentialRedeemFungibleTokensFlow`,
 **Initiating**
 
 ```kotlin
-val myTokenType: MyTokenType = ...
+val myTokenType: TokenType = ...
 val issuerParty: Party = ...
 val observerParty: Party = ...
 
@@ -408,7 +372,7 @@ _Responder flow:_ `RedeemNonFungibleTokensHandler`
 **Inline**
 
 ```kotlin
-val myTokenType: MyTokenType = ...
+val myTokenType: TokenType = ...
 val issuerSession = initateFlow(issuerParty)
 val observerSession = initatieFlow(observerParty)
 subFlow(RedeemNonFungibleTokensFlow(myTokenType, listOf(issuerSession), listOf(observerSession)))
@@ -448,4 +412,42 @@ Simply call at the end of your flow:
 ```kotlin
 val stx: SignedTransaction = ...
 subFlow(UpdateDistributionListFlow(stx))
+```
+
+### Creating your own subtypes of TokenType
+
+If type-safety is required or if you need to define custom properties on
+top of the `tokenIdentifier` and `fractionDigits` then it is still
+possible to create your own `TokenType` sub-type by sub-classing `TokenType`.
+
+```kotlin
+class MyTokenType(override val tokenIdentifier: String, override val fractionDigits: Int = 0) : TokenType
+```
+
+The above defined token type, allows CorDapp developers to create multiple
+instances of the token type with different identifiers, for example:
+
+* `MyTokenType("ABC") -> tokenClass: MyTokenType, tokenIdentifier: ABC`
+* `MyTokenType("XYZ") -> tokenClass: MyTokenType, tokenIdentifier: XYZ`
+
+#### Creating an instance of your new `TokenType`
+
+Create an instance of your new token type like you would a regular object.
+
+```kotlin
+    val myTokenType = MyTokenType("TEST", 2)
+```
+
+This creates a token of
+
+```kotlin
+    val tokenClass: MyTokenType
+    val tokenIdentifier: TEST
+```
+
+Similar to the above you can create `IssuedTokenType` using your new token:
+
+```kotlin
+val issuer: Party = ...
+val issuedTokenType: IssuedTokenType = myTokenType issuedBy issuer
 ```

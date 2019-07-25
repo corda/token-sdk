@@ -1,7 +1,8 @@
 # Simple delivery versus payment tutorial
 
 ## Overview
-This section will walk you step by step through the extremely simple delivery versus payment flow using token-sdk.
+
+This section will walk you step by step through the extremely simple delivery versus payment flow using `token-sdk`.
 
 At the end of this section you will know how to:
 
@@ -38,7 +39,8 @@ data class House(
         val address: String,
         val valuation: Amount<FiatCurrency>,
         override val maintainers: List<Party>,
-        override val fractionDigits: Int = 0
+        override val fractionDigits: Int = 0,
+        override val linearId: UniqueIdentifier
 ) : EvolvableTokenType()
 ```
 
@@ -94,7 +96,7 @@ Let's issue `NonFungibleToken` referencing `House` held by Alice party.
     val issuerParty: Party = ourIdentity
     val housePtr = house.toPointer<House>()
     // Create NonFungibleToken referencing house with Alice party as an owner.
-    val houseToken: NonFungibleToken> = housePtr issuedBy issuerParty heldBy aliceParty
+    val houseToken: NonFungibleToken = housePtr issuedBy issuerParty heldBy aliceParty
     subFlow(ConfidentialIssueTokens(listOf(houseToken)))
 ```
 
@@ -120,7 +122,7 @@ After the initial setup phase let's write a simple flow that involves two partie
 ```kotlin
     @StartableByRPC
     @InitiatingFlow
-    class SellHouseFlow(val house: House, val newOwner: Party) : FlowLogic<SignedTransaction>() {
+    class SellHouseFlow(val house: House, val newHolder: Party) : FlowLogic<SignedTransaction>() {
         @Suspendable
         override fun call(): SignedTransaction {
             TODO("Implement delivery versus payment logic.")
@@ -132,10 +134,10 @@ Flow takes house to sell and new owner party. Let's define price notification to
 
 ```kotlin
     @CordaSerializable
-    data class PriceNotification(val amount: Amount<FiatCurrency>)
+    data class PriceNotification(val amount: Amount<TokenType>)
 ```
 
-Then construct transaction builder with house move to the new owner:
+Then construct transaction builder with house move to the new holder:
 
 ```kotlin
     @Suspendable
@@ -143,7 +145,7 @@ Then construct transaction builder with house move to the new owner:
         val housePtr = house.toPointer<House>()
         // We can specify preferred notary in cordapp config file, otherwise the first one from network parameters is chosen.
         val txBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
-        addMoveTokens(txBuilder, housePointer, newOwner)
+        addMoveTokens(txBuilder, housePointer, newHolder)
         ...
     }
 ```
@@ -153,13 +155,13 @@ Time to contact the counterparty to collect `GBP` states in exchange for house:
 ```kotlin
         ...
         // Initiate new flow session. If this flow is supposed to be called as inline flow, then session should have been already passed.
-        val session = initiateFlow(newOwner)
+        val session = initiateFlow(newHolder)
         // Ask for input stateAndRefs - send notification with the amount to exchange.
         session.send(PriceNotification(house.valuation))
         // Receive GBP states back.
-        val inputs = subFlow(ReceiveStateAndRefFlow<FungibleToken<FiatCurrency>>(session))
+        val inputs = subFlow(ReceiveStateAndRefFlow<FungibleToken>(session))
         // Receive outputs.
-        val outputs = session.receive<List<FungibleToken<FiatCurrency>>>().unwrap { it }
+        val outputs = session.receive<List<FungibleToken>>().unwrap { it }
         // For the future we could add some checks for inputs and outputs - that they sum up to house valuation,
         // usually we would like to implement it as part of the contract
         ...
@@ -263,3 +265,7 @@ It's sufficient for the issuer (or house state maintainer) to update that token 
 
 It will send the transaction with new updated house state to all parties on the issuer's distribution list. They will record it locally
 in their vaults. Next time `housePtr.pointer.resolve(serviceHub)` is called it will contain updated state.
+
+## Next steps
+
+[Most common tasks](IWantTo.md)
