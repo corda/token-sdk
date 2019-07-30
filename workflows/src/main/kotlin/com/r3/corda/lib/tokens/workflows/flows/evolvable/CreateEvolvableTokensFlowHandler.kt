@@ -1,15 +1,17 @@
 package com.r3.corda.lib.tokens.workflows.flows.evolvable
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlowHandler
 import net.corda.core.contracts.requireThat
-import net.corda.core.flows.*
-import net.corda.core.node.StatesToRecord
+import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.FlowSession
+import net.corda.core.flows.SignTransactionFlow
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.unwrap
 
-class CreateEvolvableTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<SignedTransaction>() {
+class CreateEvolvableTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
-    override fun call(): SignedTransaction {
+    override fun call() {
         // Receive the notification
         val notification = otherSession.receive<CreateEvolvableTokensFlow.Notification>().unwrap { it }
 
@@ -24,6 +26,6 @@ class CreateEvolvableTokensFlowHandler(val otherSession: FlowSession) : FlowLogi
         }
 
         // Resolve the creation transaction.
-        return subFlow(ReceiveFinalityFlow(otherSideSession = otherSession, statesToRecord = StatesToRecord.ONLY_RELEVANT))
+        return subFlow(ObserverAwareFinalityFlowHandler(otherSession))
     }
 }

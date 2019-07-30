@@ -21,7 +21,7 @@ class TestEvolvableTokenTypeFactory(val testSuite: JITMockNetworkTests, val main
         )
     }
 
-    fun withOneMaintainerAndOneObserver(linearId: UniqueIdentifier = UniqueIdentifier(), maintainer: Party = testSuite.identity(maintainerA), observer: Party = testSuite.identity(observerC)): TestEvolvableTokenType {
+    fun withOneMaintainerAndOneParticipant(linearId: UniqueIdentifier = UniqueIdentifier(), maintainer: Party = testSuite.identity(maintainerA), observer: Party = testSuite.identity(observerC)): TestEvolvableTokenType {
         return TestEvolvableTokenType(
                 maintainers = listOf(maintainer),
                 observers = listOf(observer),
@@ -29,7 +29,7 @@ class TestEvolvableTokenTypeFactory(val testSuite: JITMockNetworkTests, val main
         )
     }
 
-    fun withOneMaintainerAndTwoObservers(linearId: UniqueIdentifier = UniqueIdentifier(), maintainer1: Party = testSuite.identity(maintainerA), observer1: Party = testSuite.identity(observerC), observer2: Party = testSuite.identity(observerD)): TestEvolvableTokenType {
+    fun withOneMaintainerAndTwoParticipants(linearId: UniqueIdentifier = UniqueIdentifier(), maintainer1: Party = testSuite.identity(maintainerA), observer1: Party = testSuite.identity(observerC), observer2: Party = testSuite.identity(observerD)): TestEvolvableTokenType {
         return TestEvolvableTokenType(
                 maintainers = listOf(maintainer1),
                 observers = listOf(observer1, observer2),
@@ -37,7 +37,7 @@ class TestEvolvableTokenTypeFactory(val testSuite: JITMockNetworkTests, val main
         )
     }
 
-    fun withTwoMaintainersAndOneObserver(linearId: UniqueIdentifier = UniqueIdentifier(), maintainer1: Party = testSuite.identity(maintainerA), maintainer2: Party = testSuite.identity(maintainerB), observer1: Party = testSuite.identity(observerC)): TestEvolvableTokenType {
+    fun withTwoMaintainersAndOneParticipant(linearId: UniqueIdentifier = UniqueIdentifier(), maintainer1: Party = testSuite.identity(maintainerA), maintainer2: Party = testSuite.identity(maintainerB), observer1: Party = testSuite.identity(observerC)): TestEvolvableTokenType {
         return TestEvolvableTokenType(
                 maintainers = listOf(maintainer1, maintainer2),
                 observers = listOf(observer1),
@@ -45,7 +45,7 @@ class TestEvolvableTokenTypeFactory(val testSuite: JITMockNetworkTests, val main
         )
     }
 
-    fun withTwoMaintainersAndTwoObservers(linearId: UniqueIdentifier = UniqueIdentifier(), maintainer1: Party = testSuite.identity(maintainerA), maintainer2: Party = testSuite.identity(maintainerB), observer1: Party = testSuite.identity(observerC), observer2: Party = testSuite.identity(observerD)): TestEvolvableTokenType {
+    fun withTwoMaintainersAndTwoParticipants(linearId: UniqueIdentifier = UniqueIdentifier(), maintainer1: Party = testSuite.identity(maintainerA), maintainer2: Party = testSuite.identity(maintainerB), observer1: Party = testSuite.identity(observerC), observer2: Party = testSuite.identity(observerD)): TestEvolvableTokenType {
         return TestEvolvableTokenType(
                 maintainers = listOf(maintainer1, maintainer2),
                 observers = listOf(observer1, observer2),
