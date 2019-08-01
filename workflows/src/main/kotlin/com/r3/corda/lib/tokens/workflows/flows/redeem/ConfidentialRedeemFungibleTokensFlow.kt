@@ -37,7 +37,7 @@ constructor(
         return subFlow(RedeemFungibleTokensFlow(
                 amount = amount,
                 issuerSession = issuerSession,
-                changeOwner = changeOwner,
+                changeHolder = changeOwner,
                 observerSessions = observerSessions,
                 additionalQueryCriteria = additionalQueryCriteria
         ))
