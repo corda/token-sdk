@@ -30,13 +30,20 @@ class NonFungibleTokenTests : ContractTestCommon() {
             // Signed by a party other than the issuer.
             tweak {
                 command(BOB.publicKey, IssueTokenCommand(issuedToken, outputs = listOf(0)))
-                this `fails with` "The issuer must be the only signing party when a token is issued."
+                this `fails with` "The issuer must be the signing party when a token is issued."
             }
             // Non issuer signature present.
             tweak {
                 command(listOf(BOB.publicKey, BOB.publicKey), IssueTokenCommand(issuedToken, outputs = listOf(0)))
-                this `fails with` "The issuer must be the only signing party when a token is issued."
+                this `fails with` "The issuer must be the signing party when a token is issued."
             }
+
+            // Issuer and other signature present.
+            tweak {
+                command(listOf(ISSUER.publicKey, BOB.publicKey), IssueTokenCommand(issuedToken, outputs = listOf(0)))
+                verifies()
+            }
+
             // With an incorrect command.
             tweak {
                 command(BOB.publicKey, WrongCommand())
