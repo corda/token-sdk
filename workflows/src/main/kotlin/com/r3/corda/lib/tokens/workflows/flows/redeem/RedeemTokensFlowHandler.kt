@@ -10,7 +10,6 @@ import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
 import net.corda.confidential.IdentitySyncFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatedBy
 import net.corda.core.flows.SignTransactionFlow
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.unwrap
@@ -20,7 +19,6 @@ import net.corda.core.utilities.unwrap
  * [RedeemNonFungibleTokensFlow], [RedeemTokensFlow].
  */
 // Called on Issuer side.
-@InitiatedBy(RedeemTokensFlow::class)
 class RedeemTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {

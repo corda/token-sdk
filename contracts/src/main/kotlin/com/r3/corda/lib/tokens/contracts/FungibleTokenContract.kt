@@ -52,10 +52,11 @@ open class FungibleTokenContract : AbstractTokenContract<FungibleToken>() {
             // There can only be one issuer per group as the issuer is part of the token which is used to group states.
             // If there are multiple issuers for the same tokens then there will be a group for each issued token. So,
             // the line below should never fail on single().
-            val issuer: Party = this.map { it.state.data }.map(AbstractToken::issuer).toSet().single()
-            // Only the issuer should be signing the issuer command.
-            require(issueCommand.signers.singleOrNull { it == issuer.owningKey } != null) {
-                "The issuer must be the only signing party when an amount of tokens are issued."
+            val issuerKey: PublicKey = this.map { it.state.data }.map(AbstractToken::issuer).toSet().single().owningKey
+            val issueSigners: List<PublicKey> = issueCommand.signers
+            // The issuer should be signing the issue command. Notice that it can be signed by more parties.
+            require(issuerKey in issueSigners) {
+                "The issuer must be the signing party when an amount of tokens are issued."
             }
         }
 

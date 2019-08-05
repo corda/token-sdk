@@ -5,6 +5,7 @@ import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.internal.uncheckedCast
+import java.security.PublicKey
 
 /**
  * See kdoc for [FungibleTokenContract].
@@ -26,11 +27,11 @@ class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>() {
         require(inputs.isEmpty()) { "When issuing non fungible tokens, there cannot be any input states." }
         require(outputs.size == 1) { "When issuing non fungible tokens, there must be a single output state." }
         val output = outputs.single()
-        // There can only be one issuer per group as the issuer is part of the token which is used to group states.
-        // If there are multiple issuers for the same tokens then there will be a group for each issued token. So,
-        // the line below should never fail on single().
-        require(issueCommand.signers.singleOrNull { it == output.state.data.issuer.owningKey } != null) {
-            "The issuer must be the only signing party when a token is issued."
+        val issuerKey: PublicKey = output.state.data.issuer.owningKey
+        val issueSigners: List<PublicKey> = issueCommand.signers
+        // The issuer should be signing the issue command. Notice that it can be signed by more parties.
+        require(issuerKey in issueSigners) {
+            "The issuer must be the signing party when a token is issued."
         }
     }
 
