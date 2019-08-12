@@ -5,10 +5,7 @@ import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStatesOrZero
-import net.corda.core.contracts.Amount
-import net.corda.core.contracts.Attachment
-import net.corda.core.contracts.CommandWithParties
-import net.corda.core.identity.Party
+import net.corda.core.contracts.*
 import net.corda.core.internal.uncheckedCast
 import java.security.PublicKey
 
@@ -36,7 +33,8 @@ open class FungibleTokenContract : AbstractTokenContract<FungibleToken>() {
             issueCommand: CommandWithParties<TokenCommand>,
             inputs: List<IndexedState<FungibleToken>>,
             outputs: List<IndexedState<FungibleToken>>,
-            attachments: List<Attachment>
+            attachments: List<Attachment>,
+            references: List<StateAndRef<ContractState>>
     ) {
         val issuedToken: IssuedTokenType = issueCommand.value.token
         require(inputs.isEmpty()) { "When issuing tokens, there cannot be any input states." }
@@ -66,7 +64,8 @@ open class FungibleTokenContract : AbstractTokenContract<FungibleToken>() {
             moveCommands: List<CommandWithParties<TokenCommand>>,
             inputs: List<IndexedState<FungibleToken>>,
             outputs: List<IndexedState<FungibleToken>>,
-            attachments: List<Attachment>
+            attachments: List<Attachment>,
+            references: List<StateAndRef<ContractState>>
     ) {
         // Commands are grouped by Token Type, so we just need a token reference.
         val issuedToken: IssuedTokenType = moveCommands.first().value.token
@@ -92,15 +91,14 @@ open class FungibleTokenContract : AbstractTokenContract<FungibleToken>() {
         require(signers.containsAll(inputOwningKeys)) {
             "Required signers does not contain all the current owners of the tokens being moved"
         }
-
-
     }
 
     override fun verifyRedeem(
             redeemCommand: CommandWithParties<TokenCommand>,
             inputs: List<IndexedState<FungibleToken>>,
             outputs: List<IndexedState<FungibleToken>>,
-            attachments: List<Attachment>
+            attachments: List<Attachment>,
+            references: List<StateAndRef<ContractState>>
     ) {
         val issuedToken: IssuedTokenType = redeemCommand.value.token
         // There can be at most one output treated as a change paid back to the owner. Issuer is used to group states,

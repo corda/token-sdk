@@ -36,20 +36,24 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
             commands: List<CommandWithParties<TokenCommand>>,
             inputs: List<IndexedState<AT>>,
             outputs: List<IndexedState<AT>>,
-            attachments: List<Attachment>
+            attachments: List<Attachment>,
+            references: List<StateAndRef<ContractState>>
     ) {
         // Get the JAR which implements the TokenType for this group.
-        val jarHash: SecureHash? = verifyAllTokensUseSameTypeJar(inputs = inputs.map { it.state.data }, outputs = outputs.map { it.state.data })
+        val jarHash: SecureHash? = verifyAllTokensUseSameTypeJar(
+                inputs = inputs.map { it.state.data },
+                outputs = outputs.map { it.state.data }
+        )
         // This group involves a custom TokenType, so we need to check the correct JAR is attached.
         jarHash?.let { verifyTypeJarPresentInTransaction(jar = jarHash, attachments = attachments) }
         when (commands.first().value) {
             //verify the type jar presence and correctness
             // Issuances should only contain one issue command.
-            is IssueTokenCommand -> verifyIssue(commands.single(), inputs, outputs, attachments)
+            is IssueTokenCommand -> verifyIssue(commands.single(), inputs, outputs, attachments, references)
             // Moves may contain more than one move command.
-            is MoveTokenCommand -> verifyMove(commands, inputs, outputs, attachments)
+            is MoveTokenCommand -> verifyMove(commands, inputs, outputs, attachments, references)
             // Redeems must only contain one redeem command.
-            is RedeemTokenCommand -> verifyRedeem(commands.single(), inputs, outputs, attachments)
+            is RedeemTokenCommand -> verifyRedeem(commands.single(), inputs, outputs, attachments, references)
         }
     }
 
@@ -57,21 +61,39 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
      * Provide custom logic for handling issuance of a token. With issuances, the assumption is that only one issuer
      * will be involved in any one issuance, therefore there will only be one [IssueTokenCommand] per group.
      */
-    abstract fun verifyIssue(issueCommand: CommandWithParties<TokenCommand>, inputs: List<IndexedState<AT>>, outputs: List<IndexedState<AT>>, attachments: List<Attachment>)
+    abstract fun verifyIssue(
+            issueCommand: CommandWithParties<TokenCommand>,
+            inputs: List<IndexedState<AT>>,
+            outputs: List<IndexedState<AT>>,
+            attachments: List<Attachment>,
+            references: List<StateAndRef<ContractState>>
+    )
 
     /**
      * Provide custom logic for handling the moving of a token. More than one move command can be supplied because
      * multiple parties may need to move the same [IssuedTokenType] in one atomic transaction. Each party adds their
      * own command with the required public keys for the tokens they are moving.
      */
-    abstract fun verifyMove(moveCommands: List<CommandWithParties<TokenCommand>>, inputs: List<IndexedState<AT>>, outputs: List<IndexedState<AT>>, attachments: List<Attachment>)
+    abstract fun verifyMove(
+            moveCommands: List<CommandWithParties<TokenCommand>>,
+            inputs: List<IndexedState<AT>>,
+            outputs: List<IndexedState<AT>>,
+            attachments: List<Attachment>,
+            references: List<StateAndRef<ContractState>>
+    )
 
     /**
      * Provide custom logic for handling the redemption of a token. There is an assumption in that only one issuer will
      * be involved in a single redemption transaction, therefore there will only be one [RedeemTokenCommand] per
      * group of [IssuedTokenType]s.
      */
-    abstract fun verifyRedeem(redeemCommand: CommandWithParties<TokenCommand>, inputs: List<IndexedState<AT>>, outputs: List<IndexedState<AT>>, attachments: List<Attachment>)
+    abstract fun verifyRedeem(
+            redeemCommand: CommandWithParties<TokenCommand>,
+            inputs: List<IndexedState<AT>>,
+            outputs: List<IndexedState<AT>>,
+            attachments: List<Attachment>,
+            references: List<StateAndRef<ContractState>>
+    )
 
     final override fun verify(tx: LedgerTransaction) {
         // Group token amounts by token type. We need to do this because tokens of different types need to be
@@ -100,7 +122,7 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
                         "TokenCommand type per group! For example: You cannot map an Issue AND a Move command " +
                         "to one group of tokens in a transaction."
             }
-            dispatchOnCommand(commands, group.inputs, group.outputs, tx.attachments)
+            dispatchOnCommand(commands, group.inputs, group.outputs, tx.attachments, tx.references)
         }
 
 
@@ -113,7 +135,9 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
     }
 
     private fun groupMatchesCommand(it: CommandWithParties<TokenCommand>, group: IndexedInOutGroup<AbstractToken, TokenInfo>): Boolean {
-        return it.value.token == group.groupingKey.issuedTokenType && it.value.inputIndicies() == group.inputIndicies && it.value.outputIndicies() == group.outputIndicies
+        return it.value.token == group.groupingKey.issuedTokenType
+                && it.value.inputIndicies() == group.inputIndicies
+                && it.value.outputIndicies() == group.outputIndicies
 
     }
 
@@ -169,11 +193,14 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
     }
 
 
-    data class IndexedInOutGroup<out T : ContractState, out K : Any>(val inputs: List<IndexedState<T>>, val outputs: List<IndexedState<T>>, val groupingKey: K) {
+    data class IndexedInOutGroup<out T : ContractState, out K : Any>(
+            val inputs: List<IndexedState<T>>,
+            val outputs: List<IndexedState<T>>,
+            val groupingKey: K
+    ) {
         val inputIndicies = inputs.map { it.index }.sortedBy { it }
         val outputIndicies = outputs.map { it.index }.sortedBy { it }
     }
 
     data class IndexedState<out T : ContractState>(val state: TransactionState<T>, val index: Int)
-
 }
