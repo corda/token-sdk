@@ -4,6 +4,8 @@ import com.r3.corda.lib.tokens.contracts.commands.TokenCommand
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.CommandWithParties
+import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.internal.uncheckedCast
 import java.security.PublicKey
 
@@ -22,7 +24,8 @@ class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>() {
             issueCommand: CommandWithParties<TokenCommand>,
             inputs: List<IndexedState<NonFungibleToken>>,
             outputs: List<IndexedState<NonFungibleToken>>,
-            attachments: List<Attachment>
+            attachments: List<Attachment>,
+            references: List<StateAndRef<ContractState>>
     ) {
         require(inputs.isEmpty()) { "When issuing non fungible tokens, there cannot be any input states." }
         require(outputs.size == 1) { "When issuing non fungible tokens, there must be a single output state." }
@@ -43,7 +46,8 @@ class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>() {
             moveCommands: List<CommandWithParties<TokenCommand>>,
             inputs: List<IndexedState<NonFungibleToken>>,
             outputs: List<IndexedState<NonFungibleToken>>,
-            attachments: List<Attachment>
+            attachments: List<Attachment>,
+            references: List<StateAndRef<ContractState>>
     ) {
         // There must be inputs and outputs present.
         require(inputs.isNotEmpty()) { "When moving a non fungible token, there must be one input state present." }
@@ -67,7 +71,8 @@ class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>() {
             redeemCommand: CommandWithParties<TokenCommand>,
             inputs: List<IndexedState<NonFungibleToken>>,
             outputs: List<IndexedState<NonFungibleToken>>,
-            attachments: List<Attachment>
+            attachments: List<Attachment>,
+            references: List<StateAndRef<ContractState>>
     ) {
         // There must be inputs and outputs present.
         require(outputs.isEmpty()) { "When redeeming a held token, there must be no output." }
