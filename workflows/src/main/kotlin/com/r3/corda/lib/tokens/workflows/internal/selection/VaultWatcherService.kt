@@ -2,7 +2,8 @@ package com.r3.corda.lib.tokens.workflows.internal.selection
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
-import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
+import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.contracts.utilities.withoutIssuer
 import com.r3.corda.lib.tokens.workflows.utilities.sortByStateRefAscending
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
@@ -16,12 +17,21 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.utilities.contextLogger
 import rx.Observable
+import java.security.PublicKey
 import java.time.Duration
-import java.util.concurrent.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentMap
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 
 val UNLOCKER: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 const val PLACE_HOLDER: String = "THIS_IS_A_PLACE_HOLDER"
 
+/**
+ * TODO
+ */
+// TODO is this constructor with tokenObserver only for test purposes?
 @CordaService
 class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSerializeAsToken() {
 
@@ -30,6 +40,9 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
     }
 
     private val cache: ConcurrentMap<TokenIndex, TokenBucket> = ConcurrentHashMap()
+    // TODO for now not used, add some reasonable default - stop listening print massive error; Figure out sensible default
+    //    5% of heap, your heap needs to be min 8GB?
+    private var cacheSize: Int = 1024
 
     constructor(appServiceHub: AppServiceHub) : this(getObservableFromAppServiceHub(appServiceHub))
 
@@ -38,19 +51,16 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
 
         private fun getObservableFromAppServiceHub(appServiceHub: AppServiceHub): TokenObserver {
             val config = appServiceHub.cordappProvider.getAppContext().config
+            val configOptions = InMemorySelectionConfig.parse(config)
+            // TODO cacheSize = configOptions.cacheSize
 
-            val indexingType = try {
-                IndexingType.valueOf(config.get("ownerIndexingStrategy").toString())
-            } catch (e: Exception) {
-                IndexingType.PUBLIC_KEY
-            }
-
-            val ownerProvider: ((StateAndRef<FungibleToken>, AppServiceHub) -> Any) = if (indexingType == IndexingType.PUBLIC_KEY) {
+            val ownerProvider: ((StateAndRef<FungibleToken>, AppServiceHub) -> Any) = if (configOptions.indexingStrategy == IndexingType.PUBLIC_KEY) {
                 { stateAndRef, _ ->
                     stateAndRef.state.data.holder.owningKey
                 }
             } else {
                 { _, _ ->
+                    // TODO implement external id indexing
                     throw IllegalStateException("Only IndexingType.PUBLIC_KEY available on Corda V4")
                 }
             }
@@ -82,7 +92,6 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
 
     }
 
-
     //owner -> tokenClass -> tokenIdentifier -> List
     init {
         tokenObserver?.initialValues?.forEach(::addTokenToCache)
@@ -104,6 +113,7 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
     }
 
     private fun addTokenToCache(stateAndRef: StateAndRef<FungibleToken>) {
+        // TODO after some cache size is reached, stop listening to new events and print massive warning & switch to database selection on this event
         val token = stateAndRef.state.data
 
         val (owner, type, typeId) = processToken(token)
@@ -124,35 +134,43 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
         }
     }
 
+    // TODO Improve type safety for this method
     @Suspendable
     fun selectTokens(
             owner: Any,
-            amountRequested: Amount<IssuedTokenType>,
+            requiredAmount: Amount<TokenType>,
             predicate: ((StateAndRef<FungibleToken>) -> Boolean) = { true },
             allowShortfall: Boolean = false,
             autoUnlockDelay: Duration = Duration.ofMinutes(5),
             selectionId: String
     ): List<StateAndRef<FungibleToken>> {
-        val set = getTokenBucket(owner, amountRequested.token.tokenType.tokenClass, amountRequested.token.tokenType.tokenIdentifier)
+        // TODO terrible hack for making it work for now, refactor
+        val buckets = if (owner is List<*>) {
+            owner.map { getTokenBucket(it as PublicKey, requiredAmount.token.tokenClass, requiredAmount.token.tokenIdentifier) }
+        } else {
+            listOf(getTokenBucket(owner, requiredAmount.token.tokenClass, requiredAmount.token.tokenIdentifier))
+        }
         val lockedTokens = mutableListOf<StateAndRef<FungibleToken>>()
-        var amountLocked: Amount<IssuedTokenType> = amountRequested.copy(quantity = 0)
-        for (tokenStateAndRef in set.keys) {
-            //does the token satisfy the (optional) predicate?
-            if (amountRequested.token.issuer == tokenStateAndRef.state.data.amount.token.issuer && predicate.invoke(tokenStateAndRef)) {
-                //if so, race to lock the token, expected oldValue = PLACE_HOLDER
-                if (set.replace(tokenStateAndRef, PLACE_HOLDER, selectionId)) {
-                    //we won the race to lock this token
-                    lockedTokens.add(tokenStateAndRef)
-                    val token = tokenStateAndRef.state.data
-                    amountLocked += uncheckedCast(token.amount)
-                    if (amountLocked >= amountRequested) {
-                        break
+        var amountLocked: Amount<TokenType> = requiredAmount.copy(quantity = 0)
+        for (set in buckets) {
+            for (tokenStateAndRef in set.keys) {
+                // Does the token satisfy the (optional) predicate eg. issuer?
+                if (predicate.invoke(tokenStateAndRef)) {
+                    // if so, race to lock the token, expected oldValue = PLACE_HOLDER
+                    if (set.replace(tokenStateAndRef, PLACE_HOLDER, selectionId)) {
+                        // we won the race to lock this token
+                        lockedTokens.add(tokenStateAndRef)
+                        val token = tokenStateAndRef.state.data
+                        amountLocked += uncheckedCast(token.amount.withoutIssuer()) // TODO
+                        if (amountLocked >= requiredAmount) {
+                            break
+                        }
                     }
                 }
             }
         }
-        if (!allowShortfall && amountLocked < amountRequested) {
-            throw InsufficientBalanceException("Could not find enough tokens to satisfy token request")
+        if (!allowShortfall && amountLocked < requiredAmount) {
+            throw InsufficientBalanceException("Insufficient spendable states identified for $requiredAmount.")
         }
 
         UNLOCKER.schedule({

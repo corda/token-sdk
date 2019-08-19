@@ -2,10 +2,10 @@ package com.r3.corda.lib.tokens.workflows.flows.move
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.workflows.internal.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AbstractParty
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.TransactionBuilder
 
 /**
@@ -27,18 +27,18 @@ constructor(
         val partiesAndAmounts: List<PartyAndAmount<TokenType>>,
         override val participantSessions: List<FlowSession>,
         override val observerSessions: List<FlowSession> = emptyList(),
-        val queryCriteria: QueryCriteria? = null,
+        val queryBy: TokenQueryBy? = null,
         val changeHolder: AbstractParty? = null
 ) : AbstractMoveTokensFlow() {
 
     @JvmOverloads
     constructor(
             partyAndAmount: PartyAndAmount<TokenType>,
-            queryCriteria: QueryCriteria,
             participantSessions: List<FlowSession>,
             observerSessions: List<FlowSession> = emptyList(),
+            queryBy: TokenQueryBy? = null,
             changeHolder: AbstractParty? = null
-    ) : this(listOf(partyAndAmount), participantSessions, observerSessions, queryCriteria, changeHolder)
+    ) : this(listOf(partyAndAmount), participantSessions, observerSessions, queryBy, changeHolder)
 
     @Suspendable
     override fun addMove(transactionBuilder: TransactionBuilder) {
@@ -47,7 +47,7 @@ constructor(
                 serviceHub = serviceHub,
                 partiesAndAmounts = partiesAndAmounts,
                 changeHolder = changeHolder ?: ourIdentity,
-                queryCriteria = queryCriteria
+                queryBy = queryBy
         )
     }
 }

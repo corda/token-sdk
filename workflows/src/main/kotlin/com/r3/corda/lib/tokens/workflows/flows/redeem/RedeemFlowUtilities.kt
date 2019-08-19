@@ -8,7 +8,12 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer
 import com.r3.corda.lib.tokens.workflows.internal.checkSameNotary
+import com.r3.corda.lib.tokens.workflows.internal.selection.ConfigSelection
+import com.r3.corda.lib.tokens.workflows.internal.selection.LocalTokenSelector
+import com.r3.corda.lib.tokens.workflows.internal.selection.Selector
+import com.r3.corda.lib.tokens.workflows.internal.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
+import com.r3.corda.lib.tokens.workflows.internal.selection.VaultWatcherService
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateExitNonFungible
 import com.r3.corda.lib.tokens.workflows.utilities.addNotaryWithCheck
 import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
@@ -19,7 +24,6 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.ServiceHub
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.TransactionBuilder
 
 /**
@@ -87,7 +91,7 @@ fun addNonFungibleTokensToRedeem(
 
 /**
  * Redeem amount of certain type of the token issued by [issuer]. Pay possible change to the [changeOwner] - it can be confidential identity.
- * Additional query criteria can be provided using [additionalQueryCriteria].
+ * Additional query criteria can be provided using [queryBy].
  */
 @Suspendable
 @JvmOverloads
@@ -95,22 +99,18 @@ fun addFungibleTokensToRedeem(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         amount: Amount<TokenType>,
-        issuer: Party,
         changeOwner: AbstractParty,
-        additionalQueryCriteria: QueryCriteria? = null
+        queryBy: TokenQueryBy? = null
 ): TransactionBuilder {
-    val tokenSelection = TokenSelection(serviceHub)
-    val baseCriteria = tokenAmountWithIssuerCriteria(amount.token, issuer)
-    val queryCriteria = additionalQueryCriteria?.let { baseCriteria.and(it) } ?: baseCriteria
-    val fungibleStates = tokenSelection.attemptSpend(amount, transactionBuilder.lockId, queryCriteria) // TODO We shouldn't expose lockId in this function
+    val selector: Selector = ConfigSelection.getPreferredSelection(serviceHub)
+    val fungibleStates = selector.selectTokens(transactionBuilder.lockId, amount, queryBy)
     checkSameNotary(fungibleStates)
     check(fungibleStates.isNotEmpty()) {
         "Received empty list of states to redeem."
     }
     val notary = fungibleStates.first().state.notary
     addNotaryWithCheck(transactionBuilder, notary)
-    // TODO unify it, probably need to move generate exit to redeem utils
-    val (exitStates, change) = tokenSelection.generateExit(
+    val (exitStates, change) = selector.generateExit(
             exitStates = fungibleStates,
             amount = amount,
             changeOwner = changeOwner
