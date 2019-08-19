@@ -25,7 +25,7 @@ constructor(
         val partyAndToken: PartyAndToken,
         override val participantSessions: List<FlowSession>,
         override val observerSessions: List<FlowSession> = emptyList(),
-        val queryCriteria: QueryCriteria?
+        val queryCriteria: QueryCriteria? // TODO Unify API.
 ) : AbstractMoveTokensFlow() {
     @Suspendable
     override fun addMove(transactionBuilder: TransactionBuilder) {

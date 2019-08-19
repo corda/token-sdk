@@ -5,7 +5,12 @@ import com.r3.corda.lib.tokens.contracts.commands.MoveTokenCommand
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.workflows.internal.selection.ConfigSelection
+import com.r3.corda.lib.tokens.workflows.internal.selection.LocalTokenSelector
+import com.r3.corda.lib.tokens.workflows.internal.selection.Selector
+import com.r3.corda.lib.tokens.workflows.internal.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
+import com.r3.corda.lib.tokens.workflows.internal.selection.VaultWatcherService
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateMoveNonFungible
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
@@ -92,15 +97,11 @@ fun addMoveFungibleTokens(
         serviceHub: ServiceHub,
         partiesAndAmounts: List<PartyAndAmount<TokenType>>,
         changeHolder: AbstractParty,
-        queryCriteria: QueryCriteria? = null
+        queryBy: TokenQueryBy? = null
 ): TransactionBuilder {
-    val tokenSelection = TokenSelection(serviceHub)
-    val (inputs, outputs) = tokenSelection.generateMove(
-            lockId = transactionBuilder.lockId,
-            partyAndAmounts = partiesAndAmounts,
-            queryCriteria = queryCriteria,
-            changeHolder = changeHolder
-    )
+    val selector: Selector = ConfigSelection.getPreferredSelection(serviceHub)
+    // TODO have better interface to specify owner/criteria - remember about accounts, check James Higgs PR to Corda
+    val (inputs, outputs) = selector.generateMove(transactionBuilder.lockId, partiesAndAmounts, changeHolder, queryBy)
     return addMoveTokens(transactionBuilder = transactionBuilder, inputs = inputs, outputs = outputs)
 }
 
@@ -117,14 +118,14 @@ fun addMoveFungibleTokens(
         amount: Amount<TokenType>,
         holder: AbstractParty,
         changeHolder: AbstractParty,
-        queryCriteria: QueryCriteria? = null
+        queryBy: TokenQueryBy? = null
 ): TransactionBuilder {
     return addMoveFungibleTokens(
             transactionBuilder = transactionBuilder,
             serviceHub = serviceHub,
             partiesAndAmounts = listOf(PartyAndAmount(holder, amount)),
             changeHolder = changeHolder,
-            queryCriteria = queryCriteria
+            queryBy = queryBy
     )
 }
 
@@ -141,7 +142,7 @@ fun addMoveNonFungibleTokens(
         serviceHub: ServiceHub,
         token: TokenType,
         holder: AbstractParty,
-        queryCriteria: QueryCriteria? = null
+        queryCriteria: QueryCriteria? = null // TODO Unify API.
 ): TransactionBuilder {
     return generateMoveNonFungible(transactionBuilder, PartyAndToken(holder, token), serviceHub.vaultService, queryCriteria)
 }
@@ -157,7 +158,7 @@ fun addMoveNonFungibleTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         partyAndToken: PartyAndToken,
-        queryCriteria: QueryCriteria? = null
+        queryCriteria: QueryCriteria? = null // TODO Unify API.
 ): TransactionBuilder {
     return generateMoveNonFungible(transactionBuilder, partyAndToken, serviceHub.vaultService, queryCriteria)
 }

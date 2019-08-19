@@ -29,7 +29,7 @@ constructor(
         val partyAndToken: PartyAndToken,
         val participantSessions: List<FlowSession>,
         val observerSessions: List<FlowSession> = emptyList(),
-        val queryCriteria: QueryCriteria? = null
+        val queryCriteria: QueryCriteria? = null // TODO Unify API between fungible and non fungible
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {

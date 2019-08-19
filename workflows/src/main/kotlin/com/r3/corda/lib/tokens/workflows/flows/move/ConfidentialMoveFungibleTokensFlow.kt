@@ -4,12 +4,12 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.flows.confidential.ConfidentialTokensFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
+import com.r3.corda.lib.tokens.workflows.internal.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AbstractParty
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 
 /**
@@ -32,7 +32,7 @@ constructor(
         val participantSessions: List<FlowSession>,
         val changeHolder: AbstractParty,
         val observerSessions: List<FlowSession> = emptyList(),
-        val queryCriteria: QueryCriteria? = null
+        val queryBy: TokenQueryBy? = null
 ) : FlowLogic<SignedTransaction>() {
 
     @JvmOverloads
@@ -40,19 +40,19 @@ constructor(
             partyAndAmount: PartyAndAmount<TokenType>,
             participantSessions: List<FlowSession>,
             changeHolder: AbstractParty,
-            queryCriteria: QueryCriteria? = null,
+            queryBy: TokenQueryBy? = null, // TODO Leave the old constructor with queryCriteria and internally change it to TokenQueryBy?
             observerSessions: List<FlowSession> = emptyList()
 
-    ) : this(listOf(partyAndAmount), participantSessions, changeHolder, observerSessions, queryCriteria)
+    ) : this(listOf(partyAndAmount), participantSessions, changeHolder, observerSessions, queryBy)
 
     @Suspendable
     override fun call(): SignedTransaction {
         val tokenSelection = TokenSelection(serviceHub)
         val (inputs, outputs) = tokenSelection.generateMove(
                 lockId = stateMachine.id.uuid,
-                partyAndAmounts = partiesAndAmounts,
+                partiesAndAmounts = partiesAndAmounts,
                 changeHolder = changeHolder,
-                queryCriteria = queryCriteria
+                queryBy = queryBy
         )
         // TODO Not pretty fix, because we decided to go with sessions approach, we need to make sure that right responders are started depending on observer/participant role
         participantSessions.forEach { it.send(TransactionRole.PARTICIPANT) }
