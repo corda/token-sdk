@@ -9,16 +9,12 @@ import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer
 import com.r3.corda.lib.tokens.workflows.internal.checkSameNotary
 import com.r3.corda.lib.tokens.workflows.internal.selection.ConfigSelection
-import com.r3.corda.lib.tokens.workflows.internal.selection.LocalTokenSelector
 import com.r3.corda.lib.tokens.workflows.internal.selection.Selector
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenQueryBy
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
-import com.r3.corda.lib.tokens.workflows.internal.selection.VaultWatcherService
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateExitNonFungible
 import com.r3.corda.lib.tokens.workflows.utilities.addNotaryWithCheck
 import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
 import com.r3.corda.lib.tokens.workflows.utilities.heldTokensByTokenIssuer
-import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountWithIssuerCriteria
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.identity.AbstractParty

@@ -30,11 +30,11 @@ import java.util.*
  * is to order all states by [StateRef] and query for a specific token type. The default behaviour is probably not very
  * efficient but the behaviour can be customised if necessary.
  *
- * This is only really here as a stopgap solution until in-memory token selection is imple                                                                                                                                                                                                                                                                                                                                                       mented.
+ * This is only really here as a stopgap solution until in-memory token selection is implemented.
  *
  * @param services for performing vault queries.
  */
-class TokenSelection(
+class DatabaseTokenSelection(
         override val services: ServiceHub,
         private val maxRetries: Int = MAX_RETRIES_DEFAULT,
         private val retrySleep: Int = RETRY_SLEEP_DEFAULT,

@@ -87,8 +87,8 @@ private data class TokenSelectionConfig(
     }
 
     @Suspendable
-    override fun toSelector(services: ServiceHub): TokenSelection {
-        return TokenSelection(services, maxRetries, retrySleep, retryCap)
+    override fun toSelector(services: ServiceHub): DatabaseTokenSelection {
+        return DatabaseTokenSelection(services, maxRetries, retrySleep, retryCap)
     }
 }
 

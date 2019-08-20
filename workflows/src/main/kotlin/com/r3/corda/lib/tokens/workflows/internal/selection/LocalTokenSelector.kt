@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicReference
  * TODO
  */
 class LocalTokenSelector(
-        override val services: ServiceHub, // TODO don't need really + visibility
+        override val services: ServiceHub,
         private val vaultObserver: VaultWatcherService,
         private val allowShortfall: Boolean = false,
         private val autoUnlockDelay: Duration = Duration.ofMinutes(5),

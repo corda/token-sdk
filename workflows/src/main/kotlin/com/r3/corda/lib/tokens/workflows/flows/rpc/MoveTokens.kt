@@ -84,7 +84,7 @@ class MoveNonFungibleTokens
 constructor(
         val partyAndToken: PartyAndToken,
         val observers: List<Party> = emptyList(),
-        val queryCriteria: QueryCriteria? = null // TODO Unify API.
+        val queryCriteria: QueryCriteria? = null
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
@@ -165,7 +165,7 @@ class ConfidentialMoveFungibleTokensHandler(val otherSession: FlowSession) : Flo
 class ConfidentialMoveNonFungibleTokens(
         val partyAndToken: PartyAndToken,
         val observers: List<Party>,
-        val queryCriteria: QueryCriteria? = null // TODO Unify API.
+        val queryCriteria: QueryCriteria? = null
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
