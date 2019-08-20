@@ -7,7 +7,7 @@ import com.r3.corda.lib.tokens.workflows.internal.selection.LocalTokenSelector
 import com.r3.corda.lib.tokens.workflows.internal.selection.MAX_RETRIES_DEFAULT
 import com.r3.corda.lib.tokens.workflows.internal.selection.RETRY_CAP_DEFAULT
 import com.r3.corda.lib.tokens.workflows.internal.selection.RETRY_SLEEP_DEFAULT
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
+import com.r3.corda.lib.tokens.workflows.internal.selection.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.internal.selection.VaultWatcherService
 import com.typesafe.config.ConfigFactory
 import net.corda.core.identity.CordaX500Name
@@ -46,7 +46,7 @@ class ConfigSelectionTest {
                 "}")
         val cordappConfig = TypesafeCordappConfig(config)
         val selection = ConfigSelection.getPreferredSelection(services, cordappConfig)
-        assertThat(selection).isInstanceOf(TokenSelection::class.java)
+        assertThat(selection).isInstanceOf(DatabaseTokenSelection::class.java)
         assertThat(selection).hasFieldOrPropertyWithValue("maxRetries", 13)
         assertThat(selection).hasFieldOrPropertyWithValue("retrySleep", 300)
         assertThat(selection).hasFieldOrPropertyWithValue("retryCap", 1345)
@@ -92,7 +92,7 @@ class ConfigSelectionTest {
         val configNull = ConfigFactory.parseString("string=string\nint=1\nfloat=1.0\ndouble=1.0\nnumber=2\ndouble=1.01\nbool=false")
         val cordappConfigNull = TypesafeCordappConfig(configNull)
         val selectionNull = ConfigSelection.getPreferredSelection(services, cordappConfigNull)
-        assertThat(selectionNull).isInstanceOf(TokenSelection::class.java)
+        assertThat(selectionNull).isInstanceOf(DatabaseTokenSelection::class.java)
         // blank
         val configBlank = ConfigFactory.parseString("string=string\nstateSelection {\n}")
         val cordappConfigBlank = TypesafeCordappConfig(configBlank)
@@ -111,7 +111,7 @@ class ConfigSelectionTest {
                 "}")
         val cordappConfigOne = TypesafeCordappConfig(configOne)
         val selectionOne = ConfigSelection.getPreferredSelection(services, cordappConfigOne)
-        assertThat(selectionOne).isInstanceOf(TokenSelection::class.java)
+        assertThat(selectionOne).isInstanceOf(DatabaseTokenSelection::class.java)
         assertThat(selectionOne).hasFieldOrPropertyWithValue("maxRetries", 13)
         assertThat(selectionOne).hasFieldOrPropertyWithValue("retrySleep", RETRY_SLEEP_DEFAULT)
         assertThat(selectionOne).hasFieldOrPropertyWithValue("retryCap", 1345)
@@ -121,7 +121,7 @@ class ConfigSelectionTest {
                 "}")
         val cordappConfigAll = TypesafeCordappConfig(configAll)
         val selectionAll = ConfigSelection.getPreferredSelection(services, cordappConfigAll)
-        assertThat(selectionAll).isInstanceOf(TokenSelection::class.java)
+        assertThat(selectionAll).isInstanceOf(DatabaseTokenSelection::class.java)
         assertThat(selectionAll).hasFieldOrPropertyWithValue("maxRetries", MAX_RETRIES_DEFAULT)
         assertThat(selectionAll).hasFieldOrPropertyWithValue("retrySleep", RETRY_SLEEP_DEFAULT)
         assertThat(selectionAll).hasFieldOrPropertyWithValue("retryCap", RETRY_CAP_DEFAULT)

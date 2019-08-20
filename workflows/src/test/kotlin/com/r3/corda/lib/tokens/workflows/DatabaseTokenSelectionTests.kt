@@ -10,7 +10,7 @@ import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveFungibleTokens
 import com.r3.corda.lib.tokens.workflows.internal.selection.InsufficientBalanceException
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenQueryBy
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
+import com.r3.corda.lib.tokens.workflows.internal.selection.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountWithIssuerCriteria
 import net.corda.core.transactions.TransactionBuilder
@@ -25,7 +25,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 // TODO: Improve these tests. E.g. Order states in a list by state ref, so we can specify exactly which will be picked.
-class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
+class DatabaseTokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
 
     lateinit var A: StartedMockNode
     lateinit var B: StartedMockNode
@@ -57,7 +57,7 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
 
     @Test
     fun `select up to available amount with tokens sorted by state ref`() {
-        val tokenSelection = TokenSelection(A.services)
+        val tokenSelection = DatabaseTokenSelection(A.services)
         val uuid = UUID.randomUUID()
         val one = A.transaction { tokenSelection.selectTokens(uuid, 160.GBP) }
         // We need to release the soft lock after acquiring it, this is because we before we used LOCK_AND_SPECIFIED
@@ -75,7 +75,7 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
 
     @Test
     fun `not enough tokens available`() {
-        val tokenSelection = TokenSelection(A.services)
+        val tokenSelection = DatabaseTokenSelection(A.services)
         val uuid = UUID.randomUUID()
         assertFailsWith<InsufficientBalanceException> {
             A.transaction {
@@ -109,7 +109,7 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         val four = J.issueFungibleTokens(A, 4.BTC).toCompletableFuture()
         CompletableFuture.allOf(one, two, three, four)
 
-        val tokenSelection = TokenSelection(A.services)
+        val tokenSelection = DatabaseTokenSelection(A.services)
         val uuid = UUID.randomUUID()
 
         val resultOne = A.transaction { tokenSelection.selectTokens(uuid, 4.BTC, TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, I.legalIdentity()))) }
@@ -127,7 +127,7 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
     @Test
     fun `should be able to select tokens if you need more than one page to fulfill`() {
         (1..12).map { I.issueFungibleTokens(A, 1 of CHF).getOrThrow() }
-        val tokenSelection = TokenSelection(A.services)
+        val tokenSelection = DatabaseTokenSelection(A.services)
         A.transaction {
             val tokens = tokenSelection.selectTokens(UUID.randomUUID(), 12 of CHF)//, pageSize = 5)
             val value = tokens.fold(0L) { acc, token ->

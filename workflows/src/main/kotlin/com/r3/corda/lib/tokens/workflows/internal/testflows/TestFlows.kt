@@ -16,7 +16,7 @@ import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistribu
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlowHandler
 import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
+import com.r3.corda.lib.tokens.workflows.internal.selection.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
@@ -69,7 +69,7 @@ class DvPFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
         // TODO This is API pain, we assumed that we could just modify TransactionBuilder, but... it cannot be sent over the wire, because non-serializable
         // We need custom serializer and some custom flows to do checks.
         val changeHolder = serviceHub.keyManagementService.freshKeyAndCert(ourIdentityAndCert, false).party.anonymise()
-        val (inputs, outputs) = TokenSelection(serviceHub).generateMove(
+        val (inputs, outputs) = DatabaseTokenSelection(serviceHub).generateMove(
                 lockId = runId.uuid,
                 partiesAndAmounts = listOf(PartyAndAmount(otherSession.counterparty, dvPNotification.amount)),
                 changeHolder = changeHolder

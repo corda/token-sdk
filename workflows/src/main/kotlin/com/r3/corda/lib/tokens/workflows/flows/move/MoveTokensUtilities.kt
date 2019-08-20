@@ -6,11 +6,8 @@ import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.internal.selection.ConfigSelection
-import com.r3.corda.lib.tokens.workflows.internal.selection.LocalTokenSelector
 import com.r3.corda.lib.tokens.workflows.internal.selection.Selector
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenQueryBy
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
-import com.r3.corda.lib.tokens.workflows.internal.selection.VaultWatcherService
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateMoveNonFungible
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
@@ -142,7 +139,7 @@ fun addMoveNonFungibleTokens(
         serviceHub: ServiceHub,
         token: TokenType,
         holder: AbstractParty,
-        queryCriteria: QueryCriteria? = null // TODO Unify API.
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
     return generateMoveNonFungible(transactionBuilder, PartyAndToken(holder, token), serviceHub.vaultService, queryCriteria)
 }
@@ -158,7 +155,7 @@ fun addMoveNonFungibleTokens(
         transactionBuilder: TransactionBuilder,
         serviceHub: ServiceHub,
         partyAndToken: PartyAndToken,
-        queryCriteria: QueryCriteria? = null // TODO Unify API.
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
     return generateMoveNonFungible(transactionBuilder, partyAndToken, serviceHub.vaultService, queryCriteria)
 }
