@@ -253,11 +253,11 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     @Test
     fun `should get different tokens if we select twice`() {
         (1..2).map { I.issueFungibleTokens(A, 1 of GBP).getOrThrow() }
-        val tokenSelection = DatabaseTokenSelection(A.services)
+        val tokenSelection = DatabaseTokenSelection(A.services, pageSize = 5)
         val lockId = UUID.randomUUID()
         A.transaction {
-            val token1 = tokenSelection.selectTokens(lockId, requiredAmount = 1 of GBP)//, pageSize = 5)
-            val token2 = tokenSelection.selectTokens(lockId,1 of GBP)//, pageSize = 5)
+            val token1 = tokenSelection.selectTokens(lockId, requiredAmount = 1 of GBP)
+            val token2 = tokenSelection.selectTokens(lockId,1 of GBP)
             assertThat(token1).isNotEqualTo(token2)
         }
     }

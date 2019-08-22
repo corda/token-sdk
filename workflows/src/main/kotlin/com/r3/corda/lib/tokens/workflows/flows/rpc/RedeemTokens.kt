@@ -18,6 +18,7 @@ import net.corda.core.flows.StartableByRPC
 import net.corda.core.flows.StartableByService
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
+import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 
 @StartableByService
@@ -29,7 +30,7 @@ constructor(
         val amount: Amount<TokenType>,
         val issuer: Party,
         val observers: List<Party> = emptyList(),
-        val queryBy: TokenQueryBy? = null,
+        val queryCriteria: QueryCriteria? = null,
         val changeHolder: AbstractParty? = null
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
@@ -37,7 +38,7 @@ constructor(
         val observerSessions = sessionsForParties(observers)
         val issuerSession = initiateFlow(issuer)
         return subFlow(RedeemFungibleTokensFlow(amount, issuerSession, changeHolder
-                ?: ourIdentity, observerSessions, queryBy))
+                ?: ourIdentity, observerSessions, queryCriteria))
     }
 }
 
@@ -82,13 +83,13 @@ constructor(
         val amount: Amount<TokenType>,
         val issuer: Party,
         val observers: List<Party> = emptyList(),
-        val queryBy: TokenQueryBy? = null
+        val queryCriteria: QueryCriteria? = null
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
         val observerSessions = sessionsForParties(observers)
         val issuerSession = initiateFlow(issuer)
-        return subFlow(ConfidentialRedeemFungibleTokensFlow(amount, issuerSession, observerSessions, queryBy))
+        return subFlow(ConfidentialRedeemFungibleTokensFlow(amount, issuerSession, observerSessions, queryCriteria))
     }
 }
 

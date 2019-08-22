@@ -10,6 +10,7 @@ import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AbstractParty
+import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 
 /**
@@ -32,7 +33,7 @@ constructor(
         val participantSessions: List<FlowSession>,
         val changeHolder: AbstractParty,
         val observerSessions: List<FlowSession> = emptyList(),
-        val queryBy: TokenQueryBy? = null
+        val queryCriteria: QueryCriteria? = null
 ) : FlowLogic<SignedTransaction>() {
 
     @JvmOverloads
@@ -40,19 +41,20 @@ constructor(
             partyAndAmount: PartyAndAmount<TokenType>,
             participantSessions: List<FlowSession>,
             changeHolder: AbstractParty,
-            queryBy: TokenQueryBy? = null, // TODO Leave the old constructor with queryCriteria and internally change it to TokenQueryBy?
+            queryCriteria: QueryCriteria? = null,
             observerSessions: List<FlowSession> = emptyList()
 
-    ) : this(listOf(partyAndAmount), participantSessions, changeHolder, observerSessions, queryBy)
+    ) : this(listOf(partyAndAmount), participantSessions, changeHolder, observerSessions, queryCriteria)
 
     @Suspendable
     override fun call(): SignedTransaction {
+        // TODO add in memory selection too
         val tokenSelection = DatabaseTokenSelection(serviceHub)
         val (inputs, outputs) = tokenSelection.generateMove(
                 lockId = stateMachine.id.uuid,
                 partiesAndAmounts = partiesAndAmounts,
                 changeHolder = changeHolder,
-                queryBy = queryBy
+                queryBy = TokenQueryBy(queryCriteria = queryCriteria)
         )
         // TODO Not pretty fix, because we decided to go with sessions approach, we need to make sure that right responders are started depending on observer/participant role
         participantSessions.forEach { it.send(TransactionRole.PARTICIPANT) }

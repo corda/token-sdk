@@ -6,6 +6,7 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
+import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Amount.Companion.sumOrThrow
@@ -26,8 +27,7 @@ interface Selector {
      * Select [FungibleToken]s that cover [requiredAmount]. Notice that this
      * function doesn't calculate change. If query criteria is not specified then only held token amounts are used.
      *
-     * TODO different API for query
-     * Use [QueryUtilities.tokenAmountWithIssuerCriteria] to specify issuer.
+     * Set [TokenQueryBy.issuer] to specify issuer.
      * Calling selectTokens multiple time with the same lockId will return next unlocked states.
      *
      * @param lockId id used to lock the states for spend, defaults to [FlowLogic] runID
@@ -39,16 +39,13 @@ interface Selector {
     fun selectTokens(
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
             requiredAmount: Amount<TokenType>,
-            queryBy: TokenQueryBy? = null // TODO think of good default
-//            sorter: Sort = sortByStateRefAscending(), // TODO ugh, need to do sth about it
-//            pageSize: Int = 200
+            queryBy: TokenQueryBy? = null
     ): List<StateAndRef<FungibleToken>>
 
     /**
      * Generate move of [FungibleToken] T to tokenHolders specified in [PartyAndAmount]. Each party will receive amount
-     * defined by [partyAndAmounts]. If query criteria is not specified then only held token amounts are used. Use
-     * [QueryUtilities.tokenAmountWithIssuerCriteria] to specify issuer. This function mutates [builder] provided as
-     * parameter.
+     * defined by [partyAndAmounts]. If query criteria is not specified then only held token amounts are used. Set
+     * [TokenQueryBy.issuer] to specify issuer.
      *
      * @return Pair of lists, one for [FungibleToken]s that satisfy the amount to spend, empty list if none found, second
      *  for output states with possible change.
@@ -130,14 +127,19 @@ interface Selector {
         return Pair(acceptableStates, outputStates)
     }
 
-    // Modifies builder in place. All checks for exit states should have been done before.
-    // For example we assume that existStates have same issuer.
+    /**
+     * Generate exit of [FungibleToken]s specified by [exitStates] up to given [amount]. Possible change will be paid to
+     * [changeHolder]. All checks for exit states should have been done before. For example we assume that existStates have same issuer.
+     *
+     * @return Pair of list of [FungibleToken] inputs that satisfy the amount to exit and change output.
+     */
     @Suspendable
     fun generateExit(
             exitStates: List<StateAndRef<FungibleToken>>,
             amount: Amount<TokenType>,
             changeHolder: AbstractParty
     ): Pair<List<StateAndRef<FungibleToken>>, FungibleToken?> {
+        checkSameIssuer(exitStates)
         // Choose states to cover amount - return ones used, and change output
         val changeOutput = change(exitStates, amount, changeHolder)
         return Pair(exitStates, changeOutput)

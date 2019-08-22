@@ -6,6 +6,7 @@ import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.internal.selection.ConfigSelection
+import com.r3.corda.lib.tokens.workflows.internal.selection.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.internal.selection.Selector
 import com.r3.corda.lib.tokens.workflows.internal.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateMoveNonFungible
@@ -94,11 +95,12 @@ fun addMoveFungibleTokens(
         serviceHub: ServiceHub,
         partiesAndAmounts: List<PartyAndAmount<TokenType>>,
         changeHolder: AbstractParty,
-        queryBy: TokenQueryBy? = null
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    val selector: Selector = ConfigSelection.getPreferredSelection(serviceHub)
-    // TODO have better interface to specify owner/criteria - remember about accounts, check James Higgs PR to Corda
-    val (inputs, outputs) = selector.generateMove(transactionBuilder.lockId, partiesAndAmounts, changeHolder, queryBy)
+    // TODO For now default to database query, but switch this line on after we can change API in 2.0
+//    val selector: Selector = ConfigSelection.getPreferredSelection(serviceHub)
+    val selector = DatabaseTokenSelection(serviceHub)
+    val (inputs, outputs) = selector.generateMove(transactionBuilder.lockId, partiesAndAmounts, changeHolder, TokenQueryBy(queryCriteria = queryCriteria))
     return addMoveTokens(transactionBuilder = transactionBuilder, inputs = inputs, outputs = outputs)
 }
 
@@ -115,14 +117,14 @@ fun addMoveFungibleTokens(
         amount: Amount<TokenType>,
         holder: AbstractParty,
         changeHolder: AbstractParty,
-        queryBy: TokenQueryBy? = null
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
     return addMoveFungibleTokens(
             transactionBuilder = transactionBuilder,
             serviceHub = serviceHub,
             partiesAndAmounts = listOf(PartyAndAmount(holder, amount)),
             changeHolder = changeHolder,
-            queryBy = queryBy
+            queryCriteria = queryCriteria
     )
 }
 

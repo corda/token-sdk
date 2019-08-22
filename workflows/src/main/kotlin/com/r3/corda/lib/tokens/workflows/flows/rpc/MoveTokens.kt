@@ -8,7 +8,6 @@ import com.r3.corda.lib.tokens.workflows.flows.move.ConfidentialMoveTokensFlowHa
 import com.r3.corda.lib.tokens.workflows.flows.move.MoveFungibleTokensFlow
 import com.r3.corda.lib.tokens.workflows.flows.move.MoveNonFungibleTokensFlow
 import com.r3.corda.lib.tokens.workflows.flows.move.MoveTokensFlowHandler
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
 import com.r3.corda.lib.tokens.workflows.utilities.sessionsForParties
@@ -35,7 +34,7 @@ class MoveFungibleTokens
 constructor(
         val partiesAndAmounts: List<PartyAndAmount<TokenType>>,
         val observers: List<Party> = emptyList(),
-        val queryBy: TokenQueryBy? = null,
+        val queryCriteria: QueryCriteria? = null,
         val changeHolder: AbstractParty? = null
 ) : FlowLogic<SignedTransaction>() {
 
@@ -43,9 +42,9 @@ constructor(
     constructor(
             partyAndAmount: PartyAndAmount<TokenType>,
             observers: List<Party> = emptyList(),
-            queryBy: TokenQueryBy? = null,
+            queryCriteria: QueryCriteria? = null,
             changeHolder: AbstractParty? = null
-    ) : this(listOf(partyAndAmount), observers, queryBy, changeHolder)
+    ) : this(listOf(partyAndAmount), observers, queryCriteria, changeHolder)
 
     constructor(amount: Amount<TokenType>, holder: AbstractParty) : this(PartyAndAmount(holder, amount), emptyList())
 
@@ -58,7 +57,7 @@ constructor(
                 partiesAndAmounts = partiesAndAmounts,
                 participantSessions = participantSessions,
                 observerSessions = observerSessions,
-                queryBy = queryBy,
+                queryCriteria = queryCriteria,
                 changeHolder = changeHolder
         ))
     }
@@ -119,16 +118,16 @@ class MoveNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Un
 class ConfidentialMoveFungibleTokens(
         val partiesAndAmounts: List<PartyAndAmount<TokenType>>,
         val observers: List<Party>,
-        val queryBy: TokenQueryBy? = null,
+        val queryCriteria: QueryCriteria? = null,
         val changeHolder: AbstractParty? = null
 ) : FlowLogic<SignedTransaction>() {
 
     constructor(
             partyAndAmount: PartyAndAmount<TokenType>,
             observers: List<Party>,
-            queryBy: TokenQueryBy? = null,
+            queryCriteria: QueryCriteria? = null,
             changeHolder: AbstractParty? = null
-    ) : this(listOf(partyAndAmount), observers, queryBy, changeHolder)
+    ) : this(listOf(partyAndAmount), observers, queryCriteria, changeHolder)
 
     @Suspendable
     override fun call(): SignedTransaction {
@@ -141,7 +140,7 @@ class ConfidentialMoveFungibleTokens(
                 partiesAndAmounts = partiesAndAmounts,
                 participantSessions = participantSessions,
                 observerSessions = observerSessions,
-                queryBy = queryBy,
+                queryCriteria = queryCriteria,
                 changeHolder = confidentialHolder
         ))
     }

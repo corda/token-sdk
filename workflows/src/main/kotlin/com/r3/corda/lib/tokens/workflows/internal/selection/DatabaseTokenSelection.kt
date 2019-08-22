@@ -26,8 +26,7 @@ import java.util.*
  * AbstractCoinSelection within the finance module. The only difference is that now there are not specific database
  * implementations, instead hibernate is used for an agnostic approach.
  *
- * TODO adjust
- * When calling [selectTokens] there is the option to pass in a custom [QueryCriteria] and [Sort]. The default behaviour
+ * When calling [selectTokens] there is the option to pass in a custom [QueryCriteria]. The default behaviour
  * is to order all states by [StateRef] and query for a specific token type. The default behaviour is probably not very
  * efficient but the behaviour can be customised if necessary.
  *
@@ -39,7 +38,8 @@ class DatabaseTokenSelection(
         override val services: ServiceHub,
         private val maxRetries: Int = MAX_RETRIES_DEFAULT,
         private val retrySleep: Int = RETRY_SLEEP_DEFAULT,
-        private val retryCap: Int = RETRY_CAP_DEFAULT
+        private val retryCap: Int = RETRY_CAP_DEFAULT,
+        private val pageSize: Int = PAGE_SIZE_DEFAULT
 ) : Selector {
 
     companion object {
@@ -53,7 +53,6 @@ class DatabaseTokenSelection(
             additionalCriteria: QueryCriteria,
             sorter: Sort,
             stateAndRefs: MutableList<StateAndRef<FungibleToken>>,
-            pageSize: Int = 200,
             softLockingType: QueryCriteria.SoftLockingType = QueryCriteria.SoftLockingType.UNLOCKED_ONLY
     ): Boolean {
         // Didn't need to select any tokens.
@@ -108,8 +107,6 @@ class DatabaseTokenSelection(
             lockId: UUID,
             requiredAmount: Amount<TokenType>,
             queryBy: TokenQueryBy?
-//            sorter: Sort = sortByStateRefAscending(),
-//            pageSize: Int = 200
     ): List<StateAndRef<FungibleToken>> {
         val stateAndRefs = mutableListOf<StateAndRef<FungibleToken>>()
         for (retryCount in 1..maxRetries) {
@@ -118,8 +115,7 @@ class DatabaseTokenSelection(
             } else tokenAmountCriteria(requiredAmount.token)
             val criteria = queryBy?.queryCriteria?.let { additionalCriteria.and(it) }
                     ?: additionalCriteria
-            // TODO Set sorter and pagesize
-            if (!executeQuery(requiredAmount, lockId, criteria, sortByStateRefAscending(), stateAndRefs, 200)) {
+            if (!executeQuery(requiredAmount, lockId, criteria, sortByStateRefAscending(), stateAndRefs)) {
                 // TODO: Need to specify exactly why it fails. Locked states or literally _no_ states!
                 // No point in retrying if there will never be enough...
                 logger.warn("TokenType selection failed on attempt $retryCount.")
