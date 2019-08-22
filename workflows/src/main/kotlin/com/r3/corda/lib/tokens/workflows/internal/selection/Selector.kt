@@ -16,9 +16,25 @@ import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.TransactionBuilder
 import java.util.*
 
+/**
+ * Interface that provides fungible state selection methods in flow.
+ */
 interface Selector {
     val services: ServiceHub
 
+    /**
+     * Select [FungibleToken]s that cover [requiredAmount]. Notice that this
+     * function doesn't calculate change. If query criteria is not specified then only held token amounts are used.
+     *
+     * TODO different API for query
+     * Use [QueryUtilities.tokenAmountWithIssuerCriteria] to specify issuer.
+     * Calling selectTokens multiple time with the same lockId will return next unlocked states.
+     *
+     * @param lockId id used to lock the states for spend, defaults to [FlowLogic] runID
+     * @param requiredAmount amount that should be spent
+     * @param queryBy narrows down tokens to spend, see [TokenQueryBy]
+     * @return List of [FungibleToken]s that satisfy the amount to spend, empty list if none found.
+     */
     @Suspendable
     fun selectTokens(
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
@@ -34,7 +50,8 @@ interface Selector {
      * [QueryUtilities.tokenAmountWithIssuerCriteria] to specify issuer. This function mutates [builder] provided as
      * parameter.
      *
-     * @return [TransactionBuilder] and list of all owner keys used in the input states that are going to be moved.
+     * @return Pair of lists, one for [FungibleToken]s that satisfy the amount to spend, empty list if none found, second
+     *  for output states with possible change.
      */
     @Suspendable
     fun generateMove(
@@ -119,10 +136,10 @@ interface Selector {
     fun generateExit(
             exitStates: List<StateAndRef<FungibleToken>>,
             amount: Amount<TokenType>,
-            changeOwner: AbstractParty
+            changeHolder: AbstractParty
     ): Pair<List<StateAndRef<FungibleToken>>, FungibleToken?> {
         // Choose states to cover amount - return ones used, and change output
-        val changeOutput = change(exitStates, amount, changeOwner)
+        val changeOutput = change(exitStates, amount, changeHolder)
         return Pair(exitStates, changeOutput)
     }
 

@@ -109,7 +109,7 @@ fun addFungibleTokensToRedeem(
     val (exitStates, change) = selector.generateExit(
             exitStates = fungibleStates,
             amount = amount,
-            changeOwner = changeOwner
+            changeHolder = changeOwner
     )
     addTokensToRedeem(transactionBuilder, exitStates, change)
     return transactionBuilder

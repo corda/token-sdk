@@ -26,7 +26,8 @@ import java.util.*
  * AbstractCoinSelection within the finance module. The only difference is that now there are not specific database
  * implementations, instead hibernate is used for an agnostic approach.
  *
- * When calling [attemptSpend] there is the option to pass in a custom [QueryCriteria] and [Sort]. The default behaviour
+ * TODO adjust
+ * When calling [selectTokens] there is the option to pass in a custom [QueryCriteria] and [Sort]. The default behaviour
  * is to order all states by [StateRef] and query for a specific token type. The default behaviour is probably not very
  * efficient but the behaviour can be customised if necessary.
  *
@@ -102,16 +103,6 @@ class DatabaseTokenSelection(
         return true
     }
 
-
-    /**
-     * Attempt spend of [requiredAmount] of [FungibleToken] T. Returns states that cover given amount. Notice that this
-     * function doesn't calculate change. If query criteria is not specified then only held token amounts are used.
-     *
-     * Use [QueryUtilities.tokenAmountWithIssuerCriteria] to specify issuer.
-     * Calling attemptSpend multiple time with the same lockId will return next unlocked states.
-     *
-     * @return List of [FungibleToken]s that satisfy the amount to spend, empty list if none found.
-     */
     @Suspendable
     override fun selectTokens(
             lockId: UUID,
