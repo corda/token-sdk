@@ -24,7 +24,6 @@ const val CACHE_SIZE_DEFAULT = 1024 // TODO Return good default, for now it's no
  *      in_memory {
  *          indexingStrategy: ["external_id"|"public_key"]
  *          cacheSize: Int
- *
  *      }
  * }
  *

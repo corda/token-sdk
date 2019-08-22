@@ -14,7 +14,16 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * TODO
+ * Selector that should be used from your flow when you want to do in memory token selection opposed to [DatabaseTokenSelection].
+ * This is experimental feature for now. It was designed to remove potential performance bottleneck and remove the requirement
+ * for database specific SQL to be provided for each backend.
+ * To use it, you need to have `VaultWatcherService` installed as a `CordaService` on node startup. Indexing
+ * strategy could be specified via cordapp configuration, see [ConfigSelection]. You can index either by PublicKey or by ExternalId if using accounts feature.
+ *
+ * @property services ServiceHub available from the flow
+ * @property vaultObserver corda service that watches and caches new states
+ * @property allowShortfall Specifies if we want to select tokens that not cover the required amount. Defaults to false.
+ * @property autoUnlockDelay Time after which the tokens that are not spent will be automatically released. Defaults to Duration.ofMinutes(5).
  */
 class LocalTokenSelector(
         override val services: ServiceHub,
