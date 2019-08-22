@@ -4,10 +4,10 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.ci.ProvideKeyFlow
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenQueryBy
 import net.corda.core.contracts.Amount
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
+import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 
 /**
@@ -18,7 +18,7 @@ import net.corda.core.transactions.SignedTransaction
  * @param amount amount of token to redeem
  * @param issuerSession session with the issuer tokens should be redeemed with
  * @param observerSessions optional sessions with the observer nodes, to witch the transaction will be broadcasted
- * @param queryBy additional criteria for token selection, see [TokenQueryBy]
+ * @param additionalQueryCriteria additional criteria for token selection
  */
 class ConfidentialRedeemFungibleTokensFlow
 @JvmOverloads
@@ -26,7 +26,7 @@ constructor(
         val amount: Amount<TokenType>,
         val issuerSession: FlowSession,
         val observerSessions: List<FlowSession> = emptyList(),
-        val queryBy: TokenQueryBy? = null
+        val additionalQueryCriteria: QueryCriteria? = null
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
@@ -39,7 +39,7 @@ constructor(
                 issuerSession = issuerSession,
                 changeHolder = changeOwner,
                 observerSessions = observerSessions,
-                queryBy = queryBy
+                additionalQueryCriteria = additionalQueryCriteria
         ))
     }
 }

@@ -28,10 +28,6 @@ import java.util.concurrent.TimeUnit
 val UNLOCKER: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 const val PLACE_HOLDER: String = "THIS_IS_A_PLACE_HOLDER"
 
-/**
- * TODO
- */
-// TODO is this constructor with tokenObserver only for test purposes?
 @CordaService
 class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSerializeAsToken() {
 
@@ -60,7 +56,6 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
                 }
             } else {
                 { _, _ ->
-                    // TODO implement external id indexing
                     throw IllegalStateException("Only IndexingType.PUBLIC_KEY available on Corda V4")
                 }
             }

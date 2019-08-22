@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 const val MAX_RETRIES_DEFAULT = 8
 const val RETRY_SLEEP_DEFAULT = 100
 const val RETRY_CAP_DEFAULT = 2000
+const val PAGE_SIZE_DEFAULT = 200
 const val CACHE_SIZE_DEFAULT = 1024 // TODO Return good default, for now it's not wired, it will be done in separate PR.
 
 /**
