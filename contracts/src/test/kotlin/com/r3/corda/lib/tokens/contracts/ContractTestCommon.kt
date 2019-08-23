@@ -15,7 +15,7 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.internal.DEPLOYED_CORDAPP_UPLOADER
 import net.corda.core.internal.location
 import net.corda.core.node.NotaryInfo
-import net.corda.node.services.api.IdentityServiceInternal
+import net.corda.core.node.services.IdentityService
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.DUMMY_NOTARY_NAME
 import net.corda.testing.core.SerializationEnvironmentRule
@@ -46,7 +46,7 @@ abstract class ContractTestCommon {
     protected val aliceServices = MockServices(
             cordappPackages = listOf("com.r3.corda.lib.tokens.contracts", "com.r3.corda.lib.tokens.money"),
             initialIdentity = ALICE,
-            identityService = mock<IdentityServiceInternal>().also {
+            identityService = mock<IdentityService>().also {
                 doReturn(ALICE.party).whenever(it).partyFromKey(ALICE.publicKey)
                 doReturn(BOB.party).whenever(it).partyFromKey(BOB.publicKey)
                 doReturn(CHARLIE.party).whenever(it).partyFromKey(CHARLIE.publicKey)

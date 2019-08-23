@@ -1,13 +1,13 @@
 package com.r3.corda.lib.tokens.workflows.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.ci.SyncKeyMappingFlowHandler
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.workflows.internal.checkOwner
 import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer
 import com.r3.corda.lib.tokens.workflows.internal.checkSameNotary
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlowHandler
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
-import net.corda.confidential.IdentitySyncFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.SignTransactionFlow
@@ -26,7 +26,7 @@ class RedeemTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>()
         if (role == TransactionRole.PARTICIPANT) {
             // Synchronise all confidential identities, issuer isn't involved in move transactions, so states holders may
             // not be known to this node.
-            subFlow(IdentitySyncFlow.Receive(otherSession))
+            subFlow(SyncKeyMappingFlowHandler(otherSession))
             // Perform all the checks to sign the transaction.
             subFlow(object : SignTransactionFlow(otherSession) {
                 override fun checkTransaction(stx: SignedTransaction) {
