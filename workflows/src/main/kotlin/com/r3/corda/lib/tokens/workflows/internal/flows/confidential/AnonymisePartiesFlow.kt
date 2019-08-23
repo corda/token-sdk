@@ -25,8 +25,8 @@ class AnonymisePartiesFlow(
             val party = session.counterparty
             if (party in parties) {
                 session.send(ActionRequest.CREATE_NEW_KEY)
-                val anonymousKey = subFlow(RequestKeyFlow(session)).publicKey
-                Pair(party, AnonymousParty(anonymousKey))
+                val anonParty = subFlow(RequestConfidentialIdentityFlow(session))
+                Pair(party, anonParty)
             } else {
                 session.send(ActionRequest.DO_NOTHING)
                 null
