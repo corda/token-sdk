@@ -40,7 +40,6 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         network.waitQuiescent()
         A.redeemTokens(GBP, I, 100.GBP, true).getOrThrow()
-
         assertThat(A.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
         assertThat(I.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
     }

@@ -57,9 +57,28 @@ shell with the following command:
 See the token template code [here](https://github.com/corda/cordapp-template-kotlin/tree/token-template)
 for more information.
 
+
+### Build Tokens SDK against Corda branch
+
+In order to use the CorDapp you will need to build against a specific Corda branch until the required changes to the 
+`IdentityService` will be released in the `4.3` version. First, clone the Corda repo
+and checkout the `feature/CID-878-non_party_flow_sessions` branch with the following commands:
+
+    git clone https://github.com/corda/corda
+    git fetch
+    git checkout origin feature/CID-878-non_party_flow_sessions
+
+Navigate to the `constants.properties` file in the root directory and set the following flag:
+
+    cordaVersion=5.0-SNAPSHOT
+   
+Then run a `./gradlew clean install` from the root directory. This will be the `cordaVersion` you will need to build the 
+Token SDK CorDapp against. 
+
 ### Adding token SDK dependencies to an existing CorDapp
 
-First, add a variable for the tokens SDK version you wish to use:
+First, add a variable for the tokens release group and the version you 
+wish to use and set the corda version that should've been installed locally::
 
     buildscript {
         ext {

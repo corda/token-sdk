@@ -11,6 +11,7 @@ import java.security.PublicKey
 class RequestConfidentialIdentityFlowHandler(val otherSession: FlowSession) : FlowLogic<AnonymousParty>() {
     @Suspendable
     override fun call(): AnonymousParty {
+        //TODO get ProvideKeyFlow to return the AnonymousParty to avoid this hogwash
         subFlow(ProvideKeyFlow(otherSession))
         val key = otherSession.receive<PublicKey>().unwrap { it }
         return AnonymousParty(key)
