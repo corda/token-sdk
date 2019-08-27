@@ -1,4 +1,4 @@
-package com.r3.corda.lib.tokens.workflows.internal.selection
+package com.r3.corda.lib.tokens.selection
 
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import net.corda.core.contracts.StateAndRef

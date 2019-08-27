@@ -2,11 +2,10 @@ package com.r3.corda.lib.tokens.workflows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
-import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.workflows.internal.selection.LocalTokenSelector
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenQueryBy
-import com.r3.corda.lib.tokens.workflows.internal.selection.VaultWatcherService
+import com.r3.corda.lib.tokens.selection.TokenQueryBy
+import com.r3.corda.lib.tokens.selection.selectors.LocalTokenSelector
+import com.r3.corda.lib.tokens.selection.services.VaultWatcherService
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
@@ -29,7 +28,7 @@ class SuspendingSelector(val owningKey: PublicKey,
     @Suspendable
     override fun call(): List<StateAndRef<FungibleToken>> {
         val vaultWatcherService = serviceHub.cordaService(VaultWatcherService::class.java)
-        val localTokenSelector = LocalTokenSelector(serviceHub, vaultWatcherService,  allowShortfall = allowShortfall)
+        val localTokenSelector = LocalTokenSelector(serviceHub, vaultWatcherService, allowShortfall = allowShortfall)
 
         val selectedTokens = localTokenSelector.selectTokens(requiredAmount = amount, queryBy = TokenQueryBy(holder = owningKey))
 

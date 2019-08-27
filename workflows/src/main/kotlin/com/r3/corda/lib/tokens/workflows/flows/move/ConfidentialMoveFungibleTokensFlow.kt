@@ -2,11 +2,12 @@ package com.r3.corda.lib.tokens.workflows.flows.move
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.workflows.flows.confidential.ConfidentialTokensFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.workflows.internal.selection.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
+import com.r3.corda.lib.tokens.workflows.types.toPairs
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AbstractParty
@@ -52,7 +53,7 @@ constructor(
         val tokenSelection = DatabaseTokenSelection(serviceHub)
         val (inputs, outputs) = tokenSelection.generateMove(
                 lockId = stateMachine.id.uuid,
-                partiesAndAmounts = partiesAndAmounts,
+                partiesAndAmounts = partiesAndAmounts.toPairs(),
                 changeHolder = changeHolder,
                 queryBy = TokenQueryBy(queryCriteria = queryCriteria)
         )

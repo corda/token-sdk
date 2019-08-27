@@ -2,7 +2,6 @@ package com.r3.corda.lib.tokens.workflows.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenQueryBy
 import net.corda.core.contracts.Amount
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AbstractParty

@@ -3,6 +3,9 @@ package com.r3.corda.lib.tokens.workflows.internal.selection
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.selection.TokenQueryBy
+import com.r3.corda.lib.tokens.selection.selectors.Selector
+import com.r3.corda.lib.tokens.selection.services.InsufficientBalanceException
 import com.r3.corda.lib.tokens.workflows.utilities.sortByStateRefAscending
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountWithIssuerCriteria
@@ -111,7 +114,7 @@ class DatabaseTokenSelection(
         val stateAndRefs = mutableListOf<StateAndRef<FungibleToken>>()
         for (retryCount in 1..maxRetries) {
             val additionalCriteria = if (queryBy?.issuer != null) {
-                tokenAmountWithIssuerCriteria(requiredAmount.token, queryBy.issuer)
+                tokenAmountWithIssuerCriteria(requiredAmount.token, queryBy.issuer!!) //TODO !!
             } else tokenAmountCriteria(requiredAmount.token)
             val criteria = queryBy?.queryCriteria?.let { additionalCriteria.and(it) }
                     ?: additionalCriteria

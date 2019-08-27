@@ -7,7 +7,6 @@ import com.r3.corda.lib.tokens.workflows.flows.redeem.ConfidentialRedeemFungible
 import com.r3.corda.lib.tokens.workflows.flows.redeem.RedeemFungibleTokensFlow
 import com.r3.corda.lib.tokens.workflows.flows.redeem.RedeemNonFungibleTokensFlow
 import com.r3.corda.lib.tokens.workflows.flows.redeem.RedeemTokensFlowHandler
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.workflows.utilities.sessionsForParties
 import net.corda.core.contracts.Amount
 import net.corda.core.flows.FlowLogic

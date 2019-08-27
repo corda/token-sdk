@@ -6,7 +6,7 @@ import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.testing.states.Appartment
-import com.r3.corda.lib.tokens.workflows.internal.selection.InsufficientBalanceException
+import com.r3.corda.lib.tokens.selection.services.InsufficientBalanceException
 import com.r3.corda.lib.tokens.workflows.utilities.heldTokenAmountCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.heldTokensByToken
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountsByToken

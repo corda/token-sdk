@@ -1,14 +1,14 @@
 package com.r3.corda.lib.tokens.workflows
 
-import com.r3.corda.lib.tokens.workflows.internal.selection.CACHE_SIZE_DEFAULT
+import com.r3.corda.lib.tokens.selection.config.CACHE_SIZE_DEFAULT
+import com.r3.corda.lib.tokens.selection.config.InMemorySelectionConfig
+import com.r3.corda.lib.tokens.selection.selectors.LocalTokenSelector
+import com.r3.corda.lib.tokens.selection.services.VaultWatcherService
 import com.r3.corda.lib.tokens.workflows.internal.selection.ConfigSelection
-import com.r3.corda.lib.tokens.workflows.internal.selection.InMemorySelectionConfig
-import com.r3.corda.lib.tokens.workflows.internal.selection.LocalTokenSelector
+import com.r3.corda.lib.tokens.workflows.internal.selection.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.internal.selection.MAX_RETRIES_DEFAULT
 import com.r3.corda.lib.tokens.workflows.internal.selection.RETRY_CAP_DEFAULT
 import com.r3.corda.lib.tokens.workflows.internal.selection.RETRY_SLEEP_DEFAULT
-import com.r3.corda.lib.tokens.workflows.internal.selection.DatabaseTokenSelection
-import com.r3.corda.lib.tokens.workflows.internal.selection.VaultWatcherService
 import com.typesafe.config.ConfigFactory
 import net.corda.core.identity.CordaX500Name
 import net.corda.node.internal.cordapp.TypesafeCordappConfig

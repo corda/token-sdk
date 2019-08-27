@@ -1,10 +1,11 @@
-package com.r3.corda.lib.tokens.workflows.internal.selection
+package com.r3.corda.lib.tokens.selection.services
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.withoutIssuer
-import com.r3.corda.lib.tokens.workflows.utilities.sortByStateRefAscending
+import com.r3.corda.lib.tokens.selection.config.InMemorySelectionConfig
+import com.r3.corda.lib.tokens.selection.sortByStateRefAscending
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.internal.uncheckedCast

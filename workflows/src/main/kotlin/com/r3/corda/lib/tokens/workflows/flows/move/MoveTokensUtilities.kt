@@ -5,13 +5,12 @@ import com.r3.corda.lib.tokens.contracts.commands.MoveTokenCommand
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.workflows.internal.selection.ConfigSelection
+import com.r3.corda.lib.tokens.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.workflows.internal.selection.DatabaseTokenSelection
-import com.r3.corda.lib.tokens.workflows.internal.selection.Selector
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateMoveNonFungible
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
+import com.r3.corda.lib.tokens.workflows.types.toPairs
 import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
@@ -100,7 +99,7 @@ fun addMoveFungibleTokens(
     // TODO For now default to database query, but switch this line on after we can change API in 2.0
 //    val selector: Selector = ConfigSelection.getPreferredSelection(serviceHub)
     val selector = DatabaseTokenSelection(serviceHub)
-    val (inputs, outputs) = selector.generateMove(transactionBuilder.lockId, partiesAndAmounts, changeHolder, TokenQueryBy(queryCriteria = queryCriteria))
+    val (inputs, outputs) = selector.generateMove(transactionBuilder.lockId, partiesAndAmounts.toPairs(), changeHolder, TokenQueryBy(queryCriteria = queryCriteria))
     return addMoveTokens(transactionBuilder = transactionBuilder, inputs = inputs, outputs = outputs)
 }
 
