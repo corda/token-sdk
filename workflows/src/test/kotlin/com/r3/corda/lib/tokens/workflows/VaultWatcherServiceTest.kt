@@ -10,9 +10,9 @@ import com.r3.corda.lib.tokens.contracts.utilities.withoutIssuer
 import com.r3.corda.lib.tokens.money.BTC
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
-import com.r3.corda.lib.tokens.workflows.internal.selection.InsufficientBalanceException
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenObserver
-import com.r3.corda.lib.tokens.workflows.internal.selection.VaultWatcherService
+import com.r3.corda.lib.tokens.selection.services.InsufficientBalanceException
+import com.r3.corda.lib.tokens.selection.services.TokenObserver
+import com.r3.corda.lib.tokens.selection.services.VaultWatcherService
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
@@ -296,6 +296,7 @@ class VaultWatcherServiceTest {
 
         val mockNet = InternalMockNetwork(cordappPackages = listOf(
                 "com.r3.corda.lib.tokens.money",
+                "com.r3.corda.lib.tokens.selection",
                 "com.r3.corda.lib.tokens.contracts",
                 "com.r3.corda.lib.tokens.workflows"
         ))

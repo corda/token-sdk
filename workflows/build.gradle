@@ -65,6 +65,7 @@ dependencies {
     cordaCompile project(":contracts")
     cordaCompile project(":modules:money")
     cordaCompile project(":modules:contracts-for-testing")
+    cordaCompile project(":modules:selection")
 }
 
 jar {

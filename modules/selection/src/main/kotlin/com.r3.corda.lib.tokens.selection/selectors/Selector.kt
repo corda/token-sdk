@@ -1,4 +1,4 @@
-package com.r3.corda.lib.tokens.workflows.internal.selection
+package com.r3.corda.lib.tokens.selection.selectors
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
@@ -6,15 +6,13 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
-import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer
-import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
+import com.r3.corda.lib.tokens.selection.TokenQueryBy
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Amount.Companion.sumOrThrow
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.AbstractParty
 import net.corda.core.node.ServiceHub
-import net.corda.core.transactions.TransactionBuilder
 import java.util.*
 
 /**
@@ -53,7 +51,7 @@ interface Selector {
     @Suspendable
     fun generateMove(
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
-            partiesAndAmounts: List<PartyAndAmount<TokenType>>,
+            partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
             changeHolder: AbstractParty,
             queryBy: TokenQueryBy? = null
     ): Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> {
@@ -62,7 +60,7 @@ interface Selector {
         // TODO Support spends for different token types, different instances of the same type.
         // The way to do this will be to perform a query for each token type. If there are multiple token types then
         // just do all the below however many times is necessary.
-        val totalRequired = partiesAndAmounts.map { it.amount }.sumOrThrow()
+        val totalRequired = partiesAndAmounts.map { it.second }.sumOrThrow()
         val acceptableStates = selectTokens(lockId, totalRequired, queryBy)
         require(acceptableStates.isNotEmpty()) {
             "No states matching given criteria to generate move."
@@ -139,7 +137,13 @@ interface Selector {
             amount: Amount<TokenType>,
             changeHolder: AbstractParty
     ): Pair<List<StateAndRef<FungibleToken>>, FungibleToken?> {
-        checkSameIssuer(exitStates)
+        check(exitStates.isNotEmpty()) {
+            "Exiting empty list of states"
+        }
+        val firstIssuer = exitStates.first().state.data.issuer
+        check(exitStates.all { it.state.data.issuer == firstIssuer }) {
+            "Tokens with different issuers."
+        }
         // Choose states to cover amount - return ones used, and change output
         val changeOutput = change(exitStates, amount, changeHolder)
         return Pair(exitStates, changeOutput)

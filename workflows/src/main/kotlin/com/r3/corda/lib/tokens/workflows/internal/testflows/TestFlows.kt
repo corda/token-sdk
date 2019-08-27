@@ -69,7 +69,7 @@ class DvPFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
         val changeHolder = serviceHub.keyManagementService.freshKeyAndCert(ourIdentityAndCert, false).party.anonymise()
         val (inputs, outputs) = DatabaseTokenSelection(serviceHub).generateMove(
                 lockId = runId.uuid,
-                partiesAndAmounts = listOf(PartyAndAmount(otherSession.counterparty, dvPNotification.amount)),
+                partiesAndAmounts = listOf(Pair(otherSession.counterparty, dvPNotification.amount)),
                 changeHolder = changeHolder
         )
         subFlow(SendStateAndRefFlow(otherSession, inputs))

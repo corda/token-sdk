@@ -1,8 +1,10 @@
-package com.r3.corda.lib.tokens.workflows.internal.selection
+package com.r3.corda.lib.tokens.selection.selectors
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.selection.TokenQueryBy
+import com.r3.corda.lib.tokens.selection.services.VaultWatcherService
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.node.ServiceHub
