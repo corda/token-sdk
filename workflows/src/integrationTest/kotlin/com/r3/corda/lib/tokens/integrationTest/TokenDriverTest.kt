@@ -105,7 +105,8 @@ class TokenDriverTest {
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.ci")
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
                 ),
                 // TODO this should be default to 4 in main corda no?
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())

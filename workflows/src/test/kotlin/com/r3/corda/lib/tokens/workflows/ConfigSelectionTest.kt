@@ -1,6 +1,7 @@
 package com.r3.corda.lib.tokens.workflows
 
 import com.r3.corda.lib.tokens.selection.config.CACHE_SIZE_DEFAULT
+import com.r3.corda.lib.tokens.selection.config.INDEXING_STRATEGY_DEFAULT
 import com.r3.corda.lib.tokens.selection.config.InMemorySelectionConfig
 import com.r3.corda.lib.tokens.selection.selectors.LocalTokenSelector
 import com.r3.corda.lib.tokens.selection.services.VaultWatcherService
@@ -137,7 +138,7 @@ class ConfigSelectionTest {
         val cordappConfig = TypesafeCordappConfig(config)
         val inMemoryConfig = InMemorySelectionConfig.parse(cordappConfig)
         assertThat(inMemoryConfig.cacheSize).isEqualTo(CACHE_SIZE_DEFAULT)
-        assertThat(inMemoryConfig.indexingStrategy).isEqualTo(VaultWatcherService.IndexingType.PUBLIC_KEY)
+        assertThat(inMemoryConfig.indexingStrategy).isEqualTo(INDEXING_STRATEGY_DEFAULT)
     }
 
     @Test

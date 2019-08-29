@@ -113,8 +113,9 @@ class DatabaseTokenSelection(
     ): List<StateAndRef<FungibleToken>> {
         val stateAndRefs = mutableListOf<StateAndRef<FungibleToken>>()
         for (retryCount in 1..maxRetries) {
-            val additionalCriteria = if (queryBy?.issuer != null) {
-                tokenAmountWithIssuerCriteria(requiredAmount.token, queryBy.issuer!!) //TODO !!
+            val issuer = queryBy?.issuer
+            val additionalCriteria = if (issuer != null) {
+                tokenAmountWithIssuerCriteria(requiredAmount.token, issuer)
             } else tokenAmountCriteria(requiredAmount.token)
             val criteria = queryBy?.queryCriteria?.let { additionalCriteria.and(it) }
                     ?: additionalCriteria

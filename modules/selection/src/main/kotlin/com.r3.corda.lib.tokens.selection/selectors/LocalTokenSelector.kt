@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.selection.TokenQueryBy
+import com.r3.corda.lib.tokens.selection.internal.Holder
 import com.r3.corda.lib.tokens.selection.services.VaultWatcherService
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
@@ -45,20 +46,20 @@ class LocalTokenSelector(
     ): List<StateAndRef<FungibleToken>> {
         synchronized(mostRecentlyLocked) {
             if (mostRecentlyLocked.get() == null) {
-                // TODO For now I put it as a hack to find all keys that belong to us, so it behaves similar to database selection API, refactor further, remember about accounts
-                val holder = if (queryBy?.holder == null) {
-                    val allKeys = services.keyManagementService.keys
-                    services.keyManagementService.filterMyKeys(allKeys)
-                } else queryBy.holder
                 val additionalPredicate = queryBy?.issuerAndPredicate() ?: { true } // TODO refactor
-                return vaultObserver.selectTokens(holder, requiredAmount, additionalPredicate, allowShortfall, autoUnlockDelay, lockId.toString()).also { mostRecentlyLocked.set(it to lockId.toString()) }
+                // We assume that if no queryBy was provided we want to choose all tokens of that token type and identifier
+                // OR unmapped identity? it depends on the indexing type
+                // TODO it can break here, maybe just avoid nullability whatsoever, or have one Holder subclass for all that
+                return vaultObserver.selectTokens(
+                        queryBy?.holder ?: Holder.JustToken, requiredAmount, additionalPredicate, allowShortfall, autoUnlockDelay, lockId.toString()
+                ).also { mostRecentlyLocked.set(it to lockId.toString()) }
             } else {
                 throw IllegalStateException("Each instance can only used to select tokens once")
             }
         }
     }
 
-    // TODO not used anywhere?
+    // For manual rollback
     @Suspendable
     fun rollback() {
         val lockedStates = mostRecentlyLocked.get()
