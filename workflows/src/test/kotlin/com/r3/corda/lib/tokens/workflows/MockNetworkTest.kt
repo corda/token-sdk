@@ -26,6 +26,7 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
             cordappsForAllNodes = listOf(TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
                     TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
                     TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection"),
                     TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")),
             threadPerNode = true,
             networkParameters = testNetworkParameters(minimumPlatformVersion = 4)

@@ -10,6 +10,7 @@ import net.corda.core.node.ServiceHub
 import org.slf4j.LoggerFactory
 
 const val CACHE_SIZE_DEFAULT = 1024 // TODO Return good default, for now it's not wired, it will be done in separate PR.
+val INDEXING_STRATEGY_DEFAULT = VaultWatcherService.IndexingType.TOKEN // Default is by token class and identifier
 
 // TODO that interface should be separate, same for selector
 interface StateSelectionConfig {
@@ -26,7 +27,7 @@ data class InMemorySelectionConfig(val indexingStrategy: VaultWatcherService.Ind
             val indexingType = try {
                 VaultWatcherService.IndexingType.valueOf(config.get("stateSelection.inMemory.indexingStrategy").toString().toUpperCase())
             } catch (e: CordappConfigException) {
-                VaultWatcherService.IndexingType.PUBLIC_KEY // Default is public key.
+                INDEXING_STRATEGY_DEFAULT
             }
             logger.info("Found in memory token selection configuration with values indexing strategy: $indexingType, cacheSize: $cacheSize")
             return InMemorySelectionConfig(indexingType, cacheSize)
@@ -39,7 +40,6 @@ data class InMemorySelectionConfig(val indexingStrategy: VaultWatcherService.Ind
             val vaultObserver = services.cordaService(VaultWatcherService::class.java)
             LocalTokenSelector(services, vaultObserver, state = null)// TODO allowShortFall and autoUnlockDelay, should it be config or per flow?
         } catch (e: IllegalArgumentException) {
-            // TODO Provide some docs reference after I finish the refactor, so it's clear what needs to be done
             throw IllegalArgumentException("Couldn't find VaultWatcherService in CordaServices, please make sure that it was installed in node.")
         }
     }

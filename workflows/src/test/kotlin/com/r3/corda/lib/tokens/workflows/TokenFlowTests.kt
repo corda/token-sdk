@@ -6,6 +6,7 @@ import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.contracts.utilities.sumIssuedTokensOrNull
 import com.r3.corda.lib.tokens.money.GBP
+import com.r3.corda.lib.tokens.selection.services.VaultWatcherService
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveFungibleTokens
@@ -257,7 +258,7 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         val lockId = UUID.randomUUID()
         A.transaction {
             val token1 = tokenSelection.selectTokens(lockId, requiredAmount = 1 of GBP)
-            val token2 = tokenSelection.selectTokens(lockId,1 of GBP)
+            val token2 = tokenSelection.selectTokens(lockId, 1 of GBP)
             assertThat(token1).isNotEqualTo(token2)
         }
     }

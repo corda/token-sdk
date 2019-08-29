@@ -7,6 +7,8 @@ import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.selection.TokenQueryBy
+import com.r3.corda.lib.tokens.selection.selectors.LocalTokenSelector
+import com.r3.corda.lib.tokens.selection.services.VaultWatcherService
 import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer
 import com.r3.corda.lib.tokens.workflows.internal.checkSameNotary
 import com.r3.corda.lib.tokens.workflows.internal.selection.DatabaseTokenSelection
@@ -105,7 +107,7 @@ fun addFungibleTokensToRedeem(
     val selector = DatabaseTokenSelection(serviceHub)
     val baseCriteria = tokenAmountWithIssuerCriteria(amount.token, issuer)
     val queryCriteria = additionalQueryCriteria?.let { baseCriteria.and(it) } ?: baseCriteria
-    val fungibleStates = selector.selectTokens(transactionBuilder.lockId, amount, TokenQueryBy(queryCriteria = queryCriteria))
+    val fungibleStates = selector.selectTokens(transactionBuilder.lockId, amount, TokenQueryBy(issuer = issuer, queryCriteria = queryCriteria))
     checkSameNotary(fungibleStates)
     check(fungibleStates.isNotEmpty()) {
         "Received empty list of states to redeem."
