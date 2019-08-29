@@ -12,7 +12,7 @@ class AnonymisePartiesFlowHandler(val otherSession: FlowSession) : FlowLogic<Uni
     override fun call() {
         val action = otherSession.receive<ActionRequest>().unwrap { it }
         if (action == ActionRequest.CREATE_NEW_KEY) {
-            subFlow(RequestConfidentialIdentityFlowHandler(otherSession))
+            subFlow(ProvideKeyFlow(otherSession))
         }
     }
 }

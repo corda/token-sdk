@@ -1,8 +1,8 @@
 package com.r3.corda.lib.tokens.workflows.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.ci.ProvideKeyFlow
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.workflows.internal.flows.confidential.RequestConfidentialIdentityFlowHandler
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
 import net.corda.core.contracts.Amount
 import net.corda.core.flows.FlowLogic
@@ -33,7 +33,7 @@ constructor(
         // Send anonymous identity to the issuer.
         issuerSession.send(TransactionRole.PARTICIPANT)
         observerSessions.forEach { it.send(TransactionRole.OBSERVER) }
-        val changeOwner = subFlow(RequestConfidentialIdentityFlowHandler(issuerSession))
+        val changeOwner = subFlow(ProvideKeyFlow(issuerSession))
         return subFlow(RedeemFungibleTokensFlow(
                 amount = amount,
                 issuerSession = issuerSession,

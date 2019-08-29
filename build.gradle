@@ -1,7 +1,7 @@
 buildscript {
     ext {
         corda_release_group = 'net.corda'
-        corda_release_version = '5.0-SNAPSHOT-CI'
+        corda_release_version = '4.3-SNAPSHOT'
         tokens_release_group = "com.r3.corda.lib.tokens"
         tokens_release_version = "1.1-SNAPSHOT"
         corda_gradle_plugins_version = '4.0.45'
@@ -16,7 +16,7 @@ buildscript {
         log4j_version = '2.9.1'
         jackson_version = '2.9.0'
         confidential_id_release_group = "com.r3.corda.lib.ci"
-        confidential_id_release_version = "1.1-SNAPSHOT"
+        confidential_id_release_version = "1.0-SNAPSHOT"
     }
 
     repositories {
