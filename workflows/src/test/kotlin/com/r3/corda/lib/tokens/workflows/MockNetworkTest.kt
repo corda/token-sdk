@@ -26,7 +26,8 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
             cordappsForAllNodes = listOf(TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
                     TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
                     TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
-                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.ci")),
             threadPerNode = true,
             networkParameters = testNetworkParameters(minimumPlatformVersion = 4)
     )
@@ -53,7 +54,12 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
 
     @After
     fun tearDownNetwork() {
-        network.stopNodes()
+        // Required to get around mysterious KryoException
+        try{
+            network.stopNodes()
+        } catch (e: Exception) {
+            println(e.localizedMessage)
+        }
     }
 
     protected val NOTARY: StartedMockNode get() = network.defaultNotaryNode

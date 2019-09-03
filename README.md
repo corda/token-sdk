@@ -57,9 +57,23 @@ shell with the following command:
 See the token template code [here](https://github.com/corda/cordapp-template-kotlin/tree/token-template)
 for more information.
 
+
+### Build Tokens SDK against Corda release branch
+
+Often, in order to use the latest tokens-sdk master you will need to build against a specific Corda release branch until 
+the required changes make it into a Corda release. At the team of writing tokens `1.1-SNAPSHOT` requires Corda 
+`4.3-SNAPSHOT`. You can build this branch with the following commands:
+
+    git clone https://github.com/corda/corda
+    git fetch
+    git checkout origin release/os/4.3
+   
+Then run a `./gradlew clean install` from the root directory.
+
 ### Adding token SDK dependencies to an existing CorDapp
 
-First, add a variable for the tokens SDK version you wish to use:
+First, add a variable for the tokens release group and the version you 
+wish to use and set the corda version that should've been installed locally::
 
     buildscript {
         ext {

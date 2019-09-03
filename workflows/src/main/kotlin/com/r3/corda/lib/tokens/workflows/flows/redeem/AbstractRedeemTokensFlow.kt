@@ -1,10 +1,10 @@
 package com.r3.corda.lib.tokens.workflows.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.ci.SyncKeyMappingFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
-import net.corda.confidential.IdentitySyncFlow
 import net.corda.core.flows.CollectSignaturesFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
@@ -52,7 +52,7 @@ abstract class AbstractRedeemTokensFlow : FlowLogic<SignedTransaction>() {
         // First synchronise identities between issuer and our states.
         // TODO: Only do this if necessary.
         progressTracker.currentStep = SYNC_IDS
-        subFlow(IdentitySyncFlow.Send(issuerSession, txBuilder.toWireTransaction(serviceHub)))
+        subFlow(SyncKeyMappingFlow(issuerSession, txBuilder.toWireTransaction(serviceHub)))
         val ourSigningKeys = txBuilder.toLedgerTransaction(serviceHub).ourSigningKeys(serviceHub)
         val partialStx = serviceHub.signInitialTransaction(txBuilder, ourSigningKeys)
         // Call collect signatures flow, issuer should perform all the checks for redeeming states.
