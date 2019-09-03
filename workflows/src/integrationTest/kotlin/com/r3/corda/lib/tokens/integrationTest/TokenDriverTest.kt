@@ -93,7 +93,7 @@ class TokenDriverTest {
         }
     }
 
-    @Test(timeout = 300_000)
+    @Test(timeout = 500_000)
     fun `beefy tokens integration test`() {
         driver(DriverParameters(
                 portAllocation = incrementalPortAllocation(),
