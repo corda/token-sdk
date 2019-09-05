@@ -31,7 +31,6 @@ import java.util.concurrent.atomic.AtomicReference
 class LocalTokenSelector(
         override val services: ServiceHub,
         private val vaultObserver: VaultWatcherService,
-        private val allowShortfall: Boolean = false,
         private val autoUnlockDelay: Duration = Duration.ofMinutes(5),
         state: Pair<List<StateAndRef<FungibleToken>>, String>? = null // Used for deserializing
 ) : SerializeAsToken, Selector {
@@ -51,7 +50,7 @@ class LocalTokenSelector(
                 // OR unmapped identity? it depends on the indexing type
                 // TODO it can break here, maybe just avoid nullability whatsoever, or have one Holder subclass for all that
                 return vaultObserver.selectTokens(
-                        queryBy?.holder ?: Holder.JustToken, requiredAmount, additionalPredicate, allowShortfall, autoUnlockDelay, lockId.toString()
+                        queryBy?.holder ?: Holder.JustToken, requiredAmount, additionalPredicate, false, autoUnlockDelay, lockId.toString()
                 ).also { mostRecentlyLocked.set(it to lockId.toString()) }
             } else {
                 throw IllegalStateException("Each instance can only used to select tokens once")
@@ -71,14 +70,14 @@ class LocalTokenSelector(
 
     override fun toToken(context: SerializeAsTokenContext): SerializationToken {
         val lockedStateAndRefs = mostRecentlyLocked.get() ?: listOf<StateAndRef<FungibleToken>>() to ""
-        return SerialToken(lockedStateAndRefs.first, lockedStateAndRefs.second, allowShortfall, autoUnlockDelay) // TODO think where to move allowShortfall and autoUnlockDelay
+        return SerialToken(lockedStateAndRefs.first, lockedStateAndRefs.second, false, autoUnlockDelay) // TODO think where to move allowShortfall and autoUnlockDelay
     }
 
     private class SerialToken(val lockedStateAndRefs: List<StateAndRef<FungibleToken>>, val selectionId: String, val allowShortfall: Boolean, val autoUnlockDelay: Duration) : SerializationToken {
         override fun fromToken(context: SerializeAsTokenContext): LocalTokenSelector {
             val watcherService = context.serviceHub.cordaService(VaultWatcherService::class.java)
             watcherService.lockTokensExternal(lockedStateAndRefs, knownSelectionId = selectionId)
-            return LocalTokenSelector(context.serviceHub, watcherService, state = lockedStateAndRefs to selectionId, allowShortfall = allowShortfall, autoUnlockDelay = autoUnlockDelay)
+            return LocalTokenSelector(context.serviceHub, watcherService, state = lockedStateAndRefs to selectionId, autoUnlockDelay = autoUnlockDelay)
         }
     }
 }

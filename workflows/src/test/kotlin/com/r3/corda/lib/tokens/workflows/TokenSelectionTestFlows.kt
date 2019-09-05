@@ -22,14 +22,13 @@ import java.util.concurrent.Future
 val e = Executors.newSingleThreadExecutor()
 
 class SuspendingSelector(val owningKey: PublicKey,
-                         val amount: Amount<TokenType>,
-                         val allowShortfall: Boolean) : FlowLogic<List<StateAndRef<FungibleToken>>>() {
+                         val amount: Amount<TokenType>) : FlowLogic<List<StateAndRef<FungibleToken>>>() {
 
 
     @Suspendable
     override fun call(): List<StateAndRef<FungibleToken>> {
         val vaultWatcherService = serviceHub.cordaService(VaultWatcherService::class.java)
-        val localTokenSelector = LocalTokenSelector(serviceHub, vaultWatcherService, allowShortfall = allowShortfall)
+        val localTokenSelector = LocalTokenSelector(serviceHub, vaultWatcherService)
 
         val selectedTokens = localTokenSelector.selectTokens(requiredAmount = amount, queryBy = TokenQueryBy(holder = Holder.JustToken))
 

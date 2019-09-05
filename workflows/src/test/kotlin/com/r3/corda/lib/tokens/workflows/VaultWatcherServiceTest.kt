@@ -326,7 +326,7 @@ class VaultWatcherServiceTest {
         val issueResultTx = resultFuture.get()
         val issuedStateRef = issueResultTx.coreTransaction.outRefsOfType<FungibleToken>().single()
 
-        val tokensFuture = aliceNode.services.startFlow(SuspendingSelector(alice.owningKey, Amount(1, BTC), allowShortfall = false)).resultFuture
+        val tokensFuture = aliceNode.services.startFlow(SuspendingSelector(alice.owningKey, Amount(1, BTC))).resultFuture
         mockNet.runNetwork()
         val selectedToken = tokensFuture.getOrThrow().single()
 
