@@ -5,9 +5,9 @@ import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.selection.internal.Holder
 import com.r3.corda.lib.tokens.selection.internal.lookupExternalIdFromKey
-import com.r3.corda.lib.tokens.selection.services.InsufficientBalanceException
-import com.r3.corda.lib.tokens.selection.services.TokenObserver
-import com.r3.corda.lib.tokens.selection.services.VaultWatcherService
+import com.r3.corda.lib.tokens.selection.memory.services.InsufficientBalanceException
+import com.r3.corda.lib.tokens.selection.memory.services.TokenObserver
+import com.r3.corda.lib.tokens.selection.memory.services.VaultWatcherService
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.identity.CordaX500Name

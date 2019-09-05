@@ -1,14 +1,18 @@
-package com.r3.corda.lib.tokens.workflows.internal.selection
+package com.r3.corda.lib.tokens.selection.database.selector
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.selection.TokenQueryBy
-import com.r3.corda.lib.tokens.selection.selectors.Selector
-import com.r3.corda.lib.tokens.selection.services.InsufficientBalanceException
-import com.r3.corda.lib.tokens.workflows.utilities.sortByStateRefAscending
-import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
-import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountWithIssuerCriteria
+import com.r3.corda.lib.tokens.selection.api.Selector
+import com.r3.corda.lib.tokens.selection.database.config.MAX_RETRIES_DEFAULT
+import com.r3.corda.lib.tokens.selection.database.config.PAGE_SIZE_DEFAULT
+import com.r3.corda.lib.tokens.selection.database.config.RETRY_CAP_DEFAULT
+import com.r3.corda.lib.tokens.selection.database.config.RETRY_SLEEP_DEFAULT
+import com.r3.corda.lib.tokens.selection.memory.services.InsufficientBalanceException
+import com.r3.corda.lib.tokens.selection.sortByStateRefAscending
+import com.r3.corda.lib.tokens.selection.tokenAmountCriteria
+import com.r3.corda.lib.tokens.selection.tokenAmountWithIssuerCriteria
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowLogic

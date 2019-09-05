@@ -6,9 +6,7 @@ import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.selection.TokenQueryBy
-import com.r3.corda.lib.tokens.selection.selectors.LocalTokenSelector
-import com.r3.corda.lib.tokens.selection.services.VaultWatcherService
-import com.r3.corda.lib.tokens.workflows.internal.selection.DatabaseTokenSelection
+import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateMoveNonFungible
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken

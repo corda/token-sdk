@@ -1,10 +1,10 @@
-package com.r3.corda.lib.tokens.selection.services
+package com.r3.corda.lib.tokens.selection.memory.services
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.withoutIssuer
-import com.r3.corda.lib.tokens.selection.config.InMemorySelectionConfig
+import com.r3.corda.lib.tokens.selection.memory.config.InMemorySelectionConfig
 import com.r3.corda.lib.tokens.selection.internal.Holder
 import com.r3.corda.lib.tokens.selection.internal.lookupExternalIdFromKey
 import com.r3.corda.lib.tokens.selection.sortByStateRefAscending
@@ -36,7 +36,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver, private val 
     enum class IndexingType {
         EXTERNAL_ID, // external id (all keys registered to this id as an owner) + token class + token identifier
         PUBLIC_KEY, // Public key + token class + token identifier
-        TOKEN // Just token class + token identifier without owner
+        TOKEN_ONLY // Just token class + token identifier without owner
     }
 
     private val cache: ConcurrentMap<TokenIndex, TokenBucket> = ConcurrentHashMap()
@@ -65,7 +65,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver, private val 
                         val owningKey = stateAndRef.state.data.holder.owningKey
                         lookupExternalIdFromKey(owningKey, services)
                     }
-                IndexingType.TOKEN -> // This is default indexing.
+                IndexingType.TOKEN_ONLY -> // This is default indexing.
                     { _, _ ->
                         Holder.JustToken
                     }
