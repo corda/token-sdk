@@ -16,8 +16,7 @@ import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistribu
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlowHandler
 import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
-import com.r3.corda.lib.tokens.workflows.internal.selection.DatabaseTokenSelection
-import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
+import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
 import net.corda.core.contracts.Amount

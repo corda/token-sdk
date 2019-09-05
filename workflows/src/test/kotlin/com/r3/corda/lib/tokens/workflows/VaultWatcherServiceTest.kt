@@ -10,9 +10,9 @@ import com.r3.corda.lib.tokens.contracts.utilities.withoutIssuer
 import com.r3.corda.lib.tokens.money.BTC
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.selection.internal.Holder
-import com.r3.corda.lib.tokens.selection.services.InsufficientBalanceException
-import com.r3.corda.lib.tokens.selection.services.TokenObserver
-import com.r3.corda.lib.tokens.selection.services.VaultWatcherService
+import com.r3.corda.lib.tokens.selection.memory.services.InsufficientBalanceException
+import com.r3.corda.lib.tokens.selection.memory.services.TokenObserver
+import com.r3.corda.lib.tokens.selection.memory.services.VaultWatcherService
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef

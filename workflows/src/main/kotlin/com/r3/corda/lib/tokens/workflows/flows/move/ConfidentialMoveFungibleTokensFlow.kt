@@ -3,9 +3,9 @@ package com.r3.corda.lib.tokens.workflows.flows.move
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.selection.TokenQueryBy
+import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.flows.confidential.ConfidentialTokensFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
-import com.r3.corda.lib.tokens.workflows.internal.selection.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.toPairs
 import net.corda.core.flows.FlowLogic

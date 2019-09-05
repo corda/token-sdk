@@ -23,9 +23,9 @@ stateSelection {
 }
 ```
 
-And choose indexing strategy, `external_id` , `public_key` or `token`. Public key strategy makes a token bucket for each public key,
+And choose indexing strategy, `external_id` , `public_key` or `token_only`. Public key strategy makes a token bucket for each public key,
 so if you use accounts, probably it is better to use external id grouping that groups states
-from many public keys connected with given uuid. Just `token` selection strategy indexes states only using token type and identifier.
+from many public keys connected with given uuid. `token_only` selection strategy indexes states only using token type and identifier.
 
 ## How to use LocalTokenSelector from the flow
 

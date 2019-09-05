@@ -1,11 +1,12 @@
-package com.r3.corda.lib.tokens.selection.selectors
+package com.r3.corda.lib.tokens.selection.memory.selector
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.selection.TokenQueryBy
+import com.r3.corda.lib.tokens.selection.api.Selector
 import com.r3.corda.lib.tokens.selection.internal.Holder
-import com.r3.corda.lib.tokens.selection.services.VaultWatcherService
+import com.r3.corda.lib.tokens.selection.memory.services.VaultWatcherService
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.node.ServiceHub

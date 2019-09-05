@@ -1,4 +1,4 @@
-package com.r3.corda.lib.tokens.selection.selectors
+package com.r3.corda.lib.tokens.selection.api
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
