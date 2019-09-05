@@ -165,6 +165,9 @@ class VaultWatcherService(private val tokenObserver: TokenObserver, private val 
         }
 
         if (!allowShortfall && amountLocked < requiredAmount) {
+            lockedTokens.forEach {
+                unlockToken(it, selectionId)
+            }
             throw InsufficientBalanceException("Insufficient spendable states identified for $requiredAmount.")
         }
 

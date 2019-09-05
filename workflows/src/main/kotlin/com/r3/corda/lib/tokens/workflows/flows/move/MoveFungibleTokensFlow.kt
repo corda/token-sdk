@@ -34,9 +34,9 @@ constructor(
     @JvmOverloads
     constructor(
             partyAndAmount: PartyAndAmount<TokenType>,
+            queryCriteria: QueryCriteria? = null,
             participantSessions: List<FlowSession>,
             observerSessions: List<FlowSession> = emptyList(),
-            queryCriteria: QueryCriteria? = null,
             changeHolder: AbstractParty? = null
     ) : this(listOf(partyAndAmount), participantSessions, observerSessions, queryCriteria, changeHolder)
 

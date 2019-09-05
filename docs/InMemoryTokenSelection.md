@@ -5,27 +5,27 @@
 To remove potential performance bottleneck and remove the requirement for database specific SQL to be provided for each backend,
 in memory implementation of token selection was introduced as an experimental feature of `token-sdk`.
 To use it, you need to have `VaultWatcherService` installed as a `CordaService` on node startup. Indexing
-strategy could be specified, either by PublicKey or by ExternalId if using accounts feature.
+strategy could be specified, by PublicKey, by ExternalId (if using accounts feature) or just by token type and identifier.
 
 ## How to switch between database based selection and in memory cache?
 
 To be able to use in memory token selection, make sure that you have `VaultWatcherService` corda service installed
 (for now it comes with `token-sdk` but may be split out in the future). There are configuration options available
 for service initialisation when cordapps are loaded.
-In your CorDapp config put:
+In your [CorDapp config](https://docs.corda.net/cordapp-build-systems.html#cordapp-configuration-files) put:
 
 ```text
 stateSelection {
     in_memory {
-           indexingStrategy: ["external_id"|"public_key"]
+           indexingStrategy: ["external_id"|"public_key"|"token"]
            cacheSize: Int
     }
 }
 ```
 
-And choose indexing strategy, either `external_id` or `public_key`. Public key strategy makes a token bucket for each public key,
-so if you use confidential identities for each transaction, probably it is better to use external id grouping that groups states
-from many public keys connected with given uuid.
+And choose indexing strategy, `external_id` , `public_key` or `token`. Public key strategy makes a token bucket for each public key,
+so if you use accounts, probably it is better to use external id grouping that groups states
+from many public keys connected with given uuid. Just `token` selection strategy indexes states only using token type and identifier.
 
 ## How to use LocalTokenSelector from the flow
 
@@ -45,13 +45,12 @@ val vaultWatcherService = serviceHub.cordaService(VaultWatcherService::class.jav
 After that construct `LocalTokenSelector` instance for use in your flow:
 
 ```kotlin
-val allowShortfall: Boolean = ... // Defaults to false. Specifies if we want to select tokens that not cover the required amount.
 val autoUnlockDelay = ... // Defaults to Duration.ofMinutes(5). Time after which the tokens that are not spent will be automatically released.
-val localTokenSelector = LocalTokenSelector(serviceHub, vaultWatcherService,  allowShortfall = allowShortfall, autoUnlockDelay = autoUnlockDelay)
+// autoUnlockDelay is needed in case flow errors or hangs on some operation.
+val localTokenSelector = LocalTokenSelector(serviceHub, vaultWatcherService, autoUnlockDelay = autoUnlockDelay)
 ```
 
-After that you can choose states for move by either calling `selectTokens` or even better `generateMove`. The latter method returns
-list of inputs and list of output states that can be passed to `addMove` or `MoveTokensFlow`:
+After that you can choose states for move by either calling `selectTokens`:
 
 ```kotlin
 val transactionBuilder: TransactionBuilder = ...
@@ -63,6 +62,11 @@ val selectedStates: List<StateAndRef<FungibleToken>> = localTokenSelector.select
     lockID = transactionBuilder.lockId, // Defaults to FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     requiredAmount = requiredAmount,
     queryBy = queryBy) // TODO Add querying
+```
+
+or even better `generateMove` method returns list of inputs and list of output states that can be passed to `addMove` or `MoveTokensFlow`:
+
+```kotlin
 // or generate inputs, outputs with change, grouped by issuers
 val partiesAndAmounts: List<PartyAndAmount<TokenType>> = ... // As in previous tutorials, list of parties that should receive amount of TokenType
 val changeHolder: AbstractParty = ... // Party that should receive change
@@ -86,7 +90,7 @@ Using in memory selection when redeeming tokens looks very similar to move:
 
 ```kotlin
 val vaultWatcherService = serviceHub.cordaService(VaultWatcherService::class.java)
-val localTokenSelector = LocalTokenSelector(serviceHub, vaultWatcherService,  allowShortfall = allowShortfall, autoUnlockDelay = autoUnlockDelay)
+val localTokenSelector = LocalTokenSelector(serviceHub, vaultWatcherService, autoUnlockDelay = autoUnlockDelay)
 
 // Smilar to previous case, we need to choose states that cover the amount.
 val exitStates: List<StateAndRef<FungibleToken>> = localTokenSelector.selectStates(
