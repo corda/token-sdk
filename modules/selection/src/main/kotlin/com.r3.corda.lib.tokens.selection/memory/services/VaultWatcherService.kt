@@ -5,8 +5,8 @@ import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.withoutIssuer
 import com.r3.corda.lib.tokens.selection.memory.config.InMemorySelectionConfig
-import com.r3.corda.lib.tokens.selection.internal.Holder
-import com.r3.corda.lib.tokens.selection.internal.lookupExternalIdFromKey
+import com.r3.corda.lib.tokens.selection.memory.internal.Holder
+import com.r3.corda.lib.tokens.selection.memory.internal.lookupExternalIdFromKey
 import com.r3.corda.lib.tokens.selection.sortByStateRefAscending
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
