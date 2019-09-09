@@ -46,7 +46,7 @@ class TokenDriverTest {
     @Test
     fun `should allow issuance of inline defined token`() {
         driver(DriverParameters(
-                portAllocation = incrementalPortAllocation(15000),
+                portAllocation = incrementalPortAllocation(),
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
@@ -71,7 +71,7 @@ class TokenDriverTest {
     @Test(expected = TransactionVerificationException.ContractRejection::class)
     fun `should prevent issuance of a token with a null jarHash that does not use an inline tokenType`() {
         driver(DriverParameters(
-                portAllocation = incrementalPortAllocation(10000),
+                portAllocation = incrementalPortAllocation(),
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
@@ -96,7 +96,7 @@ class TokenDriverTest {
     @Test(timeout = 300_000)
     fun `beefy tokens integration test`() {
         driver(DriverParameters(
-                portAllocation = incrementalPortAllocation(20000),
+                portAllocation = incrementalPortAllocation(),
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),

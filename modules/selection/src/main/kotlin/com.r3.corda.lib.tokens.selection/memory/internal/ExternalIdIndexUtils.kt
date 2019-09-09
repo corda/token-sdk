@@ -1,8 +1,7 @@
-package com.r3.corda.lib.tokens.selection.internal
+package com.r3.corda.lib.tokens.selection.memory.internal
 
 import net.corda.core.crypto.toStringShort
 import net.corda.core.node.ServiceHub
-import net.corda.nodeapi.internal.persistence.CordaPersistence
 import java.security.PublicKey
 import java.util.*
 
@@ -32,28 +31,21 @@ sealed class Holder {
 
 // TODO after corda 4.3 we will be able to use cache introduced by this PR https://github.com/corda/corda/pull/5357
 fun lookupExternalIdFromKey(owningKey: PublicKey, serviceHub: ServiceHub): Holder {
-    // Small explanation, observable thread doesn't have access to database transaction, what a nice surprise, the only way to make it work
-    // is to obtain database via reflection from vaultService. Hopefully this will get fixed in 4.3. Additionally if we will use cache introduced in the PR mentioned above
-    // it won't be a problem anymore.
-    // uh oh, since kotlin 1.1 we can use this trick to compute it only on the first access
-    val database: CordaPersistence by lazy { serviceHub.vaultService::class.java.getDeclaredField("database").also { it.isAccessible = true }.get(serviceHub.vaultService) as CordaPersistence }
-    return database.transaction {
-        serviceHub.withEntityManager {
-            val query = createNativeQuery(
-                    """
+    return serviceHub.withEntityManager {
+        val query = createNativeQuery(
+                """
                         select $publicKeyHashToExternalId_externalId
                         from $publicKeyHashToExternalId
                         where $publicKeyHashToExternalId_publicKeyHash = :hash
                     """
-            )
-            query.setParameter("hash", owningKey.toStringShort())
-            val uuid = query.resultList.firstOrNull()?.let { UUID.fromString(it as String) }
-            if (uuid != null || isKeyPartOfNodeKeyPairs(owningKey, serviceHub) || isKeyIdentityKey(owningKey, serviceHub)) {
-                val signingEntity = Holder.fromUUID(uuid)
-                signingEntity
-            } else {
-                Holder.UnmappedIdentity // TODO need to have good default for these cases with no mapping
-            }
+        )
+        query.setParameter("hash", owningKey.toStringShort())
+        val uuid = query.resultList.firstOrNull()?.let { UUID.fromString(it as String) }
+        if (uuid != null || isKeyPartOfNodeKeyPairs(owningKey, serviceHub) || isKeyIdentityKey(owningKey, serviceHub)) {
+            val signingEntity = Holder.fromUUID(uuid)
+            signingEntity
+        } else {
+            Holder.UnmappedIdentity // TODO need to have good default for these cases with no mapping
         }
     }
 }

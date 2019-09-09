@@ -1,7 +1,7 @@
 package com.r3.corda.lib.tokens.selection
 
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
-import com.r3.corda.lib.tokens.selection.internal.Holder
+import com.r3.corda.lib.tokens.selection.memory.internal.Holder
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.identity.Party
 import net.corda.core.node.services.vault.QueryCriteria

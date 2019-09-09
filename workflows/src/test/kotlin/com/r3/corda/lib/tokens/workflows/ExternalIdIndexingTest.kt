@@ -3,8 +3,8 @@ package com.r3.corda.lib.tokens.workflows
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
-import com.r3.corda.lib.tokens.selection.internal.Holder
-import com.r3.corda.lib.tokens.selection.internal.lookupExternalIdFromKey
+import com.r3.corda.lib.tokens.selection.memory.internal.Holder
+import com.r3.corda.lib.tokens.selection.memory.internal.lookupExternalIdFromKey
 import com.r3.corda.lib.tokens.selection.memory.services.InsufficientBalanceException
 import com.r3.corda.lib.tokens.selection.memory.services.TokenObserver
 import com.r3.corda.lib.tokens.selection.memory.services.VaultWatcherService
@@ -13,6 +13,7 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.services.Vault
+import net.corda.nodeapi.internal.persistence.CordaPersistence
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
@@ -25,16 +26,19 @@ import java.util.*
 
 class ExternalIdIndexingTest {
     private lateinit var services: MockServices
+    private lateinit var database: CordaPersistence
 
     @Before
     fun setup() {
-        services = MockServices.makeTestDatabaseAndPersistentServices(
+        val mockDbAndServices = MockServices.makeTestDatabaseAndPersistentServices(
                 cordappPackages = listOf("com.r3.corda.lib.tokens.workflows"),
                 initialIdentity = TestIdentity(CordaX500Name("Test", "London", "GB")),
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4),
                 moreIdentities = emptySet(),
                 moreKeys = emptySet()
-        ).second
+        )
+        services = mockDbAndServices.second
+        database = mockDbAndServices.first
     }
 
     private fun getExternalIdVaultObserver(): Pair<TokenObserver, PublishSubject<Vault.Update<FungibleToken>>> {
@@ -53,8 +57,8 @@ class ExternalIdIndexingTest {
         val key1 = services.keyManagementService.freshKey(uuid1)
         val key2 = services.keyManagementService.freshKey(uuid2)
         val amountToIssue: Long = 100
-        val stateAndRef1 = VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key1, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, GBP, observable)
-        val stateAndRef2 = VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key2, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, GBP, observable)
+        val stateAndRef1 = VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key1, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, GBP, observable, database)
+        val stateAndRef2 = VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key2, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, GBP, observable, database)
         val selectedTokens1 = vaultWatcherService.selectTokens(Holder.MappedIdentity(uuid1), Amount(5, GBP), selectionId = "abc")
         val selectedTokens2 = vaultWatcherService.selectTokens(Holder.MappedIdentity(uuid2), Amount(5, GBP), selectionId = "abc")
         Assert.assertThat(selectedTokens1, CoreMatchers.`is`(CoreMatchers.equalTo(listOf<StateAndRef<FungibleToken>>(stateAndRef1))))
@@ -69,8 +73,10 @@ class ExternalIdIndexingTest {
         val uuid = UUID.randomUUID()
         val key = services.keyManagementService.freshKey(uuid)
         val amountToIssue: Long = 5
-        VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, USD, observable)
-        VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, GBP, observable)
-        vaultWatcherService.selectTokens(Holder.MappedIdentity(uuid), Amount(10, GBP), selectionId = "abc")
+        VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, USD, observable, database)
+        VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, GBP, observable, database)
+        database.transaction {
+            vaultWatcherService.selectTokens(Holder.MappedIdentity(uuid), Amount(10, GBP), selectionId = "abc")
+        }
     }
 }
