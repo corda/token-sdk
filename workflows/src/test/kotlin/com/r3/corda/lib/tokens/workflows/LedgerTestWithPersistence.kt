@@ -2,7 +2,7 @@ package com.r3.corda.lib.tokens.workflows
 
 import com.nhaarman.mockito_kotlin.whenever
 import net.corda.core.identity.CordaX500Name
-import net.corda.node.services.api.IdentityServiceInternal
+import net.corda.core.node.services.IdentityService
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.DUMMY_NOTARY_NAME
 import net.corda.testing.core.SerializationEnvironmentRule
@@ -14,7 +14,7 @@ import org.mockito.Mockito
 
 abstract class LedgerTestWithPersistence {
 
-    private val mockIdentityService = rigorousMock<IdentityServiceInternal>().also {
+    private val mockIdentityService = rigorousMock<IdentityService>().also {
         Mockito.doReturn(ALICE.party).whenever(it).partyFromKey(ALICE.publicKey)
         Mockito.doReturn(BOB.party).whenever(it).partyFromKey(BOB.publicKey)
         Mockito.doReturn(ISSUER.party).whenever(it).partyFromKey(ISSUER.publicKey)

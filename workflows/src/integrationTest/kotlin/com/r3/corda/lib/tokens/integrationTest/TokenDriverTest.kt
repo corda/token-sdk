@@ -51,8 +51,9 @@ class TokenDriverTest {
                 cordappsForAllNodes = listOf(
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
-                        ),
+                ),
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
         )) {
             val issuer = startNode(providedName = BOC_NAME).getOrThrow()
@@ -78,7 +79,8 @@ class TokenDriverTest {
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci")
                 ),
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
         )) {
@@ -93,7 +95,7 @@ class TokenDriverTest {
         }
     }
 
-    @Test(timeout = 300_000)
+    @Test(timeout = 500_000)
     fun `beefy tokens integration test`() {
         driver(DriverParameters(
                 portAllocation = incrementalPortAllocation(),
@@ -103,6 +105,7 @@ class TokenDriverTest {
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
                 ),
                 // TODO this should be default to 4 in main corda no?

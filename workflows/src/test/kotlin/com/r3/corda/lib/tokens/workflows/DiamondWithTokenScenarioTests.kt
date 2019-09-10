@@ -5,7 +5,6 @@ import com.r3.corda.lib.tokens.testing.states.DiamondGradingReport
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
 import org.junit.Test
-import java.time.Duration
 import kotlin.test.assertEquals
 
 /**
@@ -50,34 +49,34 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
                 token = diamondPointer,
                 issueTo = alice,
                 anonymous = true
-        ).getOrThrow(Duration.ofSeconds(5))
+        ).getOrThrow()
         // GIC should *not* receive a copy of this issuance
         assertHasTransaction(issueTokenTx, alice)
         assertNotHasTransaction(issueTokenTx, gic)
 
         // STEP 03: Alice transfers ownership to Bob
         // Continuing the chain of sale
-        val moveTokenToBobTx = alice.moveNonFungibleTokens(diamondPointer, bob, anonymous = true).getOrThrow(Duration.ofSeconds(5))
+        val moveTokenToBobTx = alice.moveNonFungibleTokens(diamondPointer, bob, anonymous = true).getOrThrow()
         assertHasTransaction(moveTokenToBobTx, alice, bob)
         assertNotHasTransaction(moveTokenToBobTx, gic, denise)
 
         // STEP 04: Bob transfers ownership to Charlie
         // Continuing the chain of sale
-        val moveTokenToCharlieTx = bob.moveNonFungibleTokens(diamondPointer, charlie, anonymous = true).getOrThrow(Duration.ofSeconds(5))
+        val moveTokenToCharlieTx = bob.moveNonFungibleTokens(diamondPointer, charlie, anonymous = true).getOrThrow()
         assertHasTransaction(moveTokenToCharlieTx, bob, charlie)
         assertNotHasTransaction(moveTokenToCharlieTx, gic, denise, alice)
 
         // STEP 05: GIC amends (updates) the grading report
         // This should be reflected to the report participants
         val updatedDiamond = publishedDiamond.state.data.copy(color = DiamondGradingReport.ColorScale.B)
-        val updateDiamondTx = gic.updateEvolvableToken(publishedDiamond, updatedDiamond).getOrThrow(Duration.ofSeconds(5))
+        val updateDiamondTx = gic.updateEvolvableToken(publishedDiamond, updatedDiamond).getOrThrow()
         assertHasTransaction(updateDiamondTx, gic, denise, bob, charlie)
         assertNotHasTransaction(updateDiamondTx, alice)
 
         // STEP 06: Charlie redeems the token with Denise
         // This should exit the holdable token
         val charlieDiamond = moveTokenToCharlieTx.tx.outputsOfType<NonFungibleToken>().first()
-        val redeemDiamondTx = charlie.redeemTokens(charlieDiamond.token.tokenType, denise).getOrThrow(Duration.ofSeconds(5))
+        val redeemDiamondTx = charlie.redeemTokens(charlieDiamond.token.tokenType, denise).getOrThrow()
         assertHasTransaction(redeemDiamondTx, charlie, denise)
         assertNotHasTransaction(redeemDiamondTx, gic, alice, bob)
 

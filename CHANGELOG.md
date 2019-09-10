@@ -1,5 +1,11 @@
 ## Changelog
 
+### V1.1
+
+#### Workflows
+
+* Rebased the `workflows` to use the new `confidential-identities` module.
+
 ### V1
 
 #### Contracts

@@ -1,6 +1,8 @@
 package com.r3.corda.lib.tokens.workflows.internal.testflows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.ci.SyncKeyMappingFlow
+import com.r3.corda.lib.ci.SyncKeyMappingFlowHandler
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
@@ -17,7 +19,6 @@ import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
 import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
-import net.corda.confidential.IdentitySyncFlow
 import net.corda.core.contracts.Amount
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
@@ -46,7 +47,8 @@ class DvPFlow(val house: House, val newOwner: Party) : FlowLogic<SignedTransacti
         val outputs = session.receive<List<FungibleToken>>().unwrap { it }
         addMoveTokens(txBuilder, inputs, outputs)
         // Synchronise any confidential identities
-        subFlow(IdentitySyncFlow.Send(session, txBuilder.toWireTransaction(serviceHub)))
+        subFlow(SyncKeyMappingFlow(session, txBuilder.toWireTransaction(serviceHub)))
+//        subFlow(IdentitySyncFlow.Send(session, txBuilder.toWireTransaction(serviceHub)))
         val ourSigningKeys = txBuilder.toLedgerTransaction(serviceHub).ourSigningKeys(serviceHub)
         val initialStx = serviceHub.signInitialTransaction(txBuilder, signingPubKeys = ourSigningKeys)
         val stx = subFlow(CollectSignaturesFlow(initialStx, listOf(session), ourSigningKeys))
@@ -73,7 +75,7 @@ class DvPFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
         )
         subFlow(SendStateAndRefFlow(otherSession, inputs))
         otherSession.send(outputs)
-        subFlow(IdentitySyncFlow.Receive(otherSession))
+        subFlow(SyncKeyMappingFlowHandler(otherSession))
         subFlow(object : SignTransactionFlow(otherSession) {
             override fun checkTransaction(stx: SignedTransaction) {}
         }
