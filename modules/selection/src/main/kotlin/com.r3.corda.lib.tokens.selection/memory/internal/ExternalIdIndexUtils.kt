@@ -16,7 +16,7 @@ sealed class Holder {
     data class KeyIdentity(val owningKey: PublicKey) : Holder() // Just public key
     object UnmappedIdentity : Holder() // For all keys that are unmapped
     data class MappedIdentity(val uuid: UUID) : Holder() // All keys register to this uuid
-    object JustToken : Holder() // This is for the case where we use token class and token identifier only
+    object TokenOnly : Holder() // This is for the case where we use token class and token identifier only
 
     companion object {
         fun fromUUID(uuid: UUID?): Holder {

@@ -7,6 +7,7 @@ import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.selection.TokenQueryBy
+import com.r3.corda.lib.tokens.selection.memory.internal.Holder
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Amount.Companion.sumOrThrow
 import net.corda.core.contracts.StateAndRef
@@ -37,12 +38,12 @@ interface Selector {
     fun selectTokens(
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
             requiredAmount: Amount<TokenType>,
-            queryBy: TokenQueryBy? = null
+            queryBy: TokenQueryBy = TokenQueryBy(holder = Holder.TokenOnly)
     ): List<StateAndRef<FungibleToken>>
 
     /**
      * Generate move of [FungibleToken] T to tokenHolders specified in [PartyAndAmount]. Each party will receive amount
-     * defined by [partyAndAmounts]. If query criteria is not specified then only held token amounts are used. Set
+     * defined by [partyAndAmounts]. If [queryBy] is not specified then only held token amounts are used. Set
      * [TokenQueryBy.issuer] to specify issuer.
      *
      * @return Pair of lists, one for [FungibleToken]s that satisfy the amount to spend, empty list if none found, second
@@ -53,7 +54,7 @@ interface Selector {
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
             partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
             changeHolder: AbstractParty,
-            queryBy: TokenQueryBy? = null
+            queryBy: TokenQueryBy = TokenQueryBy(holder = Holder.TokenOnly)
     ): Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> {
         // Grab some tokens from the vault and soft-lock.
         // Only supports moves of the same token instance currently.

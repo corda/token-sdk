@@ -17,7 +17,7 @@ In your [CorDapp config](https://docs.corda.net/cordapp-build-systems.html#corda
 ```text
 stateSelection {
     in_memory {
-           indexingStrategy: ["external_id"|"public_key"|"token"]
+           indexingStrategy: ["external_id"|"public_key"|"token_only"]
            cacheSize: Int
     }
 }
@@ -32,7 +32,9 @@ from many public keys connected with given uuid. `token_only` selection strategy
 For now, our default flows are written with database token selection in mind. The API will change in 2.0 release.
 If you would like to use in memory token selection, then you have to write your own wrappers around `MoveTokensFlow` and
 `RedeemTokensFlow`. You can also use that selection with `addMoveTokens` and `addRedeemTokens` utility functions, but
-make sure that all the checks are performed before construction of the transaction. Let's take a look how to use the feature.
+make sure that all the checks are performed before construction of the transaction. 
+
+Let's take a look how to use the feature.
 
 ### Moving tokens using LocalTokenSelection
 
@@ -45,8 +47,9 @@ val vaultWatcherService = serviceHub.cordaService(VaultWatcherService::class.jav
 After that construct `LocalTokenSelector` instance for use in your flow:
 
 ```kotlin
-val autoUnlockDelay = ... // Defaults to Duration.ofMinutes(5). Time after which the tokens that are not spent will be automatically released.
-// autoUnlockDelay is needed in case flow errors or hangs on some operation.
+// Optionally you can specify autoUnlockDelay which is needed in case flow errors or hangs on some operation.
+// Defaults to Duration.ofMinutes(5). Time after which the tokens that are not spent will be automatically released.
+val autoUnlockDelay = ...
 val localTokenSelector = LocalTokenSelector(serviceHub, vaultWatcherService, autoUnlockDelay = autoUnlockDelay)
 ```
 
@@ -57,11 +60,12 @@ val transactionBuilder: TransactionBuilder = ...
 val participantSessions: List<FlowSession> = ...
 val observerSessions: List<FlowSession> = ...
 val requiredAmount: Amount<TokenType> = ...
+val queryBy: TokenQueryBy = ...  // TODO Add querying
 // Just select states for spend, without output and change calculation
 val selectedStates: List<StateAndRef<FungibleToken>> = localTokenSelector.selectStates(
     lockID = transactionBuilder.lockId, // Defaults to FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     requiredAmount = requiredAmount,
-    queryBy = queryBy) // TODO Add querying
+    queryBy = queryBy)
 ```
 
 or even better `generateMove` method returns list of inputs and list of output states that can be passed to `addMove` or `MoveTokensFlow`:

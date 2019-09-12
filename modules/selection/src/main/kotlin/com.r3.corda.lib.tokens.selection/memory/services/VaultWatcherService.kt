@@ -67,7 +67,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver, private val 
                     }
                 IndexingType.TOKEN_ONLY -> // This is default indexing.
                     { _, _ ->
-                        Holder.JustToken
+                        Holder.TokenOnly
                     }
             }
 
@@ -118,7 +118,6 @@ class VaultWatcherService(private val tokenObserver: TokenObserver, private val 
     }
 
     private fun addTokenToCache(stateAndRef: StateAndRef<FungibleToken>) {
-        // TODO after some cache size is reached, stop listening to new events and print massive warning & switch to database selection on this event
         val idx = processToken(stateAndRef)
         val tokensForTypeInfo = getTokenBucket(idx)
         val existingMark = tokensForTypeInfo.putIfAbsent(stateAndRef, PLACE_HOLDER)

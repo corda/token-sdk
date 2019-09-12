@@ -113,15 +113,15 @@ class DatabaseTokenSelection(
     override fun selectTokens(
             lockId: UUID,
             requiredAmount: Amount<TokenType>,
-            queryBy: TokenQueryBy?
+            queryBy: TokenQueryBy
     ): List<StateAndRef<FungibleToken>> {
         val stateAndRefs = mutableListOf<StateAndRef<FungibleToken>>()
         for (retryCount in 1..maxRetries) {
-            val issuer = queryBy?.issuer
+            val issuer = queryBy.issuer
             val additionalCriteria = if (issuer != null) {
                 tokenAmountWithIssuerCriteria(requiredAmount.token, issuer)
             } else tokenAmountCriteria(requiredAmount.token)
-            val criteria = queryBy?.queryCriteria?.let { additionalCriteria.and(it) }
+            val criteria = queryBy.queryCriteria?.let { additionalCriteria.and(it) }
                     ?: additionalCriteria
             if (!executeQuery(requiredAmount, lockId, criteria, sortByStateRefAscending(), stateAndRefs)) {
                 // TODO: Need to specify exactly why it fails. Locked states or literally _no_ states!
@@ -141,7 +141,7 @@ class DatabaseTokenSelection(
             }
         }
         return stateAndRefs.toList().filter { stateAndRef ->
-            queryBy?.predicate?.invoke(stateAndRef) ?: true
+            queryBy.predicate.invoke(stateAndRef)
         }
     }
 }

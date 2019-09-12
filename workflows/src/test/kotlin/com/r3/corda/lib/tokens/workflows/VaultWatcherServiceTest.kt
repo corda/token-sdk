@@ -111,7 +111,7 @@ class VaultWatcherServiceTest {
         val amountToIssue: Long = 100
         val stateAndRef = createNewFiatCurrencyTokenRef(amountToIssue, owner, notary1, issuer1, GBP, observable, database)
 
-        val selectedTokens = vaultWatcherService.selectTokens(Holder.JustToken, Amount(5, IssuedTokenType(issuer1, GBP)), selectionId = "abc")
+        val selectedTokens = vaultWatcherService.selectTokens(Holder.TokenOnly, Amount(5, IssuedTokenType(issuer1, GBP)), selectionId = "abc")
         Assert.assertThat(selectedTokens, `is`(CoreMatchers.equalTo(listOf<StateAndRef<FungibleToken>>(stateAndRef))))
         vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(5, IssuedTokenType(issuer1, GBP)), selectionId = "abc")
     }

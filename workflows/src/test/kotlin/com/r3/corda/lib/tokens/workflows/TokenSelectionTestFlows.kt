@@ -30,7 +30,7 @@ class SuspendingSelector(val owningKey: PublicKey,
         val vaultWatcherService = serviceHub.cordaService(VaultWatcherService::class.java)
         val localTokenSelector = LocalTokenSelector(serviceHub, vaultWatcherService)
 
-        val selectedTokens = localTokenSelector.selectTokens(requiredAmount = amount, queryBy = TokenQueryBy(holder = Holder.JustToken))
+        val selectedTokens = localTokenSelector.selectTokens(requiredAmount = amount, queryBy = TokenQueryBy(holder = Holder.TokenOnly))
 
         println("SUSPENDING:::: ${runId.uuid}")
 

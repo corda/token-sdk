@@ -5,7 +5,7 @@ import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.selection.api.Selector
-import com.r3.corda.lib.tokens.selection.memory.internal.Holder
+import com.r3.corda.lib.tokens.selection.issuerAndPredicate
 import com.r3.corda.lib.tokens.selection.memory.services.VaultWatcherService
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
@@ -26,7 +26,6 @@ import java.util.concurrent.atomic.AtomicReference
  *
  * @property services ServiceHub available from the flow
  * @property vaultObserver corda service that watches and caches new states
- * @property allowShortfall Specifies if we want to select tokens that not cover the required amount. Defaults to false.
  * @property autoUnlockDelay Time after which the tokens that are not spent will be automatically released. Defaults to Duration.ofMinutes(5).
  */
 class LocalTokenSelector(
@@ -42,16 +41,13 @@ class LocalTokenSelector(
     override fun selectTokens(
             lockId: UUID,
             requiredAmount: Amount<TokenType>,
-            queryBy: TokenQueryBy?
+            queryBy: TokenQueryBy
     ): List<StateAndRef<FungibleToken>> {
         synchronized(mostRecentlyLocked) {
             if (mostRecentlyLocked.get() == null) {
-                val additionalPredicate = queryBy?.issuerAndPredicate() ?: { true } // TODO refactor
-                // We assume that if no queryBy was provided we want to choose all tokens of that token type and identifier
-                // OR unmapped identity? it depends on the indexing type
-                // TODO it can break here, maybe just avoid nullability whatsoever, or have one Holder subclass for all that
+                val additionalPredicate = queryBy.issuerAndPredicate()
                 return vaultObserver.selectTokens(
-                        queryBy?.holder ?: Holder.JustToken, requiredAmount, additionalPredicate, false, autoUnlockDelay, lockId.toString()
+                        queryBy.holder, requiredAmount, additionalPredicate, false, autoUnlockDelay, lockId.toString()
                 ).also { mostRecentlyLocked.set(it to lockId.toString()) }
             } else {
                 throw IllegalStateException("Each instance can only used to select tokens once")
@@ -71,10 +67,10 @@ class LocalTokenSelector(
 
     override fun toToken(context: SerializeAsTokenContext): SerializationToken {
         val lockedStateAndRefs = mostRecentlyLocked.get() ?: listOf<StateAndRef<FungibleToken>>() to ""
-        return SerialToken(lockedStateAndRefs.first, lockedStateAndRefs.second, false, autoUnlockDelay) // TODO think where to move allowShortfall and autoUnlockDelay
+        return SerialToken(lockedStateAndRefs.first, lockedStateAndRefs.second, autoUnlockDelay)
     }
 
-    private class SerialToken(val lockedStateAndRefs: List<StateAndRef<FungibleToken>>, val selectionId: String, val allowShortfall: Boolean, val autoUnlockDelay: Duration) : SerializationToken {
+    private class SerialToken(val lockedStateAndRefs: List<StateAndRef<FungibleToken>>, val selectionId: String, val autoUnlockDelay: Duration) : SerializationToken {
         override fun fromToken(context: SerializeAsTokenContext): LocalTokenSelector {
             val watcherService = context.serviceHub.cordaService(VaultWatcherService::class.java)
             watcherService.lockTokensExternal(lockedStateAndRefs, knownSelectionId = selectionId)
