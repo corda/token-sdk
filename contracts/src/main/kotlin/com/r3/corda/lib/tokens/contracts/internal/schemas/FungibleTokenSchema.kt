@@ -27,7 +27,6 @@ class PersistentFungibleToken(
         var issuer: Party,
 
         @Column(name = "holder")
-        // TODO deconstruct it into owning key + nullable name
         var holder: AbstractParty?,
 
         @Column(name = "amount", nullable = false)
