@@ -1,6 +1,5 @@
 package com.r3.corda.lib.tokens.selection.memory.internal
 
-import net.corda.core.crypto.toStringShort
 import net.corda.core.node.ServiceHub
 import java.security.PublicKey
 import java.util.*
@@ -29,24 +28,13 @@ sealed class Holder {
     }
 }
 
-// TODO after corda 4.3 we will be able to use cache introduced by this PR https://github.com/corda/corda/pull/5357
 fun lookupExternalIdFromKey(owningKey: PublicKey, serviceHub: ServiceHub): Holder {
-    return serviceHub.withEntityManager {
-        val query = createNativeQuery(
-                """
-                        select $publicKeyHashToExternalId_externalId
-                        from $publicKeyHashToExternalId
-                        where $publicKeyHashToExternalId_publicKeyHash = :hash
-                    """
-        )
-        query.setParameter("hash", owningKey.toStringShort())
-        val uuid = query.resultList.firstOrNull()?.let { UUID.fromString(it as String) }
-        if (uuid != null || isKeyPartOfNodeKeyPairs(owningKey, serviceHub) || isKeyIdentityKey(owningKey, serviceHub)) {
-            val signingEntity = Holder.fromUUID(uuid)
-            signingEntity
-        } else {
-            Holder.UnmappedIdentity // TODO need to have good default for these cases with no mapping
-        }
+    val uuid = serviceHub.identityService.externalIdForPublicKey(owningKey)
+    return if (uuid != null || isKeyPartOfNodeKeyPairs(owningKey, serviceHub) || isKeyIdentityKey(owningKey, serviceHub)) {
+        val signingEntity = Holder.fromUUID(uuid)
+        signingEntity
+    } else {
+        Holder.UnmappedIdentity
     }
 }
 

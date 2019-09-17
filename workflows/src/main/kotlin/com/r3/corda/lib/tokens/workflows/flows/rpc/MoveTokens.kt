@@ -1,7 +1,6 @@
 package com.r3.corda.lib.tokens.workflows.flows.rpc
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.lib.ci.registerKeyToParty
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.workflows.flows.move.ConfidentialMoveFungibleTokensFlow
 import com.r3.corda.lib.tokens.workflows.flows.move.ConfidentialMoveNonFungibleTokensFlow
@@ -13,6 +12,7 @@ import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
 import com.r3.corda.lib.tokens.workflows.utilities.sessionsForParties
 import net.corda.core.contracts.Amount
+import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatedBy
@@ -136,11 +136,16 @@ class ConfidentialMoveFungibleTokens(
         val participants = partiesAndAmounts.map(PartyAndAmount<*>::party)
         val observerSessions = sessionsForParties(observers)
         val participantSessions = sessionsForParties(participants)
-        val confidentialHolder = changeHolder?:let {
-                val key = serviceHub.keyManagementService.freshKey()
-                    registerKeyToParty(key, ourIdentity, serviceHub)
-                    AnonymousParty(key)
-                }
+        val confidentialHolder = changeHolder ?: let {
+            val key = serviceHub.keyManagementService.freshKey()
+            try {
+                serviceHub.identityService.registerKey(key, ourIdentity)
+            } catch (e: Exception) {
+                throw FlowException("Could not register a new key for party: $ourIdentity as the provided public key is already registered " +
+                        "or registered to a different party.")
+            }
+            AnonymousParty(key)
+        }
         return subFlow(ConfidentialMoveFungibleTokensFlow(
                 partiesAndAmounts = partiesAndAmounts,
                 participantSessions = participantSessions,
