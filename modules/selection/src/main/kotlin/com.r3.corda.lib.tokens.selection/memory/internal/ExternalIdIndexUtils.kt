@@ -4,13 +4,6 @@ import net.corda.core.node.ServiceHub
 import java.security.PublicKey
 import java.util.*
 
-/** Table names. */
-val publicKeyHashToExternalId = "pk_hash_to_ext_id_map"
-
-/** Column names. */
-val publicKeyHashToExternalId_externalId = "external_id"
-val publicKeyHashToExternalId_publicKeyHash = "public_key_hash"
-
 sealed class Holder {
     data class KeyIdentity(val owningKey: PublicKey) : Holder() // Just public key
     object UnmappedIdentity : Holder() // For all keys that are unmapped

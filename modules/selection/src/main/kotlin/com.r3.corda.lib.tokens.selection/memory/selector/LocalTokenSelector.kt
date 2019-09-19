@@ -6,6 +6,7 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.selection.api.Selector
 import com.r3.corda.lib.tokens.selection.issuerAndPredicate
+import com.r3.corda.lib.tokens.selection.memory.internal.Holder
 import com.r3.corda.lib.tokens.selection.memory.services.VaultWatcherService
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
@@ -33,12 +34,13 @@ class LocalTokenSelector(
         private val vaultObserver: VaultWatcherService,
         private val autoUnlockDelay: Duration = Duration.ofMinutes(5),
         state: Pair<List<StateAndRef<FungibleToken>>, String>? = null // Used for deserializing
-) : SerializeAsToken, Selector {
+) : SerializeAsToken, Selector() {
 
     private val mostRecentlyLocked = AtomicReference<Pair<List<StateAndRef<FungibleToken>>, String>>(state)
 
     @Suspendable
-    override fun selectTokens(
+    override protected fun selectTokens(
+            holder: Holder,
             lockId: UUID,
             requiredAmount: Amount<TokenType>,
             queryBy: TokenQueryBy
@@ -47,7 +49,7 @@ class LocalTokenSelector(
             if (mostRecentlyLocked.get() == null) {
                 val additionalPredicate = queryBy.issuerAndPredicate()
                 return vaultObserver.selectTokens(
-                        queryBy.holder, requiredAmount, additionalPredicate, false, autoUnlockDelay, lockId.toString()
+                        holder, requiredAmount, additionalPredicate, false, autoUnlockDelay, lockId.toString()
                 ).also { mostRecentlyLocked.set(it to lockId.toString()) }
             } else {
                 throw IllegalStateException("Each instance can only used to select tokens once")

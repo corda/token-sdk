@@ -3,6 +3,7 @@ package com.r3.corda.lib.tokens.selection
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.node.services.vault.Sort
@@ -28,7 +29,6 @@ fun tokenAmountWithIssuerCriteria(token: TokenType, issuer: Party): QueryCriteri
 
 // Returns all held token amounts of a specified token.
 // We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
-// TODO should be called token amount criteria (there is no owner selection)
 @Suspendable
 fun tokenAmountCriteria(token: TokenType): QueryCriteria {
     val tokenClass = builder {
@@ -40,4 +40,12 @@ fun tokenAmountCriteria(token: TokenType): QueryCriteria {
     }
     val tokenIdentifierCriteria = QueryCriteria.VaultCustomQueryCriteria(tokenIdentifier)
     return tokenClassCriteria.and(tokenIdentifierCriteria)
+}
+
+@Suspendable
+fun tokenAmountWithHolderCriteria(token: TokenType, holder: AbstractParty): QueryCriteria {
+    val issuerCriteria = QueryCriteria.VaultCustomQueryCriteria(builder {
+        PersistentFungibleToken::holder.equal(holder)
+    })
+    return tokenAmountCriteria(token).and(issuerCriteria)
 }

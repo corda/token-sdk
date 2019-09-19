@@ -14,13 +14,14 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.AbstractParty
 import net.corda.core.node.ServiceHub
+import java.security.PublicKey
 import java.util.*
 
 /**
  * Interface that provides fungible state selection methods in flow.
  */
-interface Selector {
-    val services: ServiceHub
+abstract class Selector {
+    abstract val services: ServiceHub
 
     /**
      * Select [FungibleToken]s that cover [requiredAmount]. Notice that this
@@ -34,11 +35,114 @@ interface Selector {
      * @param queryBy narrows down tokens to spend, see [TokenQueryBy]
      * @return List of [FungibleToken]s that satisfy the amount to spend, empty list if none found.
      */
+    // Token Only
     @Suspendable
     fun selectTokens(
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
             requiredAmount: Amount<TokenType>,
-            queryBy: TokenQueryBy = TokenQueryBy(holder = Holder.TokenOnly)
+            queryBy: TokenQueryBy = TokenQueryBy()
+    ): List<StateAndRef<FungibleToken>> {
+        return selectTokens(Holder.TokenOnly, lockId, requiredAmount, queryBy)
+    }
+
+    /**
+     * Select [FungibleToken]s that cover [requiredAmount] from keys associated with [externalId]. Notice that this
+     * function doesn't calculate change. If query criteria is not specified then only held token amounts are used.
+     *
+     * Set [TokenQueryBy.issuer] to specify issuer.
+     * Calling selectTokens multiple time with the same lockId will return next unlocked states.
+     *
+     * @param externalId external id that states should be selected from, if null then states not mapped to any id will be chosen
+     * @param lockId id used to lock the states for spend, defaults to [FlowLogic] runID
+     * @param requiredAmount amount that should be spent
+     * @param queryBy narrows down tokens to spend, see [TokenQueryBy]
+     * @return List of [FungibleToken]s that satisfy the amount to spend, empty list if none found.
+     */
+    // From external id
+    @Suspendable
+    fun selectTokens(
+            externalId: UUID? = null,
+            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
+            requiredAmount: Amount<TokenType>,
+            queryBy: TokenQueryBy = TokenQueryBy()
+    ): List<StateAndRef<FungibleToken>> {
+        return selectTokens(Holder.fromUUID(externalId), lockId, requiredAmount, queryBy)
+    }
+
+    /**
+     * Select [FungibleToken]s that cover [requiredAmount] that belong to [holdingKey]. Notice that this
+     * function doesn't calculate change. If query criteria is not specified then only held token amounts are used.
+     *
+     * Set [TokenQueryBy.issuer] to specify issuer.
+     * Calling selectTokens multiple time with the same lockId will return next unlocked states.
+     *
+     * @param holdingKey key that holds the states to select
+     * @param lockId id used to lock the states for spend, defaults to [FlowLogic] runID
+     * @param requiredAmount amount that should be spent
+     * @param queryBy narrows down tokens to spend, see [TokenQueryBy]
+     * @return List of [FungibleToken]s that satisfy the amount to spend, empty list if none found.
+     */
+    // From a given key
+    @Suspendable
+    fun selectTokens(
+            holdingKey: PublicKey,
+            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
+            requiredAmount: Amount<TokenType>,
+            queryBy: TokenQueryBy = TokenQueryBy()
+    ): List<StateAndRef<FungibleToken>> {
+        return selectTokens(Holder.KeyIdentity(holdingKey), lockId, requiredAmount, queryBy)
+    }
+
+    /**
+     * TODO
+     */
+    // Token only
+    @Suspendable
+    fun generateMove(
+            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
+            partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
+            changeHolder: AbstractParty,
+            queryBy: TokenQueryBy = TokenQueryBy()
+    ): Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> {
+        return generateMove(Holder.TokenOnly, lockId, partiesAndAmounts, changeHolder, queryBy)
+    }
+
+    /**
+     * TODO
+     */
+    // External id
+    @Suspendable
+    fun generateMove(
+            externalId: UUID? = null,
+            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
+            partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
+            changeHolder: AbstractParty,
+            queryBy: TokenQueryBy = TokenQueryBy()
+    ): Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> {
+        return generateMove(Holder.fromUUID(externalId), lockId, partiesAndAmounts, changeHolder, queryBy)
+    }
+
+    /**
+     * TODO
+     */
+    // From public key
+    @Suspendable
+    fun generateMove(
+            holdingKey: PublicKey,
+            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
+            partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
+            changeHolder: AbstractParty,
+            queryBy: TokenQueryBy = TokenQueryBy()
+    ): Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> {
+        return generateMove(Holder.KeyIdentity(holdingKey), lockId, partiesAndAmounts, changeHolder, queryBy)
+    }
+
+    @Suspendable
+    protected abstract fun selectTokens(
+            holder: Holder,
+            lockId: UUID,
+            requiredAmount: Amount<TokenType>,
+            queryBy: TokenQueryBy
     ): List<StateAndRef<FungibleToken>>
 
     /**
@@ -50,11 +154,12 @@ interface Selector {
      *  for output states with possible change.
      */
     @Suspendable
-    fun generateMove(
+    private fun generateMove(
+            holder: Holder,
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
             partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
             changeHolder: AbstractParty,
-            queryBy: TokenQueryBy = TokenQueryBy(holder = Holder.TokenOnly)
+            queryBy: TokenQueryBy = TokenQueryBy()
     ): Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> {
         // Grab some tokens from the vault and soft-lock.
         // Only supports moves of the same token instance currently.
@@ -62,7 +167,7 @@ interface Selector {
         // The way to do this will be to perform a query for each token type. If there are multiple token types then
         // just do all the below however many times is necessary.
         val totalRequired = partiesAndAmounts.map { it.second }.sumOrThrow()
-        val acceptableStates = selectTokens(lockId, totalRequired, queryBy)
+        val acceptableStates = selectTokens(holder, lockId, totalRequired, queryBy) // call private version
         require(acceptableStates.isNotEmpty()) {
             "No states matching given criteria to generate move."
         }

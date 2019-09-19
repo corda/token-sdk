@@ -9,13 +9,17 @@ import com.r3.corda.lib.tokens.selection.database.config.MAX_RETRIES_DEFAULT
 import com.r3.corda.lib.tokens.selection.database.config.PAGE_SIZE_DEFAULT
 import com.r3.corda.lib.tokens.selection.database.config.RETRY_CAP_DEFAULT
 import com.r3.corda.lib.tokens.selection.database.config.RETRY_SLEEP_DEFAULT
+import com.r3.corda.lib.tokens.selection.memory.internal.Holder
 import com.r3.corda.lib.tokens.selection.memory.services.InsufficientBalanceException
 import com.r3.corda.lib.tokens.selection.sortByStateRefAscending
 import com.r3.corda.lib.tokens.selection.tokenAmountCriteria
+import com.r3.corda.lib.tokens.selection.tokenAmountWithHolderCriteria
 import com.r3.corda.lib.tokens.selection.tokenAmountWithIssuerCriteria
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowLogic
+import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.AnonymousParty
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.queryBy
@@ -47,7 +51,7 @@ class DatabaseTokenSelection(
         private val retrySleep: Int = RETRY_SLEEP_DEFAULT,
         private val retryCap: Int = RETRY_CAP_DEFAULT,
         private val pageSize: Int = PAGE_SIZE_DEFAULT
-) : Selector {
+) : Selector() {
 
     companion object {
         val logger = contextLogger()
@@ -110,19 +114,23 @@ class DatabaseTokenSelection(
     }
 
     @Suspendable
-    override fun selectTokens(
+    override protected fun selectTokens(
+            holder: Holder, // TODO Should it be a list?
             lockId: UUID,
             requiredAmount: Amount<TokenType>,
             queryBy: TokenQueryBy
     ): List<StateAndRef<FungibleToken>> {
         val stateAndRefs = mutableListOf<StateAndRef<FungibleToken>>()
+        val criteria = holderToCriteria(holder, requiredAmount.token).run {
+            if (queryBy.issuer != null) {
+                and(tokenAmountWithIssuerCriteria(requiredAmount.token, queryBy.issuer))
+            } else this
+        }.run {
+            if (queryBy.queryCriteria != null) {
+                and(queryBy.queryCriteria)
+            } else this
+        }
         for (retryCount in 1..maxRetries) {
-            val issuer = queryBy.issuer
-            val additionalCriteria = if (issuer != null) {
-                tokenAmountWithIssuerCriteria(requiredAmount.token, issuer)
-            } else tokenAmountCriteria(requiredAmount.token)
-            val criteria = queryBy.queryCriteria?.let { additionalCriteria.and(it) }
-                    ?: additionalCriteria
             if (!executeQuery(requiredAmount, lockId, criteria, sortByStateRefAscending(), stateAndRefs)) {
                 // TODO: Need to specify exactly why it fails. Locked states or literally _no_ states!
                 // No point in retrying if there will never be enough...
@@ -140,8 +148,28 @@ class DatabaseTokenSelection(
                 break
             }
         }
-        return stateAndRefs.toList().filter { stateAndRef ->
-            queryBy.predicate.invoke(stateAndRef)
+        return if (queryBy.predicate != { true }) {
+            stateAndRefs.toList().filter { stateAndRef ->
+                queryBy.predicate.invoke(stateAndRef)
+            }
+        } else stateAndRefs
+    }
+
+    private fun holderToCriteria(holder: Holder, token: TokenType): QueryCriteria {
+        return when (holder) {
+            // TODO It seems that indexing by key doesn't really make sense, it's just leftover from Stefano's original code
+            is Holder.KeyIdentity -> {
+                // TODO this API isn't entirely clear for me, I assume that partyFromKey will return always the well known party that this key belongs to?
+                //  So in case of the confidential identity it will be Party with different key?
+                val knownParty: AbstractParty = services.identityService.partyFromKey(holder.owningKey)
+                        ?: AnonymousParty(holder.owningKey) // Null part shouldn't happen
+                val holderParty = if (knownParty.owningKey == holder.owningKey) knownParty else AnonymousParty(holder.owningKey)
+                tokenAmountWithHolderCriteria(token, holderParty)
+            }
+            is Holder.MappedIdentity -> tokenAmountCriteria(token).and(QueryCriteria.VaultQueryCriteria(externalIds = listOf(holder.uuid)))
+            // TODO After looking at VaultQueryCriteria implemenation of querying by external id we don't really support querying for keys not mapped to external id!
+            is Holder.UnmappedIdentity -> tokenAmountCriteria(token)
+            is Holder.TokenOnly -> tokenAmountCriteria(token)
         }
     }
 }

@@ -145,7 +145,7 @@ Then construct transaction builder with house move to the new holder:
         val housePtr = house.toPointer<House>()
         // We can specify preferred notary in cordapp config file, otherwise the first one from network parameters is chosen.
         val txBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
-        addMoveTokens(txBuilder, housePointer, newHolder)
+        addMoveTokens(txBuilder, housePtr, newHolder)
         ...
     }
 ```
