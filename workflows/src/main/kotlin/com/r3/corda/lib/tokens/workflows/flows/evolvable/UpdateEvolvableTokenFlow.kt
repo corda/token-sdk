@@ -29,6 +29,10 @@ class UpdateEvolvableTokenFlow(
 
     @Suspendable
     override fun call(): SignedTransaction {
+        require(ourIdentity in oldStateAndRef.state.data.maintainers) {
+            "This flow can only be started by existing maintainers of the EvolvableTokenType."
+        }
+
         // Create a transaction which updates the ledger with the new evolvable token.
         // The tokenHolders listed as maintainers in the old state should be the signers.
         // TODO Should this be both old and new maintainer lists?
