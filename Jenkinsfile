@@ -17,26 +17,19 @@ pipeline {
             steps {
                 sh "./gradlew clean test --info"
             }
-            post {
-                always {
-                    junit '**/build/test-results/**/*.xml'
-                }
-            }
         }
 
         stage('Integration Tests') {
             steps {
                 sh "./gradlew integrationTest --info"
             }
-            post {
-                always {
-                    junit '**/build/test-results/**/*.xml'
-                }
-            }
         }
     }
 
     post {
+        always {
+            junit '**/build/test-results/**/*.xml'
+        }
         cleanup {
             deleteDir() /* clean up our workspace */
         }
