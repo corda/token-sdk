@@ -29,7 +29,7 @@ class UpdateEvolvableTokenFlow(
 
     @Suspendable
     override fun call(): SignedTransaction {
-        require(ourIdentity in oldStateAndRef.state.data.participants) {
+        require(ourIdentity in oldStateAndRef.state.data.maintainers) {
             "This flow can only be started by existing maintainers of the EvolvableTokenType."
         }
 
