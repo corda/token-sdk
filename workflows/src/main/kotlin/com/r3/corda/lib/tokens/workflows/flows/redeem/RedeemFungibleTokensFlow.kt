@@ -34,7 +34,7 @@ constructor(
                 serviceHub = serviceHub,
                 amount = amount,
                 issuer = issuerSession.counterparty,
-                changeOwner = changeHolder ?: ourIdentity,
+                changeHolder = changeHolder ?: ourIdentity,
                 additionalQueryCriteria = additionalQueryCriteria
         )
     }

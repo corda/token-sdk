@@ -10,7 +10,7 @@ import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveFungibleTokens
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistributionList
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
+import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.utilities.getLinearStateById
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountsByToken
 import com.r3.corda.lib.tokens.workflows.utilities.tokenBalance
@@ -253,11 +253,11 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     @Test
     fun `should get different tokens if we select twice`() {
         (1..2).map { I.issueFungibleTokens(A, 1 of GBP).getOrThrow() }
-        val tokenSelection = TokenSelection(A.services)
+        val tokenSelection = DatabaseTokenSelection(A.services, pageSize = 5)
         val lockId = UUID.randomUUID()
         A.transaction {
-            val token1 = tokenSelection.attemptSpend(1 of GBP, lockId, pageSize = 5)
-            val token2 = tokenSelection.attemptSpend(1 of GBP, lockId, pageSize = 5)
+            val token1 = tokenSelection.selectTokens(lockId, requiredAmount = 1 of GBP)
+            val token2 = tokenSelection.selectTokens(lockId, 1 of GBP)
             assertThat(token1).isNotEqualTo(token2)
         }
     }

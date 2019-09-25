@@ -1,13 +1,18 @@
-package com.r3.corda.lib.tokens.workflows.internal.selection
+package com.r3.corda.lib.tokens.selection.memory.services
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
-import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
-import com.r3.corda.lib.tokens.workflows.utilities.sortByStateRefAscending
+import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.contracts.utilities.withoutIssuer
+import com.r3.corda.lib.tokens.selection.memory.config.InMemorySelectionConfig
+import com.r3.corda.lib.tokens.selection.memory.internal.Holder
+import com.r3.corda.lib.tokens.selection.memory.internal.lookupExternalIdFromKey
+import com.r3.corda.lib.tokens.selection.sortByStateRefAscending
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.AppServiceHub
+import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.CordaService
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.vault.DEFAULT_PAGE_NUM
@@ -17,42 +22,53 @@ import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.utilities.contextLogger
 import rx.Observable
 import java.time.Duration
-import java.util.concurrent.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentMap
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 
 val UNLOCKER: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 const val PLACE_HOLDER: String = "THIS_IS_A_PLACE_HOLDER"
 
 @CordaService
-class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSerializeAsToken() {
-
+class VaultWatcherService(private val tokenObserver: TokenObserver, private val serviceHub: ServiceHub) : SingletonSerializeAsToken() {
     enum class IndexingType {
-        EXTERNAL_ID, PUBLIC_KEY
+        EXTERNAL_ID, // external id (all keys registered to this id as an owner) + token class + token identifier
+        PUBLIC_KEY, // Public key + token class + token identifier
+        TOKEN_ONLY // Just token class + token identifier without owner
     }
 
     private val cache: ConcurrentMap<TokenIndex, TokenBucket> = ConcurrentHashMap()
+    // TODO for now not used, add some reasonable default - stop listening print massive error; Figure out sensible default
+    //    5% of heap, your heap needs to be min 8GB?
+    private var cacheSize: Int = 1024
 
-    constructor(appServiceHub: AppServiceHub) : this(getObservableFromAppServiceHub(appServiceHub))
+    constructor(appServiceHub: AppServiceHub) : this(getObservableFromAppServiceHub(appServiceHub, null), appServiceHub)
 
     companion object {
         val LOG = contextLogger()
 
-        private fun getObservableFromAppServiceHub(appServiceHub: AppServiceHub): TokenObserver {
+        private fun getObservableFromAppServiceHub(appServiceHub: AppServiceHub, providedConfig: InMemorySelectionConfig?): TokenObserver {
             val config = appServiceHub.cordappProvider.getAppContext().config
+            val configOptions = if (providedConfig == null) {
+                InMemorySelectionConfig.parse(config)
+            } else providedConfig
 
-            val indexingType = try {
-                IndexingType.valueOf(config.get("ownerIndexingStrategy").toString())
-            } catch (e: Exception) {
-                IndexingType.PUBLIC_KEY
-            }
-
-            val ownerProvider: ((StateAndRef<FungibleToken>, AppServiceHub) -> Any) = if (indexingType == IndexingType.PUBLIC_KEY) {
-                { stateAndRef, _ ->
-                    stateAndRef.state.data.holder.owningKey
-                }
-            } else {
-                { _, _ ->
-                    throw IllegalStateException("Only IndexingType.PUBLIC_KEY available on Corda V4")
-                }
+            val ownerProvider: ((StateAndRef<FungibleToken>, ServiceHub) -> Holder) = when (configOptions.indexingStrategy) {
+                IndexingType.PUBLIC_KEY ->
+                    { stateAndRef, _ ->
+                        Holder.KeyIdentity(stateAndRef.state.data.holder.owningKey)
+                    }
+                IndexingType.EXTERNAL_ID ->
+                    { stateAndRef, services ->
+                        val owningKey = stateAndRef.state.data.holder.owningKey
+                        lookupExternalIdFromKey(owningKey, services)
+                    }
+                IndexingType.TOKEN_ONLY -> // This is default indexing.
+                    { _, _ ->
+                        Holder.TokenOnly
+                    }
             }
 
             val pageSize = 1000
@@ -72,21 +88,19 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
             }
             return TokenObserver(statesToProcess, uncheckedCast(observable), ownerProvider)
         }
-
-        fun processToken(token: FungibleToken): TokenIndex {
-            val owner = token.holder.owningKey
-            val type = token.amount.token.tokenType.tokenClass
-            val typeId = token.amount.token.tokenType.tokenIdentifier
-            return TokenIndex(owner, type, typeId)
-        }
-
     }
-
 
     //owner -> tokenClass -> tokenIdentifier -> List
     init {
-        tokenObserver?.initialValues?.forEach(::addTokenToCache)
-        tokenObserver?.source?.subscribe(::onVaultUpdate)
+        tokenObserver.initialValues.forEach(::addTokenToCache)
+        tokenObserver.source.subscribe(::onVaultUpdate)
+    }
+
+    fun processToken(token: StateAndRef<FungibleToken>): TokenIndex {
+        val owner = tokenObserver.ownerProvider(token, serviceHub)
+        val type = token.state.data.amount.token.tokenType.tokenClass
+        val typeId = token.state.data.amount.token.tokenType.tokenIdentifier
+        return TokenIndex(owner, type, typeId)
     }
 
     private fun onVaultUpdate(t: Vault.Update<FungibleToken>) {
@@ -95,7 +109,7 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
     }
 
     private fun removeTokenFromCache(it: StateAndRef<FungibleToken>) {
-        val idx = processToken(it.state.data)
+        val idx = processToken(it)
         val tokenSet = getTokenBucket(idx)
         val removeResult = tokenSet.remove(it)
         if (removeResult == PLACE_HOLDER || removeResult == null) {
@@ -104,10 +118,8 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
     }
 
     private fun addTokenToCache(stateAndRef: StateAndRef<FungibleToken>) {
-        val token = stateAndRef.state.data
-
-        val (owner, type, typeId) = processToken(token)
-        val tokensForTypeInfo = getTokenBucket(owner, type, typeId)
+        val idx = processToken(stateAndRef)
+        val tokensForTypeInfo = getTokenBucket(idx)
         val existingMark = tokensForTypeInfo.putIfAbsent(stateAndRef, PLACE_HOLDER)
         existingMark?.let {
             LOG.warn("Attempted to overwrite existing token ${stateAndRef.ref} during cache initialization, this suggests incorrect vault behaviours")
@@ -117,42 +129,45 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
     @Suspendable
     fun lockTokensExternal(list: List<StateAndRef<FungibleToken>>, knownSelectionId: String) {
         list.forEach {
-            val token = it.state.data
-            val (owner, type, typeId) = processToken(token)
-            val tokensForTypeInfo = getTokenBucket(owner, type, typeId)
+            val idx = processToken(it)
+            val tokensForTypeInfo = getTokenBucket(idx)
             tokensForTypeInfo.replace(it, PLACE_HOLDER, knownSelectionId)
         }
     }
 
     @Suspendable
     fun selectTokens(
-            owner: Any,
-            amountRequested: Amount<IssuedTokenType>,
+            owner: Holder,
+            requiredAmount: Amount<TokenType>,
             predicate: ((StateAndRef<FungibleToken>) -> Boolean) = { true },
             allowShortfall: Boolean = false,
             autoUnlockDelay: Duration = Duration.ofMinutes(5),
             selectionId: String
     ): List<StateAndRef<FungibleToken>> {
-        val set = getTokenBucket(owner, amountRequested.token.tokenType.tokenClass, amountRequested.token.tokenType.tokenIdentifier)
+        val bucket = getTokenBucket(owner, requiredAmount.token.tokenClass, requiredAmount.token.tokenIdentifier)
         val lockedTokens = mutableListOf<StateAndRef<FungibleToken>>()
-        var amountLocked: Amount<IssuedTokenType> = amountRequested.copy(quantity = 0)
-        for (tokenStateAndRef in set.keys) {
-            //does the token satisfy the (optional) predicate?
-            if (amountRequested.token.issuer == tokenStateAndRef.state.data.amount.token.issuer && predicate.invoke(tokenStateAndRef)) {
-                //if so, race to lock the token, expected oldValue = PLACE_HOLDER
-                if (set.replace(tokenStateAndRef, PLACE_HOLDER, selectionId)) {
-                    //we won the race to lock this token
+        var amountLocked: Amount<TokenType> = requiredAmount.copy(quantity = 0)
+        for (tokenStateAndRef in bucket.keys) {
+            // Does the token satisfy the (optional) predicate eg. issuer?
+            if (predicate.invoke(tokenStateAndRef)) {
+                // if so, race to lock the token, expected oldValue = PLACE_HOLDER
+                if (bucket.replace(tokenStateAndRef, PLACE_HOLDER, selectionId)) {
+                    // we won the race to lock this token
                     lockedTokens.add(tokenStateAndRef)
                     val token = tokenStateAndRef.state.data
-                    amountLocked += uncheckedCast(token.amount)
-                    if (amountLocked >= amountRequested) {
+                    amountLocked += uncheckedCast(token.amount.withoutIssuer())
+                    if (amountLocked >= requiredAmount) {
                         break
                     }
                 }
             }
         }
-        if (!allowShortfall && amountLocked < amountRequested) {
-            throw InsufficientBalanceException("Could not find enough tokens to satisfy token request")
+
+        if (!allowShortfall && amountLocked < requiredAmount) {
+            lockedTokens.forEach {
+                unlockToken(it, selectionId)
+            }
+            throw InsufficientBalanceException("Insufficient spendable states identified for $requiredAmount.")
         }
 
         UNLOCKER.schedule({
@@ -165,13 +180,12 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
     }
 
     fun unlockToken(it: StateAndRef<FungibleToken>, selectionId: String) {
-        val token = it.state.data
-        val idx = processToken(token)
+        val idx = processToken(it)
         val tokensForTypeInfo = getTokenBucket(idx)
         tokensForTypeInfo.replace(it, selectionId, PLACE_HOLDER)
     }
 
-    private fun getTokenBucket(idx: Any, tokenClass: Class<*>, tokenIdentifier: String): TokenBucket {
+    private fun getTokenBucket(idx: Holder, tokenClass: Class<*>, tokenIdentifier: String): TokenBucket {
         return getTokenBucket(TokenIndex(idx, tokenClass, tokenIdentifier))
     }
 
@@ -185,10 +199,10 @@ class VaultWatcherService(tokenObserver: TokenObserver? = null) : SingletonSeria
 
 data class TokenObserver(val initialValues: List<StateAndRef<FungibleToken>>,
                          val source: Observable<Vault.Update<FungibleToken>>,
-                         val ownerProvider: ((StateAndRef<FungibleToken>, AppServiceHub) -> Any)? = null)
+                         val ownerProvider: ((StateAndRef<FungibleToken>, ServiceHub) -> Holder))
 
 class TokenBucket(private val __backingMap: ConcurrentMap<StateAndRef<FungibleToken>, String> = ConcurrentHashMap()) : ConcurrentMap<StateAndRef<FungibleToken>, String> by __backingMap
 
-data class TokenIndex(val owner: Any, val tokenClazz: Class<*>, val tokenIdentifier: String)
+data class TokenIndex(val owner: Holder, val tokenClazz: Class<*>, val tokenIdentifier: String)
 
 class InsufficientBalanceException(message: String) : RuntimeException(message)

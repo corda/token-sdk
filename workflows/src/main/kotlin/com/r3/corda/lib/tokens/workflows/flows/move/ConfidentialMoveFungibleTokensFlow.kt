@@ -2,10 +2,12 @@ package com.r3.corda.lib.tokens.workflows.flows.move
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.selection.TokenQueryBy
+import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.flows.confidential.ConfidentialTokensFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
+import com.r3.corda.lib.tokens.workflows.types.toPairs
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AbstractParty
@@ -47,12 +49,13 @@ constructor(
 
     @Suspendable
     override fun call(): SignedTransaction {
-        val tokenSelection = TokenSelection(serviceHub)
+        // TODO add in memory selection too
+        val tokenSelection = DatabaseTokenSelection(serviceHub)
         val (inputs, outputs) = tokenSelection.generateMove(
                 lockId = stateMachine.id.uuid,
-                partyAndAmounts = partiesAndAmounts,
+                partiesAndAmounts = partiesAndAmounts.toPairs(),
                 changeHolder = changeHolder,
-                queryCriteria = queryCriteria
+                queryBy = TokenQueryBy(queryCriteria = queryCriteria)
         )
         // TODO Not pretty fix, because we decided to go with sessions approach, we need to make sure that right responders are started depending on observer/participant role
         participantSessions.forEach { it.send(TransactionRole.PARTICIPANT) }
