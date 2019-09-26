@@ -52,7 +52,7 @@ abstract class Selector {
      * Set [TokenQueryBy.issuer] to specify issuer.
      * Calling selectTokens multiple time with the same lockId will return next unlocked states.
      *
-     * @param externalId external id that states should be selected from, if null then states not mapped to any id will be chosen
+     * @param externalId external id that states should be selected from
      * @param lockId id used to lock the states for spend, defaults to [FlowLogic] runID
      * @param requiredAmount amount that should be spent
      * @param queryBy narrows down tokens to spend, see [TokenQueryBy]
@@ -61,7 +61,7 @@ abstract class Selector {
     // From external id
     @Suspendable
     fun selectTokens(
-            externalId: UUID? = null,
+            externalId: UUID,
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
             requiredAmount: Amount<TokenType>,
             queryBy: TokenQueryBy = TokenQueryBy()
@@ -94,7 +94,12 @@ abstract class Selector {
     }
 
     /**
-     * TODO
+     * Generate move of [FungibleToken] T to tokenHolders specified in [PartyAndAmount]. Each party will receive amount
+     * defined by [partyAndAmounts]. If [queryBy] is not specified then only held token amounts are used. Set
+     * [TokenQueryBy.issuer] to specify issuer.
+     *
+     * @return Pair of lists, one for [FungibleToken]s that satisfy the amount to spend, empty list if none found, second
+     *  for output states with possible change.
      */
     // Token only
     @Suspendable
@@ -108,12 +113,17 @@ abstract class Selector {
     }
 
     /**
-     * TODO
+     * Generate move of [FungibleToken] T to tokenHolders specified in [PartyAndAmount] from given [externalId]. Each party will receive amount
+     * defined by [partyAndAmounts]. If [queryBy] is not specified then only held token amounts are used. Set
+     * [TokenQueryBy.issuer] to specify issuer.
+     *
+     * @return Pair of lists, one for [FungibleToken]s that satisfy the amount to spend, empty list if none found, second
+     *  for output states with possible change.
      */
     // External id
     @Suspendable
     fun generateMove(
-            externalId: UUID? = null,
+            externalId: UUID,
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
             partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
             changeHolder: AbstractParty,
@@ -123,7 +133,12 @@ abstract class Selector {
     }
 
     /**
-     * TODO
+     * Generate move of [FungibleToken] T to tokenHolders specified in [PartyAndAmount] from given [publicKey]. Each party will receive amount
+     * defined by [partyAndAmounts]. If [queryBy] is not specified then only held token amounts are used. Set
+     * [TokenQueryBy.issuer] to specify issuer.
+     *
+     * @return Pair of lists, one for [FungibleToken]s that satisfy the amount to spend, empty list if none found, second
+     *  for output states with possible change.
      */
     // From public key
     @Suspendable
@@ -145,14 +160,6 @@ abstract class Selector {
             queryBy: TokenQueryBy
     ): List<StateAndRef<FungibleToken>>
 
-    /**
-     * Generate move of [FungibleToken] T to tokenHolders specified in [PartyAndAmount]. Each party will receive amount
-     * defined by [partyAndAmounts]. If [queryBy] is not specified then only held token amounts are used. Set
-     * [TokenQueryBy.issuer] to specify issuer.
-     *
-     * @return Pair of lists, one for [FungibleToken]s that satisfy the amount to spend, empty list if none found, second
-     *  for output states with possible change.
-     */
     @Suspendable
     private fun generateMove(
             holder: Holder,

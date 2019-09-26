@@ -110,7 +110,7 @@ class DatabaseTokenSelection(
 
     @Suspendable
     override protected fun selectTokens(
-            holder: Holder, // TODO Should it be a list?
+            holder: Holder,
             lockId: UUID,
             requiredAmount: Amount<TokenType>,
             queryBy: TokenQueryBy
@@ -152,12 +152,11 @@ class DatabaseTokenSelection(
 
     private fun holderToCriteria(holder: Holder, token: TokenType): QueryCriteria {
         return when (holder) {
-            // TODO It seems that indexing by key doesn't really make sense, it's just leftover from Stefano's original code
             is Holder.KeyIdentity -> {
-                // TODO this API isn't entirely clear for me, I assume that partyFromKey will return always the well known party that this key belongs to?
-                //  So in case of the confidential identity it will be Party with different key?
+                // We want the AbstractParty that this key refers to, unfortunately, partyFromKey returns always well known party
+                // for that key, so afterwards we need to construct AnonymousParty.
                 val knownParty: AbstractParty = services.identityService.partyFromKey(holder.owningKey)
-                        ?: AnonymousParty(holder.owningKey) // Null part shouldn't happen
+                        ?: AnonymousParty(holder.owningKey)
                 val holderParty = if (knownParty.owningKey == holder.owningKey) knownParty else AnonymousParty(holder.owningKey)
                 tokenAmountWithHolderCriteria(token, holderParty)
             }
