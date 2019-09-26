@@ -1,53 +1,33 @@
 package com.r3.corda.lib.tokens.workflows
 
-import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
-import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
-import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
-import com.r3.corda.lib.tokens.contracts.utilities.sumIssuedTokensOrNull
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
+import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
 import com.r3.corda.lib.tokens.testing.states.Appartment
-import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.workflows.flows.rpc.*
-import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistributionList
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
-import com.r3.corda.lib.tokens.workflows.utilities.getLinearStateById
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
-import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountsByToken
-import com.r3.corda.lib.tokens.workflows.utilities.tokenBalance
-import net.corda.core.contracts.Amount
-import net.corda.core.contracts.LinearState
-import net.corda.core.contracts.StateAndRef
-import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.common.internal.testNetworkParameters
-import net.corda.testing.internal.chooseIdentityAndCert
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.TestCordapp
-import org.assertj.core.api.Assertions
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import java.lang.IllegalStateException
-import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNotEquals
 
 class MoveTokensTest {
 
@@ -284,7 +264,7 @@ class MoveTokensTest {
 
         network.runNetwork()
         val movedTokeninNodeB=moveTokenToB.getOrThrow()
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<InsufficientBalanceException> {
             val moveTokenToC = nodeA.startFlow(MoveFungibleTokens(PartyAndAmount(nodeC.legalIdentity(), 100.GBP)))
 
             network.runNetwork()

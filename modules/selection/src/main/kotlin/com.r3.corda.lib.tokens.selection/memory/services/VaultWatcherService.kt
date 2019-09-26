@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.withoutIssuer
+import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
 import com.r3.corda.lib.tokens.selection.memory.config.InMemorySelectionConfig
 import com.r3.corda.lib.tokens.selection.memory.internal.Holder
 import com.r3.corda.lib.tokens.selection.memory.internal.lookupExternalIdFromKey
@@ -22,11 +23,7 @@ import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.utilities.contextLogger
 import rx.Observable
 import java.time.Duration
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentMap
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 
 val UNLOCKER: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 const val PLACE_HOLDER: String = "THIS_IS_A_PLACE_HOLDER"
@@ -204,5 +201,3 @@ data class TokenObserver(val initialValues: List<StateAndRef<FungibleToken>>,
 class TokenBucket(private val __backingMap: ConcurrentMap<StateAndRef<FungibleToken>, String> = ConcurrentHashMap()) : ConcurrentMap<StateAndRef<FungibleToken>, String> by __backingMap
 
 data class TokenIndex(val owner: Holder, val tokenClazz: Class<*>, val tokenIdentifier: String)
-
-class InsufficientBalanceException(message: String) : RuntimeException(message)

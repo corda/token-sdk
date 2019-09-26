@@ -7,9 +7,9 @@ import com.r3.corda.lib.tokens.money.BTC
 import com.r3.corda.lib.tokens.money.CHF
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
+import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
 import com.r3.corda.lib.tokens.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
-import com.r3.corda.lib.tokens.selection.memory.services.InsufficientBalanceException
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveFungibleTokens
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountWithIssuerCriteria

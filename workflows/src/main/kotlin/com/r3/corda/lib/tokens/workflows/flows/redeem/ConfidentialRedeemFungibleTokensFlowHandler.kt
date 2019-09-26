@@ -1,7 +1,7 @@
 package com.r3.corda.lib.tokens.workflows.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.lib.ci.RequestKeyFlow
+import com.r3.corda.lib.ci.workflows.RequestKeyFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.TransactionRole
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession

@@ -1,11 +1,12 @@
 package com.r3.corda.lib.tokens.workflows.internal.testflows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.lib.ci.SyncKeyMappingFlow
-import com.r3.corda.lib.ci.SyncKeyMappingFlowHandler
+import com.r3.corda.lib.ci.workflows.SyncKeyMappingFlow
+import com.r3.corda.lib.ci.workflows.SyncKeyMappingFlowHandler
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveNonFungibleTokens
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveTokens
@@ -16,7 +17,6 @@ import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistribu
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlowHandler
 import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
-import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
 import net.corda.core.contracts.Amount

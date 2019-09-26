@@ -9,6 +9,7 @@ import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.money.BTC
 import com.r3.corda.lib.tokens.money.GBP
+import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
 import com.r3.corda.lib.tokens.testing.states.Appartment
 import com.r3.corda.lib.tokens.workflows.flows.rpc.*
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
@@ -27,9 +28,7 @@ import net.corda.testing.node.TestCordapp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
 import org.junit.Before
-import org.junit.FixMethodOrder
 import org.junit.Test
-import org.junit.runners.MethodSorters
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
@@ -48,10 +47,12 @@ class RedeemTokenTestsFlow{
         network =  MockNetwork(
             MockNetworkParameters(
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4),
-                cordappsForAllNodes = listOf(TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
-                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
-                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
-                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")
+                    cordappsForAllNodes = listOf(
+                            TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+                            TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                            TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                            TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                            TestCordapp.findCordapp("com.r3.corda.lib.ci")
                 )
             )
         )
@@ -284,12 +285,13 @@ class RedeemTokenTestsFlow{
 
         // Checking if the tokens are issued to nodeA.
         assertThat(nodeA.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty()
+        assertThat(nodeI.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
 
         // Redeeming the tokens.
         val amountToRedeem = 10.GBP
         val exception = nodeI.startFlow(RedeemFungibleTokens(amount = amountToRedeem, issuer = issuer))
         network.runNetwork()
-        assertFailsWith<IllegalStateException> { exception.getOrThrow() }
+        assertFailsWith<InsufficientBalanceException> { exception.getOrThrow() }
     }
 
 
