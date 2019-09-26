@@ -1,4 +1,7 @@
-killall_jobs()
+@Library('existing-build-control')
+import static com.r3.build.BuildControl.killAllExistingBuildsForJob
+
+killAllExistingBuildsForJob(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
 
 pipeline {
     agent {
@@ -33,25 +36,5 @@ pipeline {
         cleanup {
             deleteDir() /* clean up our workspace */
         }
-    }
-}
-
-@NonCPS
-def killall_jobs() {
-    def jobname = env.JOB_NAME
-    def buildnum = env.BUILD_NUMBER.toInteger()
-
-    def job = Jenkins.instance.getItemByFullName(jobname)
-    for (build in job.builds) {
-        if (!build.isBuilding()) {
-            continue;
-        }
-
-        if (buildnum == build.getNumber().toInteger()) {
-            continue
-        }
-
-        echo "Killing task = ${build}"
-        build.doStop();
     }
 }
