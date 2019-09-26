@@ -413,4 +413,18 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         val charlieToken = charlie.services.vaultService.queryBy<TestEvolvableTokenType>().states
         assertEquals(updatedToken, charlieToken.single())
     }
+
+    @Test
+    fun `non maintainer updating an evolvable token type fails`() {
+        // Alice creates an evolvable token type.
+        val token = factory.withOneMaintainer(maintainer = alice.info.legalIdentities.first())
+        val createTx = alice.createEvolvableToken(token, notaryIdentity).getOrThrow()
+        val createdToken = createTx.singleOutput<TestEvolvableTokenType>()
+
+        // Bob tries to update the token.
+        val newToken = createdToken.state.data
+        assertFails("This flow can only be started by existing maintainers of the EvolvableTokenType.") {
+            bob.updateEvolvableToken(createdToken, newToken).getOrThrow()
+        }
+    }
 }

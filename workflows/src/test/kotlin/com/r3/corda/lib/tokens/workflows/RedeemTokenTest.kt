@@ -5,6 +5,7 @@ import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
+import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
 import com.r3.corda.lib.tokens.testing.states.Appartment
 import com.r3.corda.lib.tokens.workflows.utilities.heldTokenAmountCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.heldTokensByToken
@@ -15,6 +16,7 @@ import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.Before
 import org.junit.FixMethodOrder
 import org.junit.Test
@@ -59,9 +61,9 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     fun `isufficient balance`() {
         I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         network.waitQuiescent()
-        Assertions.assertThatThrownBy {
+        assertThatExceptionOfType(InsufficientBalanceException::class.java).isThrownBy {
             A.redeemTokens(GBP, I, 200.GBP, true).getOrThrow()
-        }.hasMessageContaining("Insufficient spendable states identified for")
+        }
     }
 
     @Test
@@ -70,9 +72,9 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         network.waitQuiescent()
         B.issueFungibleTokens(A, 100.USD).getOrThrow()
         network.waitQuiescent()
-        Assertions.assertThatThrownBy {
+        assertThatExceptionOfType(InsufficientBalanceException::class.java).isThrownBy {
             A.redeemTokens(USD, I, 100.USD, true).getOrThrow()
-        }.hasMessageContaining("Insufficient spendable states identified for ${100.USD}")
+        }
     }
 
     @Test

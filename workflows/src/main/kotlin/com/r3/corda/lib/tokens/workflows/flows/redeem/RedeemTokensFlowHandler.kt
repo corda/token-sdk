@@ -1,7 +1,7 @@
 package com.r3.corda.lib.tokens.workflows.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.lib.ci.SyncKeyMappingFlowHandler
+import com.r3.corda.lib.ci.workflows.SyncKeyMappingFlowHandler
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.workflows.internal.checkOwner
 import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer

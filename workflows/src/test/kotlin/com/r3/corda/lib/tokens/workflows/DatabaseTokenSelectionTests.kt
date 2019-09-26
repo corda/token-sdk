@@ -7,8 +7,10 @@ import com.r3.corda.lib.tokens.money.BTC
 import com.r3.corda.lib.tokens.money.CHF
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
+import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
+import com.r3.corda.lib.tokens.selection.TokenQueryBy
+import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveFungibleTokens
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountWithIssuerCriteria
 import net.corda.core.transactions.TransactionBuilder
@@ -23,7 +25,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 // TODO: Improve these tests. E.g. Order states in a list by state ref, so we can specify exactly which will be picked.
-class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
+class DatabaseTokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
 
     lateinit var A: StartedMockNode
     lateinit var B: StartedMockNode
@@ -55,29 +57,29 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
 
     @Test
     fun `select up to available amount with tokens sorted by state ref`() {
-        val tokenSelection = TokenSelection(A.services)
+        val tokenSelection = DatabaseTokenSelection(A.services)
         val uuid = UUID.randomUUID()
-        val one = A.transaction { tokenSelection.attemptSpend(160.GBP, uuid) }
+        val one = A.transaction { tokenSelection.selectTokens(uuid, 160.GBP) }
         // We need to release the soft lock after acquiring it, this is because we before we used LOCK_AND_SPECIFIED
         // and now we use UNLOCKED_ONLY. The difference is that LOCK_AND_SPECIFIED lets you re lock tokens you have
         // already locked, where as with UNLOCKED_ONLY, the tokens which have already been locked are out of scope for
         // future selections. This _is_ a behavioural change but should only affect unit tests.
         A.transaction { A.services.vaultService.softLockRelease(uuid) }
         assertEquals(gbpTokens.size, one.size)
-        val two = A.transaction { tokenSelection.attemptSpend(175.GBP, uuid) }
+        val two = A.transaction { tokenSelection.selectTokens(uuid, 175.GBP) }
         A.transaction { A.services.vaultService.softLockRelease(uuid) }
         assertEquals(gbpTokens.size, two.size)
-        val results = A.transaction { tokenSelection.attemptSpend(25.GBP, uuid) }
+        val results = A.transaction { tokenSelection.selectTokens(uuid, 25.GBP) }
         assertEquals(1, results.size)
     }
 
     @Test
     fun `not enough tokens available`() {
-        val tokenSelection = TokenSelection(A.services)
+        val tokenSelection = DatabaseTokenSelection(A.services)
         val uuid = UUID.randomUUID()
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<InsufficientBalanceException> {
             A.transaction {
-                tokenSelection.attemptSpend(176.GBP, uuid)
+                tokenSelection.selectTokens(uuid, 176.GBP)
             }
         }
     }
@@ -107,27 +109,27 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         val four = J.issueFungibleTokens(A, 4.BTC).toCompletableFuture()
         CompletableFuture.allOf(one, two, three, four)
 
-        val tokenSelection = TokenSelection(A.services)
+        val tokenSelection = DatabaseTokenSelection(A.services)
         val uuid = UUID.randomUUID()
 
-        val resultOne = A.transaction { tokenSelection.attemptSpend(4.BTC, uuid, additionalCriteria = tokenAmountWithIssuerCriteria(BTC, I.legalIdentity())) }
+        val resultOne = A.transaction { tokenSelection.selectTokens(uuid, 4.BTC, TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, I.legalIdentity()))) }
         assertEquals(4.BTC issuedBy I.legalIdentity(), resultOne.sumTokenStateAndRefs())
 
         // Not enough tokens as only 4 BTC on issuer I.
-        assertFailsWith<IllegalStateException> {
-            A.transaction { tokenSelection.attemptSpend(5.BTC, uuid, additionalCriteria = tokenAmountWithIssuerCriteria(BTC, I.legalIdentity())) }
+        assertFailsWith<InsufficientBalanceException> {
+            A.transaction { tokenSelection.selectTokens(uuid, 5.BTC, TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, I.legalIdentity()))) }
         }
 
-        val resultTwo = A.transaction { tokenSelection.attemptSpend(6.BTC, uuid, additionalCriteria = tokenAmountWithIssuerCriteria(BTC, J.legalIdentity())) }
+        val resultTwo = A.transaction { tokenSelection.selectTokens(uuid, 6.BTC, TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, J.legalIdentity()))) }
         assertEquals(6.BTC issuedBy J.legalIdentity(), resultTwo.sumTokenStateAndRefs())
     }
 
     @Test
     fun `should be able to select tokens if you need more than one page to fulfill`() {
         (1..12).map { I.issueFungibleTokens(A, 1 of CHF).getOrThrow() }
-        val tokenSelection = TokenSelection(A.services)
+        val tokenSelection = DatabaseTokenSelection(A.services)
         A.transaction {
-            val tokens = tokenSelection.attemptSpend(12 of CHF, UUID.randomUUID(), pageSize = 5)
+            val tokens = tokenSelection.selectTokens(UUID.randomUUID(), 12 of CHF)//, pageSize = 5)
             val value = tokens.fold(0L) { acc, token ->
                 acc + token.state.data.amount.quantity
             }
@@ -137,5 +139,4 @@ class TokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
     }
 
     // TODO: Test with different notaries.
-
 }

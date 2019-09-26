@@ -2,5 +2,6 @@ include 'contracts'
 include 'workflows'
 include 'modules:money'
 include 'modules:contracts-for-testing'
+include 'modules:selection'
 findProject(':modules:money')?.name = 'money'
 

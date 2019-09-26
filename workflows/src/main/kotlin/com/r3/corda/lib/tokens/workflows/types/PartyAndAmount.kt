@@ -17,3 +17,5 @@ data class PartyAndAmount<T : TokenType>(val party: AbstractParty, val amount: A
  * Used in [generateMove] to define what token [T] [party] should receive.
  */
 data class PartyAndToken(val party: AbstractParty, val token: TokenType)
+
+fun Iterable<PartyAndAmount<TokenType>>.toPairs() = map { Pair(it.party, it.amount) }

@@ -5,7 +5,17 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.withNotary
-import com.r3.corda.lib.tokens.workflows.flows.rpc.*
+import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialMoveFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialMoveNonFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialRedeemFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveNonFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.RedeemFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.RedeemNonFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
@@ -76,7 +86,7 @@ fun StartedMockNode.moveNonFungibleTokens(
         owner: StartedMockNode,
         anonymous: Boolean = true,
         observers: List<Party> = emptyList()
-    ): CordaFuture<SignedTransaction> {
+): CordaFuture<SignedTransaction> {
     return transaction {
         if (anonymous) {
             startFlow(ConfidentialMoveNonFungibleTokens(PartyAndToken(owner.legalIdentity(), token), observers))
