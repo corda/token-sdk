@@ -3,7 +3,7 @@ buildscript {
         corda_release_group = 'net.corda'
         corda_release_version = '4.3-RC01'
         tokens_release_group = "com.r3.corda.lib.tokens"
-        tokens_release_version = "1.1-SNAPSHOT"
+        tokens_release_version = "1.1-RC01"
         corda_gradle_plugins_version = '4.0.45'
         aetherVersion = '1.0.0.v20140518'
         mavenVersion = '3.1.0'
