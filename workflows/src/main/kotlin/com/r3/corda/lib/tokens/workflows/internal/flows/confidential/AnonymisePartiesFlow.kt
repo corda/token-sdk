@@ -1,7 +1,7 @@
 package com.r3.corda.lib.tokens.workflows.internal.flows.confidential
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.lib.ci.RequestKeyFlow
+import com.r3.corda.lib.ci.workflows.RequestKeyFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AnonymousParty

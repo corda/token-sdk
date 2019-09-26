@@ -1,7 +1,6 @@
 package com.r3.corda.lib.tokens.workflows.flows.confidential
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.lib.ci.RequestKeyFlow
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.workflows.internal.flows.confidential.AnonymisePartiesFlow
 import com.r3.corda.lib.tokens.workflows.utilities.toWellKnownParties

@@ -20,10 +20,10 @@ class UpdateEvolvableTokenFlowHandler(val otherSession: FlowSession) : FlowLogic
         if (notification.signatureRequired) {
             val signTransactionFlow = object : SignTransactionFlow(otherSession) {
                 override fun checkTransaction(stx: SignedTransaction) = requireThat {
-                    val ledgerTransaction = stx.toLedgerTransaction(serviceHub)
+                    val ledgerTransaction = stx.toLedgerTransaction(serviceHub, checkSufficientSignatures = false)
                     val evolvableTokenTypeStateRef = ledgerTransaction.inRefsOfType<EvolvableTokenType>().single()
-                    val oldParticipants = evolvableTokenTypeStateRef.state.data.maintainers
-                    require(otherSession.counterparty in oldParticipants) {
+                    val oldMaintainers = evolvableTokenTypeStateRef.state.data.maintainers
+                    require(otherSession.counterparty in oldMaintainers) {
                         "This flow can only be started by existing maintainers of the EvolvableTokenType. However it " +
                                 "was started by ${otherSession.counterparty} who is not a maintainer."
                     }

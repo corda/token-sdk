@@ -49,3 +49,5 @@ fun tokenAmountWithHolderCriteria(token: TokenType, holder: AbstractParty): Quer
     })
     return tokenAmountCriteria(token).and(issuerCriteria)
 }
+
+class InsufficientBalanceException(message: String) : RuntimeException(message)

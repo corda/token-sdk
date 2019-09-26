@@ -16,7 +16,7 @@ buildscript {
         log4j_version = '2.9.1'
         jackson_version = '2.9.0'
         confidential_id_release_group = "com.r3.corda.lib.ci"
-        confidential_id_release_version = "1.0-RC02"
+        confidential_id_release_version = "1.0-RC03"
     }
 
     repositories {
