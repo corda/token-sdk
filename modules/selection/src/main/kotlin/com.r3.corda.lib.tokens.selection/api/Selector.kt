@@ -38,9 +38,9 @@ abstract class Selector {
     // Token Only
     @Suspendable
     fun selectTokens(
-            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
             requiredAmount: Amount<TokenType>,
-            queryBy: TokenQueryBy = TokenQueryBy()
+            queryBy: TokenQueryBy = TokenQueryBy(),
+            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     ): List<StateAndRef<FungibleToken>> {
         return selectTokens(Holder.TokenOnly, lockId, requiredAmount, queryBy)
     }
@@ -62,9 +62,9 @@ abstract class Selector {
     @Suspendable
     fun selectTokens(
             externalId: UUID,
-            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
             requiredAmount: Amount<TokenType>,
-            queryBy: TokenQueryBy = TokenQueryBy()
+            queryBy: TokenQueryBy = TokenQueryBy(),
+            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     ): List<StateAndRef<FungibleToken>> {
         return selectTokens(Holder.fromUUID(externalId), lockId, requiredAmount, queryBy)
     }
@@ -86,9 +86,9 @@ abstract class Selector {
     @Suspendable
     fun selectTokens(
             holdingKey: PublicKey,
-            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
             requiredAmount: Amount<TokenType>,
-            queryBy: TokenQueryBy = TokenQueryBy()
+            queryBy: TokenQueryBy = TokenQueryBy(),
+            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     ): List<StateAndRef<FungibleToken>> {
         return selectTokens(Holder.KeyIdentity(holdingKey), lockId, requiredAmount, queryBy)
     }
@@ -104,10 +104,10 @@ abstract class Selector {
     // Token only
     @Suspendable
     fun generateMove(
-            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
             partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
             changeHolder: AbstractParty,
-            queryBy: TokenQueryBy = TokenQueryBy()
+            queryBy: TokenQueryBy = TokenQueryBy(),
+            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     ): Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> {
         return generateMove(Holder.TokenOnly, lockId, partiesAndAmounts, changeHolder, queryBy)
     }
@@ -124,10 +124,10 @@ abstract class Selector {
     @Suspendable
     fun generateMove(
             externalId: UUID,
-            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
             partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
             changeHolder: AbstractParty,
-            queryBy: TokenQueryBy = TokenQueryBy()
+            queryBy: TokenQueryBy = TokenQueryBy(),
+            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     ): Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> {
         return generateMove(Holder.fromUUID(externalId), lockId, partiesAndAmounts, changeHolder, queryBy)
     }
@@ -144,10 +144,10 @@ abstract class Selector {
     @Suspendable
     fun generateMove(
             holdingKey: PublicKey,
-            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
             partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
             changeHolder: AbstractParty,
-            queryBy: TokenQueryBy = TokenQueryBy()
+            queryBy: TokenQueryBy = TokenQueryBy(),
+            lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     ): Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> {
         return generateMove(Holder.KeyIdentity(holdingKey), lockId, partiesAndAmounts, changeHolder, queryBy)
     }

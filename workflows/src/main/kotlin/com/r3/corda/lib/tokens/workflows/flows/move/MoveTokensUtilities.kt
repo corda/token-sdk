@@ -99,7 +99,7 @@ fun addMoveFungibleTokens(
     // TODO For now default to database query, but switch this line on after we can change API in 2.0
 //    val selector: Selector = ConfigSelection.getPreferredSelection(serviceHub)
     val selector = DatabaseTokenSelection(serviceHub)
-    val (inputs, outputs) = selector.generateMove(transactionBuilder.lockId, partiesAndAmounts.toPairs(), changeHolder, TokenQueryBy(queryCriteria = queryCriteria))
+    val (inputs, outputs) = selector.generateMove(partiesAndAmounts.toPairs(), changeHolder, TokenQueryBy(queryCriteria = queryCriteria), transactionBuilder.lockId)
     return addMoveTokens(transactionBuilder = transactionBuilder, inputs = inputs, outputs = outputs)
 }
 
