@@ -139,4 +139,16 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         network.waitQuiescent()
         assertHasTransaction(rtx, network, observer)
     }
+
+    @Test
+    fun `redeem from two different keys on the same node - correct signatures`() {
+        val itx1 = I.issueFungibleTokens(A, 100.GBP, true).getOrThrow()
+        val itx2 = I.issueFungibleTokens(A, 13.GBP, true).getOrThrow()
+        network.waitQuiescent()
+        val key1 = itx1.singleOutput<FungibleToken>().state.data.holder.owningKey
+        val key2 = itx2.singleOutput<FungibleToken>().state.data.holder.owningKey
+        assertThat(key1).isNotEqualTo(key2)
+        val rtx = A.redeemTokens(GBP, I, 113.GBP).getOrThrow()
+        assertThat(rtx.sigs.map { it.by }).contains(key1, key2, I.legalIdentity().owningKey)
+    }
 }

@@ -145,7 +145,6 @@ fun addMoveNonFungibleTokens(
     return generateMoveNonFungible(transactionBuilder, PartyAndToken(holder, token), serviceHub.vaultService, queryCriteria)
 }
 
-// TODO don't need it
 /**
  * Add single move of token to the new holder specified using [partyAndToken] parameter.
  * Provide optional [queryCriteria] for move generation.
