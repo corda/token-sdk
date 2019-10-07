@@ -7,9 +7,9 @@ import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.selection.TokenQueryBy
+import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.internal.checkSameIssuer
 import com.r3.corda.lib.tokens.workflows.internal.checkSameNotary
-import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateExitNonFungible
 import com.r3.corda.lib.tokens.workflows.utilities.addNotaryWithCheck
 import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
@@ -42,8 +42,8 @@ fun addTokensToRedeem(
     }
     val firstState = inputs.first().state
     addNotaryWithCheck(transactionBuilder, firstState.notary)
-    val moveKey = firstState.data.holder.owningKey
     val issuerKey = firstState.data.issuer.owningKey
+    val moveKeys = inputs.map { it.state.data.holder.owningKey }
 
     var inputIdx = transactionBuilder.inputStates().size
     val outputIdx = transactionBuilder.outputStates().size
@@ -58,7 +58,7 @@ fun addTokensToRedeem(
         } else {
             emptyList()
         }
-        transactionBuilder.addCommand(RedeemTokenCommand(firstState.data.issuedTokenType, inputIndicies, outputs), issuerKey, moveKey)
+        addCommand(RedeemTokenCommand(firstState.data.issuedTokenType, inputIndicies, outputs), moveKeys + issuerKey)
     }
     val states = inputs.map { it.state.data } + if (changeOutput == null) emptyList() else listOf(changeOutput)
     addTokenTypeJar(states, transactionBuilder)
@@ -117,6 +117,7 @@ fun addFungibleTokensToRedeem(
             amount = amount,
             changeHolder = changeHolder
     )
+
     addTokensToRedeem(transactionBuilder, exitStates, change)
     return transactionBuilder
 }

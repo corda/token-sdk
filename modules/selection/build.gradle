@@ -4,7 +4,7 @@ cordapp {
     targetPlatformVersion 4
     minimumPlatformVersion 4
     contract {
-        name "Token SDK test-contracts"
+        name "Token SDK test-selection"
         vendor "R3"
         licence "Apache 2"
         versionId 1
@@ -42,4 +42,8 @@ dependencies {
 
     // CorDapp dependencies.
     cordapp project(":contracts")
+}
+
+jar {
+    baseName "token-selection"
 }
