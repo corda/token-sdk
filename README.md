@@ -12,7 +12,7 @@ available.
 
 ## What is the token SDK?
 
-The tokens SDK exists to make it easy for CorDapp developers to create
+The token SDK exists to make it easy for CorDapp developers to create
 CorDapps which use tokens. Functionality is provided to create token types,
 then issue, move and redeem tokens of a particular type.
 
@@ -22,6 +22,7 @@ The tokens SDK comprises three CorDapp JARs:
 2. Workflows which contains flows for issuing, moving and redeeming tokens
    as well as utilities for the above operations.
 3. Money which contains token type definitions for various currencies
+4. Selection that contains both database and in memory token selection of fungible tokens
 
 The token SDK is intended to replace the "finance module" from the core
 Corda repository.
@@ -33,7 +34,7 @@ For more details behind the token SDK's design, see
 
 ### Using the tokens template.
 
-By far the easiest way to get started with the tokens SDK is to use the
+By far the easiest way to get started with the `token-sdk` is to use the
 `tokens-template` which is a branch on the kotlin version of the "CorDapp
 template". You can obtain it with the following commands:
 
@@ -60,8 +61,8 @@ for more information.
 
 ### Build Tokens SDK against Corda release branch
 
-Often, in order to use the latest tokens-sdk master you will need to build against a specific Corda release branch until 
-the required changes make it into a Corda release. At the team of writing tokens `1.1-SNAPSHOT` requires Corda 
+Often, in order to use the latest `token-sdk` master you will need to build against a specific Corda release branch until 
+the required changes make it into a Corda release. At the time of writing tokens `1.1-SNAPSHOT` requires Corda 
 `4.3-SNAPSHOT`. You can build this branch with the following commands:
 
     git clone https://github.com/corda/corda
@@ -90,7 +91,7 @@ list of repositories for your project:
         maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-lib-dev' }
     }
 
-Now, you can add the tokens SDK dependencies to the `dependencies` block
+Now, you can add the `token-sdk` dependencies to the `dependencies` block
 in each module of your CorDapp. For contract modules add:
 
     cordaCompile "$tokens_release_group:tokens-contracts:$tokens_release_version"
@@ -98,7 +99,9 @@ in each module of your CorDapp. For contract modules add:
 In your workflow `build.gradle` add:
 
     cordaCompile "$tokens_release_group:tokens-workflows:$tokens_release_version"
+To be able to use selection of fungible tokens add:
 
+    cordaCompile "$tokens_release_group:tokens-selection:$tokens_release_version"
 For `FiatCurrency` and `DigitalCurrency` definitions add:
 
     cordaCompile "$tokens_release_group:tokens-money:$tokens_release_version"
@@ -109,6 +112,7 @@ following dependencies to your root `build.gradle` file:
     cordapp "$tokens_release_group:tokens-contracts:$tokens_release_version"
     cordapp "$tokens_release_group:tokens-workflows:$tokens_release_version"
     cordapp "$tokens_release_group:tokens-money:$tokens_release_version"
+    cordapp "$tokens_release_group:tokens-selection:$tokens_release_version"
 
 These should also be added to the `deployNodes` task with the following syntax:
 
@@ -119,11 +123,12 @@ These should also be added to the `deployNodes` task with the following syntax:
         cordapp("$tokens_release_group:tokens-contracts:$tokens_release_version")
         cordapp("$tokens_release_group:tokens-workflows:$tokens_release_version")
         cordapp("$tokens_release_group:tokens-money:$tokens_release_version")
+        cordapp("$tokens_release_group:tokens-selection:$tokens_release_version")
     }
 
 ### Installing the token SDK binaries
 
-If you wish to build the token SDK from source then do the following to
+If you wish to build the `token-sdk` from source then do the following to
 publish binaries to your local maven repository:
 
     git clone http://github.com/corda/token-sdk
