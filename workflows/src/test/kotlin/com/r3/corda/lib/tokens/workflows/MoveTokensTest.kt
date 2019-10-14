@@ -10,7 +10,12 @@ import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
 import com.r3.corda.lib.tokens.testing.states.Appartment
-import com.r3.corda.lib.tokens.workflows.flows.rpc.*
+import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialMoveFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialMoveNonFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveNonFungibleTokens
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
@@ -34,22 +39,20 @@ class MoveTokensTest {
     lateinit var network: MockNetwork
     lateinit var nodeA: StartedMockNode
     lateinit var nodeB: StartedMockNode
-    lateinit var nodeC:StartedMockNode
+    lateinit var nodeC: StartedMockNode
     lateinit var nodeI: StartedMockNode
-    // protected val NOTARY: StartedMockNode get() = network.defaultNotaryNode
-    private val fooToken = Appartment()
 
     @Before
     fun setup() {
-        network =  MockNetwork(
-            MockNetworkParameters(
-                networkParameters = testNetworkParameters(minimumPlatformVersion = 4),
-                cordappsForAllNodes = listOf(TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
-                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
-                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
-                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")
+        network = MockNetwork(
+                MockNetworkParameters(
+                        networkParameters = testNetworkParameters(minimumPlatformVersion = 4),
+                        cordappsForAllNodes = listOf(TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+                                TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                                TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                                TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")
+                        )
                 )
-            )
         )
         nodeA = network.createPartyNode()
         nodeB = network.createPartyNode()
@@ -65,7 +68,7 @@ class MoveTokensTest {
 
     //This flow test should allow to move newly issued fungible token
     @Test
-    fun `should move issued fungible tokens`(){
+    fun `should move issued fungible tokens`() {
         //create token
         val token = 100.GBP issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
         //token issued to nodeA
@@ -74,7 +77,7 @@ class MoveTokensTest {
         //getting the above transaction
         val issuedTokenSignedTransaction = issuedToken.getOrThrow()
         //Get the issued fungible token's transaction reference
-        val issuedFungibeToken = issuedTokenSignedTransaction.coreTransaction.outRefsOfType<FungibleToken>().single()
+        issuedTokenSignedTransaction.coreTransaction.outRefsOfType<FungibleToken>().single()
         //getting the state and reference of nodeA
         val issuedGBPOfNodeA = nodeA.services.vaultService.queryBy<FungibleToken>().states
         //move issued token to nodeB
@@ -83,7 +86,7 @@ class MoveTokensTest {
         //getting the transaction
         val movedGBPSignedTransaction = moveToken.getOrThrow()
         //Get the moved issued fungible token's transaction reference
-        val movedGBP = movedGBPSignedTransaction.coreTransaction.outRefsOfType<FungibleToken>()
+        movedGBPSignedTransaction.coreTransaction.outRefsOfType<FungibleToken>()
         //getting the state and reference of nodeB
         val newlyMovedGBPNodeB = nodeB.services.vaultService.queryBy<FungibleToken>().states
         //getting the state and reference of nodeA
@@ -97,9 +100,9 @@ class MoveTokensTest {
 
     //This flow test should allow to move newly issued non fungible token
     @Test
-    fun `should move issued non fungible tokens`(){
+    fun `should move issued non fungible tokens`() {
         //Creating a non-fungible token of type Appartment
-        val fooToken = TokenType("MyToken",0)
+        val fooToken = TokenType("MyToken", 0)
         //Creating token type with the non-fungible token with node A as issuer and node B as holder
         val tokenType = fooToken issuedBy nodeI.legalIdentity() heldBy nodeB.legalIdentity()
         //Set empty list of observers
@@ -107,21 +110,19 @@ class MoveTokensTest {
         //Issue tokens to node B
         val issuedToken = nodeI.startFlow(IssueTokens(listOf(tokenType), observers))
         network.runNetwork()
-        val issuedNonFungibleTokenSignedTransaction = issuedToken .getOrThrow()
+        val issuedNonFungibleTokenSignedTransaction = issuedToken.getOrThrow()
         //Get the issued non fungible token's transaction reference
-        val issuedNonFungibleToken = issuedNonFungibleTokenSignedTransaction.coreTransaction.outRefsOfType<NonFungibleToken>().single()
+        issuedNonFungibleTokenSignedTransaction.coreTransaction.outRefsOfType<NonFungibleToken>().single()
         //Get states of node B from vault
-        val nonFungibleTokenNodeB = nodeB.services.vaultService.queryBy<NonFungibleToken>().states
+        nodeB.services.vaultService.queryBy<NonFungibleToken>().states
         //moving the node
-        val moveToken = nodeB.startFlow(MoveNonFungibleTokens(PartyAndToken(nodeI.legalIdentity(),fooToken)))
+        val moveToken = nodeB.startFlow(MoveNonFungibleTokens(PartyAndToken(nodeI.legalIdentity(), fooToken)))
         network.runNetwork()
         val movedGBPSignedTransaction = moveToken.getOrThrow()
         val movedGBP = movedGBPSignedTransaction.coreTransaction.outRefsOfType<NonFungibleToken>()
         val newlyMovedGBPNodeI = nodeI.services.vaultService.queryBy<NonFungibleToken>().states
-        val newBalanceGBPNodeA = nodeB.services.vaultService.queryBy<NonFungibleToken>().states
+        nodeB.services.vaultService.queryBy<NonFungibleToken>().states
         Assert.assertEquals(movedGBP, newlyMovedGBPNodeI)
-
-
     }
 
     //This flow test should allow to move newly issued confidential fungible token
@@ -130,15 +131,15 @@ class MoveTokensTest {
         //create and issue token
         val token = 100 of GBP issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
         //executing confidential issue token flow
-        val issuedConfidentialFungibleToken =nodeI.startFlow(ConfidentialIssueTokens(listOf(token)))
+        val issuedConfidentialFungibleToken = nodeI.startFlow(ConfidentialIssueTokens(listOf(token)))
         //set observer list
-        val observerList=listOf(nodeB.legalIdentity())
+        val observerList = listOf(nodeB.legalIdentity())
         network.runNetwork()
         //getting the transaction
-        val issuedCFTSignedTransaction = issuedConfidentialFungibleToken.getOrThrow()
+        issuedConfidentialFungibleToken.getOrThrow()
 
         //move confidential  fungible token to nodeI
-        val moveConfidentialFungibleToken = nodeA.startFlow(ConfidentialMoveFungibleTokens(PartyAndAmount(nodeI.legalIdentity(),50.GBP),observerList))
+        val moveConfidentialFungibleToken = nodeA.startFlow(ConfidentialMoveFungibleTokens(PartyAndAmount(nodeI.legalIdentity(), 50.GBP), observerList))
         network.runNetwork()
 
         //getting the transction
@@ -153,34 +154,31 @@ class MoveTokensTest {
         val newBalanceCFTNodeA = nodeA.services.vaultService.queryBy<FungibleToken>().states
 
         //checking both are same
-        assertEquals(movedCFT, listOf(newlyMovedCFTNodeI[0],newBalanceCFTNodeA[0]))
+        assertEquals(movedCFT, listOf(newlyMovedCFTNodeI[0], newBalanceCFTNodeA[0]))
         Assert.assertEquals(newlyMovedCFTNodeI[0].state.data.amount, 50.GBP issuedBy nodeI.legalIdentity())
         Assert.assertEquals(newBalanceCFTNodeA[0].state.data.amount, 50.GBP issuedBy nodeI.legalIdentity())
-
-
     }
 
 
     //This flow test should allow to move newly issued confidential non fungible token
     @Test
-    fun `should move issued confidential non-fungible tokens`()
-    {
+    fun `should move issued confidential non-fungible tokens`() {
         //create token
-        val myNewToken=TokenType("MyToken",0)
+        val myNewToken = TokenType("MyToken", 0)
         //issue non fungible token
-        val token= myNewToken issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
+        val token = myNewToken issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
 
         //executing confidential issue token flow
         val issuedNonFungibleTx = nodeI.startFlow(ConfidentialIssueTokens(listOf(token)))
 
         //set observer list
-        val observerList=listOf(nodeB.legalIdentity())
+        val observerList = listOf(nodeB.legalIdentity())
         network.runNetwork()
 
         //getting the transaction
-        val issuedCNFTSignedTransaction = issuedNonFungibleTx.getOrThrow()
+        issuedNonFungibleTx.getOrThrow()
         //move confidential non fungible token to nodeI
-        val moveConfidentialNonFungibleToken = nodeA.startFlow(ConfidentialMoveNonFungibleTokens(PartyAndToken(nodeI.legalIdentity(),myNewToken),observerList))
+        val moveConfidentialNonFungibleToken = nodeA.startFlow(ConfidentialMoveNonFungibleTokens(PartyAndToken(nodeI.legalIdentity(), myNewToken), observerList))
         network.runNetwork()
         //getting the transaction
         val movedCNFTSignedTransaction = moveConfidentialNonFungibleToken.getOrThrow()
@@ -192,33 +190,31 @@ class MoveTokensTest {
         val newlyMovedCNFTNodeI = nodeI.services.vaultService.queryBy<NonFungibleToken>().states
 
         //comparing state and references of node I with moved token
-        Assert.assertEquals(newlyMovedCNFTNodeI[0],movedCNFT[0])
-
+        Assert.assertEquals(newlyMovedCNFTNodeI[0], movedCNFT[0])
     }
 
     /*
 * This flow test return the real identities of the participants involved in fungible token move.
 * */
     @Test
-    fun `should the parties involved in fungible token move are not anonymous`(){
-
+    fun `should the parties involved in fungible token move are not anonymous`() {
         //Creating fungible token
-        val fungibleToken= 100.USD issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
+        val fungibleToken = 100.USD issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
         //Fungible token issued to nodeA by nodeI without observers
-        val tokenIssuedtoNodeA=nodeI.startFlow(IssueTokens(listOf(fungibleToken)))
+        val tokenIssuedtoNodeA = nodeI.startFlow(IssueTokens(listOf(fungibleToken)))
         network.runNetwork()
         //Getting the transaction
-        val tokenIssuedtoNodeA_Tx=tokenIssuedtoNodeA.getOrThrow()
+        tokenIssuedtoNodeA.getOrThrow()
         //Move some fungible token to node B
-        val moveToNodeB=nodeA.startFlow(MoveFungibleTokens(PartyAndAmount(nodeB.legalIdentity(),50 of USD)))
+        val moveToNodeB = nodeA.startFlow(MoveFungibleTokens(PartyAndAmount(nodeB.legalIdentity(), 50 of USD)))
         network.runNetwork()
         //Getting transaction
-        val moveToNodeBTx=moveToNodeB.getOrThrow()
-        assertHasTransaction(moveToNodeBTx,network,nodeB)
+        val moveToNodeBTx = moveToNodeB.getOrThrow()
+        assertHasTransaction(moveToNodeBTx, network, nodeB)
         //Getting the State and Reference of above transaction
-        val moveTxStateRef=moveToNodeBTx.coreTransaction.outRefsOfType<FungibleToken>()
+        val moveTxStateRef = moveToNodeBTx.coreTransaction.outRefsOfType<FungibleToken>()
         //Getting participants involved in move fungible token
-        val participantsInTx=moveTxStateRef[0].state.data.participants
+        val participantsInTx = moveTxStateRef[0].state.data.participants
         //Checking whether participants involved have real identities
         assertEquals(participantsInTx, listOf(nodeB.legalIdentity()))
     }
@@ -228,68 +224,65 @@ class MoveTokensTest {
     * This flow test must return the real identities of the participants involved in non-fungible token move.
     * */
     @Test
-    fun `should the parties involved in non-fungible token move are not anonymous`(){
-
+    fun `should the parties involved in non-fungible token move are not anonymous`() {
         //Creating non-fungible token
-        val myNewToken=TokenType("MyToken",0)
-        val nonFungibleToken= myNewToken issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
+        val myNewToken = TokenType("MyToken", 0)
+        val nonFungibleToken = myNewToken issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
         //Non-Fungible token issued to nodeA by nodeI without observers
-        val tokenIssuedtoNodeA=nodeI.startFlow(IssueTokens(listOf(nonFungibleToken)))
+        val tokenIssuedtoNodeA = nodeI.startFlow(IssueTokens(listOf(nonFungibleToken)))
         network.runNetwork()
         //Getting the transaction
-        val tokenIssuedtoNodeA_Tx=tokenIssuedtoNodeA.getOrThrow()
+        tokenIssuedtoNodeA.getOrThrow()
         //Move non-fungible token to node B
-        val moveToNodeB=nodeA.startFlow(MoveNonFungibleTokens(PartyAndToken(nodeB.legalIdentity(),nonFungibleToken.tokenType)))
+        val moveToNodeB = nodeA.startFlow(MoveNonFungibleTokens(PartyAndToken(nodeB.legalIdentity(), nonFungibleToken.tokenType)))
         network.runNetwork()
         //Getting transaction
-        val moveToNodeBTx=moveToNodeB.getOrThrow()
+        val moveToNodeBTx = moveToNodeB.getOrThrow()
         //Getting the participants in transaction
-        val moveTxParties=moveToNodeBTx.coreTransaction.outRefsOfType<NonFungibleToken>().single().state.data.participants
+        val moveTxParties = moveToNodeBTx.coreTransaction.outRefsOfType<NonFungibleToken>().single().state.data.participants
         //Checking whether participants involved have real identities
-        Assert.assertEquals(moveTxParties,listOf(nodeB.legalIdentity()))
+        Assert.assertEquals(moveTxParties, listOf(nodeB.legalIdentity()))
     }
 
 
     //Checks if the flow moves a single fungible token from nodeA to nodeB
     @Test
-    fun `should add a single move of fungible token `(){
+    fun `should add a single move of fungible token `() {
         val token = 100.GBP issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
         //Issue token
-        val issueToken = nodeI.startFlow(IssueTokens(listOf(token)))
+        nodeI.startFlow(IssueTokens(listOf(token)))
         network.runNetwork()
 
-        val tokenInA = nodeA.services.vaultService.queryBy<FungibleToken>().states
+        nodeA.services.vaultService.queryBy<FungibleToken>().states
         //nodeA moves the  token to nodeB
         val moveTokenToB = nodeA.startFlow(MoveFungibleTokens(PartyAndAmount(nodeB.legalIdentity(), 100.GBP)))
 
         network.runNetwork()
-        val movedTokeninNodeB=moveTokenToB.getOrThrow()
+        moveTokenToB.getOrThrow()
         assertFailsWith<InsufficientBalanceException> {
             val moveTokenToC = nodeA.startFlow(MoveFungibleTokens(PartyAndAmount(nodeC.legalIdentity(), 100.GBP)))
-
             network.runNetwork()
-            val movedTokeninNodeC=moveTokenToC.getOrThrow()
+            val movedTokeninNodeC = moveTokenToC.getOrThrow()
         }
     }
 
     //checks if a node can move a single non-fungible token to another participant in a transaction
     @Test
-    fun `should add a single move of non-fungible token `(){
+    fun `should add a single move of non-fungible token `() {
         //create a non-fungible token
-        val myTokenType=TokenType("MyToken",0)
-        val nonFungibleToken= myTokenType issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
+        val myTokenType = TokenType("MyToken", 0)
+        val nonFungibleToken = myTokenType issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
         //nodeI issue the token
-        val issuedToken = nodeI.startFlow(IssueTokens(listOf(nonFungibleToken)))
+        nodeI.startFlow(IssueTokens(listOf(nonFungibleToken)))
         network.runNetwork()
         //nodeA moves the token to nodeB
-        val moveToB=nodeA.startFlow(MoveNonFungibleTokens(PartyAndToken(nodeB.legalIdentity(),nonFungibleToken.tokenType)))
+        val moveToB = nodeA.startFlow(MoveNonFungibleTokens(PartyAndToken(nodeB.legalIdentity(), nonFungibleToken.tokenType)))
         network.runNetwork()
-        val moveToBTx=moveToB.getOrThrow()
+        moveToB.getOrThrow()
         assertFailsWith<IllegalArgumentException> {
-            val moveTokenToC = nodeA.startFlow(MoveNonFungibleTokens(PartyAndToken(nodeC.legalIdentity(),nonFungibleToken.tokenType)))
+            val moveTokenToC = nodeA.startFlow(MoveNonFungibleTokens(PartyAndToken(nodeC.legalIdentity(), nonFungibleToken.tokenType)))
             network.runNetwork()
-            val movedTokeninNodeC=moveTokenToC.getOrThrow()
-
+            moveTokenToC.getOrThrow()
         }
     }
 
@@ -297,34 +290,33 @@ class MoveTokensTest {
     *This flow test combine multiple fungible token amounts from single issuer and move to other parties.
     * */
     @Test
-    fun `should combine multiple fungible tokens from a single issuer and move`(){
+    fun `should combine multiple fungible tokens from a single issuer and move`() {
         //Creating fungible tokens
-        val fungibleToken1= 100.USD issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
-        val fungibleToken2= 50.USD issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
+        val fungibleToken1 = 100.USD issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
+        val fungibleToken2 = 50.USD issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
         //Fungible token issued to nodeA by nodeI without observers
-        val tokenIssuedtoNodeA=nodeI.startFlow(IssueTokens(listOf(fungibleToken1,fungibleToken2)))
+        val tokenIssuedtoNodeA = nodeI.startFlow(IssueTokens(listOf(fungibleToken1, fungibleToken2)))
         network.runNetwork()
         //Getting the transaction
-        val tokenIssuedtoNodeA_Tx=tokenIssuedtoNodeA.getOrThrow()
-        assertHasTransaction(tokenIssuedtoNodeA_Tx,network,nodeI,nodeA)
+        val tokenIssuedtoNodeA_Tx = tokenIssuedtoNodeA.getOrThrow()
+        assertHasTransaction(tokenIssuedtoNodeA_Tx, network, nodeI, nodeA)
 
         //Move some fungible token to node B
-        val moveToNodeB=nodeA.startFlow(MoveFungibleTokens(PartyAndAmount(nodeB.legalIdentity(),125 of USD)))
+        val moveToNodeB = nodeA.startFlow(MoveFungibleTokens(PartyAndAmount(nodeB.legalIdentity(), 125 of USD)))
         network.runNetwork()
         //Getting transaction
-        val moveToNodeBTx=moveToNodeB.getOrThrow()
-        assertHasTransaction(moveToNodeBTx,network,nodeB,nodeA)
+        val moveToNodeBTx = moveToNodeB.getOrThrow()
+        assertHasTransaction(moveToNodeBTx, network, nodeB, nodeA)
         //Getting the State and Reference of above transaction
-        val moveTxStateRef=moveToNodeBTx.coreTransaction.outRefsOfType<FungibleToken>()
+        val moveTxStateRef = moveToNodeBTx.coreTransaction.outRefsOfType<FungibleToken>()
         //Getting the State and Reference from node A
-        val usdA=nodeA.services.vaultService.queryBy<FungibleToken>().states[0]
+        val usdA = nodeA.services.vaultService.queryBy<FungibleToken>().states[0]
         //Getting the State and Reference from node B
-        val usdB=nodeB.services.vaultService.queryBy<FungibleToken>().states[0]
+        val usdB = nodeB.services.vaultService.queryBy<FungibleToken>().states[0]
         //Comparing State and References
-        assertEquals(moveTxStateRef,listOf(usdB,usdA))
+        assertEquals(moveTxStateRef, listOf(usdB, usdA))
         //Checking balance in node A
-        assertEquals(usdA.state.data.amount,25.USD issuedBy nodeI.legalIdentity())
-
+        assertEquals(usdA.state.data.amount, 25.USD issuedBy nodeI.legalIdentity())
     }
 
     /*
@@ -333,7 +325,6 @@ class MoveTokensTest {
         * */
     @Test
     fun ` should have anonymous identity for sender of moved confidential fungible token`() {
-
         //Create a fungible token type
         val token = 100 of GBP issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
         //Issue the created fungible token type
@@ -371,11 +362,10 @@ class MoveTokensTest {
     * */
     @Test
     fun `should have anonymous identity for sender of moved confidential non-fungible token`() {
-
         //Create a non-fungible token type
-        val nonFungibleTokenType=TokenType("MyToken",0)
+        val nonFungibleTokenType = TokenType("MyToken", 0)
         //Create a non-fungible token in which node A issues the token to node B
-        val nonFungibleToken= nonFungibleTokenType issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
+        val nonFungibleToken = nonFungibleTokenType issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
         //Issue the non-fungible token
         val issuedToken = nodeI.startFlow(ConfidentialIssueTokens(listOf(nonFungibleToken)))
         network.runNetwork()
@@ -385,43 +375,41 @@ class MoveTokensTest {
         //Call ConfidentialMoveNonFungibleTokens flow in which node A confidentially move non-fungible token to node B
         val moveToken = nodeA.startFlow(ConfidentialMoveNonFungibleTokens(PartyAndToken(nodeB.legalIdentity(), token = nonFungibleTokenType), observers))
         network.runNetwork()
-        val moveTokenState=moveToken.getOrThrow().coreTransaction.outRefsOfType<NonFungibleToken>()[0]
+        val moveTokenState = moveToken.getOrThrow().coreTransaction.outRefsOfType<NonFungibleToken>()[0]
         //Get the states of node B from vault after the move
-        val newlyMovedGBPNodeB = nodeB.services.vaultService.queryBy<NonFungibleToken>().states
+        nodeB.services.vaultService.queryBy<NonFungibleToken>().states
         //Get the states of node A from vault after the move
-        val newBalanceGBPNodeA = nodeA.services.vaultService.queryBy<NonFungibleToken>().states
+        nodeA.services.vaultService.queryBy<NonFungibleToken>().states
         //Check that after Confidential move, the owning key of issuer is same as that of node A's owning key
 
         Assert.assertNotEquals(issuedTokenTx.state.data.holder, nodeA.legalIdentity())
         Assert.assertNotEquals(moveTokenState.state.data.holder, nodeB.legalIdentity())
-
     }
-
 
 
     //checks if a node can split token amounts and move them to different participants in a single transaction
     @Test
-    fun `should move different amount of  fungible tokens to different participants in a transaction`(){
-        val token=100.GBP issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
+    fun `should move different amount of  fungible tokens to different participants in a transaction`() {
+        val token = 100.GBP issuedBy nodeI.legalIdentity() heldBy nodeA.legalIdentity()
         //nodeI issues token
-        val issueToken=nodeI.startFlow(IssueTokens(listOf(token)))
+        nodeI.startFlow(IssueTokens(listOf(token)))
 
         network.runNetwork()
-        val tokenInA= nodeA.services.vaultService.queryBy<FungibleToken>().states
+        val tokenInA = nodeA.services.vaultService.queryBy<FungibleToken>().states
         //verify that the token in nodeA's vault is same as the token issued
-        Assert.assertEquals(tokenInA[0].state.data.amount,100.GBP issuedBy nodeI.legalIdentity())
+        Assert.assertEquals(tokenInA[0].state.data.amount, 100.GBP issuedBy nodeI.legalIdentity())
         //nodeA splits and  move different amounts of the token to nodeB and nodec
-        val moveToken=nodeA.startFlow(MoveFungibleTokens(listOf(PartyAndAmount(nodeB.legalIdentity(),60 of GBP), PartyAndAmount(nodeC.legalIdentity(),30 of GBP))))
+        nodeA.startFlow(MoveFungibleTokens(listOf(PartyAndAmount(nodeB.legalIdentity(), 60 of GBP), PartyAndAmount(nodeC.legalIdentity(), 30 of GBP))))
         network.runNetwork()
 
-        var tokenInB=nodeB.services.vaultService.queryBy<FungibleToken>().states
-        var tokenInC=nodeC.services.vaultService.queryBy<FungibleToken>().states
-        var tokenBalanceInA=nodeA.services.vaultService.queryBy<FungibleToken>().states
+        val tokenInB = nodeB.services.vaultService.queryBy<FungibleToken>().states
+        val tokenInC = nodeC.services.vaultService.queryBy<FungibleToken>().states
+        val tokenBalanceInA = nodeA.services.vaultService.queryBy<FungibleToken>().states
         //verifies that the amount of token in nodeB is the actual amount moved to nodeB
-        Assert.assertEquals(tokenInB[0].state.data.amount,60 of GBP issuedBy nodeI.legalIdentity())
+        Assert.assertEquals(tokenInB[0].state.data.amount, 60 of GBP issuedBy nodeI.legalIdentity())
         //verifies that the amount of token in nodeC is the actual amount moved to nodeC
-        Assert.assertEquals(tokenInC[0].state.data.amount,30 of GBP issuedBy nodeI.legalIdentity())
+        Assert.assertEquals(tokenInC[0].state.data.amount, 30 of GBP issuedBy nodeI.legalIdentity())
         //verifies the token balance in nodeA after the move
-        Assert.assertEquals(tokenBalanceInA[0].state.data.amount,10 of GBP issuedBy nodeI.legalIdentity())
+        Assert.assertEquals(tokenBalanceInA[0].state.data.amount, 10 of GBP issuedBy nodeI.legalIdentity())
     }
 }

@@ -1,6 +1,5 @@
 package com.r3.corda.lib.tokens.selection.memory.services
 
-import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.withoutIssuer
@@ -23,7 +22,11 @@ import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.utilities.contextLogger
 import rx.Observable
 import java.time.Duration
-import java.util.concurrent.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentMap
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 
 val UNLOCKER: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 const val PLACE_HOLDER: String = "THIS_IS_A_PLACE_HOLDER"
@@ -123,7 +126,6 @@ class VaultWatcherService(private val tokenObserver: TokenObserver, private val 
         }
     }
 
-    @Suspendable
     fun lockTokensExternal(list: List<StateAndRef<FungibleToken>>, knownSelectionId: String) {
         list.forEach {
             val idx = processToken(it)
@@ -132,7 +134,6 @@ class VaultWatcherService(private val tokenObserver: TokenObserver, private val 
         }
     }
 
-    @Suspendable
     fun selectTokens(
             owner: Holder,
             requiredAmount: Amount<TokenType>,

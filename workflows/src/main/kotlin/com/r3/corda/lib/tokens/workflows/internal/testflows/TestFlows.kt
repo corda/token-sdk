@@ -7,6 +7,7 @@ import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
+import com.r3.corda.lib.tokens.selection.memory.selector.LocalTokenSelector
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveNonFungibleTokens
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveTokens
@@ -20,12 +21,22 @@ import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
 import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
 import net.corda.core.contracts.Amount
-import net.corda.core.flows.*
+import net.corda.core.flows.CollectSignaturesFlow
+import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.FlowSession
+import net.corda.core.flows.InitiatedBy
+import net.corda.core.flows.InitiatingFlow
+import net.corda.core.flows.ReceiveStateAndRefFlow
+import net.corda.core.flows.SendStateAndRefFlow
+import net.corda.core.flows.SignTransactionFlow
+import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.utilities.seconds
 import net.corda.core.utilities.unwrap
+import java.time.Duration
 
 // This is very simple test flow for DvP.
 @CordaSerializable
@@ -48,7 +59,6 @@ class DvPFlow(val house: House, val newOwner: Party) : FlowLogic<SignedTransacti
         addMoveTokens(txBuilder, inputs, outputs)
         // Synchronise any confidential identities
         subFlow(SyncKeyMappingFlow(session, txBuilder.toWireTransaction(serviceHub)))
-//        subFlow(IdentitySyncFlow.Send(session, txBuilder.toWireTransaction(serviceHub)))
         val ourSigningKeys = txBuilder.toLedgerTransaction(serviceHub).ourSigningKeys(serviceHub)
         val initialStx = serviceHub.signInitialTransaction(txBuilder, signingPubKeys = ourSigningKeys)
         val stx = subFlow(CollectSignaturesFlow(initialStx, listOf(session), ourSigningKeys))
@@ -120,5 +130,16 @@ class RedeemFungibleGBP(
     @Suspendable
     override fun call(): SignedTransaction {
         return subFlow(RedeemFungibleTokens(amount, issuerParty, emptyList(), null))
+    }
+}
+
+// Helper flow for selection testing
+@StartableByRPC
+class SelectAndLockFlow(val amount: Amount<TokenType>, val delay: Duration = 1.seconds) : FlowLogic<Unit>() {
+    @Suspendable
+    override fun call() {
+        val selector = LocalTokenSelector(serviceHub)
+        selector.selectTokens(amount)
+        sleep(delay)
     }
 }

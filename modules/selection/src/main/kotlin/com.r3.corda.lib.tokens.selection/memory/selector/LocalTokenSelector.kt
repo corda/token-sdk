@@ -1,6 +1,5 @@
 package com.r3.corda.lib.tokens.selection.memory.selector
 
-import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.selection.TokenQueryBy
@@ -35,10 +34,16 @@ class LocalTokenSelector(
         private val autoUnlockDelay: Duration = Duration.ofMinutes(5),
         state: Pair<List<StateAndRef<FungibleToken>>, String>? = null // Used for deserializing
 ) : SerializeAsToken, Selector() {
+    constructor(services: ServiceHub) : this(services, getVaultObserver(services))
+
+    companion object {
+        private fun getVaultObserver(services: ServiceHub): VaultWatcherService {
+            return services.cordaService(VaultWatcherService::class.java)
+        }
+    }
 
     private val mostRecentlyLocked = AtomicReference<Pair<List<StateAndRef<FungibleToken>>, String>>(state)
 
-    @Suspendable
     override protected fun selectTokens(
             holder: Holder,
             lockId: UUID,
@@ -58,7 +63,6 @@ class LocalTokenSelector(
     }
 
     // For manual rollback
-    @Suspendable
     fun rollback() {
         val lockedStates = mostRecentlyLocked.get()
         lockedStates?.first?.forEach {

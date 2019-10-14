@@ -32,7 +32,7 @@ data class InMemorySelectionConfig(val indexingStrategy: VaultWatcherService.Ind
     override fun toSelector(services: ServiceHub): LocalTokenSelector {
         return try {
             val vaultObserver = services.cordaService(VaultWatcherService::class.java)
-            LocalTokenSelector(services, vaultObserver, state = null)// TODO allowShortFall and autoUnlockDelay, should it be config or per flow?
+            LocalTokenSelector(services, vaultObserver, state = null)
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException("Couldn't find VaultWatcherService in CordaServices, please make sure that it was installed in node.")
         }

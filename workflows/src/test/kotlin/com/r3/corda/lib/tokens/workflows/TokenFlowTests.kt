@@ -256,8 +256,8 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         val tokenSelection = DatabaseTokenSelection(A.services, pageSize = 5)
         val lockId = UUID.randomUUID()
         A.transaction {
-            val token1 = tokenSelection.selectTokens(lockId, requiredAmount = 1 of GBP)
-            val token2 = tokenSelection.selectTokens(lockId, 1 of GBP)
+            val token1 = tokenSelection.selectTokens(requiredAmount = 1 of GBP, lockId = lockId)
+            val token2 = tokenSelection.selectTokens(requiredAmount = 1 of GBP, lockId = lockId)
             assertThat(token1).isNotEqualTo(token2)
         }
     }

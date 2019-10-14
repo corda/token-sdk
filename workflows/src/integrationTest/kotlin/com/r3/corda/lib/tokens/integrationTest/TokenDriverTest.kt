@@ -4,15 +4,26 @@ import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.contracts.utilities.*
+import com.r3.corda.lib.tokens.contracts.utilities.heldBy
+import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
+import com.r3.corda.lib.tokens.contracts.utilities.of
+import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
+import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefsOrZero
+import com.r3.corda.lib.tokens.contracts.utilities.withNotary
 import com.r3.corda.lib.tokens.money.GBP
+import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.testing.states.Ruble
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.UpdateEvolvableToken
-import com.r3.corda.lib.tokens.workflows.internal.testflows.*
+import com.r3.corda.lib.tokens.workflows.internal.testflows.CheckTokenPointer
+import com.r3.corda.lib.tokens.workflows.internal.testflows.DvPFlow
+import com.r3.corda.lib.tokens.workflows.internal.testflows.GetDistributionList
+import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemFungibleGBP
+import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemNonFungibleHouse
+import com.r3.corda.lib.tokens.workflows.internal.testflows.SelectAndLockFlow
 import com.r3.corda.lib.tokens.workflows.singleOutput
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
 import com.r3.corda.lib.tokens.workflows.utilities.heldTokenCriteria
@@ -27,12 +38,15 @@ import net.corda.core.internal.concurrent.transpose
 import net.corda.core.messaging.startFlow
 import net.corda.core.messaging.vaultQueryBy
 import net.corda.core.utilities.getOrThrow
+import net.corda.core.utilities.millis
+import net.corda.core.utilities.seconds
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.BOC_NAME
 import net.corda.testing.core.DUMMY_BANK_A_NAME
 import net.corda.testing.core.DUMMY_BANK_B_NAME
 import net.corda.testing.core.singleIdentity
 import net.corda.testing.driver.DriverParameters
+import net.corda.testing.driver.OutOfProcess
 import net.corda.testing.driver.driver
 import net.corda.testing.driver.internal.incrementalPortAllocation
 import net.corda.testing.node.TestCordapp
@@ -41,7 +55,6 @@ import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.Test
 
 class TokenDriverTest {
-
 
     @Test
     fun `should allow issuance of inline defined token`() {
@@ -201,6 +214,64 @@ class TokenDriverTest {
             nodeA.rpc.watchForTransaction(redeemGBPTx).getOrThrow()
             assertThat(nodeA.rpc.vaultQueryBy<FungibleToken>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(800_000L.GBP issuedBy issuerParty)
             assertThat(issuer.rpc.vaultQueryBy<FungibleToken>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
+        }
+    }
+
+    @Test
+    fun `tokens locked in memory are still locked after restart`() {
+        driver(DriverParameters(
+                inMemoryDB = false,
+                startNodesInProcess = false,
+                cordappsForAllNodes = listOf(
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
+                ),
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList()))
+        ) {
+            val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+            val nodeParty = node.nodeInfo.singleIdentity()
+            // Issue 50.GBP to self
+            node.rpc.startFlowDynamic(
+                    IssueTokens::class.java,
+                    listOf(50.GBP issuedBy nodeParty heldBy nodeParty),
+                    emptyList<Party>()
+            ).returnValue.getOrThrow()
+            // Issue 50.USD to self
+            node.rpc.startFlowDynamic(
+                    IssueTokens::class.java,
+                    listOf(50.USD issuedBy nodeParty heldBy nodeParty),
+                    emptyList<Party>()
+            ).returnValue.getOrThrow()
+            // Run select and lock tokens flow with 5 seconds sleep in it.
+            node.rpc.startFlowDynamic(
+                    SelectAndLockFlow::class.java,
+                    50.GBP,
+                    5.seconds
+            )
+            // Stop node
+            (node as OutOfProcess).process.destroyForcibly()
+            node.stop()
+
+            // Restart the node
+            val restartedNode = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+            // Try to spend same states, they should be locked after restart, so we expect insufficient balance exception to be thrown.
+            assertThatExceptionOfType(CordaRuntimeException::class.java).isThrownBy {
+                restartedNode.rpc.startFlowDynamic(
+                        SelectAndLockFlow::class.java,
+                        50.GBP,
+                        10.millis
+                ).returnValue.getOrThrow()
+            }.withMessageContaining("InsufficientBalanceException: Insufficient spendable states identified for 50.00 TokenType(tokenIdentifier='GBP', fractionDigits=2)")
+            // This should just work.
+            restartedNode.rpc.startFlowDynamic(
+                    SelectAndLockFlow::class.java,
+                    50.USD,
+                    10.millis
+            ).returnValue.getOrThrow()
         }
     }
 }

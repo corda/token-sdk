@@ -59,17 +59,17 @@ class DatabaseTokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
     fun `select up to available amount with tokens sorted by state ref`() {
         val tokenSelection = DatabaseTokenSelection(A.services)
         val uuid = UUID.randomUUID()
-        val one = A.transaction { tokenSelection.selectTokens(uuid, 160.GBP) }
+        val one = A.transaction { tokenSelection.selectTokens(160.GBP, lockId = uuid) }
         // We need to release the soft lock after acquiring it, this is because we before we used LOCK_AND_SPECIFIED
         // and now we use UNLOCKED_ONLY. The difference is that LOCK_AND_SPECIFIED lets you re lock tokens you have
         // already locked, where as with UNLOCKED_ONLY, the tokens which have already been locked are out of scope for
         // future selections. This _is_ a behavioural change but should only affect unit tests.
         A.transaction { A.services.vaultService.softLockRelease(uuid) }
         assertEquals(gbpTokens.size, one.size)
-        val two = A.transaction { tokenSelection.selectTokens(uuid, 175.GBP) }
+        val two = A.transaction { tokenSelection.selectTokens(175.GBP, lockId = uuid) }
         A.transaction { A.services.vaultService.softLockRelease(uuid) }
         assertEquals(gbpTokens.size, two.size)
-        val results = A.transaction { tokenSelection.selectTokens(uuid, 25.GBP) }
+        val results = A.transaction { tokenSelection.selectTokens(25.GBP, lockId = uuid) }
         assertEquals(1, results.size)
     }
 
@@ -79,7 +79,7 @@ class DatabaseTokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         val uuid = UUID.randomUUID()
         assertFailsWith<InsufficientBalanceException> {
             A.transaction {
-                tokenSelection.selectTokens(uuid, 176.GBP)
+                tokenSelection.selectTokens(176.GBP, lockId = uuid)
             }
         }
     }
@@ -112,15 +112,15 @@ class DatabaseTokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         val tokenSelection = DatabaseTokenSelection(A.services)
         val uuid = UUID.randomUUID()
 
-        val resultOne = A.transaction { tokenSelection.selectTokens(uuid, 4.BTC, TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, I.legalIdentity()))) }
+        val resultOne = A.transaction { tokenSelection.selectTokens(4.BTC, TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, I.legalIdentity())), lockId = uuid) }
         assertEquals(4.BTC issuedBy I.legalIdentity(), resultOne.sumTokenStateAndRefs())
 
         // Not enough tokens as only 4 BTC on issuer I.
         assertFailsWith<InsufficientBalanceException> {
-            A.transaction { tokenSelection.selectTokens(uuid, 5.BTC, TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, I.legalIdentity()))) }
+            A.transaction { tokenSelection.selectTokens(5.BTC, TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, I.legalIdentity())), lockId = uuid) }
         }
 
-        val resultTwo = A.transaction { tokenSelection.selectTokens(uuid, 6.BTC, TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, J.legalIdentity()))) }
+        val resultTwo = A.transaction { tokenSelection.selectTokens(6.BTC, TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, J.legalIdentity())), lockId = uuid) }
         assertEquals(6.BTC issuedBy J.legalIdentity(), resultTwo.sumTokenStateAndRefs())
     }
 
@@ -129,7 +129,7 @@ class DatabaseTokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
         (1..12).map { I.issueFungibleTokens(A, 1 of CHF).getOrThrow() }
         val tokenSelection = DatabaseTokenSelection(A.services)
         A.transaction {
-            val tokens = tokenSelection.selectTokens(UUID.randomUUID(), 12 of CHF)//, pageSize = 5)
+            val tokens = tokenSelection.selectTokens(12 of CHF)
             val value = tokens.fold(0L) { acc, token ->
                 acc + token.state.data.amount.quantity
             }

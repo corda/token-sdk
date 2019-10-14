@@ -105,7 +105,7 @@ fun addFungibleTokensToRedeem(
     val selector = DatabaseTokenSelection(serviceHub)
     val baseCriteria = tokenAmountWithIssuerCriteria(amount.token, issuer)
     val queryCriteria = additionalQueryCriteria?.let { baseCriteria.and(it) } ?: baseCriteria
-    val fungibleStates = selector.selectTokens(transactionBuilder.lockId, amount, TokenQueryBy(issuer = issuer, queryCriteria = queryCriteria))
+    val fungibleStates = selector.selectTokens(amount, TokenQueryBy(issuer = issuer, queryCriteria = queryCriteria), transactionBuilder.lockId)
     checkSameNotary(fungibleStates)
     check(fungibleStates.isNotEmpty()) {
         "Received empty list of states to redeem."
