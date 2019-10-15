@@ -27,6 +27,24 @@ And choose indexing strategy, `external_id` , `public_key` or `token_only`. Publ
 so if you use accounts, probably it is better to use external id grouping that groups states
 from many public keys connected with given uuid. `token_only` selection strategy indexes states only using token type and identifier.
 
+For example, to configure token selection in your `deployNodes`:
+
+```groovy
+// Add under e.g.: task deployNodes(type: net.corda.plugins.Cordform)...
+nodeDefaults {
+    cordapp ("$corda_tokens_sdk_release_group:tokens-selection:$corda_tokens_sdk_version"){
+        config '''
+            stateSelection {
+                inMemory {
+                       indexingStrategy: "token_only"
+                       cacheSize: 1024
+                }
+            }
+        '''
+    }
+}
+```
+
 ## How to use LocalTokenSelector from the flow
 
 For now, our default flows are written with database token selection in mind. The API will change in 2.0 release.
@@ -119,3 +137,17 @@ addTokensToRedeem(
     changeOutput = changeOutput
 )
 ```
+
+
+### Providing Queries to LocalTokenSelector
+
+Query utility functions in `om.r3.corda.lib.tokens.selection` (`tokenAmountCriteria`, `tokenAmountWithIssuerCriteria`, `tokenAmountWithHolderCriteria`) can be useful in building `TokenQueryBy` 
+instances for  `LocalTokenSelector`, for example:
+
+```kotlin
+// Get list of input and output states that can be passed to addMove or MoveTokensFlow
+val (inputs, outputs) = localTokenSelector.generateMove(
+        partiesAndAmounts = listOf(Pair(receivingParty,  tokensAmount)),
+        changeHolder = this.ourIdentity,
+        queryBy = TokenQueryBy(queryCriteria = tokenAmountCriteria(tokensAmount.token)))
+``` 
