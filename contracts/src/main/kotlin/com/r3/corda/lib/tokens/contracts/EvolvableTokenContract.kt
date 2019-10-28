@@ -56,9 +56,6 @@ abstract class EvolvableTokenContract : Contract {
         require(participants.containsAll(maintainers)) { "All evolvable token maintainers must also be participants." }
 
         // Check signatures.
-        require(command.signers.toSet().containsAll(maintainerKeys)) {
-            "All evolvable token maintainers must sign the create evolvable token transaction."
-        }
         require(command.signers.toSet() == maintainerKeys) {
             "Only evolvable token maintainers may sign the create evolvable token transaction."
         }
@@ -94,9 +91,6 @@ abstract class EvolvableTokenContract : Contract {
         val maintainerKeys = maintainers.map(AbstractParty::owningKey).toSet()
 
         // Check signatures.
-        require(command.signers.toSet().containsAll(maintainerKeys)) {
-            "All evolvable token maintainers (from inputs and outputs) must sign the update evolvable token transaction."
-        }
         require(command.signers.toSet() == maintainerKeys) {
             "Only evolvable token maintainers (from inputs and outputs) may sign the update evolvable token transaction."
         }
