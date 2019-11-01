@@ -9,7 +9,6 @@ import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
-import com.r3.corda.lib.tokens.testing.states.Appartment
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialMoveFungibleTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialMoveNonFungibleTokens
