@@ -1,23 +1,31 @@
 package com.r3.corda.lib.tokens.workflows
 
+import com.r3.corda.lib.tokens.contracts.states.FungibleToken
+import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
+import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.contracts.utilities.sumIssuedTokensOrNull
+import com.r3.corda.lib.tokens.contracts.utilities.withNotary
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveFungibleTokens
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistributionList
 import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
+import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
 import com.r3.corda.lib.tokens.workflows.utilities.getLinearStateById
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountsByToken
 import com.r3.corda.lib.tokens.workflows.utilities.tokenBalance
+import com.r3.corda.lib.tokens.workflows.utilities.tokenBalanceForIssuer
+import net.corda.core.contracts.Amount
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.node.services.queryBy
+import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.internal.chooseIdentityAndCert
 import net.corda.testing.node.StartedMockNode
@@ -260,5 +268,46 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
             val token2 = tokenSelection.selectTokens(requiredAmount = 1 of GBP, lockId = lockId)
             assertThat(token1).isNotEqualTo(token2)
         }
+    }
+
+    // Adel's test
+    @Test
+    fun `move amount of issuedTokenType instead of TokenType`() {
+        val aParty = A.info.legalIdentities.first()
+        val bParty = B.info.legalIdentities.first()
+        // Create evolvable token type
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(A.legalIdentity()), linearId = UniqueIdentifier())
+        val flow1 = CreateEvolvableTokens(house withNotary NOTARY.legalIdentity())
+        val future1 = A.startFlow(flow1)
+        val typeTx = future1.get() as SignedTransaction
+        val state = typeTx.coreTransaction.outRef<House>(0)
+        val createdTokenType = state.state.data
+
+        // Issue 100 tokens to node A
+        val tokenPointer = createdTokenType.toPointer(createdTokenType::class.java)
+        val issuedTokenType = IssuedTokenType(createdTokenType.maintainers.first(),
+                tokenPointer)
+        val amountToIssue = Amount(100, issuedTokenType)
+        val token = FungibleToken(amountToIssue,
+                aParty,
+                null)
+        val flow2 = IssueTokens(listOf(token))
+        A.startFlow(flow2).get()
+
+        // Confirm node A balance is 100
+        var nodeABalance: Amount<*> = A.services.vaultService.tokenBalanceForIssuer(
+                tokenPointer, aParty)
+        assertThat(nodeABalance.quantity).isEqualTo(100)
+
+        // Move 1 token to node B
+        val amountToMove = Amount(1, issuedTokenType)
+        val flow3 = MoveFungibleTokens(amountToMove as Amount<TokenType>, bParty) // Force using IssuedTokenType
+        val future3 = A.startFlow(flow3)
+        future3.get()
+
+        // Confirm node A balance is 99
+        nodeABalance = A.services.vaultService.tokenBalanceForIssuer(
+                tokenPointer, aParty)
+        assertThat(nodeABalance.quantity).isEqualTo(99)
     }
 }

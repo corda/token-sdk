@@ -2,14 +2,20 @@ package com.r3.corda.lib.tokens.selection.database.selector
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
+import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.selection.*
+import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
+import com.r3.corda.lib.tokens.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.selection.api.Selector
 import com.r3.corda.lib.tokens.selection.database.config.MAX_RETRIES_DEFAULT
 import com.r3.corda.lib.tokens.selection.database.config.PAGE_SIZE_DEFAULT
 import com.r3.corda.lib.tokens.selection.database.config.RETRY_CAP_DEFAULT
 import com.r3.corda.lib.tokens.selection.database.config.RETRY_SLEEP_DEFAULT
 import com.r3.corda.lib.tokens.selection.memory.internal.Holder
+import com.r3.corda.lib.tokens.selection.sortByStateRefAscending
+import com.r3.corda.lib.tokens.selection.tokenAmountCriteria
+import com.r3.corda.lib.tokens.selection.tokenAmountWithHolderCriteria
+import com.r3.corda.lib.tokens.selection.tokenAmountWithIssuerCriteria
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowLogic
@@ -115,16 +121,8 @@ class DatabaseTokenSelection(
             requiredAmount: Amount<TokenType>,
             queryBy: TokenQueryBy
     ): List<StateAndRef<FungibleToken>> {
+        val criteria = constructQueryCriteria(requiredAmount, holder, queryBy)
         val stateAndRefs = mutableListOf<StateAndRef<FungibleToken>>()
-        val criteria = holderToCriteria(holder, requiredAmount.token).run {
-            if (queryBy.issuer != null) {
-                and(tokenAmountWithIssuerCriteria(requiredAmount.token, queryBy.issuer))
-            } else this
-        }.run {
-            if (queryBy.queryCriteria != null) {
-                and(queryBy.queryCriteria)
-            } else this
-        }
         for (retryCount in 1..maxRetries) {
             if (!executeQuery(requiredAmount, lockId, criteria, sortByStateRefAscending(), stateAndRefs)) {
                 // TODO: Need to specify exactly why it fails. Locked states or literally _no_ states!
@@ -148,6 +146,25 @@ class DatabaseTokenSelection(
                 queryBy.predicate.invoke(stateAndRef)
             }
         } else stateAndRefs
+    }
+
+    private fun constructQueryCriteria(requiredAmount: Amount<TokenType>, holder: Holder, queryBy: TokenQueryBy): QueryCriteria {
+        // This is due to the fact, that user can pass Amount<IssuedTokenType>, this usually shouldn't happen, but just in case
+        val amountToken = requiredAmount.token
+        val (token, issuer) = when (amountToken) {
+            is IssuedTokenType -> Pair(amountToken.tokenType, amountToken.issuer)
+            else -> Pair(amountToken, queryBy.issuer)
+        }
+        val criteria = holderToCriteria(holder, token).run {
+            if (issuer != null) {
+                and(tokenAmountWithIssuerCriteria(token, issuer))
+            } else this
+        }.run {
+            if (queryBy.queryCriteria != null) {
+                and(queryBy.queryCriteria)
+            } else this
+        }
+        return criteria
     }
 
     private fun holderToCriteria(holder: Holder, token: TokenType): QueryCriteria {
