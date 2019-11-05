@@ -5,6 +5,24 @@
 #### Workflows
 
 * Rebased the `workflows` to use the new `confidential-identities` module.
+You will need to add: `TestCordapp.findCordapp("com.r3.corda.lib.ci")` to your tests.
+
+#### General
+
+* Added experimental feature for in memory token selection independent from database backend. To learn more see documentation:
+[InMemoryTokenSelection](docs/InMemoryTokenSelection.md) Notice that it still needs refining in the future release, but it's here to play with!
+
+* Split all the selection related code (both database and in memory) into the new module: `tokens-selection`
+This will require change in your tests and CorDapps code.
+You will need to add: `TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")` to your tests and
+`cordapp "com.r3.corda.lib.tokens:tokens-money:$tokens_release_version"` to your gradle files.
+
+* On top of that lots of exciting improvements and unexciting bug fixes!
+
+#### Known issues
+
+* In memory token selection is still experimental due to the API change we need to make in coming 2.0 release.
+For further information see [list of required changes](SELECTION-TODO.md)
 
 ### V1
 

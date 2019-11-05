@@ -56,19 +56,10 @@ Let's take a look how to use the feature.
 
 ### Moving tokens using LocalTokenSelection
 
-From your flow get the `VaultWatcherService` using:
+From your flow construct `LocalTokenSelector` instance:
 
 ```kotlin
-val vaultWatcherService = serviceHub.cordaService(VaultWatcherService::class.java)
-```
-
-After that construct `LocalTokenSelector` instance for use in your flow:
-
-```kotlin
-// Optionally you can specify autoUnlockDelay which is needed in case flow errors or hangs on some operation.
-// Defaults to Duration.ofMinutes(5). Time after which the tokens that are not spent will be automatically released.
-val autoUnlockDelay = ...
-val localTokenSelector = LocalTokenSelector(serviceHub, vaultWatcherService, autoUnlockDelay = autoUnlockDelay)
+val localTokenSelector = LocalTokenSelector(serviceHub)
 ```
 
 After that you can choose states for move by either calling `selectTokens`:
@@ -104,7 +95,11 @@ subflow(MoveTokensFlow(inputs, outputs, participantSessions, observerSessions))
 //... implement some business specific logic
 addMoveTokens(transactionBuilder, inputs, outputs)
 ```
+
 Then finalize transaction, update distribution list etc, see [Most common tasks](docs/IWantTo.md)
+
+**Note:** we use generic versions of `MoveTokensFlow` or `addMoveTokens` (not `addMoveFungibleTokens`), because we 
+already performed selection and provide input and output states directly. Fungible versions will always use database selection.
 
 ### Redeeming tokens using LocalTokenSelection
 
