@@ -3,8 +3,8 @@ apply plugin: 'net.corda.plugins.quasar-utils'
 apply plugin: 'net.corda.plugins.cordapp'
 
 cordapp {
-    targetPlatformVersion 4
-    minimumPlatformVersion 4
+    targetPlatformVersion 5
+    minimumPlatformVersion 5
     workflow {
         name "Token SDK Workflows"
         vendor "R3"
