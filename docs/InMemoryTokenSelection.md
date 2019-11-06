@@ -29,7 +29,7 @@ from many public keys connected with given uuid. `token_only` selection strategy
 
 For example, to configure token selection in your `deployNodes`:
 
-```groovy
+```text
 // Add under e.g.: task deployNodes(type: net.corda.plugins.Cordform)...
 nodeDefaults {
     cordapp ("$corda_tokens_sdk_release_group:tokens-selection:$corda_tokens_sdk_version"){
@@ -69,7 +69,7 @@ val transactionBuilder: TransactionBuilder = ...
 val participantSessions: List<FlowSession> = ...
 val observerSessions: List<FlowSession> = ...
 val requiredAmount: Amount<TokenType> = ...
-val queryBy: TokenQueryBy = ...  // TODO Add querying
+val queryBy: TokenQueryBy = ...  // See section below on queries
 // Just select states for spend, without output and change calculation
 val selectedStates: List<StateAndRef<FungibleToken>> = localTokenSelector.selectStates(
     lockID = transactionBuilder.lockId, // Defaults to FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
@@ -87,7 +87,7 @@ val (inputs, outputs) = localTokenSelector.generateMove(
     lockId = transactionBuilder.lockId, // Defaults to FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     partiesAndAmounts = partiesAndAmounts,
     changeHolder = changeHolder,
-    queryBy = queryBy) // TODO Add querying
+    queryBy = queryBy) // See section below on queries
 
 // Call subflow
 subflow(MoveTokensFlow(inputs, outputs, participantSessions, observerSessions))
@@ -111,11 +111,10 @@ val localTokenSelector = LocalTokenSelector(serviceHub, vaultWatcherService, aut
 
 // Smilar to previous case, we need to choose states that cover the amount.
 val exitStates: List<StateAndRef<FungibleToken>> = localTokenSelector.selectStates(
-    localTokenSelector.selectStates(
     lockID = transactionBuilder.lockId, // Defaults to FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     requiredAmount = requiredAmount,
-    queryBy = queryBy) // TODO Add querying
-)
+    queryBy = queryBy) // See section below on queries
+    
 // Exit states and get possible change output.
 val (inputs, changeOutput) =  generateExit(
     exitStates = exitStates,
@@ -133,16 +132,20 @@ addTokensToRedeem(
 )
 ```
 
-
 ### Providing Queries to LocalTokenSelector
 
-Query utility functions in `om.r3.corda.lib.tokens.selection` (`tokenAmountCriteria`, `tokenAmountWithIssuerCriteria`, `tokenAmountWithHolderCriteria`) can be useful in building `TokenQueryBy` 
-instances for  `LocalTokenSelector`, for example:
+You can provide additional queries to `LocalTokenSelector` by constructing `TokenQueryBy` and passing it to `generateMove`
+or `selectStates` methods. `TokenQueryBy` takes `issuer` to specify selection of token from given issuing party, additionally
+you can provide any states filtering as `predicate` function (don't use `queryCriteria` it will get removed as part of 2.0 release
+and exists only to keep bakcwards compatibility with databse selection!).
 
 ```kotlin
+val issuerParty: Party = ...
+val notaryParty: Party = ...
 // Get list of input and output states that can be passed to addMove or MoveTokensFlow
 val (inputs, outputs) = localTokenSelector.generateMove(
         partiesAndAmounts = listOf(Pair(receivingParty,  tokensAmount)),
         changeHolder = this.ourIdentity,
-        queryBy = TokenQueryBy(queryCriteria = tokenAmountCriteria(tokensAmount.token)))
+        // Get tokens issued by issuerParty and notarised by notaryParty
+        queryBy = TokenQueryBy(issuer = issuerParty, predicate = { it.state.notary == notaryParty }))
 ``` 
