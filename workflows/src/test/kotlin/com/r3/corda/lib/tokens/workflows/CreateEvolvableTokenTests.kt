@@ -229,4 +229,165 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         val charlieToken = charlie.services.vaultService.queryBy<TestEvolvableTokenType>().states
         assertEquals(createdToken, charlieToken.single())
     }
+
+    /*
+      This flow test checks whether updation of EvolvableToken by observers is not possible
+   */
+    @Test
+    fun `should not update EvolvableToken by observers`() {
+
+        val house = House("24 Leinster Gardens, Bayswater, London", 1_000_000.GBP, listOf(denise.legalIdentity(), alice.legalIdentity()), linearId = UniqueIdentifier())
+        val observers = listOf(bob.legalIdentity(), charlie.legalIdentity())
+        // Create an EvolvableToken with two observers bob and charlie
+        val createEvolvableTokenTx = denise.startFlow(CreateEvolvableTokens(house withNotary network.defaultNotaryNode.legalIdentity(), observers)).getOrThrow()
+        assertHasTransaction(createEvolvableTokenTx, network, denise, alice, bob, charlie)
+        // Get the EvolvableToken state
+        val oldHouseToken = createEvolvableTokenTx.coreTransaction.outRefsOfType<House>().single()
+        // Updating the EvolvableToken
+        val newHouseToken = oldHouseToken.state.data.copy(valuation = 900_000.GBP)
+        // Expecting error when Observer bob tries to update evolvable token
+        assertFailsWith(IllegalArgumentException::class, "Observers could not update Evolvable tokens") {
+            // Update the token by observer charlie
+            val newUpdationByObserverNodeCTx = charlie.startFlow(UpdateEvolvableToken(oldHouseToken, newHouseToken)).getOrThrow()
+            // The above update transaction should not be present in bob
+            assertHasTransaction(newUpdationByObserverNodeCTx, network, denise, alice, charlie)
+        }
+    }
+
+    /*
+         This test case checks whether removed maintainers couldn't update the evolvable token anymore
+    */
+    @Test
+    fun `should remove maintainer from maintainers and the party should not be able to update anymore`() {
+        // Create Evolvable Token
+        val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(alice.legalIdentity(), bob.legalIdentity()), linearId = UniqueIdentifier())
+        // Empty observer list
+        val observerList = emptyList<Party>()
+        // Create Evolvable token with two maintainers alice and bob
+        val tokenTxResult = denise.startFlow(CreateEvolvableTokens(house withNotary network.defaultNotaryNode.legalIdentity(), observerList))
+        // Getting the signed transaction
+        val tokenTx = tokenTxResult.getOrThrow()
+        // Checks if the maintainers have recorded the transaction
+        assertHasTransaction(tokenTx, network, alice, bob, denise)
+        // Getting created evolvable token from above transaction
+        val createdToken = tokenTx.singleOutput<House>()
+        // Linear Id of created evolvable token
+        val createdTokenId = createdToken.linearId()
+        // Update evolvable token
+        val newHouseToken1 = House("24 Leinster Gardens, Bayswater, London", 855_000.GBP, listOf(alice.legalIdentity(), bob.legalIdentity()), linearId = createdTokenId)
+        // Checks if bob can update the token successfully
+        val updateTxByNodeB = bob.startFlow(UpdateEvolvableToken(createdToken, newHouseToken1))
+        // Getting the result of update transaction
+        val updateTxByNodeBResult = updateTxByNodeB.getOrThrow()
+        // Checks if the maintainers have recorded the transaction
+        assertHasTransaction(updateTxByNodeBResult, network, alice, bob)
+        // Getting state and reference from above transaction
+        val updateTxByNodeBState = updateTxByNodeBResult.singleOutput<House>()
+        // Linear Id of updated evolvable token
+        val updatedTokenId = updateTxByNodeBState.linearId()
+        // Removing maintainer bob from maintainer list and updating the valuation of evolvable token
+        val newHouseToken2 = House("24 Leinster Gardens, Bayswater, London", 850_000.GBP, listOf(alice.legalIdentity()), linearId = updatedTokenId)
+        // Updating the above change
+        val updateTxByNodeA = alice.startFlow(UpdateEvolvableToken(updateTxByNodeBState, newHouseToken2))
+        // Getting the signed transaction
+        val updateTxByNodeAResult = updateTxByNodeA.getOrThrow()
+        // Getting state from the above transaction
+        val updateTxByNodeAState = updateTxByNodeAResult.singleOutput<House>()
+        println("Maintainers after updation: " + updateTxByNodeAState.state.data.maintainers)
+        // Checking whether the above transaction is recorded
+        assertHasTransaction(updateTxByNodeAResult, network, bob, alice)
+        // Creating another update in Evolvable token
+        val newHouseToken3 = House("24 Leinster Gardens, Bayswater, London", 860_000.GBP, listOf(alice.legalIdentity()), linearId = updateTxByNodeAState.linearId())
+        // Checking observer bob could update the evolvable token
+        assertFailsWith(IllegalArgumentException::class, "Bob is not a maintainer") {
+            // Updation by bob
+            val updateByNodeB = bob.startFlow(UpdateEvolvableToken(updateTxByNodeAState, newHouseToken3))
+            // Getting the signed transaction
+            val updateByNodeBTx = updateByNodeB.getOrThrow()
+            // Checking whether the above transaction is recorded
+            assertHasTransaction(updateByNodeBTx, network, bob, alice)
+        }
+    }
+
+    /*
+        It should be able to change a Maintainer to Observer and after that, the party should not be able to update the Evolvable
+        Token anymore
+    */
+
+    @Test
+    fun `should change the maintainer to observer and the party should not be able to update anymore`() {
+        // Create Maintainers list
+        val maintainers = listOf(alice.legalIdentity(), bob.legalIdentity())
+        // Create an Evolvable token type
+        val house: EvolvableTokenType = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, maintainers, linearId = UniqueIdentifier())
+        // Create an empty Observer list
+        val observerList = emptyList<Party>()
+        // Create Evolvable token
+        val createEvolvableTokenSignedTx = denise.startFlow(CreateEvolvableTokens(house withNotary network.defaultNotaryNode.legalIdentity(), observerList))
+
+        val createEvolvableTokenTx = createEvolvableTokenSignedTx.getOrThrow()
+        // Checks if the Maintainers have recorded the transaction
+        assertHasTransaction(createEvolvableTokenTx, network, alice, bob)
+        // Get the state of token from transaction
+        val createdTokenStateFromTransaction = createEvolvableTokenTx.singleOutput<House>()
+        // Remove bob from maintainers list
+        val newMaintainers = listOf(alice.legalIdentity())
+        // Create a new Evolvable token type where bob is removed as Maintainer
+        val newTokenB = House("24 Leinster Gardens, Bayswater, London", 850_000.GBP, newMaintainers, linearId = house.linearId)
+        // Set bob as an Observer
+        val newObservers = listOf(bob.legalIdentity())
+        // alice updates the old token with new token where bob is an Observer
+        val updateTxBResult = alice.startFlow(UpdateEvolvableToken(createdTokenStateFromTransaction, newTokenB, newObservers))
+
+        val updateTxB = updateTxBResult.getOrThrow()
+        assertHasTransaction(updateTxB, network)
+        // Create a new Evolvable token type
+        val newToken = House("24 Leinster Gardens, Bayswater, London", 855_000.GBP, listOf(alice.legalIdentity()), linearId = house.linearId)
+        // The transaction to update the token with newly created token type should fail since bob is an Observer and Observer should not be able to update
+        assertFailsWith(NotaryException::class, "Bob is not a maintainer") {
+            val updateTxIResult = bob.startFlow(UpdateEvolvableToken(createdTokenStateFromTransaction, newToken, listOf(bob.legalIdentity())))
+            val updateTxI = updateTxIResult.getOrThrow()
+        }
+    }
+
+    /*
+        It should be possible to change the Observer to Maintainer and after that the party should be able to update the token type
+    */
+
+    @Test
+    fun `should change the observer to maintainer and the party should be able to update EvolvableTokenType details`() {
+        // Create a maintainers list
+        val maintainers = listOf(alice.legalIdentity())
+        // Create an Evolvable token type
+        val house: EvolvableTokenType = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, maintainers, linearId = UniqueIdentifier())
+        // Set bob as Observer
+        val observerList = listOf(bob.legalIdentity())
+        // Create Evolvable token with Evolvable token type and Observers
+        val tokenTxResult = alice.startFlow(CreateEvolvableTokens(house withNotary network.defaultNotaryNode.legalIdentity(), observerList))
+        val tokenTx = tokenTxResult.getOrThrow()
+        // Checks if the maintainers and observers have recorded the transaction
+        assertHasTransaction(tokenTx, network, alice, bob)
+        val createdToken = tokenTx.singleOutput<House>()
+        // bob should not be able to update since it is an Observer
+        assertFailsWith(IllegalArgumentException::class, "Bob is not a maintainer"
+        ) {
+            val newTokenB = House("24 Leinster Gardens, Bayswater, London", 850_000.GBP, listOf(alice.legalIdentity()), linearId = house.linearId)
+            val updateTxBResult = bob.startFlow(UpdateEvolvableToken(createdToken, newTokenB))
+            val updateTxB = updateTxBResult.getOrThrow()
+        }
+        // Set alice and bob as maintainers
+        val newMaintainers = listOf(alice.legalIdentity(), bob.legalIdentity())
+        // Create a new Evolvable token type with new maintainers
+        val newTokenA = House("24 Leinster Gardens, Bayswater, London", 850_000.GBP, newMaintainers, linearId = house.linearId)
+        // alice updates the old token with new token type
+        val updateTxAResult = alice.startFlow(UpdateEvolvableToken(createdToken, newTokenA))
+        val updateTxA = updateTxAResult.getOrThrow()
+        val updatedTokenA = updateTxA.singleOutput<House>()
+        // Create a new Evolvable token type
+        val newTokenB = House("24 Leinster Gardens, Bayswater, London", 750_000.GBP, newMaintainers, linearId = house.linearId)
+        // bob should be able to perform updation since it is a Maintainer now
+        val updateTxBResult = bob.startFlow(UpdateEvolvableToken(updatedTokenA, newTokenB))
+        val updateTxB = updateTxBResult.getOrThrow()
+        assertHasTransaction(updateTxB, network, bob)
+    }
 }
