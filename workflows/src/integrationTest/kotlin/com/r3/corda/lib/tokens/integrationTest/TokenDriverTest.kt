@@ -4,26 +4,18 @@ import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.contracts.utilities.heldBy
-import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
-import com.r3.corda.lib.tokens.contracts.utilities.of
-import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
-import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefsOrZero
-import com.r3.corda.lib.tokens.contracts.utilities.withNotary
+import com.r3.corda.lib.tokens.contracts.utilities.*
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.testing.states.Ruble
+import com.r3.corda.lib.tokens.workflows.flows.issue.SimpleIssueFlow
+import com.r3.corda.lib.tokens.workflows.flows.move.SimpleMoveFlow
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.UpdateEvolvableToken
-import com.r3.corda.lib.tokens.workflows.internal.testflows.CheckTokenPointer
-import com.r3.corda.lib.tokens.workflows.internal.testflows.DvPFlow
-import com.r3.corda.lib.tokens.workflows.internal.testflows.GetDistributionList
-import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemFungibleGBP
-import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemNonFungibleHouse
-import com.r3.corda.lib.tokens.workflows.internal.testflows.SelectAndLockFlow
+import com.r3.corda.lib.tokens.workflows.internal.testflows.*
 import com.r3.corda.lib.tokens.workflows.singleOutput
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
 import com.r3.corda.lib.tokens.workflows.utilities.heldTokenCriteria
@@ -41,10 +33,7 @@ import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.millis
 import net.corda.core.utilities.seconds
 import net.corda.testing.common.internal.testNetworkParameters
-import net.corda.testing.core.BOC_NAME
-import net.corda.testing.core.DUMMY_BANK_A_NAME
-import net.corda.testing.core.DUMMY_BANK_B_NAME
-import net.corda.testing.core.singleIdentity
+import net.corda.testing.core.*
 import net.corda.testing.driver.DriverParameters
 import net.corda.testing.driver.OutOfProcess
 import net.corda.testing.driver.driver
@@ -272,6 +261,32 @@ class TokenDriverTest {
                     50.USD,
                     10.millis
             ).returnValue.getOrThrow()
+        }
+    }
+
+    @Test
+    fun `should be able to use wrapper flows`() {
+        driver(DriverParameters(
+                portAllocation = incrementalPortAllocation(),
+                startNodesInProcess = false,
+                cordappsForAllNodes = listOf(
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci")
+                ),
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
+        )) {
+            val issuer = startNode(providedName = BOC_NAME).getOrThrow()
+            val other = startNode(providedName = ALICE_NAME).getOrThrow()
+
+            val issuerParty = issuer.nodeInfo.singleIdentity()
+            val otherParty = other.nodeInfo.singleIdentity()
+
+            issuer.rpc.startFlowDynamic(SimpleIssueFlow::class.java, issuerParty).returnValue.getOrThrow()
+            issuer.rpc.startFlowDynamic(SimpleMoveFlow::class.java, otherParty).returnValue.getOrThrow()
         }
     }
 }
