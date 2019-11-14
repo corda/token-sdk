@@ -109,7 +109,7 @@ fungible `GBP` tokens is straightforward:
 
 ```kotlin
     // Let's print some money!
-    subFlow(IssueTokens(1_000_00.GBP issuedBy issuerParty heldBy otherParty)) // Initiating version of IssueFlow
+    subFlow(IssueTokens(listOf(1_000_00.GBP issuedBy issuerParty heldBy otherParty))) // Initiating version of IssueFlow
 ```
 
 **Note** There are different versions of `IssueFlow` inlined (that require you to pass in flow sessions) and initiating (callable via RPC),
