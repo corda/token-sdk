@@ -147,6 +147,8 @@ publish binaries to your local maven repository:
 
 [Token SDK Design](design/design.md)
 
+[Experimental in memory token selection](docs/InMemoryTokenSelection.md)
+
 [Changelog](CHANGELOG.md)
 
 [Contributing](CONTRIBUTING.md)
