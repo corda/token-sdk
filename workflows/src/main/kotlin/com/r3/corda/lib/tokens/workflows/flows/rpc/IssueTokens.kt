@@ -54,7 +54,7 @@ class IssueTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
  */
 @StartableByService
 @StartableByRPC
-@InitiatingFlow
+@InitiatingFlow(version = 2)
 class ConfidentialIssueTokens
 @JvmOverloads
 constructor(

@@ -22,7 +22,7 @@ import net.corda.core.transactions.SignedTransaction
 
 @StartableByService
 @StartableByRPC
-@InitiatingFlow
+@InitiatingFlow(version = 2)
 class RedeemFungibleTokens
 @JvmOverloads
 constructor(
@@ -49,7 +49,7 @@ class RedeemFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Uni
 
 @StartableByService
 @StartableByRPC
-@InitiatingFlow
+@InitiatingFlow(version = 2)
 class RedeemNonFungibleTokens
 @JvmOverloads
 constructor(
@@ -75,7 +75,7 @@ class RedeemNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<
 // We don't need confidential non fungible redeem, because there are no outputs.
 @StartableByService
 @StartableByRPC
-@InitiatingFlow
+@InitiatingFlow(version = 2)
 class ConfidentialRedeemFungibleTokens
 @JvmOverloads
 constructor(

@@ -2,6 +2,7 @@ package com.r3.corda.lib.tokens.workflows.internal.flows.confidential
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.ci.workflows.RequestKeyFlow
+import com.r3.corda.lib.tokens.workflows.internal.flows.requestKeyVersion
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AnonymousParty
@@ -25,7 +26,7 @@ class AnonymisePartiesFlow(
             val party = session.counterparty
             if (party in parties) {
                 session.send(ActionRequest.CREATE_NEW_KEY)
-                val anonParty = subFlow(RequestKeyFlow(session))
+                val anonParty = requestKeyVersion(session)
                 Pair(party, anonParty)
             } else {
                 session.send(ActionRequest.DO_NOTHING)

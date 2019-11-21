@@ -6,6 +6,9 @@
 
 * Rebased the `workflows` to use the new `confidential-identities` module.
 You will need to add: `TestCordapp.findCordapp("com.r3.corda.lib.ci")` to your tests.
+This is also important to version your initiating flows using inlined flows from `token-sdk` with a version equal or more than 2.
+Add `@InitiatingFlow(version = 2)` to your initiating flows using new `confiential-identities`, for more information see:
+[Flow versioning](https://docs.corda.net/upgrading-cordapps.html#flow-versioning)
 
 #### General
 
