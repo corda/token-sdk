@@ -21,6 +21,7 @@ import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
 import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
 import net.corda.core.contracts.Amount
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.CollectSignaturesFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
@@ -141,5 +142,16 @@ class SelectAndLockFlow(val amount: Amount<TokenType>, val delay: Duration = 1.s
         val selector = LocalTokenSelector(serviceHub)
         selector.selectTokens(amount)
         sleep(delay)
+    }
+}
+
+// Helper flow for selection testing
+@StartableByRPC
+class JustLocalSelect(val amount: Amount<TokenType>) : FlowLogic<List<StateAndRef<FungibleToken>>>() {
+    @Suspendable
+    override fun call(): List<StateAndRef<FungibleToken>> {
+        val selector = LocalTokenSelector(serviceHub)
+        val tokens = selector.selectTokens(amount)
+        return tokens
     }
 }

@@ -21,6 +21,7 @@ import com.r3.corda.lib.tokens.workflows.flows.rpc.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.internal.testflows.CheckTokenPointer
 import com.r3.corda.lib.tokens.workflows.internal.testflows.DvPFlow
 import com.r3.corda.lib.tokens.workflows.internal.testflows.GetDistributionList
+import com.r3.corda.lib.tokens.workflows.internal.testflows.JustLocalSelect
 import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemFungibleGBP
 import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemNonFungibleHouse
 import com.r3.corda.lib.tokens.workflows.internal.testflows.SelectAndLockFlow
@@ -272,6 +273,58 @@ class TokenDriverTest {
                     50.USD,
                     10.millis
             ).returnValue.getOrThrow()
+        }
+    }
+
+    @Test
+    fun `tokens are loaded back in memory after restart`() {
+        driver(DriverParameters(
+                inMemoryDB = false,
+                startNodesInProcess = false,
+                cordappsForAllNodes = listOf(
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
+                ),
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList()))
+        ) {
+            val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+            val nodeParty = node.nodeInfo.singleIdentity()
+            // Issue 50.GBP to self
+            val gbpTx = node.rpc.startFlowDynamic(
+                    IssueTokens::class.java,
+                    listOf(50.GBP issuedBy nodeParty heldBy nodeParty),
+                    emptyList<Party>()
+            ).returnValue.getOrThrow()
+            // Issue 50.USD to self
+            val usdTx = node.rpc.startFlowDynamic(
+                    IssueTokens::class.java,
+                    listOf(50.USD issuedBy nodeParty heldBy nodeParty),
+                    emptyList<Party>()
+            ).returnValue.getOrThrow()
+
+            // Stop node
+            (node as OutOfProcess).process.destroyForcibly()
+            node.stop()
+
+            // Restart the node
+            val restartedNode = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+
+            // Select both states using LocalTokenSelector
+            val gbpToken = restartedNode.rpc.startFlowDynamic(
+                    JustLocalSelect::class.java,
+                    30.GBP
+            ).returnValue.getOrThrow().single()
+            assertThat(gbpToken).isEqualTo(gbpTx.singleOutput<FungibleToken>())
+
+            val usdToken = restartedNode.rpc.startFlowDynamic(
+                    JustLocalSelect::class.java,
+                    25.USD
+            ).returnValue.getOrThrow().single()
+            assertThat(usdToken).isEqualTo(usdTx.singleOutput<FungibleToken>())
         }
     }
 }
