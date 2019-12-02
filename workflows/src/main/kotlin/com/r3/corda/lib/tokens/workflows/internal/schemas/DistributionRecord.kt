@@ -2,10 +2,14 @@ package com.r3.corda.lib.tokens.workflows.internal.schemas
 
 import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
-import net.corda.core.serialization.CordaSerializable
 import org.hibernate.annotations.Type
 import java.util.*
-import javax.persistence.*
+import javax.persistence.Column
+import javax.persistence.Entity
+import javax.persistence.GeneratedValue
+import javax.persistence.Id
+import javax.persistence.Index
+import javax.persistence.Table
 
 object DistributionRecordSchema
 
@@ -15,7 +19,6 @@ object DistributionRecordSchemaV1 : MappedSchema(
         mappedTypes = listOf(DistributionRecord::class.java)
 )
 
-@CordaSerializable
 @Entity
 @Table(name = "distribution_record", indexes = [Index(name = "dist_record_idx", columnList = "linear_id")])
 class DistributionRecord(
