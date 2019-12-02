@@ -30,15 +30,22 @@ import java.security.SignatureException
  */
 internal const val INITIATING_TOKENS_FLOW = "com.r3.corda.lib.tokens.workflows.flows.rpc."
 
+@Suspendable
+internal fun FlowLogic<*>.counterpartyPlatformVersion(session: FlowSession): Int {
+    val nodeInfo = serviceHub.networkMapCache.getNodeByLegalIdentity(session.counterparty)
+    return nodeInfo?.platformVersion ?: 0
+}
+
 // Internal utilities after introducing new confidential identities. To handle different versions.
 @Suspendable
 internal fun FlowLogic<*>.provideKeyVersion(session: FlowSession): AbstractParty {
     val otherFlowVersion = session.getCounterpartyFlowInfo().flowVersion
     val topLevelName = FlowLogic.currentTopLevel?.let { it::class.java.canonicalName } ?: ""
     // This will work only for initiating flow
-    return if (otherFlowVersion == 1) {
+    return if (otherFlowVersion == 1 || counterpartyPlatformVersion(session) < 5) {
         if (!topLevelName.startsWith(INITIATING_TOKENS_FLOW)) {
-            logger.warn("Your CorDapp is using new confidential identities, but other party flow has version 1. Falling back to old CI." +
+            logger.warn("Your CorDapp is using new confidential identities, but other party flow has version 1 or runs " +
+                    "on platformVersion less than 5. Falling back to old CI." +
                     "If this is not intended behaviour version your flows with version >= 2")
         }
         // Old Confidential Identities case
@@ -54,9 +61,10 @@ internal fun FlowLogic<*>.requestKeyVersion(session: FlowSession): AnonymousPart
     val otherFlowVersion = session.getCounterpartyFlowInfo().flowVersion
     val topLevelName = FlowLogic.currentTopLevel?.let { it::class.java.canonicalName } ?: ""
     // This will work only for initiating flow
-    return if (otherFlowVersion == 1) {
+    return if (otherFlowVersion == 1 || counterpartyPlatformVersion(session) < 5) {
         if (!topLevelName.startsWith(INITIATING_TOKENS_FLOW)) {
-            logger.warn("Your CorDapp is using new confidential identities, but other party flow has version 1. Falling back to old CI." +
+            logger.warn("Your CorDapp is using new confidential identities, but other party flow has version 1 or runs " +
+                    "on platformVersion less than 5. Falling back to old CI." +
                     "If this is not intended behaviour version your flows with version >= 2")
         }
         // Old Confidential Identities case
@@ -73,9 +81,10 @@ internal fun FlowLogic<*>.syncKeyVersionHandler(session: FlowSession) {
     val otherFlowVersion = session.getCounterpartyFlowInfo().flowVersion
     val topLevelName = FlowLogic.currentTopLevel?.let { it::class.java.canonicalName } ?: ""
     // This will work only for initiating flow
-    if (otherFlowVersion == 1) {
+    if (otherFlowVersion == 1 || counterpartyPlatformVersion(session) < 5) {
         if (!topLevelName.startsWith(INITIATING_TOKENS_FLOW)) {
-            logger.warn("Your CorDapp is using new confidential identities, but other party flow has version 1. Falling back to old CI." +
+            logger.warn("Your CorDapp is using new confidential identities, but other party flow has version 1 or runs " +
+                    "on platformVersion less than 5. Falling back to old CI." +
                     "If this is not intended behaviour version your flows with version >= 2")
         }
         // Old Confidential Identities case
@@ -91,9 +100,10 @@ internal fun FlowLogic<*>.syncKeyVersion(session: FlowSession, txBuilder: Transa
     val otherFlowVersion = session.getCounterpartyFlowInfo().flowVersion
     val topLevelName = FlowLogic.currentTopLevel?.let { it::class.java.canonicalName } ?: ""
     // This will work only for initiating flow
-    if (otherFlowVersion == 1) {
+    if (otherFlowVersion == 1 && counterpartyPlatformVersion(session) < 5) {
         if (!topLevelName.startsWith(INITIATING_TOKENS_FLOW)) {
-            logger.warn("Your CorDapp is using new confidential identities, but other party flow has version 1. Falling back to old CI." +
+            logger.warn("Your CorDapp is using new confidential identities, but other party flow has version 1 and runs " +
+                    "on platformVersion less than 5. Falling back to old CI." +
                     "If this is not intended behaviour version your flows with version >= 2")
         }
         // Old Confidential Identities case
