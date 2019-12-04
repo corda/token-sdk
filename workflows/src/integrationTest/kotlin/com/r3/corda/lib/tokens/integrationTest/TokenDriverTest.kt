@@ -14,7 +14,6 @@ import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.testing.states.Ruble
-import com.r3.corda.lib.tokens.workflows.flows.move.MoveTokensFlow
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
@@ -22,6 +21,7 @@ import com.r3.corda.lib.tokens.workflows.flows.rpc.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.internal.testflows.CheckTokenPointer
 import com.r3.corda.lib.tokens.workflows.internal.testflows.DvPFlow
 import com.r3.corda.lib.tokens.workflows.internal.testflows.GetDistributionList
+import com.r3.corda.lib.tokens.workflows.internal.testflows.JustLocalSelect
 import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemFungibleGBP
 import com.r3.corda.lib.tokens.workflows.internal.testflows.RedeemNonFungibleHouse
 import com.r3.corda.lib.tokens.workflows.internal.testflows.SelectAndLockFlow
@@ -34,7 +34,6 @@ import net.corda.core.CordaRuntimeException
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.flows.FlowSession
 import net.corda.core.identity.Party
 import net.corda.core.internal.concurrent.transpose
 import net.corda.core.messaging.startFlow
@@ -278,7 +277,7 @@ class TokenDriverTest {
     }
 
     @Test
-    fun `tokens should be loaded from database on restart of node`() {
+    fun `tokens are loaded back in memory after restart`() {
         driver(DriverParameters(
                 inMemoryDB = false,
                 startNodesInProcess = false,
@@ -293,17 +292,19 @@ class TokenDriverTest {
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList()))
         ) {
             val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
-            val nodeB = startNode(providedName = DUMMY_BANK_B_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30010")).getOrThrow()
-
             val nodeParty = node.nodeInfo.singleIdentity()
-            val nodeBParty = nodeB.nodeInfo.singleIdentity()
             // Issue 50.GBP to self
-            node.rpc.startFlowDynamic(
+            val gbpTx = node.rpc.startFlowDynamic(
                     IssueTokens::class.java,
                     listOf(50.GBP issuedBy nodeParty heldBy nodeParty),
                     emptyList<Party>()
             ).returnValue.getOrThrow()
             // Issue 50.USD to self
+            val usdTx = node.rpc.startFlowDynamic(
+                    IssueTokens::class.java,
+                    listOf(50.USD issuedBy nodeParty heldBy nodeParty),
+                    emptyList<Party>()
+            ).returnValue.getOrThrow()
 
             // Stop node
             (node as OutOfProcess).process.destroyForcibly()
@@ -312,7 +313,18 @@ class TokenDriverTest {
             // Restart the node
             val restartedNode = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
 
-            restartedNode.rpc.startFlowDynamic(SelectAndLockFlow::class.java, 50.GBP).returnValue.getOrThrow()
+            // Select both states using LocalTokenSelector
+            val gbpToken = restartedNode.rpc.startFlowDynamic(
+                    JustLocalSelect::class.java,
+                    30.GBP
+            ).returnValue.getOrThrow().single()
+            assertThat(gbpToken).isEqualTo(gbpTx.singleOutput<FungibleToken>())
+
+            val usdToken = restartedNode.rpc.startFlowDynamic(
+                    JustLocalSelect::class.java,
+                    25.USD
+            ).returnValue.getOrThrow().single()
+            assertThat(usdToken).isEqualTo(usdTx.singleOutput<FungibleToken>())
         }
     }
 }

@@ -5,6 +5,7 @@ import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.schemas.PersistentState
 import javax.persistence.Column
+import javax.persistence.Convert
 import javax.persistence.Entity
 import javax.persistence.Index
 import javax.persistence.Table
@@ -35,6 +36,7 @@ class PersistentFungibleToken(
         // The fully qualified class name of the class which implements the token tokenType.
         // This is either a fixed token or a evolvable token.
         @Column(name = "token_class", nullable = false)
+        @Convert(converter = TokenClassConverter::class)
         var tokenClass: Class<*>,
 
         // This can either be a symbol or a linearID depending on whether the token is evolvable or fixed.
