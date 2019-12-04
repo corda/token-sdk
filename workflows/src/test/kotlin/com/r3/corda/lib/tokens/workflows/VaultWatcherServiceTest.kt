@@ -189,6 +189,7 @@ class VaultWatcherServiceTest {
     }
 
     @Test
+    @Ignore
     fun `very basic memory checking owner scales`() {
         val (VaultObserver, observable) = getDefaultVaultObserver()
 

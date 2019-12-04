@@ -3,6 +3,7 @@ package com.r3.corda.lib.tokens.contracts.utilities
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import net.corda.core.contracts.Amount
+import net.corda.core.contracts.Issued
 import net.corda.core.identity.Party
 import net.corda.core.internal.uncheckedCast
 import java.math.BigDecimal
@@ -138,6 +139,11 @@ fun <T : TokenType> Iterable<Amount<T>>.sumTokensOrZero(token: T): Amount<T> {
  * This is useful when you are mixing code that cares about specific issuers with code that will accept any, or which is
  * imposing issuer constraints via some other mechanism and the additional type safety is not wanted.
  */
-fun Amount<IssuedTokenType>.withoutIssuer(): Amount<TokenType> {
-    return Amount(quantity, displayTokenSize, token.tokenType)
+
+fun Amount<out TokenType>.withoutIssuer(): Amount<TokenType> {
+    return if (token is IssuedTokenType){
+        Amount(quantity, displayTokenSize, (token as IssuedTokenType).tokenType)
+    }else{
+        Amount(quantity, displayTokenSize, token)
+    }
 }

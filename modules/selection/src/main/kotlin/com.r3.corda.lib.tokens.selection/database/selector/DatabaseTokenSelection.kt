@@ -60,7 +60,7 @@ class DatabaseTokenSelection(
 
     /** Queries for held token amounts with the specified token to the specified requiredAmount. */
     private fun executeQuery(
-            requiredAmount: Amount<IssuedTokenType>,
+            requiredAmount: Amount<TokenType>,
             lockId: UUID,
             additionalCriteria: QueryCriteria,
             sorter: Sort,
@@ -118,7 +118,7 @@ class DatabaseTokenSelection(
     override protected fun selectTokens(
             holder: Holder,
             lockId: UUID,
-            requiredAmount: Amount<IssuedTokenType>,
+            requiredAmount: Amount<TokenType>,
             queryBy: TokenQueryBy
     ): List<StateAndRef<FungibleToken>> {
         val criteria = constructQueryCriteria(requiredAmount, holder, queryBy)
@@ -148,7 +148,7 @@ class DatabaseTokenSelection(
         } else stateAndRefs
     }
 
-    private fun constructQueryCriteria(requiredAmount: Amount<IssuedTokenType>, holder: Holder, queryBy: TokenQueryBy): QueryCriteria {
+    private fun constructQueryCriteria(requiredAmount: Amount<TokenType>, holder: Holder, queryBy: TokenQueryBy): QueryCriteria {
         // This is due to the fact, that user can pass Amount<IssuedTokenType>, this usually shouldn't happen, but just in case
         val amountToken = requiredAmount.token
         val (token, issuer) = when (amountToken) {

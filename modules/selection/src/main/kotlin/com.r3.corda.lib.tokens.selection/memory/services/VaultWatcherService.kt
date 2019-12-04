@@ -182,40 +182,47 @@ class VaultWatcherService(private val tokenObserver: TokenObserver, private val 
 
     fun selectTokens(
             owner: Holder,
-            requiredAmount: Amount<IssuedTokenType>,
+            requiredAmount: Amount<TokenType>,
             predicate: ((StateAndRef<FungibleToken>) -> Boolean) = { true },
             allowShortfall: Boolean = false,
             autoUnlockDelay: Duration = Duration.ofMinutes(5),
             selectionId: String
     ): List<StateAndRef<FungibleToken>> {
-
-        val lockedTokens = mutableListOf<StateAndRef<FungibleToken>>()
-        val bucket: Iterable<StateAndRef<FungibleToken>>
-        if (owner is Holder.TokenOnly) {
-            bucket = __backingMap.keys
+        val predicateToUse = if (requiredAmount.token is IssuedTokenType) {
+            { token ->
+                predicate.invoke(token) && token.state.data.issuer == (requiredAmount.token as IssuedTokenType).issuer
+            }
         } else {
-            val indexedView = getOrCreateIndexViewForHolderType(owner.javaClass)
-            bucket = getTokenBucket(owner, requiredAmount.token.tokenClass, requiredAmount.token.tokenIdentifier, indexedView)
+            predicate
         }
 
-        var amountLocked: Amount<IssuedTokenType> = requiredAmount.copy(quantity = 0)
+        val lockedTokens = mutableListOf<StateAndRef<FungibleToken>>()
+        val bucket: Iterable<StateAndRef<FungibleToken>> = if (owner is Holder.TokenOnly) {
+            __backingMap.keys
+        } else {
+            val indexedView = getOrCreateIndexViewForHolderType(owner.javaClass)
+            getTokenBucket(owner, requiredAmount.token.tokenClass, requiredAmount.token.tokenIdentifier, indexedView)
+        }
+
+        val requiredAmountWithoutIssuer = requiredAmount.withoutIssuer()
+        var amountLocked: Amount<TokenType> = requiredAmountWithoutIssuer.copy(quantity = 0)
         for (tokenStateAndRef in bucket) {
             // Does the token satisfy the (optional) predicate eg. issuer?
-            if (predicate.invoke(tokenStateAndRef)) {
+            if (predicateToUse.invoke(tokenStateAndRef)) {
                 // if so, race to lock the token, expected oldValue = PLACE_HOLDER
                 if (__backingMap.replace(tokenStateAndRef, PLACE_HOLDER, selectionId)) {
                     // we won the race to lock this token
                     lockedTokens.add(tokenStateAndRef)
                     val token = tokenStateAndRef.state.data
                     amountLocked += uncheckedCast(token.amount.withoutIssuer())
-                    if (amountLocked >= requiredAmount) {
+                    if (amountLocked >= requiredAmountWithoutIssuer) {
                         break
                     }
                 }
             }
         }
 
-        if (!allowShortfall && amountLocked < requiredAmount) {
+        if (!allowShortfall && amountLocked < requiredAmountWithoutIssuer) {
             lockedTokens.forEach {
                 unlockToken(it, selectionId)
             }

@@ -48,7 +48,7 @@ class LocalTokenSelector(
     override protected fun selectTokens(
             holder: Holder,
             lockId: UUID,
-            requiredAmount: Amount<IssuedTokenType>,
+            requiredAmount: Amount<TokenType>,
             queryBy: TokenQueryBy
     ): List<StateAndRef<FungibleToken>> {
         synchronized(mostRecentlyLocked) {
