@@ -2,6 +2,7 @@ package com.r3.corda.lib.tokens.selection.api
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
+import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
@@ -38,11 +39,11 @@ abstract class Selector {
     // Token Only
     @Suspendable
     fun selectTokens(
-            requiredAmount: Amount<TokenType>,
+            requiredAmount: Amount<IssuedTokenType>,
             queryBy: TokenQueryBy = TokenQueryBy(),
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     ): List<StateAndRef<FungibleToken>> {
-        return selectTokens(Holder.TokenOnly, lockId, requiredAmount, queryBy)
+        return selectTokens(Holder.TokenOnly(), lockId, requiredAmount, queryBy)
     }
 
     /**
@@ -62,7 +63,7 @@ abstract class Selector {
     @Suspendable
     fun selectTokens(
             externalId: UUID,
-            requiredAmount: Amount<TokenType>,
+            requiredAmount: Amount<IssuedTokenType>,
             queryBy: TokenQueryBy = TokenQueryBy(),
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     ): List<StateAndRef<FungibleToken>> {
@@ -86,7 +87,7 @@ abstract class Selector {
     @Suspendable
     fun selectTokens(
             holdingKey: PublicKey,
-            requiredAmount: Amount<TokenType>,
+            requiredAmount: Amount<IssuedTokenType>,
             queryBy: TokenQueryBy = TokenQueryBy(),
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     ): List<StateAndRef<FungibleToken>> {
@@ -104,12 +105,12 @@ abstract class Selector {
     // Token only
     @Suspendable
     fun generateMove(
-            partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
+            partiesAndAmounts: List<Pair<AbstractParty, Amount<IssuedTokenType>>>,
             changeHolder: AbstractParty,
             queryBy: TokenQueryBy = TokenQueryBy(),
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     ): Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> {
-        return generateMove(Holder.TokenOnly, lockId, partiesAndAmounts, changeHolder, queryBy)
+        return generateMove(Holder.TokenOnly(), lockId, partiesAndAmounts, changeHolder, queryBy)
     }
 
     /**
@@ -124,7 +125,7 @@ abstract class Selector {
     @Suspendable
     fun generateMove(
             externalId: UUID,
-            partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
+            partiesAndAmounts: List<Pair<AbstractParty, Amount<IssuedTokenType>>>,
             changeHolder: AbstractParty,
             queryBy: TokenQueryBy = TokenQueryBy(),
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
@@ -144,7 +145,7 @@ abstract class Selector {
     @Suspendable
     fun generateMove(
             holdingKey: PublicKey,
-            partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
+            partiesAndAmounts: List<Pair<AbstractParty, Amount<IssuedTokenType>>>,
             changeHolder: AbstractParty,
             queryBy: TokenQueryBy = TokenQueryBy(),
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
@@ -156,7 +157,7 @@ abstract class Selector {
     protected abstract fun selectTokens(
             holder: Holder,
             lockId: UUID,
-            requiredAmount: Amount<TokenType>,
+            requiredAmount: Amount<IssuedTokenType>,
             queryBy: TokenQueryBy
     ): List<StateAndRef<FungibleToken>>
 
@@ -164,7 +165,7 @@ abstract class Selector {
     private fun generateMove(
             holder: Holder,
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID(),
-            partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
+            partiesAndAmounts: List<Pair<AbstractParty, Amount<IssuedTokenType>>>,
             changeHolder: AbstractParty,
             queryBy: TokenQueryBy = TokenQueryBy()
     ): Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> {

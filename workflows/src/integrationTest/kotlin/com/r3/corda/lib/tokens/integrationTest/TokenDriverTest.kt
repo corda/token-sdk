@@ -14,6 +14,7 @@ import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.testing.states.Ruble
+import com.r3.corda.lib.tokens.workflows.flows.move.MoveTokensFlow
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
@@ -33,6 +34,7 @@ import net.corda.core.CordaRuntimeException
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.flows.FlowSession
 import net.corda.core.identity.Party
 import net.corda.core.internal.concurrent.transpose
 import net.corda.core.messaging.startFlow
@@ -272,6 +274,45 @@ class TokenDriverTest {
                     50.USD,
                     10.millis
             ).returnValue.getOrThrow()
+        }
+    }
+
+    @Test
+    fun `tokens should be loaded from database on restart of node`() {
+        driver(DriverParameters(
+                inMemoryDB = false,
+                startNodesInProcess = false,
+                cordappsForAllNodes = listOf(
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
+                ),
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList()))
+        ) {
+            val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+            val nodeB = startNode(providedName = DUMMY_BANK_B_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30010")).getOrThrow()
+
+            val nodeParty = node.nodeInfo.singleIdentity()
+            val nodeBParty = nodeB.nodeInfo.singleIdentity()
+            // Issue 50.GBP to self
+            node.rpc.startFlowDynamic(
+                    IssueTokens::class.java,
+                    listOf(50.GBP issuedBy nodeParty heldBy nodeParty),
+                    emptyList<Party>()
+            ).returnValue.getOrThrow()
+            // Issue 50.USD to self
+
+            // Stop node
+            (node as OutOfProcess).process.destroyForcibly()
+            node.stop()
+
+            // Restart the node
+            val restartedNode = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+
+            restartedNode.rpc.startFlowDynamic(SelectAndLockFlow::class.java, 50.GBP).returnValue.getOrThrow()
         }
     }
 }

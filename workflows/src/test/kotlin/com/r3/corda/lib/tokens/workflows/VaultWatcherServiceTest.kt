@@ -43,6 +43,7 @@ import org.hamcrest.Matchers.greaterThanOrEqualTo
 import org.hamcrest.Matchers.isIn
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import rx.subjects.PublishSubject
 import java.security.PublicKey
@@ -90,7 +91,7 @@ class VaultWatcherServiceTest {
         val vaultWatcherService = VaultWatcherService(VaultObserver, services)
         val owner = Crypto.generateKeyPair(Crypto.DEFAULT_SIGNATURE_SCHEME).public
         for (i in 1..100) {
-            createNewFiatCurrencyTokenRef(((Math.random() * 10) + 1).toLong(), owner, notary1, issuer1, GBP, observable,database)
+            createNewFiatCurrencyTokenRef(((Math.random() * 10) + 1).toLong(), owner, notary1, issuer1, GBP, observable, database)
         }
 
         val selectedTokens = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(45, GBP), selectionId = "abc")
@@ -108,7 +109,7 @@ class VaultWatcherServiceTest {
         val amountToIssue: Long = 100
         val stateAndRef = createNewFiatCurrencyTokenRef(amountToIssue, owner, notary1, issuer1, GBP, observable, database)
 
-        val selectedTokens = vaultWatcherService.selectTokens(Holder.TokenOnly, Amount(5, IssuedTokenType(issuer1, GBP)), selectionId = "abc")
+        val selectedTokens = vaultWatcherService.selectTokens(Holder.TokenOnly(), Amount(5, IssuedTokenType(issuer1, GBP)), selectionId = "abc")
         Assert.assertThat(selectedTokens, `is`(CoreMatchers.equalTo(listOf<StateAndRef<FungibleToken>>(stateAndRef))))
         vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(5, IssuedTokenType(issuer1, GBP)), selectionId = "abc")
     }
@@ -168,6 +169,7 @@ class VaultWatcherServiceTest {
     }
 
     @Test
+    @Ignore
     fun `very basic memory checking state scales`() {
 
         val (VaultObserver,
@@ -443,7 +445,7 @@ class VaultWatcherServiceTest {
 
         fun getDefaultVaultObserver(): Pair<TokenObserver, PublishSubject<Vault.Update<FungibleToken>>> {
             val observable = PublishSubject.create<Vault.Update<FungibleToken>>()
-            return Pair(TokenObserver(listOf(), uncheckedCast(observable), { stateAndRef, _ -> Holder.KeyIdentity(stateAndRef.state.data.holder.owningKey) }), observable)
+            return Pair(TokenObserver(listOf(), uncheckedCast(observable)) { stateAndRef, _, _ -> Holder.KeyIdentity(stateAndRef.state.data.holder.owningKey) }, observable)
         }
     }
 }

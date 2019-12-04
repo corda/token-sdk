@@ -109,19 +109,19 @@ class InMemorySelectionTest {
 
     private fun getExternalIdVaultObserver(): Pair<TokenObserver, PublishSubject<Vault.Update<FungibleToken>>> {
         val observable = PublishSubject.create<Vault.Update<FungibleToken>>()
-        return Pair(TokenObserver(listOf(), uncheckedCast(observable),
-                { stateAndRef, appServiceHub -> lookupExternalIdFromKey(stateAndRef.state.data.holder.owningKey, appServiceHub) }), observable)
+        return Pair(TokenObserver(listOf(), uncheckedCast(observable)
+        ) { stateAndRef, appServiceHub, _ -> lookupExternalIdFromKey(stateAndRef.state.data.holder.owningKey, appServiceHub) }, observable)
     }
 
     private fun getPublicKeyVaultObserver(): Pair<TokenObserver, PublishSubject<Vault.Update<FungibleToken>>> {
         val observable = PublishSubject.create<Vault.Update<FungibleToken>>()
-        return Pair(TokenObserver(listOf(), uncheckedCast(observable),
-                { stateAndRef, _ -> Holder.KeyIdentity(stateAndRef.state.data.holder.owningKey) }), observable)
+        return Pair(TokenObserver(listOf(), uncheckedCast(observable)
+        ) { stateAndRef, _, _ -> Holder.KeyIdentity(stateAndRef.state.data.holder.owningKey) }, observable)
     }
 
     private fun getTokenOnlyVaultObserver(): Pair<TokenObserver, PublishSubject<Vault.Update<FungibleToken>>> {
         val observable = PublishSubject.create<Vault.Update<FungibleToken>>()
-        return Pair(TokenObserver(listOf(), uncheckedCast(observable),
-                { _, _ -> Holder.TokenOnly }), observable)
+        return Pair(TokenObserver(listOf(), uncheckedCast(observable)
+        ) { _, _, _ -> Holder.TokenOnly() }, observable)
     }
 }
