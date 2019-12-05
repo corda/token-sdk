@@ -25,6 +25,7 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.internal.sumByLong
 import net.corda.core.internal.uncheckedCast
+import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.Vault
 import net.corda.core.utilities.getOrThrow
 import net.corda.nodeapi.internal.persistence.CordaPersistence
@@ -37,7 +38,6 @@ import net.corda.testing.node.MockServices
 import net.corda.testing.node.internal.InternalMockNetwork
 import net.corda.testing.node.internal.InternalMockNodeParameters
 import net.corda.testing.node.internal.startFlow
-import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.Matchers.greaterThanOrEqualTo
 import org.hamcrest.Matchers.isIn
@@ -48,6 +48,7 @@ import org.junit.Test
 import rx.subjects.PublishSubject
 import java.security.PublicKey
 import java.text.NumberFormat
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.Executors
@@ -80,7 +81,7 @@ class VaultWatcherServiceTest {
         val amountToIssue: Long = 100
         val stateAndRef = createNewFiatCurrencyTokenRef(amountToIssue, owner, notary1, issuer1, GBP, observable, database)
         val selectedTokens = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(5, GBP), selectionId = "abc")
-        Assert.assertThat(selectedTokens, `is`(CoreMatchers.equalTo(listOf<StateAndRef<FungibleToken>>(stateAndRef))))
+        Assert.assertThat(selectedTokens, `is`(equalTo(listOf(stateAndRef))))
     }
 
     @Test
@@ -110,7 +111,7 @@ class VaultWatcherServiceTest {
         val stateAndRef = createNewFiatCurrencyTokenRef(amountToIssue, owner, notary1, issuer1, GBP, observable, database)
 
         val selectedTokens = vaultWatcherService.selectTokens(Holder.TokenOnly(), Amount(5, IssuedTokenType(issuer1, GBP)), selectionId = "abc")
-        Assert.assertThat(selectedTokens, `is`(CoreMatchers.equalTo(listOf<StateAndRef<FungibleToken>>(stateAndRef))))
+        Assert.assertThat(selectedTokens, `is`(equalTo(listOf<StateAndRef<FungibleToken>>(stateAndRef))))
         vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(5, IssuedTokenType(issuer1, GBP)), selectionId = "abc")
     }
 
@@ -133,13 +134,13 @@ class VaultWatcherServiceTest {
             it.state.notary == notary1
         }, selectionId = "abc")
 
-        Assert.assertThat(selectedTokens, `is`(CoreMatchers.equalTo(listOf<StateAndRef<FungibleToken>>(stateAndRef))))
+        Assert.assertThat(selectedTokens, `is`(equalTo(listOf<StateAndRef<FungibleToken>>(stateAndRef))))
 
         val notary2Selected = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(amountToIssue * 2, GBP), {
             it.state.notary == notary2
         }, selectionId = "abc")
 
-        Assert.assertThat(notary2Selected, `is`(CoreMatchers.equalTo(notary2Selected.filter { it.state.notary == notary2 })))
+        Assert.assertThat(notary2Selected, `is`(equalTo(notary2Selected.filter { it.state.notary == notary2 })))
     }
 
     @Test
@@ -166,6 +167,72 @@ class VaultWatcherServiceTest {
         val selectedTokensAfterSpend = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(10000000000, GBP), allowShortfall = true, selectionId = "abc")
 
         Assert.assertThat(spentInputs, everyItem(not(isIn(selectedTokensAfterSpend))))
+    }
+
+    @Test
+    fun `should allow selection by multiple holder types`() {
+
+        val accountsAndKeys = (0 until 10).map {
+            val account = UUID.randomUUID()
+            val keysForAccount = (0 until 5).map {
+                Crypto.generateKeyPair(Crypto.DEFAULT_SIGNATURE_SCHEME).public
+            }
+            account to keysForAccount
+        }.toMap()
+
+        val keyToAccount = accountsAndKeys.flatMap { accountEntry ->
+            accountEntry.value.map {
+                it to accountEntry.key
+            }
+        }.toMap()
+
+        val ownerProvider = object : (StateAndRef<FungibleToken>, ServiceHub, VaultWatcherService.IndexingType) -> Holder {
+            override fun invoke(tokenState: StateAndRef<FungibleToken>, services: ServiceHub, indexingType: VaultWatcherService.IndexingType): Holder {
+                return when (indexingType) {
+                    VaultWatcherService.IndexingType.EXTERNAL_ID -> {
+                        Holder.MappedIdentity(keyToAccount[tokenState.state.data.holder.owningKey]
+                                ?: error("should never happen"))
+                    }
+                    VaultWatcherService.IndexingType.PUBLIC_KEY -> {
+                        Holder.KeyIdentity(tokenState.state.data.holder.owningKey)
+                    }
+                }
+            }
+        }
+
+        val observable = PublishSubject.create<Vault.Update<FungibleToken>>()
+
+        val vaultWatcherService = VaultWatcherService(TokenObserver(emptyList(), observable, ownerProvider), services)
+        val keyToTokenMap = HashMap<PublicKey, StateAndRef<FungibleToken>>()
+
+        val accountToIssuedTokensMap = accountsAndKeys.map {
+            val tokensIssuedToAccount = it.value.map { key ->
+                val token = createNewFiatCurrencyTokenRef(1, key, notary1, issuer1, GBP, observable, database)
+                keyToTokenMap[key] = token
+                token
+            }
+            it.key to tokensIssuedToAccount
+        }.toMap()
+
+
+        //check we can select by account
+        for (accountsAndKeyEntry in accountsAndKeys) {
+            val account = accountsAndKeyEntry.key
+            val selectedTokens = vaultWatcherService.selectTokens(Holder.MappedIdentity(account), Amount(10000000000, GBP), allowShortfall = true, selectionId = "CHEESEY_BITES").sortedBy { it.toString() }
+            val expectedTokens = accountToIssuedTokensMap[account]!!.sortedBy { it.toString() }
+            Assert.assertThat(selectedTokens, `is`(equalTo(expectedTokens)))
+            expectedTokens.forEach {
+                vaultWatcherService.unlockToken(it, "CHEESEY_BITES")
+            }
+        }
+
+        //check we can select by owning key
+        for (keyToTokenEntry in keyToTokenMap) {
+            val key = keyToTokenEntry.key
+            val selectedTokens = vaultWatcherService.selectTokens(Holder.KeyIdentity(key), Amount(10000000000, GBP), allowShortfall = true, selectionId = "CHEESEY_BITES").sortedBy { it.toString() }
+            val expectedTokens = listOf(keyToTokenEntry.value)
+            Assert.assertThat(selectedTokens, `is`(equalTo(expectedTokens)))
+        }
     }
 
     @Test
@@ -223,6 +290,7 @@ class VaultWatcherServiceTest {
                     owner2
                 }
                 createNewDigitalCurrencyTokenRef(((Math.random() * 1000) + 1).toLong(), owner, notary1, issuer1, observable, database)
+                Thread.sleep(2)
             }
         }
 
@@ -234,6 +302,7 @@ class VaultWatcherServiceTest {
                     owner2
                 }
                 createNewFiatCurrencyTokenRef(((Math.random() * 1000) + 1).toLong(), owner, notary1, issuer1, GBP, observable, database)
+                Thread.sleep(2)
             }
         }
 

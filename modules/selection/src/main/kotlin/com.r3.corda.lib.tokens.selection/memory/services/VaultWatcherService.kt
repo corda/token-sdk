@@ -23,6 +23,7 @@ import net.corda.core.utilities.contextLogger
 import rx.Observable
 import java.time.Duration
 import java.util.concurrent.*
+import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
@@ -110,10 +111,8 @@ class VaultWatcherService(private val tokenObserver: TokenObserver, private val 
     }
 
     private fun onVaultUpdate(t: Vault.Update<FungibleToken>) {
-//        UPDATER.submit {
         removeTokensFromCache(t.consumed)
         addTokensToCache(t.produced)
-//        }
     }
 
     private fun removeTokensFromCache(stateAndRefs: Collection<StateAndRef<FungibleToken>>) {
@@ -188,16 +187,31 @@ class VaultWatcherService(private val tokenObserver: TokenObserver, private val 
             autoUnlockDelay: Duration = Duration.ofMinutes(5),
             selectionId: String
     ): List<StateAndRef<FungibleToken>> {
-        val predicateToUse = if (requiredAmount.token is IssuedTokenType) {
+        //we have to handle both cases
+        //1 when passed a raw TokenType - it's likely that the selecting entity does not care about the issuer and so we cannot constrain all selections to using IssuedTokenType
+        //2 when passed an IssuedTokenType - it's likely that the selecting entity does care about the issuer, and so we must filter all tokens which do not match the issuer.
+        val enrichedPredicate: AtomicReference<(StateAndRef<FungibleToken>) -> Boolean> = AtomicReference(if (requiredAmount.token is IssuedTokenType) {
+            val issuer = (requiredAmount.token as IssuedTokenType).issuer
             { token ->
-                predicate.invoke(token) && token.state.data.issuer == (requiredAmount.token as IssuedTokenType).issuer
+                predicate(token) && token.state.data.issuer == issuer
             }
         } else {
             predicate
-        }
+        })
 
         val lockedTokens = mutableListOf<StateAndRef<FungibleToken>>()
         val bucket: Iterable<StateAndRef<FungibleToken>> = if (owner is Holder.TokenOnly) {
+            val currentPredicate = enrichedPredicate.get()
+            //why do we do this? It doesn't really make sense to index on token type, as it's very likely that there will be very few types of tokens in a given vault
+            //so instead of relying on an indexed view, we can create a predicate on the fly which will constrain the selection to the correct token type
+            //we will revisit in future if this assumption turns out to be wrong
+            enrichedPredicate.set {
+                val stateTokenType = it.state.data.tokenType
+                currentPredicate(it) &&
+                        stateTokenType.fractionDigits == requiredAmount.token.fractionDigits &&
+                        requiredAmount.token.tokenClass == stateTokenType.tokenClass &&
+                        requiredAmount.token.tokenIdentifier == stateTokenType.tokenIdentifier
+            }
             __backingMap.keys
         } else {
             val indexedView = getOrCreateIndexViewForHolderType(owner.javaClass)
@@ -206,9 +220,10 @@ class VaultWatcherService(private val tokenObserver: TokenObserver, private val 
 
         val requiredAmountWithoutIssuer = requiredAmount.withoutIssuer()
         var amountLocked: Amount<TokenType> = requiredAmountWithoutIssuer.copy(quantity = 0)
+        val finalPredicate = enrichedPredicate.get()
         for (tokenStateAndRef in bucket) {
             // Does the token satisfy the (optional) predicate eg. issuer?
-            if (predicateToUse.invoke(tokenStateAndRef)) {
+            if (finalPredicate.invoke(tokenStateAndRef)) {
                 // if so, race to lock the token, expected oldValue = PLACE_HOLDER
                 if (__backingMap.replace(tokenStateAndRef, PLACE_HOLDER, selectionId)) {
                     // we won the race to lock this token
