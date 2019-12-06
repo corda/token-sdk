@@ -10,6 +10,7 @@ import com.r3.corda.lib.tokens.contracts.utilities.withoutIssuer
 import com.r3.corda.lib.tokens.money.BTC
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
+import com.r3.corda.lib.tokens.selection.memory.config.InMemorySelectionConfig
 import com.r3.corda.lib.tokens.selection.memory.internal.Holder
 import com.r3.corda.lib.tokens.selection.memory.services.TokenObserver
 import com.r3.corda.lib.tokens.selection.memory.services.VaultWatcherService
@@ -25,7 +26,6 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.internal.sumByLong
 import net.corda.core.internal.uncheckedCast
-import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.Vault
 import net.corda.core.utilities.getOrThrow
 import net.corda.nodeapi.internal.persistence.CordaPersistence
@@ -57,9 +57,8 @@ import java.util.concurrent.atomic.AtomicInteger
 class VaultWatcherServiceTest {
     private lateinit var services: MockServices
     private lateinit var database: CordaPersistence
-
     @Before
-    fun setup() {
+    fun setupServices() {
         val mockDbAndServices = MockServices.makeTestDatabaseAndPersistentServices(
                 cordappPackages = listOf("com.r3.corda.lib.tokens.workflows"),
                 initialIdentity = TestIdentity(CordaX500Name("Test", "London", "GB")),
@@ -76,7 +75,7 @@ class VaultWatcherServiceTest {
 
         val (VaultObserver, observable) = getDefaultVaultObserver()
 
-        val vaultWatcherService = VaultWatcherService(VaultObserver, services)
+        val vaultWatcherService = VaultWatcherService(VaultObserver, InMemorySelectionConfig.defaultConfig())
         val owner = Crypto.generateKeyPair(Crypto.DEFAULT_SIGNATURE_SCHEME).public
         val amountToIssue: Long = 100
         val stateAndRef = createNewFiatCurrencyTokenRef(amountToIssue, owner, notary1, issuer1, GBP, observable, database)
@@ -89,7 +88,7 @@ class VaultWatcherServiceTest {
         val (VaultObserver,
                 observable) = getDefaultVaultObserver()
 
-        val vaultWatcherService = VaultWatcherService(VaultObserver, services)
+        val vaultWatcherService = VaultWatcherService(VaultObserver, InMemorySelectionConfig.defaultConfig())
         val owner = Crypto.generateKeyPair(Crypto.DEFAULT_SIGNATURE_SCHEME).public
         for (i in 1..100) {
             createNewFiatCurrencyTokenRef(((Math.random() * 10) + 1).toLong(), owner, notary1, issuer1, GBP, observable, database)
@@ -104,7 +103,7 @@ class VaultWatcherServiceTest {
         val (VaultObserver,
                 observable) = getDefaultVaultObserver()
 
-        val vaultWatcherService = VaultWatcherService(VaultObserver, services)
+        val vaultWatcherService = VaultWatcherService(VaultObserver, InMemorySelectionConfig.defaultConfig())
 
         val owner = Crypto.generateKeyPair(Crypto.DEFAULT_SIGNATURE_SCHEME).public
         val amountToIssue: Long = 100
@@ -120,7 +119,7 @@ class VaultWatcherServiceTest {
         val (VaultObserver,
                 observable) = getDefaultVaultObserver()
 
-        val vaultWatcherService = VaultWatcherService(VaultObserver, services)
+        val vaultWatcherService = VaultWatcherService(VaultObserver, InMemorySelectionConfig.defaultConfig())
 
         val owner = Crypto.generateKeyPair(Crypto.DEFAULT_SIGNATURE_SCHEME).public
         val amountToIssue: Long = 100
@@ -148,7 +147,7 @@ class VaultWatcherServiceTest {
         val (VaultObserver,
                 observable) = getDefaultVaultObserver()
 
-        val vaultWatcherService = VaultWatcherService(VaultObserver, services)
+        val vaultWatcherService = VaultWatcherService(VaultObserver, InMemorySelectionConfig.defaultConfig())
         val owner = Crypto.generateKeyPair(Crypto.DEFAULT_SIGNATURE_SCHEME).public
 
         for (i in 1..100) {
@@ -186,8 +185,8 @@ class VaultWatcherServiceTest {
             }
         }.toMap()
 
-        val ownerProvider = object : (StateAndRef<FungibleToken>, ServiceHub, VaultWatcherService.IndexingType) -> Holder {
-            override fun invoke(tokenState: StateAndRef<FungibleToken>, services: ServiceHub, indexingType: VaultWatcherService.IndexingType): Holder {
+        val ownerProvider = object : (StateAndRef<FungibleToken>, VaultWatcherService.IndexingType) -> Holder {
+            override fun invoke(tokenState: StateAndRef<FungibleToken>, indexingType: VaultWatcherService.IndexingType): Holder {
                 return when (indexingType) {
                     VaultWatcherService.IndexingType.EXTERNAL_ID -> {
                         Holder.MappedIdentity(keyToAccount[tokenState.state.data.holder.owningKey]
@@ -202,7 +201,7 @@ class VaultWatcherServiceTest {
 
         val observable = PublishSubject.create<Vault.Update<FungibleToken>>()
 
-        val vaultWatcherService = VaultWatcherService(TokenObserver(emptyList(), observable, ownerProvider), services)
+        val vaultWatcherService = VaultWatcherService(TokenObserver(emptyList(), observable, ownerProvider), InMemorySelectionConfig.defaultConfig())
         val keyToTokenMap = HashMap<PublicKey, StateAndRef<FungibleToken>>()
 
         val accountToIssuedTokensMap = accountsAndKeys.map {
@@ -242,7 +241,7 @@ class VaultWatcherServiceTest {
         val (VaultObserver,
                 observable) = getDefaultVaultObserver()
 
-        VaultWatcherService(VaultObserver, services)
+        VaultWatcherService(VaultObserver, InMemorySelectionConfig.defaultConfig())
         val owner = Crypto.generateKeyPair(Crypto.DEFAULT_SIGNATURE_SCHEME).public
 
 
@@ -260,7 +259,7 @@ class VaultWatcherServiceTest {
     fun `very basic memory checking owner scales`() {
         val (VaultObserver, observable) = getDefaultVaultObserver()
 
-        VaultWatcherService(VaultObserver, services)
+        VaultWatcherService(VaultObserver, InMemorySelectionConfig.defaultConfig())
 
         for (j in 1..50_000) {
             val owner = Crypto.generateKeyPair(Crypto.DEFAULT_SIGNATURE_SCHEME).public
@@ -275,7 +274,7 @@ class VaultWatcherServiceTest {
     fun `should support concurrent requests and inserts for tokens`() {
         val (VaultObserver,
                 observable) = getDefaultVaultObserver()
-        val vaultWatcherService = VaultWatcherService(VaultObserver, services)
+        val vaultWatcherService = VaultWatcherService(VaultObserver, InMemorySelectionConfig.defaultConfig())
 
         val executor = Executors.newFixedThreadPool(10)
         val owner1 = Crypto.generateKeyPair(Crypto.DEFAULT_SIGNATURE_SCHEME).public
@@ -515,7 +514,7 @@ class VaultWatcherServiceTest {
 
         fun getDefaultVaultObserver(): Pair<TokenObserver, PublishSubject<Vault.Update<FungibleToken>>> {
             val observable = PublishSubject.create<Vault.Update<FungibleToken>>()
-            return Pair(TokenObserver(listOf(), uncheckedCast(observable)) { stateAndRef, _, _ -> Holder.KeyIdentity(stateAndRef.state.data.holder.owningKey) }, observable)
+            return Pair(TokenObserver(listOf(), uncheckedCast(observable)) { stateAndRef, _ -> Holder.KeyIdentity(stateAndRef.state.data.holder.owningKey) }, observable)
         }
     }
 }

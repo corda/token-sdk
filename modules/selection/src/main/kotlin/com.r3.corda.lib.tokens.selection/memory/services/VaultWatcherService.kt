@@ -5,6 +5,7 @@ import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.withoutIssuer
 import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
+import com.r3.corda.lib.tokens.selection.memory.config.InMemorySelectionConfig
 import com.r3.corda.lib.tokens.selection.memory.internal.Holder
 import com.r3.corda.lib.tokens.selection.memory.internal.lookupExternalIdFromKey
 import com.r3.corda.lib.tokens.selection.sortByStateRefAscending
@@ -28,17 +29,19 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
-val UNLOCKER: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 val UPDATER: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 val EMPTY_BUCKET = TokenBucket()
 
 const val PLACE_HOLDER: String = "THIS_IS_A_PLACE_HOLDER"
 
 @CordaService
-class VaultWatcherService(private val tokenObserver: TokenObserver, private val serviceHub: ServiceHub) : SingletonSerializeAsToken() {
+class VaultWatcherService(private val tokenObserver: TokenObserver,
+                          private val providedConfig: InMemorySelectionConfig) : SingletonSerializeAsToken() {
 
     private val __backingMap: ConcurrentMap<StateAndRef<FungibleToken>, String> = ConcurrentHashMap()
-    private val __indexed: ConcurrentMap<Class<out Holder>, ConcurrentMap<TokenIndex, TokenBucket>> = ConcurrentHashMap()
+    private val __indexed: ConcurrentMap<Class<out Holder>, ConcurrentMap<TokenIndex, TokenBucket>> = ConcurrentHashMap(
+            providedConfig.indexingStrategies.map { it.ownerType to ConcurrentHashMap<TokenIndex, TokenBucket>() }.toMap()
+    )
 
     private val indexViewCreationLock: ReentrantReadWriteLock = ReentrantReadWriteLock()
 
@@ -64,18 +67,28 @@ class VaultWatcherService(private val tokenObserver: TokenObserver, private val 
 
     }
 
-    constructor(appServiceHub: AppServiceHub) : this(getObservableFromAppServiceHub(appServiceHub), appServiceHub)
+    constructor(appServiceHub: AppServiceHub) : this(getObservableFromAppServiceHub(appServiceHub), InMemorySelectionConfig.parse(appServiceHub.getAppContext().config))
 
     companion object {
         val LOG = contextLogger()
 
         private fun getObservableFromAppServiceHub(appServiceHub: AppServiceHub): TokenObserver {
-            val ownerProvider: (StateAndRef<FungibleToken>, ServiceHub, IndexingType) -> Holder = { token, serviceHub, indexingType ->
+            val config = appServiceHub.cordappProvider.getAppContext().config
+            val configOptions: InMemorySelectionConfig = InMemorySelectionConfig.parse(config)
+
+            if (!configOptions.enabled) {
+                LOG.info("Disabling inMemory token selection - refer to documentation on how to enable")
+                return TokenObserver(emptyList(), Observable.empty()) { _, _ ->
+                    Holder.UnmappedIdentity()
+                }
+            }
+
+            val ownerProvider: (StateAndRef<FungibleToken>, IndexingType) -> Holder = { token, indexingType ->
                 when (indexingType) {
                     IndexingType.PUBLIC_KEY -> Holder.KeyIdentity(token.state.data.holder.owningKey)
                     IndexingType.EXTERNAL_ID -> {
                         val owningKey = token.state.data.holder.owningKey
-                        lookupExternalIdFromKey(owningKey, serviceHub)
+                        lookupExternalIdFromKey(owningKey, appServiceHub)
                     }
                 }
             }
@@ -104,15 +117,17 @@ class VaultWatcherService(private val tokenObserver: TokenObserver, private val 
     }
 
     fun processToken(token: StateAndRef<FungibleToken>, indexingType: IndexingType): TokenIndex {
-        val owner = tokenObserver.ownerProvider(token, serviceHub, indexingType)
+        val owner = tokenObserver.ownerProvider(token, indexingType)
         val type = token.state.data.amount.token.tokenType.tokenClass
         val typeId = token.state.data.amount.token.tokenType.tokenIdentifier
         return TokenIndex(owner, type, typeId)
     }
 
     private fun onVaultUpdate(t: Vault.Update<FungibleToken>) {
-        removeTokensFromCache(t.consumed)
-        addTokensToCache(t.produced)
+        UPDATER.submit {
+            removeTokensFromCache(t.consumed)
+            addTokensToCache(t.produced)
+        }
     }
 
     private fun removeTokensFromCache(stateAndRefs: Collection<StateAndRef<FungibleToken>>) {
@@ -244,7 +259,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver, private val 
             throw InsufficientBalanceException("Insufficient spendable states identified for $requiredAmount.")
         }
 
-        UNLOCKER.schedule({
+        UPDATER.schedule({
             lockedTokens.forEach {
                 unlockToken(it, selectionId)
             }
@@ -268,7 +283,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver, private val 
 
 data class TokenObserver(val initialValues: List<StateAndRef<FungibleToken>>,
                          val source: Observable<Vault.Update<FungibleToken>>,
-                         val ownerProvider: ((StateAndRef<FungibleToken>, ServiceHub, VaultWatcherService.IndexingType) -> Holder))
+                         val ownerProvider: ((StateAndRef<FungibleToken>, VaultWatcherService.IndexingType) -> Holder))
 
 class TokenBucket(set: MutableSet<StateAndRef<FungibleToken>> = ConcurrentHashMap<StateAndRef<FungibleToken>, Boolean>().keySet(true)) : MutableSet<StateAndRef<FungibleToken>> by set
 
