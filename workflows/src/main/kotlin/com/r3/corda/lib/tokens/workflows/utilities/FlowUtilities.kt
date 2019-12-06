@@ -16,6 +16,7 @@ import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.IdentityService
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.TransactionBuilder
+import org.slf4j.LoggerFactory
 import java.security.PublicKey
 
 /**
@@ -110,3 +111,18 @@ fun addTokenTypeJar(input: StateAndRef<AbstractToken>, transactionBuilder: Trans
     addTokenTypeJar(input.state.data, transactionBuilder)
 }
 
+inline fun <T> Any.timed(name: String, block: () -> T): T {
+    val start = System.currentTimeMillis()
+    val log = LoggerFactory.getLogger("timings")
+    val loggerClass = javaClass.simpleName
+    try {
+        log.info("$loggerClass - $name: start")
+        return block()
+    } catch (e: Throwable) {
+        log.info("$loggerClass - $name: error: ${e.message}")
+        throw e
+    } finally {
+        val stop = System.currentTimeMillis()
+        log.info("$loggerClass - $name: end, duration: ${stop - start} ms")
+    }
+}

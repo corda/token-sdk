@@ -5,6 +5,7 @@ import com.r3.corda.lib.tokens.contracts.commands.RedeemTokenCommand
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
 import com.r3.corda.lib.tokens.workflows.utilities.participants
 import com.r3.corda.lib.tokens.workflows.utilities.requireSessionsForParticipants
+import com.r3.corda.lib.tokens.workflows.utilities.timed
 import com.r3.corda.lib.tokens.workflows.utilities.toWellKnownParties
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.flows.FinalityFlow
@@ -47,8 +48,10 @@ class ObserverAwareFinalityFlow private constructor(
     @Suspendable
     override fun call(): SignedTransaction {
         // Check there is a session for each participant, apart from the node itself.
-        val ledgerTransaction: LedgerTransaction = transactionBuilder?.toLedgerTransaction(serviceHub)
-                ?: signedTransaction!!.toLedgerTransaction(serviceHub, false)
+        val ledgerTransaction: LedgerTransaction = timed("toLedgerTransaction") {
+            transactionBuilder?.toLedgerTransaction(serviceHub)
+                    ?: signedTransaction!!.toLedgerTransaction(serviceHub, false)
+        }
         val participants: List<AbstractParty> = ledgerTransaction.participants
         val issuers: Set<Party> = ledgerTransaction.commands
                 .map(CommandWithParties<*>::value)
