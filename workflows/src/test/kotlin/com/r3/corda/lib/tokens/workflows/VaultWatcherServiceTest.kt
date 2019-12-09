@@ -390,24 +390,28 @@ class VaultWatcherServiceTest {
                 "com.r3.corda.lib.tokens.contracts",
                 "com.r3.corda.lib.tokens.workflows"
         ))
-        val aliceNode = mockNet.createNode(InternalMockNodeParameters(legalName = ALICE_NAME))
-        val issuerNode = mockNet.createNode(InternalMockNodeParameters(legalName = CHARLIE_NAME))
-        val alice = aliceNode.info.singleIdentity()
-        val issuer = issuerNode.info.singleIdentity()
 
-        val btc = 100000 of BTC issuedBy issuer heldBy alice
-        val resultFuture = issuerNode.services.startFlow(IssueTokens(listOf(btc))).resultFuture
-        mockNet.runNetwork()
-        val issueResultTx = resultFuture.get()
-        val issuedStateRef = issueResultTx.coreTransaction.outRefsOfType<FungibleToken>().single()
+        try{
+            val aliceNode = mockNet.createNode(InternalMockNodeParameters(legalName = ALICE_NAME))
+            val issuerNode = mockNet.createNode(InternalMockNodeParameters(legalName = CHARLIE_NAME))
+            val alice = aliceNode.info.singleIdentity()
+            val issuer = issuerNode.info.singleIdentity()
 
-        val tokensFuture = aliceNode.services.startFlow(SuspendingSelector(alice.owningKey, Amount(1, BTC))).resultFuture
-        mockNet.runNetwork()
-        val selectedToken = tokensFuture.getOrThrow().single()
+            val btc = 100000 of BTC issuedBy issuer heldBy alice
+            val resultFuture = issuerNode.services.startFlow(IssueTokens(listOf(btc))).resultFuture
+            mockNet.runNetwork()
+            val issueResultTx = resultFuture.get()
+            val issuedStateRef = issueResultTx.coreTransaction.outRefsOfType<FungibleToken>().single()
 
-        Assert.assertThat(issuedStateRef, `is`(equalTo(selectedToken)))
+            val tokensFuture = aliceNode.services.startFlow(SuspendingSelector(alice.owningKey, Amount(1, BTC))).resultFuture
+            mockNet.runNetwork()
+            val selectedToken = tokensFuture.getOrThrow().single()
 
-        mockNet.stopNodes()
+            Assert.assertThat(issuedStateRef, `is`(equalTo(selectedToken)))
+        }finally {
+            mockNet.stopNodes()
+        }
+
     }
 
     companion object {

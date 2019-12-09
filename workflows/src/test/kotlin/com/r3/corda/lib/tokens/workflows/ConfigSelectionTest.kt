@@ -10,26 +10,30 @@ import com.r3.corda.lib.tokens.selection.memory.config.InMemorySelectionConfig
 import com.r3.corda.lib.tokens.selection.memory.selector.LocalTokenSelector
 import com.r3.corda.lib.tokens.selection.memory.services.VaultWatcherService
 import com.typesafe.config.ConfigFactory
+import net.corda.core.identity.CordaX500Name
 import net.corda.node.internal.cordapp.TypesafeCordappConfig
+import net.corda.testing.common.internal.testNetworkParameters
+import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.createMockCordaService
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
+import org.junit.Before
 import org.junit.Test
 
 class ConfigSelectionTest {
     private lateinit var services: MockServices
 
-//    @Before
-//    fun setup() {
-//        services = MockServices.makeTestDatabaseAndPersistentServices(
-//                cordappPackages = listOf("com.r3.corda.lib.tokens.workflows"),
-//                initialIdentity = TestIdentity(CordaX500Name("Test", "London", "GB")),
-//                networkParameters = testNetworkParameters(minimumPlatformVersion = 4),
-//                moreIdentities = emptySet(),
-//                moreKeys = emptySet()
-//        ).second
-//    }
+    @Before
+    fun setup() {
+        services = MockServices.makeTestDatabaseAndPersistentServices(
+                cordappPackages = listOf("com.r3.corda.lib.tokens.workflows"),
+                initialIdentity = TestIdentity(CordaX500Name("Test", "London", "GB")),
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4),
+                moreIdentities = emptySet(),
+                moreKeys = emptySet()
+        ).second
+    }
 
     @Test
     fun `test full database selection`() {
@@ -54,14 +58,14 @@ class ConfigSelectionTest {
         val config = ConfigFactory.parseString("stateSelection {\n" +
                 "inMemory {\n" +
                 "cacheSize: 9000\n" +
-                "indexingStrategy: public_key\n" +
+                "indexingStrategies: [${VaultWatcherService.IndexingType.PUBLIC_KEY}]\n" +
                 "}\n" +
                 "}")
         val cordappConfig = TypesafeCordappConfig(config)
 
         val inMemoryConfig = InMemorySelectionConfig.parse(cordappConfig)
         assertThat(inMemoryConfig.cacheSize).isEqualTo(9000)
-        assertThat(inMemoryConfig.indexingStrategies).isEqualTo(VaultWatcherService.IndexingType.PUBLIC_KEY)
+        assertThat(inMemoryConfig.indexingStrategies).isEqualTo(listOf(VaultWatcherService.IndexingType.PUBLIC_KEY))
 
         val selection = ConfigSelection.getPreferredSelection(services, cordappConfig)
         assertThat(selection).isInstanceOf(LocalTokenSelector::class.java)
@@ -69,7 +73,6 @@ class ConfigSelectionTest {
 
     @Test
     fun `test full in memory selection with external id`() {
-//        createMockCordaService(servic+es, ::VaultWatcherService)
         val config = ConfigFactory.parseString("stateSelection {\n" +
                 "inMemory {\n" +
                 "cacheSize: 9000\n" +
@@ -79,7 +82,7 @@ class ConfigSelectionTest {
         val cordappConfig = TypesafeCordappConfig(config)
         val inMemoryConfig = InMemorySelectionConfig.parse(cordappConfig)
         assertThat(inMemoryConfig.cacheSize).isEqualTo(9000)
-        assertThat(inMemoryConfig.indexingStrategies).isEqualTo(VaultWatcherService.IndexingType.EXTERNAL_ID)
+        assertThat(inMemoryConfig.indexingStrategies).isEqualTo(listOf(VaultWatcherService.IndexingType.EXTERNAL_ID, VaultWatcherService.IndexingType.PUBLIC_KEY))
     }
 
     @Test

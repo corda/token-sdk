@@ -4,6 +4,8 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.selection.api.StateSelectionConfig
 import com.r3.corda.lib.tokens.selection.memory.selector.LocalTokenSelector
 import com.r3.corda.lib.tokens.selection.memory.services.VaultWatcherService
+import com.typesafe.config.ConfigList
+import com.typesafe.config.ConfigValue
 import net.corda.core.cordapp.CordappConfig
 import net.corda.core.cordapp.CordappConfigException
 import net.corda.core.node.ServiceHub
@@ -17,15 +19,16 @@ data class InMemorySelectionConfig(val enabled: Boolean,
     companion object {
         private val logger = LoggerFactory.getLogger("inMemoryConfigSelectionLogger")
         fun parse(config: CordappConfig): InMemorySelectionConfig {
-            val enabled = if (config.exists("stateSelection.inMemory.enabled")) {
-                config.getBoolean("stateSelection.inMemory.enabled")
+            val enabled = if (!config.exists("stateSelection.inMemory.enabled")) {
+                logger.warn("Did not detect a configuration for InMemory selection - enabling memory usage for token indexing. Please set stateSelection.inMemory.enabled to \"false\" to disable this")
+                true
             } else {
-                false
+                config.getBoolean("stateSelection.inMemory.enabled")
             }
             val cacheSize = config.getIntOrNull("stateSelection.inMemory.cacheSize")
                     ?: CACHE_SIZE_DEFAULT
             val indexingType = try {
-                (config.get("stateSelection.inMemory.indexingStrategies") as List<String>).map { VaultWatcherService.IndexingType.valueOf(it) }
+                (config.get("stateSelection.inMemory.indexingStrategies") as List<Any>).map { VaultWatcherService.IndexingType.valueOf(it.toString()) }
             } catch (e: CordappConfigException) {
                 logger.error("Unable to build selection config due to exception during parsing", e)
                 emptyList<VaultWatcherService.IndexingType>()
