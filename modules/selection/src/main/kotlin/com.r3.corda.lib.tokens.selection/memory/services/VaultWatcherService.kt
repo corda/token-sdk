@@ -13,7 +13,6 @@ import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.AppServiceHub
-import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.CordaService
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.vault.DEFAULT_PAGE_NUM
@@ -22,6 +21,7 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.utilities.contextLogger
 import rx.Observable
+import rx.subjects.PublishSubject
 import java.time.Duration
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicReference
@@ -92,22 +92,36 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
                     }
                 }
             }
+
+            val existingStatesObservable = PublishSubject.create<Vault.Update<FungibleToken>>()
+
             val pageSize = 1000
             var currentPage = DEFAULT_PAGE_NUM
-            var (existingStates, observable) = appServiceHub.vaultService.trackBy(
+            val (firstPage, observable) = appServiceHub.vaultService.trackBy(
                     contractStateType = FungibleToken::class.java,
                     paging = PageSpecification(pageNumber = currentPage, pageSize = pageSize),
                     criteria = QueryCriteria.VaultQueryCriteria(),
                     sorting = sortByStateRefAscending())
-            val statesToProcess = mutableListOf<StateAndRef<FungibleToken>>()
-            while (existingStates.states.isNotEmpty()) {
-                statesToProcess.addAll(uncheckedCast(existingStates.states))
-                existingStates = appServiceHub.vaultService.queryBy(
-                        contractStateType = FungibleToken::class.java,
-                        paging = PageSpecification(pageNumber = ++currentPage, pageSize = pageSize)
-                )
+
+            val mergedObservable = existingStatesObservable.mergeWith(observable)
+            // we use the UPDATER thread for two reasons
+            // 1 this means we return the service before all states are loaded, and so do not hold up the node startup
+            // 2 because all updates to the cache (addition / removal) are also done via UPDATER, this means that until we have finished loading all updates are buffered preventing out of order updates
+            UPDATER.submit {
+                existingStatesObservable.onNext(Vault.Update(emptySet(), firstPage.states.toSet()))
+                var shouldLoop = true
+                while (shouldLoop) {
+                    val newlyLoadedStates = appServiceHub.vaultService.queryBy(
+                            contractStateType = FungibleToken::class.java,
+                            paging = PageSpecification(pageNumber = ++currentPage, pageSize = pageSize),
+                            criteria = QueryCriteria.VaultQueryCriteria(),
+                            sorting = sortByStateRefAscending()
+                    )
+                    existingStatesObservable.onNext(Vault.Update(emptySet(), newlyLoadedStates.states.toSet()))
+                    shouldLoop = newlyLoadedStates.states.isNotEmpty()
+                }
             }
-            return TokenObserver(statesToProcess, uncheckedCast(observable), ownerProvider)
+            return TokenObserver(emptyList(), uncheckedCast(mergedObservable), ownerProvider)
         }
     }
 
@@ -124,10 +138,15 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
     }
 
     private fun onVaultUpdate(t: Vault.Update<FungibleToken>) {
-        UPDATER.submit {
-            removeTokensFromCache(t.consumed)
-            addTokensToCache(t.produced)
+        try {
+            UPDATER.submit {
+                removeTokensFromCache(t.consumed)
+                addTokensToCache(t.produced)
+            }
+        } catch (t: Throwable) {
+            //we DO NOT want to kill the observable - as a single exception will terminate the feed
         }
+
     }
 
     private fun removeTokensFromCache(stateAndRefs: Collection<StateAndRef<FungibleToken>>) {
