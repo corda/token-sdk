@@ -116,7 +116,7 @@ class MoveNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Un
  */
 @StartableByService
 @StartableByRPC
-@InitiatingFlow
+@InitiatingFlow(version = 2)
 class ConfidentialMoveFungibleTokens(
         val partiesAndAmounts: List<PartyAndAmount<TokenType>>,
         val observers: List<Party>,
@@ -170,7 +170,7 @@ class ConfidentialMoveFungibleTokensHandler(val otherSession: FlowSession) : Flo
  */
 @StartableByService
 @StartableByRPC
-@InitiatingFlow
+@InitiatingFlow(version = 2)
 class ConfidentialMoveNonFungibleTokens(
         val partyAndToken: PartyAndToken,
         val observers: List<Party>,

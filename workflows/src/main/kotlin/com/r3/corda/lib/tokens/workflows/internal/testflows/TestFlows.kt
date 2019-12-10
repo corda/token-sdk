@@ -17,7 +17,6 @@ import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistr
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistributionList
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlowHandler
-import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
 import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
 import net.corda.core.contracts.Amount
@@ -38,6 +37,7 @@ import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.seconds
 import net.corda.core.utilities.unwrap
 import java.time.Duration
+import java.util.*
 
 // This is very simple test flow for DvP.
 @CordaSerializable
@@ -95,11 +95,14 @@ class DvPFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     }
 }
 
+@CordaSerializable
+data class DistributionRecordSerial(val linearId: UUID, val party: Party)
+
 @StartableByRPC
-class GetDistributionList(val housePtr: TokenPointer<House>) : FlowLogic<List<DistributionRecord>>() {
+class GetDistributionList(val housePtr: TokenPointer<House>) : FlowLogic<List<DistributionRecordSerial>>() {
     @Suspendable
-    override fun call(): List<DistributionRecord> {
-        return getDistributionList(serviceHub, housePtr.pointer.pointer)
+    override fun call(): List<DistributionRecordSerial> {
+        return getDistributionList(serviceHub, housePtr.pointer.pointer).map { DistributionRecordSerial(it.linearId, it.party) }
     }
 }
 
