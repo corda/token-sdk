@@ -16,7 +16,7 @@ You will need to add: `TestCordapp.findCordapp("com.r3.corda.lib.ci")` to your t
 later release type agnostic (now it works only for `FungibleToken`s).
 This will require change in your tests and CorDapps code.
 You will need to add: `TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")` to your tests and
-`cordapp "com.r3.corda.lib.tokens:tokens-money:$tokens_release_version"` to your gradle files.
+`cordapp "com.r3.corda.lib.tokens:tokens-selection:$tokens_release_version"` to your gradle files.
 
 * On top of that lots of exciting improvements and unexciting bug fixes!
 
