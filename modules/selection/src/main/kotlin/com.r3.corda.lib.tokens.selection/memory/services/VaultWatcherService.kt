@@ -108,7 +108,6 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
             // 1 this means we return the service before all states are loaded, and so do not hold up the node startup
             // 2 because all updates to the cache (addition / removal) are also done via UPDATER, this means that until we have finished loading all updates are buffered preventing out of order updates
             UPDATER.submit {
-                existingStatesObservable.onNext(Vault.Update(emptySet(), firstPage.states.toSet()))
                 var shouldLoop = true
                 while (shouldLoop) {
                     val newlyLoadedStates = appServiceHub.vaultService.queryBy(
@@ -121,7 +120,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
                     shouldLoop = newlyLoadedStates.states.isNotEmpty()
                 }
             }
-            return TokenObserver(emptyList(), uncheckedCast(mergedObservable), ownerProvider)
+            return TokenObserver(firstPage.states, uncheckedCast(mergedObservable), ownerProvider)
         }
     }
 
@@ -130,7 +129,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
         tokenObserver.source.subscribe(::onVaultUpdate)
     }
 
-    fun processToken(token: StateAndRef<FungibleToken>, indexingType: IndexingType): TokenIndex {
+    private fun processToken(token: StateAndRef<FungibleToken>, indexingType: IndexingType): TokenIndex {
         val owner = tokenObserver.ownerProvider(token, indexingType)
         val type = token.state.data.amount.token.tokenType.tokenClass
         val typeId = token.state.data.amount.token.tokenType.tokenIdentifier
