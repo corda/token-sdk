@@ -151,4 +151,14 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         val rtx = A.redeemTokens(GBP, I, 113.GBP).getOrThrow()
         assertThat(rtx.sigs.map { it.by }).contains(key1, key2, I.legalIdentity().owningKey)
     }
+
+    @Test
+    fun `issue to self and redeem with self`() {
+        I.issueFungibleTokens(I, 100.GBP, true).getOrThrow()
+        network.waitQuiescent()
+        assertThat(I.services.vaultService.tokenAmountsByToken(GBP).states.firstOrNull()?.state?.data?.amount).isEqualTo(100.GBP issuedBy I.legalIdentity())
+        I.redeemTokens(GBP, I, 90.GBP).getOrThrow()
+        network.waitQuiescent()
+        assertThat(I.services.vaultService.tokenAmountsByToken(GBP).states.firstOrNull()?.state?.data?.amount).isEqualTo(10.GBP issuedBy I.legalIdentity())
+    }
 }
