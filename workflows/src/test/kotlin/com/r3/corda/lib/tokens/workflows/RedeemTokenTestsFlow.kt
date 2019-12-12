@@ -39,9 +39,6 @@ class RedeemTokenTestsFlow{
     lateinit var nodeB: StartedMockNode
     lateinit var nodeI: StartedMockNode
 
-    private val fooToken = Appartment()
-    private val newFooToken = Appartment()
-
     @Before
     fun setup() {
         network =  MockNetwork(
