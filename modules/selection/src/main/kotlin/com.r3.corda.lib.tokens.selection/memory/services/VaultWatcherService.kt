@@ -21,7 +21,6 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.utilities.contextLogger
 import rx.Observable
-import rx.subjects.PublishSubject
 import java.time.Duration
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicReference
@@ -78,9 +77,9 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
 
             if (!configOptions.enabled) {
                 LOG.info("Disabling inMemory token selection - refer to documentation on how to enable")
-                return TokenObserver(emptyList(), Observable.empty()) { _, _ ->
+                return TokenObserver(emptyList(), Observable.empty(), { _, _ ->
                     Holder.UnmappedIdentity()
-                }
+                })
             }
 
             val ownerProvider: (StateAndRef<FungibleToken>, IndexingType) -> Holder = { token, indexingType ->
@@ -93,39 +92,55 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
                 }
             }
 
-            val existingStatesObservable = PublishSubject.create<Vault.Update<FungibleToken>>()
 
             val pageSize = 1000
             var currentPage = DEFAULT_PAGE_NUM
-            val (firstPage, observable) = appServiceHub.vaultService.trackBy(
+            val (firstPage, vaultObservable) = appServiceHub.vaultService.trackBy(
                     contractStateType = FungibleToken::class.java,
                     paging = PageSpecification(pageNumber = currentPage, pageSize = pageSize),
                     criteria = QueryCriteria.VaultQueryCriteria(),
                     sorting = sortByStateRefAscending())
 
-            val mergedObservable = existingStatesObservable.mergeWith(observable)
             // we use the UPDATER thread for two reasons
             // 1 this means we return the service before all states are loaded, and so do not hold up the node startup
             // 2 because all updates to the cache (addition / removal) are also done via UPDATER, this means that until we have finished loading all updates are buffered preventing out of order updates
-            UPDATER.submit {
-                var shouldLoop = true
-                while (shouldLoop) {
-                    val newlyLoadedStates = appServiceHub.vaultService.queryBy(
-                            contractStateType = FungibleToken::class.java,
-                            paging = PageSpecification(pageNumber = ++currentPage, pageSize = pageSize),
-                            criteria = QueryCriteria.VaultQueryCriteria(),
-                            sorting = sortByStateRefAscending()
-                    )
-                    existingStatesObservable.onNext(Vault.Update(emptySet(), newlyLoadedStates.states.toSet()))
-                    shouldLoop = newlyLoadedStates.states.isNotEmpty()
+            val asyncLoader = object : ((Vault.Update<FungibleToken>) -> Unit) -> Unit {
+                override fun invoke(callback: (Vault.Update<FungibleToken>) -> Unit) {
+                    LOG.info("Starting async token loading from vault")
+                    LOG.info("publishing ${firstPage.states.size} to async state loading callback")
+                    callback(Vault.Update(emptySet(), firstPage.states.toSet()))
+                    UPDATER.submit {
+                        try {
+                            var shouldLoop = true
+                            while (shouldLoop) {
+                                val newlyLoadedStates = appServiceHub.vaultService.queryBy(
+                                        contractStateType = FungibleToken::class.java,
+                                        paging = PageSpecification(pageNumber = ++currentPage, pageSize = pageSize),
+                                        criteria = QueryCriteria.VaultQueryCriteria(),
+                                        sorting = sortByStateRefAscending()
+                                ).states.toSet()
+                                LOG.info("publishing ${newlyLoadedStates.size} to async state loading callback")
+                                callback(Vault.Update(emptySet(), newlyLoadedStates))
+                                shouldLoop = newlyLoadedStates.isNotEmpty()
+                                LOG.debug("shouldLoop=${shouldLoop}")
+                            }
+                            LOG.info("finished token loading")
+                        } catch (t: Throwable) {
+                            LOG.error("Token Loading Failed due to: ", t)
+                        }
+                    }
                 }
             }
-            return TokenObserver(firstPage.states, uncheckedCast(mergedObservable), ownerProvider)
+            return TokenObserver(emptyList(), uncheckedCast(vaultObservable), ownerProvider, asyncLoader)
         }
     }
 
     init {
         addTokensToCache(tokenObserver.initialValues)
+        tokenObserver.source.doOnError {
+            LOG.error("received error from observable", it)
+        }
+        tokenObserver.startLoading(::onVaultUpdate)
         tokenObserver.source.subscribe(::onVaultUpdate)
     }
 
@@ -137,15 +152,14 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
     }
 
     private fun onVaultUpdate(t: Vault.Update<FungibleToken>) {
+        LOG.info("received token vault update with ${t.consumed.size} consumed states and: ${t.produced.size} produced states")
         try {
-            UPDATER.submit {
-                removeTokensFromCache(t.consumed)
-                addTokensToCache(t.produced)
-            }
+            removeTokensFromCache(t.consumed)
+            addTokensToCache(t.produced)
         } catch (t: Throwable) {
             //we DO NOT want to kill the observable - as a single exception will terminate the feed
+            LOG.error("Failure during token cache update", t)
         }
-
     }
 
     private fun removeTokensFromCache(stateAndRefs: Collection<StateAndRef<FungibleToken>>) {
@@ -299,9 +313,15 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
 
 }
 
-data class TokenObserver(val initialValues: List<StateAndRef<FungibleToken>>,
-                         val source: Observable<Vault.Update<FungibleToken>>,
-                         val ownerProvider: ((StateAndRef<FungibleToken>, VaultWatcherService.IndexingType) -> Holder))
+class TokenObserver(val initialValues: List<StateAndRef<FungibleToken>>,
+                    val source: Observable<Vault.Update<FungibleToken>>,
+                    val ownerProvider: ((StateAndRef<FungibleToken>, VaultWatcherService.IndexingType) -> Holder),
+                    inline val asyncLoader: ((Vault.Update<FungibleToken>) -> Unit) -> Unit = { _ -> }) {
+
+    fun startLoading(loadingCallBack: (Vault.Update<FungibleToken>) -> Unit) {
+        asyncLoader(loadingCallBack)
+    }
+}
 
 class TokenBucket(set: MutableSet<StateAndRef<FungibleToken>> = ConcurrentHashMap<StateAndRef<FungibleToken>, Boolean>().keySet(true)) : MutableSet<StateAndRef<FungibleToken>> by set
 

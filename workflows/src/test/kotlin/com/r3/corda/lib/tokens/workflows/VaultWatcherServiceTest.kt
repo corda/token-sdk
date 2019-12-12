@@ -518,7 +518,7 @@ class VaultWatcherServiceTest {
 
         fun getDefaultVaultObserver(): Pair<TokenObserver, PublishSubject<Vault.Update<FungibleToken>>> {
             val observable = PublishSubject.create<Vault.Update<FungibleToken>>()
-            return Pair(TokenObserver(listOf(), uncheckedCast(observable)) { stateAndRef, _ -> Holder.KeyIdentity(stateAndRef.state.data.holder.owningKey) }, observable)
+            return Pair(TokenObserver(listOf(), uncheckedCast(observable), { stateAndRef, _ -> Holder.KeyIdentity(stateAndRef.state.data.holder.owningKey) }), observable)
         }
     }
 }
