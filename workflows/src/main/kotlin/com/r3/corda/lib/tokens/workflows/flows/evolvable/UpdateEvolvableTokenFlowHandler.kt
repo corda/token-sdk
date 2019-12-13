@@ -10,6 +10,7 @@ import net.corda.core.flows.SignTransactionFlow
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.unwrap
 
+/** In-line counter-flow for [UpdateEvolvableTokenFlow]. */
 class UpdateEvolvableTokenFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
