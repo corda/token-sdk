@@ -6,16 +6,35 @@ import java.util.*
 
 sealed class Holder {
     data class KeyIdentity(val owningKey: PublicKey) : Holder() // Just public key
-    object UnmappedIdentity : Holder() // For all keys that are unmapped
+    class UnmappedIdentity : Holder() // For all keys that are unmapped
+    {
+        override fun equals(other: Any?): Boolean {
+            return this === other
+        }
+
+        override fun hashCode(): Int {
+            return System.identityHashCode(this)
+        }
+    }
+
     data class MappedIdentity(val uuid: UUID) : Holder() // All keys register to this uuid
-    object TokenOnly : Holder() // This is for the case where we use token class and token identifier only
+    class TokenOnly : Holder() // This is for the case where we use token class and token identifier only
+    {
+        override fun equals(other: Any?): Boolean {
+            return this === other
+        }
+
+        override fun hashCode(): Int {
+            return System.identityHashCode(this)
+        }
+    }
 
     companion object {
         fun fromUUID(uuid: UUID?): Holder {
             return if (uuid != null) {
                 MappedIdentity(uuid)
             } else {
-                UnmappedIdentity
+                UnmappedIdentity()
             }
         }
     }
@@ -27,7 +46,7 @@ fun lookupExternalIdFromKey(owningKey: PublicKey, serviceHub: ServiceHub): Holde
         val signingEntity = Holder.fromUUID(uuid)
         signingEntity
     } else {
-        Holder.UnmappedIdentity
+        Holder.UnmappedIdentity()
     }
 }
 

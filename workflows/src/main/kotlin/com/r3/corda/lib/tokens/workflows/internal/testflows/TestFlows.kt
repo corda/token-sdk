@@ -6,6 +6,7 @@ import com.r3.corda.lib.ci.workflows.SyncKeyMappingFlowHandler
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
 import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.selection.memory.selector.LocalTokenSelector
 import com.r3.corda.lib.tokens.testing.states.House
@@ -22,15 +23,7 @@ import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.flows.CollectSignaturesFlow
-import net.corda.core.flows.FlowLogic
-import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatedBy
-import net.corda.core.flows.InitiatingFlow
-import net.corda.core.flows.ReceiveStateAndRefFlow
-import net.corda.core.flows.SendStateAndRefFlow
-import net.corda.core.flows.SignTransactionFlow
-import net.corda.core.flows.StartableByRPC
+import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
@@ -38,6 +31,7 @@ import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.seconds
 import net.corda.core.utilities.unwrap
 import java.time.Duration
+import java.time.temporal.ChronoUnit
 
 // This is very simple test flow for DvP.
 @CordaSerializable
@@ -147,11 +141,20 @@ class SelectAndLockFlow(val amount: Amount<TokenType>, val delay: Duration = 1.s
 
 // Helper flow for selection testing
 @StartableByRPC
-class JustLocalSelect(val amount: Amount<TokenType>) : FlowLogic<List<StateAndRef<FungibleToken>>>() {
+class JustLocalSelect(val amount: Amount<TokenType>, val timeBetweenSelects: Duration = Duration.of(10, ChronoUnit.SECONDS), val maxSelectAttempts: Int = 5) : FlowLogic<List<StateAndRef<FungibleToken>>>() {
     @Suspendable
     override fun call(): List<StateAndRef<FungibleToken>> {
         val selector = LocalTokenSelector(serviceHub)
-        val tokens = selector.selectTokens(amount)
-        return tokens
+        var selectionAttempts = 0
+        while (selectionAttempts < maxSelectAttempts) {
+            try {
+                return selector.selectTokens(amount)
+            } catch (e: InsufficientBalanceException) {
+                logger.error("failed to select", e)
+                sleep(timeBetweenSelects, true)
+                selectionAttempts++
+            }
+        }
+        throw InsufficientBalanceException("Could not select: ${amount}")
     }
 }

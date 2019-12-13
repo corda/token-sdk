@@ -2,6 +2,7 @@ package com.r3.corda.lib.tokens.selection.api
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
+import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
@@ -42,7 +43,7 @@ abstract class Selector {
             queryBy: TokenQueryBy = TokenQueryBy(),
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     ): List<StateAndRef<FungibleToken>> {
-        return selectTokens(Holder.TokenOnly, lockId, requiredAmount, queryBy)
+        return selectTokens(Holder.TokenOnly(), lockId, requiredAmount, queryBy)
     }
 
     /**
@@ -109,7 +110,7 @@ abstract class Selector {
             queryBy: TokenQueryBy = TokenQueryBy(),
             lockId: UUID = FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     ): Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> {
-        return generateMove(Holder.TokenOnly, lockId, partiesAndAmounts, changeHolder, queryBy)
+        return generateMove(Holder.TokenOnly(), lockId, partiesAndAmounts, changeHolder, queryBy)
     }
 
     /**
