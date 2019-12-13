@@ -15,6 +15,10 @@ import net.corda.core.transactions.TransactionBuilder
 
 /**
  * Inline sub-flow for creating multiple tokens of evolvable token type. This is just a simple flow for now.
+ *
+ * @property transactionStates a list of state to create evolvable token types with
+ * @property participantSessions a list of sessions for participants in the evolvable token types
+ * @property observerSessions a list of sessions for any observers to the create observable token transaction
  */
 class CreateEvolvableTokensFlow
 @JvmOverloads

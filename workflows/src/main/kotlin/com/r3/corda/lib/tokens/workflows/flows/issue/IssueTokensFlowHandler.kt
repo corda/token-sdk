@@ -6,7 +6,7 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 
 /**
- * The flow handler for [IssueTokensFlow].
+ * The in-line flow handler for [IssueTokensFlow].
  */
 class IssueTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable

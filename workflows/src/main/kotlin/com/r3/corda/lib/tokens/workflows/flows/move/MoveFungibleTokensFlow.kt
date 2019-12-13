@@ -19,7 +19,8 @@ import net.corda.core.transactions.TransactionBuilder
  * @param participantSessions sessions with the participants of move transaction
  * @param observerSessions optional sessions with the observer nodes, to witch the transaction will be broadcasted
  * @param queryCriteria additional criteria for token selection
- * @param changeHolder optional holder of the change outputs, it can be confidential identity, if not specified it defaults to caller's legal identity
+ * @param changeHolder optional holder of the change outputs, it can be confidential identity, if not specified it
+ *                     defaults to caller's legal identity
  */
 class MoveFungibleTokensFlow
 @JvmOverloads
