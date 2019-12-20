@@ -1,4 +1,4 @@
-# Using in memory token selection - Experimental Feature
+# Using in memory token selection
 
 ## Overview
 
@@ -6,6 +6,9 @@ To remove potential performance bottleneck and remove the requirement for databa
 in memory implementation of token selection was introduced as an experimental feature of `token-sdk`.
 To use it, you need to have `VaultWatcherService` installed as a `CordaService` on node startup. Indexing
 strategy could be specified, by PublicKey, by ExternalId (if using accounts feature) or just by token type and identifier.
+
+**NOTE: If you are running Corda Enterprise with more than one flow worker thread then it is highly recommended that 
+in-memory token selection be used over the database token selection.**
 
 ## How to switch between database based selection and in memory cache?
 
