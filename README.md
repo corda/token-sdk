@@ -99,7 +99,7 @@ in each module of your CorDapp. For contract modules add:
 In your workflow `build.gradle` add:
 
     cordaCompile "$tokens_release_group:tokens-workflows:$tokens_release_version"
-To be able to use selection of fungible tokens add:
+and add selection module:
 
     cordaCompile "$tokens_release_group:tokens-selection:$tokens_release_version"
 For `FiatCurrency` and `DigitalCurrency` definitions add:
