@@ -18,13 +18,13 @@ pipeline {
     stages {
         stage('Unit Tests') {
             steps {
-                sh "./gradlew clean test --info"
+                sh "./gradlew clean test --debug --stacktrace --no-daemon"
             }
         }
 
         stage('Integration Tests') {
             steps {
-                sh "./gradlew integrationTest --info"
+                sh "./gradlew integrationTest --debug --stacktrace --no-daemon"
             }
         }
     }
