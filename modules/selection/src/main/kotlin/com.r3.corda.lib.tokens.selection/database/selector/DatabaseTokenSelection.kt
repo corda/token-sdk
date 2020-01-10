@@ -4,18 +4,13 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
-import com.r3.corda.lib.tokens.selection.TokenQueryBy
+import com.r3.corda.lib.tokens.selection.*
 import com.r3.corda.lib.tokens.selection.api.Selector
 import com.r3.corda.lib.tokens.selection.database.config.MAX_RETRIES_DEFAULT
 import com.r3.corda.lib.tokens.selection.database.config.PAGE_SIZE_DEFAULT
 import com.r3.corda.lib.tokens.selection.database.config.RETRY_CAP_DEFAULT
 import com.r3.corda.lib.tokens.selection.database.config.RETRY_SLEEP_DEFAULT
 import com.r3.corda.lib.tokens.selection.memory.internal.Holder
-import com.r3.corda.lib.tokens.selection.sortByStateRefAscending
-import com.r3.corda.lib.tokens.selection.tokenAmountCriteria
-import com.r3.corda.lib.tokens.selection.tokenAmountWithHolderCriteria
-import com.r3.corda.lib.tokens.selection.tokenAmountWithIssuerCriteria
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowLogic
@@ -65,7 +60,7 @@ class DatabaseTokenSelection(
             additionalCriteria: QueryCriteria,
             sorter: Sort,
             stateAndRefs: MutableList<StateAndRef<FungibleToken>>,
-            softLockingType: QueryCriteria.SoftLockingType = QueryCriteria.SoftLockingType.UNLOCKED_ONLY
+            softLockingType: QueryCriteria.SoftLockingType = QueryCriteria.SoftLockingType.UNLOCKED_AND_SPECIFIED
     ): Boolean {
         // Didn't need to select any tokens.
         if (requiredAmount.quantity == 0L) {
