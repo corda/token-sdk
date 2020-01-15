@@ -4,8 +4,6 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.selection.api.StateSelectionConfig
 import com.r3.corda.lib.tokens.selection.memory.selector.LocalTokenSelector
 import com.r3.corda.lib.tokens.selection.memory.services.VaultWatcherService
-import com.typesafe.config.ConfigList
-import com.typesafe.config.ConfigValue
 import net.corda.core.cordapp.CordappConfig
 import net.corda.core.cordapp.CordappConfigException
 import net.corda.core.node.ServiceHub
@@ -30,10 +28,10 @@ data class InMemorySelectionConfig(val enabled: Boolean,
             val indexingType = try {
                 (config.get("stateSelection.inMemory.indexingStrategies") as List<Any>).map { VaultWatcherService.IndexingType.valueOf(it.toString()) }
             } catch (e: CordappConfigException) {
-                logger.error("Unable to build selection config due to exception during parsing", e)
+                logger.warn("No indexing method specified. Indexes will be created at run-time for each invocation of selectTokens", e)
                 emptyList<VaultWatcherService.IndexingType>()
             } catch (e: ClassCastException) {
-                logger.error("Unable to build selection config due to exception during parsing", e)
+                logger.warn("No indexing method specified. Indexes will be created at run-time for each invocation of selectTokens", e)
                 emptyList<VaultWatcherService.IndexingType>()
             }
             logger.info("Found in memory token selection configuration with values indexing strategy: $indexingType, cacheSize: $cacheSize")
