@@ -18,7 +18,7 @@ buildscript {
         log4j_version = '2.9.1'
         jackson_version = '2.9.0'
         confidential_id_release_group = "com.r3.corda.lib.ci"
-        confidential_id_release_version = "1.0-RC03"
+        confidential_id_release_version = "1.0"
     }
 
     repositories {
@@ -70,6 +70,7 @@ subprojects {
         maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-dev" }
         maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-releases" }
         maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib-dev" }
+        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib" }
         maven { url "https://repo.gradle.org/gradle/libs-releases-local/" }
     }
 
