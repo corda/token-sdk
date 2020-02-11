@@ -162,3 +162,43 @@ private val tokenSelectionConfig = mapOf<String, Any>("stateSelection" to
                 mapOf<String, Any>("enabled" to true, "cacheSize" to 1024, "indexingStrategies" to listOf("EXTERNAL_ID"))))
 val TokenSelectionCordapps: Set<TestCordapp> =  setOf(TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")).map{ it.withConfig(tokenSelectionConfig) }.toSet()
 ```
+
+### Unlocking Tokens
+
+The db token selector has a feature than when you fall off the end of a flow, any still locked tokens are auto-unlocked.  While this makes
+it easy to get started using the Token SDK, it hides a lot of complexity.  E.g. if a node is down in a Flow, then the tokens will be locked 
+until that node comes back up again - that could be a while.
+
+We believe it's better to explicitly reason about your locking behaviour in the context of your CorDapp.  
+
+We have built in a time based auto unlock, that you can configure with a business appropriate timeout.
+
+In the future we will add hooks into the StateMachine lifecycle that allow you to respond to events.  For the moment if you want to 
+mimic the existing behaviour of the db token selection you can do something like:
+
+```kotlin
+package io.mycompany.common.workflows.flows
+
+import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.tokens.selection.memory.selector.LocalTokenSelector
+import net.corda.core.flows.FlowLogic
+
+abstract class SdxTokenReleaseFlow<out T>  : FlowLogic<T>() {
+
+    lateinit var localTokenSelector: LocalTokenSelector
+
+    @Suspendable
+    override fun call(): T {
+        localTokenSelector = LocalTokenSelector(serviceHub)
+        return try {
+            callThenReleaseTokens()
+        } finally {
+            localTokenSelector.rollback()
+        }
+    }
+
+    @Suspendable
+    abstract fun callThenReleaseTokens(): T
+
+}
+```
