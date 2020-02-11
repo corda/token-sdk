@@ -18,7 +18,7 @@ import net.corda.core.transactions.SignedTransaction
  * and you wish to issue tokens as part of a wider workflow, then use [IssueTokensFlow].
  *
  * @property tokensToIssue a list of [AbstractToken]s to issue
- * @property observers aset of observing [Party]s
+ * @property observers a set of observing [Party]s
  */
 @StartableByService
 @StartableByRPC
@@ -38,6 +38,9 @@ constructor(
     }
 }
 
+/**
+ * Responder flow for [IssueTokens].
+ */
 @InitiatedBy(IssueTokens::class)
 class IssueTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
@@ -69,6 +72,9 @@ constructor(
     }
 }
 
+/**
+ * Responder flow for [ConfidentialIssueTokens].
+ */
 @InitiatedBy(ConfidentialIssueTokens::class)
 class ConfidentialIssueTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable

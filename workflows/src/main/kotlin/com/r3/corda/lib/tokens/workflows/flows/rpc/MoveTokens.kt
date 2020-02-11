@@ -2,23 +2,12 @@ package com.r3.corda.lib.tokens.workflows.flows.rpc
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.workflows.flows.move.ConfidentialMoveFungibleTokensFlow
-import com.r3.corda.lib.tokens.workflows.flows.move.ConfidentialMoveNonFungibleTokensFlow
-import com.r3.corda.lib.tokens.workflows.flows.move.ConfidentialMoveTokensFlowHandler
-import com.r3.corda.lib.tokens.workflows.flows.move.MoveFungibleTokensFlow
-import com.r3.corda.lib.tokens.workflows.flows.move.MoveNonFungibleTokensFlow
-import com.r3.corda.lib.tokens.workflows.flows.move.MoveTokensFlowHandler
+import com.r3.corda.lib.tokens.workflows.flows.move.*
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
 import com.r3.corda.lib.tokens.workflows.utilities.sessionsForParties
 import net.corda.core.contracts.Amount
-import net.corda.core.flows.FlowException
-import net.corda.core.flows.FlowLogic
-import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatedBy
-import net.corda.core.flows.InitiatingFlow
-import net.corda.core.flows.StartableByRPC
-import net.corda.core.flows.StartableByService
+import net.corda.core.flows.*
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
@@ -26,7 +15,17 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 
 /**
- * TODO docs
+ * Initiating flow used to move amounts of tokens to parties, [partiesAndAmounts] specifies what amount of tokens is moved
+ * to each participant with possible change output paid to the [changeHolder].
+ *
+ * Call this for one [TokenType] at a time. If you need to do multiple token types in one transaction then create a new
+ * flow, calling [addMoveFungibleTokens] for each token type.
+ *
+ * @param partiesAndAmounts list of pairing party - amount of token that is to be moved to that party
+ * @param observers optional observing parties to which the transaction will be broadcast
+ * @param queryCriteria additional criteria for token selection
+ * @param changeHolder optional holder of the change outputs, it can be confidential identity, if not specified it
+ *                     defaults to caller's legal identity
  */
 @StartableByService
 @StartableByRPC
@@ -66,7 +65,7 @@ constructor(
 }
 
 /**
- * TODO docs
+ * Responder flow for [MoveFungibleTokens].
  */
 @InitiatedBy(MoveFungibleTokens::class)
 class MoveFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
@@ -75,7 +74,15 @@ class MoveFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>
 }
 
 /**
- * TODO docs
+ * Initiating flow used to move non fungible tokens to parties, [partiesAndTokens] specifies what tokens are moved
+ * to each participant.
+ *
+ * Call this for one [TokenType] at a time. If you need to do multiple token types in one transaction then create a new
+ * flow, calling [addMoveNonFungibleTokens] for each token type.
+ *
+ * @param partyAndToken pairing party - token that is to be moved to that party
+ * @param observers optional observing parties to which the transaction will be broadcast
+ * @param queryCriteria additional criteria for token selection
  */
 @StartableByService
 @StartableByRPC
@@ -101,7 +108,7 @@ constructor(
 }
 
 /**
- * TODO docs
+ * Responder flow for [MoveNonFungibleTokens].
  */
 @InitiatedBy(MoveNonFungibleTokens::class)
 class MoveNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
@@ -112,7 +119,16 @@ class MoveNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Un
 /* Confidential flows. */
 
 /**
- * TODO docs
+ * Version of [MoveFungibleTokens] using confidential identities. Confidential identities are generated and
+ * exchanged for all parties that receive tokens states.
+ *
+ * Call this for one [TokenType] at a time. If you need to do multiple token types in one transaction then create a new
+ * flow, calling [addMoveNonFungibleTokens] for each token type and handle confidential identities exchange yourself.
+ *
+ * @param partiesAndAmounts list of pairing party - amount of token that is to be moved to that party
+ * @param observers optional observing parties to which the transaction will be broadcast
+ * @param queryCriteria additional criteria for token selection
+ * @param changeHolder holder of the change outputs, it can be confidential identity
  */
 @StartableByService
 @StartableByRPC
@@ -157,7 +173,7 @@ class ConfidentialMoveFungibleTokens(
 }
 
 /**
- * TODO docs
+ * Responder flow for [ConfidentialMoveFungibleTokens]
  */
 @InitiatedBy(ConfidentialMoveFungibleTokens::class)
 class ConfidentialMoveFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
@@ -166,7 +182,15 @@ class ConfidentialMoveFungibleTokensHandler(val otherSession: FlowSession) : Flo
 }
 
 /**
- * TODO docs
+ * Version of [MoveNonFungibleTokens] using confidential identities. Confidential identities are generated and
+ * exchanged for all parties that receive tokens states.
+ *
+ * Call this for one [TokenType] at a time. If you need to do multiple token types in one transaction then create a new
+ * flow, calling [addMoveFungibleTokens] for each token type and handle confidential identities exchange yourself.
+ *
+ * @param partyAndToken list of pairing party - token that is to be moved to that party
+ * @param observers optional observing parties to which the transaction will be broadcast
+ * @param queryCriteria additional criteria for token selection
  */
 @StartableByService
 @StartableByRPC
@@ -190,7 +214,7 @@ class ConfidentialMoveNonFungibleTokens(
 }
 
 /**
- * TODO docs
+ * Responder flow for [ConfidentialMoveNonFungibleTokens].
  */
 @InitiatedBy(ConfidentialMoveNonFungibleTokens::class)
 class ConfidentialMoveNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
