@@ -202,3 +202,9 @@ abstract class SdxTokenReleaseFlow<out T>  : FlowLogic<T>() {
 
 }
 ```
+
+### Exception Handling
+
+There is a new exception in LTS.  Previously if there were not enough tokens we used to throw an `IllegalStateException`, and indeed we still
+do throw this in certain circumstances.  But if you do not have enough tokens we now throw an `InsufficientBalanceException` so that you can
+pick this out explicitly.  NB you may need to catch both `IllegalStateException` and `InsufficientBalanceException` now.
