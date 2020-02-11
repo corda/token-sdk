@@ -183,7 +183,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.selection.memory.selector.LocalTokenSelector
 import net.corda.core.flows.FlowLogic
 
-abstract class SdxTokenReleaseFlow<out T>  : FlowLogic<T>() {
+abstract class TokenReleaseFlow<out T>  : FlowLogic<T>() {
 
     lateinit var localTokenSelector: LocalTokenSelector
 
