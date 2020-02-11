@@ -27,7 +27,8 @@ constructor(
     override fun call(): SignedTransaction {
         val observerSessions = sessionsForParties(observers)
         val issuerSession = initiateFlow(issuer)
-        return subFlow(RedeemFungibleTokensFlow(amount, issuerSession, changeHolder ?: ourIdentity, observerSessions, queryCriteria))
+        return subFlow(RedeemFungibleTokensFlow(amount, issuerSession, changeHolder
+                ?: ourIdentity, observerSessions, queryCriteria))
     }
 }
 
@@ -72,13 +73,20 @@ constructor(
         val amount: Amount<TokenType>,
         val issuer: Party,
         val observers: List<Party> = emptyList(),
-        val queryCriteria: QueryCriteria? = null
+        val queryCriteria: QueryCriteria? = null,
+        val changeHolder: AbstractParty? = null
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
         val observerSessions = sessionsForParties(observers)
         val issuerSession = initiateFlow(issuer)
-        return subFlow(ConfidentialRedeemFungibleTokensFlow(amount, issuerSession, observerSessions, queryCriteria))
+        return subFlow(ConfidentialRedeemFungibleTokensFlow(
+                amount = amount,
+                issuerSession = issuerSession,
+                observerSessions = observerSessions,
+                additionalQueryCriteria = queryCriteria,
+                changeHolder = changeHolder
+        ))
     }
 }
 

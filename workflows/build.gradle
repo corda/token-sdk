@@ -3,8 +3,8 @@ apply plugin: 'net.corda.plugins.quasar-utils'
 apply plugin: 'net.corda.plugins.cordapp'
 
 cordapp {
-    targetPlatformVersion 4
-    minimumPlatformVersion 4
+    targetPlatformVersion 5
+    minimumPlatformVersion 5
     workflow {
         name "Token SDK Workflows"
         vendor "R3"
@@ -49,9 +49,7 @@ dependencies {
     cordaCompile ("$corda_release_group:corda-core:$corda_release_version") {
         changing = true
     }
-    cordaCompile ("$corda_release_group:corda-confidential-identities:$corda_release_version") {
-        changing = true
-    }
+    cordaCompile "$confidential_id_release_group:ci-workflows:$confidential_id_release_version"
 
     // Logging.
     testCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
@@ -65,6 +63,7 @@ dependencies {
     cordaCompile project(":contracts")
     cordaCompile project(":modules:money")
     cordaCompile project(":modules:contracts-for-testing")
+    cordaCompile project(":modules:selection")
 }
 
 jar {

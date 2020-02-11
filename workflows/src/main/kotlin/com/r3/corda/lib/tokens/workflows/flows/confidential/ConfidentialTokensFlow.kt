@@ -6,6 +6,7 @@ import com.r3.corda.lib.tokens.workflows.internal.flows.confidential.AnonymisePa
 import com.r3.corda.lib.tokens.workflows.utilities.toWellKnownParties
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
+import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 
 

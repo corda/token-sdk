@@ -340,11 +340,12 @@ _Confidential version:_ `ConfidentialRedeemFungibleTokens`, _responder_: `Confid
 ```kotlin
 val issuerSession = initateFlow(issuer)
 val observerSession = initatieFlow(observer)
+val changeHolder: AbstractParty = ... // It can be either confidential identity belonging to tokens holder or well known identity of holder
 // It is also possible to provide custom query criteria for token selection.
 subFlow(RedeemFungibleTokensFlow(
     amount = 1000.GBP, 
     issuerSession = issuerSession,
-    changeOwner = TODO(),
+    changeHolder = changeHolder,
     observerSessions = listOf(observerSession)
 ))
 ```
@@ -450,4 +451,22 @@ Similar to the above you can create `IssuedTokenType` using your new token:
 ```kotlin
 val issuer: Party = ...
 val issuedTokenType: IssuedTokenType = myTokenType issuedBy issuer
+```
+
+#### Specyfing the notary from the notary list in network parameters
+
+To always use notary of your choice in CorDapp, it needs specifying in 
+[CorDapp config](https://docs.corda.net/cordapp-build-systems.html#cordapp-configuration-files). Add notary X500 name 
+(one from network parameters):
+
+```text
+notary = "O=Notary,L=London,C=GB"
+```
+
+All flows from `token-sdk` will use this notary. If you want to use it from your custom flows, you can call:
+
+```kotlin
+val notary = getPreferredNotary(serviceHub)
+// And pass it to transaction builder
+TransactionBuilder(notary = notary)
 ```

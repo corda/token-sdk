@@ -4,11 +4,7 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType
 import java.util.*
 
 /**
- * This is a temporary class while we find a better implementation. It's a wrapper for the Java Currency which doesn't
- * implement the Token SDK interfaces. It also adds specificity around the money, in question, being fiat. Note that
- * fiat money backed stable coins such as Tether would be classed as a [FiatCurrency].
- *
- * @property currency the java.util.Currency which this token type should wrap.
+ * This class is used to return a [TokenType] with the required currency code and fraction digits for fiat currencies.
  */
 class FiatCurrency {
     companion object {

@@ -14,7 +14,8 @@ At the end of this section you will know how to:
 * construct business logic using the building blocks from `tokens-sdk`.
 
 If you would like to see how to write simple integration tests using similar example take a look at: 
-[driver test](../workflows/src/test/kotlin/com/r3/corda/lib/tokens/workflows/TokenDriverTest.kt)
+[driver test](../workflows/src/integrationTest/kotlin/com/r3/corda/lib/tokens/integrationTest/TokenDriverTest.kt)
+
 
 ## Basic components
 
@@ -37,7 +38,7 @@ we expect to change over time. In our use case house valuation can change.
 @BelongsToContract(HouseContract::class)
 data class House(
         val address: String,
-        val valuation: Amount<FiatCurrency>,
+        val valuation: Amount<TokenType>,
         override val maintainers: List<Party>,
         override val fractionDigits: Int = 0,
         override val linearId: UniqueIdentifier
@@ -79,10 +80,10 @@ Let's take a look how to create and issue `EvolvableTokenType` onto the ledger.
     val house: House = House(...)
     val notary: Party = getPreferredNotary(serviceHub) // Or provide notary party using your favourite function from NotaryUtilities.
     // We need to create the evolvable token first.
-    subFlow(CreateEvolvableToken(house withNotary notary))
+    subFlow(CreateEvolvableTokens(house withNotary notary))
 ```
 
-`CreateEvolvableToken` flow creates the evolvable state and shares it with maintainers and potential observers. To issue
+`CreateEvolvableTokens` flow creates the evolvable state and shares it with maintainers and potential observers. To issue
 a token that references the `EvolvableTokenType` we have to call one of the flows from the family of `IssueTokens` flows.
 
 **Note** Because `EvolvableTokenType` is a `State` but not a `TokenType`, to issue it onto the ledger you need to convert it into `TokenPointer` first.
@@ -109,7 +110,8 @@ fungible `GBP` tokens is straightforward:
 
 ```kotlin
     // Let's print some money!
-    subFlow(IssueTokens(1_000_00.GBP issuedBy issuerParty heldBy otherParty)) // Initiating version of IssueFlow
+    val otherParty: Party = ...
+    subFlow(IssueTokens(listOf(1_000_00.GBP issuedBy issuerParty heldBy otherParty))) // Initiating version of IssueFlow
 ```
 
 **Note** There are different versions of `IssueFlow` inlined (that require you to pass in flow sessions) and initiating (callable via RPC),
@@ -145,7 +147,7 @@ Then construct transaction builder with house move to the new holder:
         val housePtr = house.toPointer<House>()
         // We can specify preferred notary in cordapp config file, otherwise the first one from network parameters is chosen.
         val txBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
-        addMoveTokens(txBuilder, housePointer, newHolder)
+        addMoveNonFungibleTokens(txBuilder, serviceHub, housePtr, newHolder)
         ...
     }
 ```
@@ -180,7 +182,7 @@ identities before the final phase:
 
 ```kotlin
         ...
-        subFlow(IdentitySyncFlow.Send(session, txBuilder.toWireTransaction(serviceHub)))
+        subFlow(SyncKeyMappingFlow(session, txBuilder.toWireTransaction(serviceHub)))
         ...
 ```
 
@@ -226,14 +228,14 @@ The responder flow is pretty straightforward to write calling corresponding flow
             // Generate fresh key, possible change outputs will belong to this key.
             val changeHolder = serviceHub.keyManagementService.freshKeyAndCert(ourIdentityAndCert, false).party.anonymise()
             // Chose state and refs to send back.
-            val (inputs, outputs) = TokenSelection(serviceHub).generateMove(
-                    lockId = runId.uuid,
-                    partyAndAmounts = listOf(PartyAndAmount(otherSession.counterparty, priceNotification.amount)),
-                    changeHolder = changeHolder
+            val (inputs, outputs) = DatabaseTokenSelection(serviceHub).generateMove(
+                lockId = runId.uuid,
+                partiesAndAmounts = listOf(Pair(otherSession.counterparty, priceNotification.amount)),
+                changeHolder = changeHolder
             )
             subFlow(SendStateAndRefFlow(otherSession, inputs))
             otherSession.send(outputs)
-            subFlow(IdentitySyncFlow.Receive(otherSession))
+            subFlow(SyncKeyMappingFlowHandler(otherSession))
             subFlow(object : SignTransactionFlow(otherSession) {
                 override fun checkTransaction(stx: SignedTransaction) {
                     // We should perform some basic sanity checks before signing the transaction. This step was omitted for simplicity.
@@ -244,7 +246,7 @@ The responder flow is pretty straightforward to write calling corresponding flow
     }
 ```
 
-Notice the ```TokenSelection(serviceHub).generateMove(...)``` used for chosing tokens that cover the required amount.
+Notice the ```DatabaseTokenSelection(serviceHub).generateMove(...)``` used for chosing tokens that cover the required amount.
 
 ## Extra advanced topic
 ### Updating evolvable token

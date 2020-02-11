@@ -4,7 +4,9 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.schemas.PersistentState
+import javax.persistence.AttributeConverter
 import javax.persistence.Column
+import javax.persistence.Convert
 import javax.persistence.Entity
 import javax.persistence.Index
 import javax.persistence.Table
@@ -26,12 +28,12 @@ class PersistentNonFungibleToken(
         var issuer: Party,
 
         @Column(name = "holder")
-        // TODO deconstruct it into owning key + nullable name
         var holder: AbstractParty?,
 
         // The fully qualified class name of the class which implements the token tokenType.
         // This is either a fixed token or a evolvable token.
         @Column(name = "token_class", nullable = false)
+        @Convert(converter = TokenClassConverter::class)
         var tokenClass: Class<*>,
 
         // This can either be a symbol or a linearID depending on whether the token is evolvable or fixed.
@@ -42,3 +44,13 @@ class PersistentNonFungibleToken(
         var tokenIdentifier: String
 
 ) : PersistentState()
+
+class TokenClassConverter : AttributeConverter<Class<*>, String> {
+    override fun convertToDatabaseColumn(attribute: Class<*>): String {
+        return attribute.name
+    }
+
+    override fun convertToEntityAttribute(dbData: String): Class<*> {
+        return Class.forName(dbData)
+    }
+}

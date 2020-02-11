@@ -13,6 +13,15 @@ import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
+/**
+ * A flow to update an existing evolvable token type which is already recorded on the ledger. This is an IN-LINE flow
+ * which means it MUST be invoked with a subFlow call from an Initiating Flow.
+ *
+ * @property oldStateAndRef the existing evolvable token type to update
+ * @property newState the new version of the evolvable token type
+ * @property participantSessions a list of sessions for participants in the evolvable token types
+ * @property observerSessions a list of sessions for any observers to the create observable token transaction
+ */
 class UpdateEvolvableTokenFlow(
         val oldStateAndRef: StateAndRef<EvolvableTokenType>,
         val newState: EvolvableTokenType,
@@ -29,6 +38,10 @@ class UpdateEvolvableTokenFlow(
 
     @Suspendable
     override fun call(): SignedTransaction {
+        require(ourIdentity in oldStateAndRef.state.data.maintainers) {
+            "This flow can only be started by existing maintainers of the EvolvableTokenType."
+        }
+
         // Create a transaction which updates the ledger with the new evolvable token.
         // The tokenHolders listed as maintainers in the old state should be the signers.
         // TODO Should this be both old and new maintainer lists?

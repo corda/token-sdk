@@ -1,9 +1,14 @@
 package com.r3.corda.lib.tokens.workflows.internal.testflows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.ci.workflows.SyncKeyMappingFlow
+import com.r3.corda.lib.ci.workflows.SyncKeyMappingFlowHandler
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
+import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
+import com.r3.corda.lib.tokens.selection.memory.selector.LocalTokenSelector
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveNonFungibleTokens
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveTokens
@@ -14,18 +19,19 @@ import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistribu
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlowHandler
 import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
-import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
-import net.corda.confidential.IdentitySyncFlow
 import net.corda.core.contracts.Amount
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.utilities.seconds
 import net.corda.core.utilities.unwrap
+import java.time.Duration
+import java.time.temporal.ChronoUnit
 
 // This is very simple test flow for DvP.
 @CordaSerializable
@@ -47,7 +53,7 @@ class DvPFlow(val house: House, val newOwner: Party) : FlowLogic<SignedTransacti
         val outputs = session.receive<List<FungibleToken>>().unwrap { it }
         addMoveTokens(txBuilder, inputs, outputs)
         // Synchronise any confidential identities
-        subFlow(IdentitySyncFlow.Send(session, txBuilder.toWireTransaction(serviceHub)))
+        subFlow(SyncKeyMappingFlow(session, txBuilder.toWireTransaction(serviceHub)))
         val ourSigningKeys = txBuilder.toLedgerTransaction(serviceHub).ourSigningKeys(serviceHub)
         val initialStx = serviceHub.signInitialTransaction(txBuilder, signingPubKeys = ourSigningKeys)
         val stx = subFlow(CollectSignaturesFlow(initialStx, listOf(session), ourSigningKeys))
@@ -67,14 +73,14 @@ class DvPFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
         // TODO This is API pain, we assumed that we could just modify TransactionBuilder, but... it cannot be sent over the wire, because non-serializable
         // We need custom serializer and some custom flows to do checks.
         val changeHolder = serviceHub.keyManagementService.freshKeyAndCert(ourIdentityAndCert, false).party.anonymise()
-        val (inputs, outputs) = TokenSelection(serviceHub).generateMove(
+        val (inputs, outputs) = DatabaseTokenSelection(serviceHub).generateMove(
                 lockId = runId.uuid,
-                partyAndAmounts = listOf(PartyAndAmount(otherSession.counterparty, dvPNotification.amount)),
+                partiesAndAmounts = listOf(Pair(otherSession.counterparty, dvPNotification.amount)),
                 changeHolder = changeHolder
         )
         subFlow(SendStateAndRefFlow(otherSession, inputs))
         otherSession.send(outputs)
-        subFlow(IdentitySyncFlow.Receive(otherSession))
+        subFlow(SyncKeyMappingFlowHandler(otherSession))
         subFlow(object : SignTransactionFlow(otherSession) {
             override fun checkTransaction(stx: SignedTransaction) {}
         }
@@ -119,5 +125,36 @@ class RedeemFungibleGBP(
     @Suspendable
     override fun call(): SignedTransaction {
         return subFlow(RedeemFungibleTokens(amount, issuerParty, emptyList(), null))
+    }
+}
+
+// Helper flow for selection testing
+@StartableByRPC
+class SelectAndLockFlow(val amount: Amount<TokenType>, val delay: Duration = 1.seconds) : FlowLogic<Unit>() {
+    @Suspendable
+    override fun call() {
+        val selector = LocalTokenSelector(serviceHub)
+        selector.selectTokens(amount)
+        sleep(delay)
+    }
+}
+
+// Helper flow for selection testing
+@StartableByRPC
+class JustLocalSelect(val amount: Amount<TokenType>, val timeBetweenSelects: Duration = Duration.of(10, ChronoUnit.SECONDS), val maxSelectAttempts: Int = 5) : FlowLogic<List<StateAndRef<FungibleToken>>>() {
+    @Suspendable
+    override fun call(): List<StateAndRef<FungibleToken>> {
+        val selector = LocalTokenSelector(serviceHub)
+        var selectionAttempts = 0
+        while (selectionAttempts < maxSelectAttempts) {
+            try {
+                return selector.selectTokens(amount)
+            } catch (e: InsufficientBalanceException) {
+                logger.error("failed to select", e)
+                sleep(timeBetweenSelects, true)
+                selectionAttempts++
+            }
+        }
+        throw InsufficientBalanceException("Could not select: ${amount}")
     }
 }

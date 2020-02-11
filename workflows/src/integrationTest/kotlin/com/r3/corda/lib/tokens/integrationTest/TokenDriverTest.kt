@@ -6,6 +6,7 @@ import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.*
 import com.r3.corda.lib.tokens.money.GBP
+import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.testing.states.Ruble
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
@@ -27,12 +28,15 @@ import net.corda.core.internal.concurrent.transpose
 import net.corda.core.messaging.startFlow
 import net.corda.core.messaging.vaultQueryBy
 import net.corda.core.utilities.getOrThrow
+import net.corda.core.utilities.millis
+import net.corda.core.utilities.seconds
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.BOC_NAME
 import net.corda.testing.core.DUMMY_BANK_A_NAME
 import net.corda.testing.core.DUMMY_BANK_B_NAME
 import net.corda.testing.core.singleIdentity
 import net.corda.testing.driver.DriverParameters
+import net.corda.testing.driver.OutOfProcess
 import net.corda.testing.driver.driver
 import net.corda.testing.driver.internal.incrementalPortAllocation
 import net.corda.testing.node.TestCordapp
@@ -42,15 +46,16 @@ import org.junit.Test
 
 class TokenDriverTest {
 
-
     @Test
     fun `should allow issuance of inline defined token`() {
         driver(DriverParameters(
-                portAllocation = incrementalPortAllocation(15000),
+                portAllocation = incrementalPortAllocation(),
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows")
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
                 ),
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
         )) {
@@ -70,13 +75,15 @@ class TokenDriverTest {
     @Test(expected = TransactionVerificationException.ContractRejection::class)
     fun `should prevent issuance of a token with a null jarHash that does not use an inline tokenType`() {
         driver(DriverParameters(
-                portAllocation = incrementalPortAllocation(10000),
+                portAllocation = incrementalPortAllocation(),
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci")
                 ),
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
         )) {
@@ -91,16 +98,18 @@ class TokenDriverTest {
         }
     }
 
-    @Test(timeout = 300_000)
+    @Test(timeout = 500_000)
     fun `beefy tokens integration test`() {
         driver(DriverParameters(
-                portAllocation = incrementalPortAllocation(20000),
+                portAllocation = incrementalPortAllocation(),
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing")
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
                 ),
                 // TODO this should be default to 4 in main corda no?
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
@@ -195,6 +204,116 @@ class TokenDriverTest {
             nodeA.rpc.watchForTransaction(redeemGBPTx).getOrThrow()
             assertThat(nodeA.rpc.vaultQueryBy<FungibleToken>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(800_000L.GBP issuedBy issuerParty)
             assertThat(issuer.rpc.vaultQueryBy<FungibleToken>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
+        }
+    }
+
+    @Test
+    fun `tokens locked in memory are still locked after restart`() {
+        driver(DriverParameters(
+                inMemoryDB = false,
+                startNodesInProcess = false,
+                cordappsForAllNodes = listOf(
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
+                ),
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList()))
+        ) {
+            val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+            val nodeParty = node.nodeInfo.singleIdentity()
+            // Issue 50.GBP to self
+            node.rpc.startFlowDynamic(
+                    IssueTokens::class.java,
+                    listOf(50.GBP issuedBy nodeParty heldBy nodeParty),
+                    emptyList<Party>()
+            ).returnValue.getOrThrow()
+            // Issue 50.USD to self
+            node.rpc.startFlowDynamic(
+                    IssueTokens::class.java,
+                    listOf(50.USD issuedBy nodeParty heldBy nodeParty),
+                    emptyList<Party>()
+            ).returnValue.getOrThrow()
+            // Run select and lock tokens flow with 5 seconds sleep in it.
+            node.rpc.startFlowDynamic(
+                    SelectAndLockFlow::class.java,
+                    50.GBP,
+                    5.seconds
+            )
+            // Stop node
+            (node as OutOfProcess).process.destroyForcibly()
+            node.stop()
+
+            // Restart the node
+            val restartedNode = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+            // Try to spend same states, they should be locked after restart, so we expect insufficient balance exception to be thrown.
+            assertThatExceptionOfType(CordaRuntimeException::class.java).isThrownBy {
+                restartedNode.rpc.startFlowDynamic(
+                        SelectAndLockFlow::class.java,
+                        50.GBP,
+                        10.millis
+                ).returnValue.getOrThrow()
+            }.withMessageContaining("InsufficientBalanceException: Insufficient spendable states identified for 50.00 TokenType(tokenIdentifier='GBP', fractionDigits=2)")
+            // This should just work.
+            restartedNode.rpc.startFlowDynamic(
+                    SelectAndLockFlow::class.java,
+                    50.USD,
+                    10.millis
+            ).returnValue.getOrThrow()
+        }
+    }
+
+    @Test
+    fun `tokens are loaded back in memory after restart`() {
+        driver(DriverParameters(
+                inMemoryDB = false,
+                startNodesInProcess = false,
+                cordappsForAllNodes = listOf(
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
+                ),
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList()))
+        ) {
+            val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+            val nodeParty = node.nodeInfo.singleIdentity()
+            // Issue 50.GBP to self
+            val gbpTx = node.rpc.startFlowDynamic(
+                    IssueTokens::class.java,
+                    listOf(50.GBP issuedBy nodeParty heldBy nodeParty),
+                    emptyList<Party>()
+            ).returnValue.getOrThrow()
+            // Issue 50.USD to self
+            val usdTx = node.rpc.startFlowDynamic(
+                    IssueTokens::class.java,
+                    listOf(50.USD issuedBy nodeParty heldBy nodeParty),
+                    emptyList<Party>()
+            ).returnValue.getOrThrow()
+
+            // Stop node
+            (node as OutOfProcess).process.destroyForcibly()
+            node.stop()
+
+            // Restart the node
+            val restartedNode = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+
+            // Select both states using LocalTokenSelector
+            val gbpToken = restartedNode.rpc.startFlowDynamic(
+                    JustLocalSelect::class.java,
+                    30.GBP
+            ).returnValue.getOrThrow().single()
+            assertThat(gbpToken).isEqualTo(gbpTx.singleOutput<FungibleToken>())
+
+            val usdToken = restartedNode.rpc.startFlowDynamic(
+                    JustLocalSelect::class.java,
+                    25.USD
+            ).returnValue.getOrThrow().single()
+            assertThat(usdToken).isEqualTo(usdTx.singleOutput<FungibleToken>())
         }
     }
 }

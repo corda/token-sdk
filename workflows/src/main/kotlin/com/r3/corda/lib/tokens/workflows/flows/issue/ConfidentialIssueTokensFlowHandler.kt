@@ -8,7 +8,7 @@ import net.corda.core.flows.FlowSession
 import net.corda.core.utilities.unwrap
 
 /**
- * The flow handler for [ConfidentialIssueTokensFlow].
+ * The in-line flow handler for [ConfidentialIssueTokensFlow].
  */
 class ConfidentialIssueTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable

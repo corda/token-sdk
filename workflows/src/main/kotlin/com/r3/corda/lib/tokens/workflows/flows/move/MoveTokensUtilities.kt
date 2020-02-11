@@ -5,10 +5,12 @@ import com.r3.corda.lib.tokens.contracts.commands.MoveTokenCommand
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.workflows.internal.selection.TokenSelection
+import com.r3.corda.lib.tokens.selection.TokenQueryBy
+import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.internal.selection.generateMoveNonFungible
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
+import com.r3.corda.lib.tokens.workflows.types.toPairs
 import com.r3.corda.lib.tokens.workflows.utilities.addTokenTypeJar
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
@@ -84,6 +86,8 @@ fun addMoveTokens(
  * Adds multiple token moves to transaction. [partiesAndAmounts] parameter specify which parties should receive amounts of the token.
  * With possible change paid to [changeHolder]. This method will combine multiple token amounts from different issuers if needed.
  * If you would like to choose only tokens from one issuer you can provide optional [queryCriteria] for move generation.
+ * Note: For now this method always uses database token selection, to use in memory one, use [addMoveTokens] with already selected
+ * input and output states.
  */
 @Suspendable
 @JvmOverloads
@@ -94,13 +98,10 @@ fun addMoveFungibleTokens(
         changeHolder: AbstractParty,
         queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-    val tokenSelection = TokenSelection(serviceHub)
-    val (inputs, outputs) = tokenSelection.generateMove(
-            lockId = transactionBuilder.lockId,
-            partyAndAmounts = partiesAndAmounts,
-            queryCriteria = queryCriteria,
-            changeHolder = changeHolder
-    )
+    // TODO For now default to database query, but switch this line on after we can change API in 2.0
+//    val selector: Selector = ConfigSelection.getPreferredSelection(serviceHub)
+    val selector = DatabaseTokenSelection(serviceHub)
+    val (inputs, outputs) = selector.generateMove(partiesAndAmounts.toPairs(), changeHolder, TokenQueryBy(queryCriteria = queryCriteria), transactionBuilder.lockId)
     return addMoveTokens(transactionBuilder = transactionBuilder, inputs = inputs, outputs = outputs)
 }
 
@@ -108,6 +109,8 @@ fun addMoveFungibleTokens(
  * Add single move of [amount] of token to the new [holder]. Possible change output will be paid to [changeHolder].
  * This method will combine multiple token amounts from different issuers if needed.
  * If you would like to choose only tokens from one issuer you can provide optional [queryCriteria] for move generation.
+ * Note: For now this method always uses database token selection, to use in memory one, use [addMoveTokens] with already selected
+ * input and output states.
  */
 @Suspendable
 @JvmOverloads
@@ -146,7 +149,6 @@ fun addMoveNonFungibleTokens(
     return generateMoveNonFungible(transactionBuilder, PartyAndToken(holder, token), serviceHub.vaultService, queryCriteria)
 }
 
-// TODO don't need it
 /**
  * Add single move of token to the new holder specified using [partyAndToken] parameter.
  * Provide optional [queryCriteria] for move generation.
