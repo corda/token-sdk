@@ -2,10 +2,10 @@
 
 ## Overview
 
-To remove potential performance bottleneck and remove the requirement for database specific SQL to be provided for each backend,
-in memory implementation of token selection was introduced as an experimental feature of `token-sdk`.
-To use it, you need to have `VaultWatcherService` installed as a `CordaService` on node startup. Indexing
-strategy could be specified, by PublicKey, by ExternalId (if using accounts feature) or just by token type and identifier.
+To remove potential performance bottlenecks and remove the requirement for database specific SQL to be provided for each backend,
+a threadsafe, in memory implementation of token selection was introduced as an experimental feature of `token-sdk`.
+To use it, you need to have `VaultWatcherService` installed as a `CordaService` on node startup. An Indexing
+strategy can be specified, by PublicKey or by ExternalId (if using accounts feature) or just by token type and identifier.
 
 ## How to switch between database based selection and in memory cache?
 
@@ -16,9 +16,10 @@ In your [CorDapp config](https://docs.corda.net/cordapp-build-systems.html#corda
 
 ```text
 stateSelection {
-    in_memory {
-           indexingStrategy: ["external_id"|"public_key"|"token_only"]
-           cacheSize: Int
+    inMemory {
+        enabled: true
+        indexingStrategy: ["EXTERNAL_ID"|"PUBLIC_KEY"|"TOKEN_ONLY"]
+        cacheSize: 2048
     }
 }
 ```
@@ -36,8 +37,9 @@ nodeDefaults {
         config '''
             stateSelection {
                 inMemory {
-                       indexingStrategy: "token_only"
-                       cacheSize: 1024
+                    enabled: true
+                    indexingStrategy: ["EXTERNAL_ID"]
+                    cacheSize: 1024
                 }
             }
         '''
@@ -148,4 +150,15 @@ val (inputs, outputs) = localTokenSelector.generateMove(
         changeHolder = this.ourIdentity,
         // Get tokens issued by issuerParty and notarised by notaryParty
         queryBy = TokenQueryBy(issuer = issuerParty, predicate = { it.state.notary == notaryParty }))
-``` 
+```
+
+### Configuring the LocalTokenSelector in Driver based tests
+
+To avoid warnings in your Driver based tests, when creating the list of test cordapps you can do something similar to:
+
+```kotlin
+private val tokenSelectionConfig = mapOf<String, Any>("stateSelection" to
+        mapOf<String, Any>("inMemory" to
+                mapOf<String, Any>("enabled" to true, "cacheSize" to 1024, "indexingStrategies" to listOf("EXTERNAL_ID"))))
+val TokenSelectionCordapps: Set<TestCordapp> =  setOf(TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")).map{ it.withConfig(tokenSelectionConfig) }.toSet()
+```
