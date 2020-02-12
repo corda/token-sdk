@@ -18,7 +18,7 @@ In your [CorDapp config](https://docs.corda.net/cordapp-build-systems.html#corda
 stateSelection {
     inMemory {
         enabled: true
-        indexingStrategy: ["EXTERNAL_ID"|"PUBLIC_KEY"|"TOKEN_ONLY"]
+        indexingStrategies: ["EXTERNAL_ID"|"PUBLIC_KEY"|"TOKEN_ONLY"]
         cacheSize: 2048
     }
 }
@@ -38,7 +38,7 @@ nodeDefaults {
             stateSelection {
                 inMemory {
                     enabled: true
-                    indexingStrategy: ["EXTERNAL_ID"]
+                    indexingStrategies: ["EXTERNAL_ID"]
                     cacheSize: 1024
                 }
             }
