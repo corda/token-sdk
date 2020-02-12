@@ -208,3 +208,8 @@ abstract class TokenReleaseFlow<out T>  : FlowLogic<T>() {
 There is a new exception in LTS.  Previously if there were not enough tokens we used to throw an `IllegalStateException`, and indeed we still
 do throw this in certain circumstances.  But if you do not have enough tokens we now throw an `InsufficientBalanceException` so that you can
 pick this out explicitly.  NB you may need to catch both `IllegalStateException` and `InsufficientBalanceException` now.
+
+### Note about re-using LTS
+
+It is worth noting that you should use a new LTS for each query - this is because it is an app concern regarding what rollback means if you make two
+different queries with the same LTS.
