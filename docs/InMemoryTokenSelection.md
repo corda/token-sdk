@@ -2,10 +2,10 @@
 
 ## Overview
 
-To remove potential performance bottleneck and remove the requirement for database specific SQL to be provided for each backend,
-in memory implementation of token selection was introduced as an experimental feature of `token-sdk`.
-To use it, you need to have `VaultWatcherService` installed as a `CordaService` on node startup. Indexing
-strategy could be specified, by PublicKey, by ExternalId (if using accounts feature) or just by token type and identifier.
+To remove potential performance bottlenecks and remove the requirement for database specific SQL to be provided for each backend,
+a threadsafe, in memory implementation of token selection was introduced as an experimental feature of `token-sdk`.
+To use it, you need to have `VaultWatcherService` installed as a `CordaService` on node startup. An Indexing
+strategy can be specified, by PublicKey or by ExternalId (if using accounts feature) or just by token type and identifier.
 
 ## How to switch between database based selection and in memory cache?
 
@@ -16,9 +16,10 @@ In your [CorDapp config](https://docs.corda.net/cordapp-build-systems.html#corda
 
 ```text
 stateSelection {
-    in_memory {
-           indexingStrategy: ["external_id"|"public_key"|"token_only"]
-           cacheSize: Int
+    inMemory {
+        enabled: true
+        indexingStrategies: ["EXTERNAL_ID"|"PUBLIC_KEY"|"TOKEN_ONLY"]
+        cacheSize: 2048
     }
 }
 ```
@@ -36,8 +37,9 @@ nodeDefaults {
         config '''
             stateSelection {
                 inMemory {
-                       indexingStrategy: "token_only"
-                       cacheSize: 1024
+                    enabled: true
+                    indexingStrategies: ["EXTERNAL_ID"]
+                    cacheSize: 1024
                 }
             }
         '''
@@ -148,4 +150,66 @@ val (inputs, outputs) = localTokenSelector.generateMove(
         changeHolder = this.ourIdentity,
         // Get tokens issued by issuerParty and notarised by notaryParty
         queryBy = TokenQueryBy(issuer = issuerParty, predicate = { it.state.notary == notaryParty }))
-``` 
+```
+
+### Configuring the LocalTokenSelector in Driver based tests
+
+To avoid warnings in your Driver based tests, when creating the list of test cordapps you can do something similar to:
+
+```kotlin
+private val tokenSelectionConfig = mapOf<String, Any>("stateSelection" to
+        mapOf<String, Any>("inMemory" to
+                mapOf<String, Any>("enabled" to true, "cacheSize" to 1024, "indexingStrategies" to listOf("EXTERNAL_ID"))))
+val TokenSelectionCordapps: Set<TestCordapp> =  setOf(TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")).map{ it.withConfig(tokenSelectionConfig) }.toSet()
+```
+
+### Unlocking Tokens
+
+The db token selector has a feature than when you fall off the end of a flow, any still locked tokens are auto-unlocked.  While this makes
+it easy to get started using the Token SDK, it hides a lot of complexity.  E.g. if a node is down in a Flow, then the tokens will be locked 
+until that node comes back up again - that could be a while.
+
+We believe it's better to explicitly reason about your locking behaviour in the context of your CorDapp.  
+
+We have built in a time based auto unlock, that you can configure with a business appropriate timeout.
+
+In the future we will add hooks into the StateMachine lifecycle that allow you to respond to events.  For the moment if you want to 
+mimic the existing behaviour of the db token selection you can do something like:
+
+```kotlin
+package io.mycompany.common.workflows.flows
+
+import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.tokens.selection.memory.selector.LocalTokenSelector
+import net.corda.core.flows.FlowLogic
+
+abstract class TokenReleaseFlow<out T>  : FlowLogic<T>() {
+
+    lateinit var localTokenSelector: LocalTokenSelector
+
+    @Suspendable
+    override fun call(): T {
+        localTokenSelector = LocalTokenSelector(serviceHub)
+        return try {
+            callThenReleaseTokens()
+        } finally {
+            localTokenSelector.rollback()
+        }
+    }
+
+    @Suspendable
+    abstract fun callThenReleaseTokens(): T
+
+}
+```
+
+### Exception Handling
+
+There is a new exception in LTS.  Previously if there were not enough tokens we used to throw an `IllegalStateException`, and indeed we still
+do throw this in certain circumstances.  But if you do not have enough tokens we now throw an `InsufficientBalanceException` so that you can
+pick this out explicitly.  NB you may need to catch both `IllegalStateException` and `InsufficientBalanceException` now.
+
+### Note about re-using LTS
+
+It is worth noting that you should use a new LTS for each query - this is because it is an app concern regarding what rollback means if you make two
+different queries with the same LTS.
