@@ -2,6 +2,7 @@ package com.r3.corda.lib.tokens.workflows.utilities
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleToken
+import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleTokenOwner
 import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentNonFungibleToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
@@ -10,6 +11,7 @@ import net.corda.core.contracts.Amount
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.services.Vault
@@ -19,6 +21,7 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.node.services.vault.Sort
 import net.corda.core.node.services.vault.SortAttribute
 import net.corda.core.node.services.vault.builder
+import net.corda.core.utilities.toBase58String
 
 // TODO Revisit this API and add documentation.
 /** Miscellaneous helpers. */
@@ -50,7 +53,7 @@ fun tokenAmountWithIssuerCriteria(token: TokenType, issuer: Party): QueryCriteri
 
 fun heldTokenAmountCriteria(token: TokenType, holder: AbstractParty): QueryCriteria {
     val holderCriteria = QueryCriteria.VaultCustomQueryCriteria(builder {
-        PersistentFungibleToken::holder.equal(holder)
+        PersistentFungibleTokenOwner::owner.equal(holder.owningKey.toStringShort())
     })
     return tokenAmountCriteria(token).and(holderCriteria)
 }

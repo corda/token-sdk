@@ -16,6 +16,7 @@ import com.r3.corda.lib.tokens.workflows.flows.rpc.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.workflows.internal.testflows.*
 import com.r3.corda.lib.tokens.workflows.singleOutput
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
+import com.r3.corda.lib.tokens.workflows.utilities.heldTokenAmountCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.heldTokenCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
 import com.r3.corda.lib.tokens.workflows.watchForTransaction
@@ -23,6 +24,7 @@ import net.corda.core.CordaRuntimeException
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.internal.concurrent.transpose
 import net.corda.core.messaging.startFlow
@@ -42,6 +44,9 @@ import net.corda.testing.driver.internal.incrementalPortAllocation
 import net.corda.testing.node.TestCordapp
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
+import org.hamcrest.CoreMatchers.`is`
+import org.hamcrest.CoreMatchers.equalTo
+import org.junit.Assert
 import org.junit.Test
 
 class TokenDriverTest {
@@ -59,16 +64,24 @@ class TokenDriverTest {
                 ),
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
         )) {
-            val issuer = startNode(providedName = BOC_NAME).getOrThrow()
+            val (issuer, otherNode) = listOf(startNode(providedName = BOC_NAME),
+                    startNode(providedName = DUMMY_BANK_A_NAME)).map { it.getOrThrow() }
 
             val issuerParty = issuer.nodeInfo.singleIdentity()
+            val otherParty = otherNode.nodeInfo.singleIdentity()
 
             val customToken = TokenType("CUSTOM_TOKEN", 3)
             val issuedType = IssuedTokenType(issuerParty, customToken)
             val amountToIssue = Amount(100, issuedType)
-            val tokenToIssue = FungibleToken(amountToIssue, issuerParty)
+            val tokenToIssueToIssuer = FungibleToken(amountToIssue, issuerParty)
+            val tokenToIssueToOther = FungibleToken(amountToIssue, otherParty)
 
-            issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(tokenToIssue), emptyList<Party>()).returnValue.getOrThrow()
+            issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(tokenToIssueToIssuer, tokenToIssueToOther), emptyList<Party>()).returnValue.getOrThrow()
+            val queryResult = issuer.rpc.vaultQueryByCriteria(heldTokenAmountCriteria(customToken, issuerParty), FungibleToken::class.java)
+
+            Assert.assertThat(queryResult.states.size, `is`(1))
+            Assert.assertThat(queryResult.states.first().state.data.holder, `is`(equalTo((issuerParty as AbstractParty))))
+
         }
     }
 

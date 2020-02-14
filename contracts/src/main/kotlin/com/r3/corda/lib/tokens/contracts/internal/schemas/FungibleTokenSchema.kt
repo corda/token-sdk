@@ -4,11 +4,8 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.schemas.PersistentState
-import javax.persistence.Column
-import javax.persistence.Convert
-import javax.persistence.Entity
-import javax.persistence.Index
-import javax.persistence.Table
+import java.security.PublicKey
+import javax.persistence.*
 
 object FungibleTokenSchema
 
@@ -16,6 +13,12 @@ object FungibleTokenSchemaV1 : MappedSchema(
         schemaFamily = FungibleTokenSchema.javaClass,
         version = 1,
         mappedTypes = listOf(PersistentFungibleToken::class.java)
+)
+
+object FungibleTokenOwnerSchemaV1 : MappedSchema(
+        schemaFamily = FungibleTokenSchema.javaClass,
+        version = 1,
+        mappedTypes = listOf(PersistentFungibleTokenOwner::class.java)
 )
 
 @Entity
@@ -45,5 +48,11 @@ class PersistentFungibleToken(
         // token.
         @Column(name = "token_identifier", nullable = true)
         var tokenIdentifier: String
+) : PersistentState()
 
+@Entity
+@Table(name = "fungible_token_owner", indexes = [Index(name = "owning_key_idx", columnList = "holding_key")])
+class PersistentFungibleTokenOwner(
+        @Column(name = "holding_key")
+        val owner: String
 ) : PersistentState()
