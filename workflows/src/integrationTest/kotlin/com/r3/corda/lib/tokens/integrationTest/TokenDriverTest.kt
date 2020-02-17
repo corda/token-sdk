@@ -1,5 +1,7 @@
 package com.r3.corda.lib.tokens.integrationTest
 
+import com.r3.corda.lib.ci.workflows.RequestKey
+import com.r3.corda.lib.ci.workflows.RequestKeyFlow
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
@@ -81,6 +83,43 @@ class TokenDriverTest {
 
             Assert.assertThat(queryResult.states.size, `is`(1))
             Assert.assertThat(queryResult.states.first().state.data.holder, `is`(equalTo((issuerParty as AbstractParty))))
+
+        }
+    }
+
+    @Test
+    fun `should allow retrieval of tokens by owning key`() {
+
+        driver(DriverParameters(
+                portAllocation = incrementalPortAllocation(),
+                startNodesInProcess = false,
+                cordappsForAllNodes = listOf(
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
+                ),
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
+        )) {
+            val (issuer) = listOf(startNode(providedName = BOC_NAME)).map { it.getOrThrow() }
+
+            val issuerParty = issuer.nodeInfo.singleIdentity()
+
+            val customToken = TokenType("CUSTOM_TOKEN", 3)
+            val issuedType = IssuedTokenType(issuerParty, customToken)
+            val newCi1 = issuer.rpc.startFlowDynamic(RequestKey::class.java, issuerParty).returnValue.getOrThrow()
+            val newCi2 = issuer.rpc.startFlowDynamic(RequestKey::class.java, issuerParty).returnValue.getOrThrow()
+            val amountToIssue = Amount(100, issuedType)
+            val tokenToIssueToIssuer = FungibleToken(amountToIssue, issuerParty)
+            val tokenToIssueToIssuerCi1 = FungibleToken(amountToIssue, newCi1)
+            val tokenToIssueToIssuerCi2 = FungibleToken(amountToIssue, newCi2)
+
+            issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(tokenToIssueToIssuer, tokenToIssueToIssuerCi1, tokenToIssueToIssuerCi2), emptyList<Party>()).returnValue.getOrThrow()
+
+            val queryResult = issuer.rpc.vaultQueryByCriteria(heldTokenAmountCriteria(customToken, newCi1), FungibleToken::class.java)
+
+            Assert.assertThat(queryResult.states.size, `is`(1))
+            Assert.assertThat(queryResult.states.first().state.data.holder, `is`(equalTo((newCi1 as AbstractParty))))
 
         }
     }

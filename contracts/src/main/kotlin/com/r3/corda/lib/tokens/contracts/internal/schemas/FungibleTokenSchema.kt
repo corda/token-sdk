@@ -54,5 +54,5 @@ class PersistentFungibleToken(
 @Table(name = "fungible_token_owner", indexes = [Index(name = "owning_key_idx", columnList = "holding_key")])
 class PersistentFungibleTokenOwner(
         @Column(name = "holding_key")
-        val owner: String
+        val owningKeyHash: String
 ) : PersistentState()

@@ -21,7 +21,6 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.node.services.vault.Sort
 import net.corda.core.node.services.vault.SortAttribute
 import net.corda.core.node.services.vault.builder
-import net.corda.core.utilities.toBase58String
 
 // TODO Revisit this API and add documentation.
 /** Miscellaneous helpers. */
@@ -53,7 +52,7 @@ fun tokenAmountWithIssuerCriteria(token: TokenType, issuer: Party): QueryCriteri
 
 fun heldTokenAmountCriteria(token: TokenType, holder: AbstractParty): QueryCriteria {
     val holderCriteria = QueryCriteria.VaultCustomQueryCriteria(builder {
-        PersistentFungibleTokenOwner::owner.equal(holder.owningKey.toStringShort())
+        PersistentFungibleTokenOwner::owningKeyHash.equal(holder.owningKey.toStringShort())
     })
     return tokenAmountCriteria(token).and(holderCriteria)
 }
