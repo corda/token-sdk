@@ -262,12 +262,13 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
     fun `should get different tokens if we select twice`() {
         (1..2).map { I.issueFungibleTokens(A, 1 of GBP).getOrThrow() }
         val tokenSelection = DatabaseTokenSelection(A.services, pageSize = 5)
-        val lockId = UUID.randomUUID()
-        A.transaction {
-            val token1 = tokenSelection.selectTokens(requiredAmount = 1 of GBP, lockId = lockId)
-            val token2 = tokenSelection.selectTokens(requiredAmount = 1 of GBP, lockId = lockId)
-            assertThat(token1).isNotEqualTo(token2)
+        val token1 = A.transaction {
+            tokenSelection.selectTokens(requiredAmount = 1 of GBP, lockId = UUID.randomUUID())
         }
+        val token2 = A.transaction {
+             tokenSelection.selectTokens(requiredAmount = 1 of GBP, lockId = UUID.randomUUID())
+        }
+        assertThat(token1).isNotEqualTo(token2)
     }
 
     // Adel's test
