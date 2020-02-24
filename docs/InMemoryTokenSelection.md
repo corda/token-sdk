@@ -16,16 +16,16 @@ In your [CorDapp config](https://docs.corda.net/cordapp-build-systems.html#corda
 
 ```text
 stateSelection {
-    in_memory {
-           indexingStrategy: ["external_id"|"public_key"|"token_only"]
+    inMemory {
+           indexingStrategies: ["EXTERNAL_ID"|"PUBLIC_KEY"|"TOKEN_ONLY"]
            cacheSize: Int
     }
 }
 ```
 
-And choose indexing strategy, `external_id` , `public_key` or `token_only`. Public key strategy makes a token bucket for each public key,
+And choose a single indexing strategy, `EXTERNAL_ID` , `PUBLIC_KEY` or `TOKEN_ONLY`. Public key strategy makes a token bucket for each public key,
 so if you use accounts, probably it is better to use external id grouping that groups states
-from many public keys connected with given uuid. `token_only` selection strategy indexes states only using token type and identifier.
+from many public keys connected with given uuid. `TOKEN_ONLY` selection strategy indexes states only using token type and identifier.
 
 For example, to configure token selection in your `deployNodes`:
 
@@ -36,7 +36,7 @@ nodeDefaults {
         config '''
             stateSelection {
                 inMemory {
-                       indexingStrategy: "token_only"
+                       indexingStrategies: ["TOKEN_ONLY"]
                        cacheSize: 1024
                 }
             }
