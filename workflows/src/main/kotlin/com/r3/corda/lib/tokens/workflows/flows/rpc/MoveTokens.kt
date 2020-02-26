@@ -119,14 +119,14 @@ class MoveNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Un
 @InitiatingFlow
 class ConfidentialMoveFungibleTokens(
         val partiesAndAmounts: List<PartyAndAmount<TokenType>>,
-        val observers: List<Party>,
+        val observers: List<Party> = emptyList(),
         val queryCriteria: QueryCriteria? = null,
         val changeHolder: AbstractParty? = null
 ) : FlowLogic<SignedTransaction>() {
 
     constructor(
             partyAndAmount: PartyAndAmount<TokenType>,
-            observers: List<Party>,
+            observers: List<Party> = emptyList(),
             queryCriteria: QueryCriteria? = null,
             changeHolder: AbstractParty? = null
     ) : this(listOf(partyAndAmount), observers, queryCriteria, changeHolder)
