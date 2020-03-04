@@ -95,10 +95,10 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
 
             val pageSize = 1000
             var currentPage = DEFAULT_PAGE_NUM
-            val (firstPage, vaultObservable) = appServiceHub.vaultService.trackBy(
+            val (_, vaultObservable) = appServiceHub.vaultService.trackBy(
                     contractStateType = FungibleToken::class.java,
                     paging = PageSpecification(pageNumber = currentPage, pageSize = pageSize),
-                    criteria = QueryCriteria.VaultQueryCriteria(),
+                    criteria = QueryCriteria.VaultQueryCriteria(status = Vault.StateStatus.ALL),
                     sorting = sortByStateRefAscending())
 
             // we use the UPDATER thread for two reasons
@@ -107,15 +107,13 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
             val asyncLoader = object : ((Vault.Update<FungibleToken>) -> Unit) -> Unit {
                 override fun invoke(callback: (Vault.Update<FungibleToken>) -> Unit) {
                     LOG.info("Starting async token loading from vault")
-                    LOG.info("publishing ${firstPage.states.size} to async state loading callback")
-                    callback(Vault.Update(emptySet(), firstPage.states.toSet()))
                     UPDATER.submit {
                         try {
                             var shouldLoop = true
                             while (shouldLoop) {
                                 val newlyLoadedStates = appServiceHub.vaultService.queryBy(
                                         contractStateType = FungibleToken::class.java,
-                                        paging = PageSpecification(pageNumber = ++currentPage, pageSize = pageSize),
+                                        paging = PageSpecification(pageNumber = currentPage, pageSize = pageSize),
                                         criteria = QueryCriteria.VaultQueryCriteria(),
                                         sorting = sortByStateRefAscending()
                                 ).states.toSet()
@@ -123,6 +121,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
                                 callback(Vault.Update(emptySet(), newlyLoadedStates))
                                 shouldLoop = newlyLoadedStates.isNotEmpty()
                                 LOG.debug("shouldLoop=${shouldLoop}")
+                                currentPage++
                             }
                             LOG.info("finished token loading")
                         } catch (t: Throwable) {
