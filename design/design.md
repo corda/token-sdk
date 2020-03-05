@@ -800,6 +800,9 @@ val updatedStock = megaCorpStock.dividend(10.POUNDS)
 val resolved = stockPointer.pointer.resolve(services)
 ```
 ```java
+// java
+
+// Example stock token. This could be used for any stock type.
 @BelongsToContract(StockContract.class)
 public class Stock extends EvolvableTokenType {
     private final String symbol;
