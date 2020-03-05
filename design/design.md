@@ -112,12 +112,14 @@ The new `FungibleState` is simply defined as:
 
 ```kotlin
 // kotlin
+
 interface FungibleState<T : Any> : ContractState {
     val amount: Amount<T>
 }
 ```
 ```java
 // java
+
 interface FungibleState<T> extends ContractState {
     Amount<T> getAmount();
 }
@@ -137,10 +139,12 @@ refer to a state from inside another state. For example:
 
 ```kotlin
 // kotlin
+
 data class FooState(val ref: StateRef) : ContractState
 ```
 ```java
 // java
+
 class FooState implements ContractState {
     private final StateRef ref;
 
@@ -173,6 +177,7 @@ responsibility for updates or to compartmentalise data for privacy reasons.
 
 ```kotlin
 // kotlin
+
 class LinearPointer<T : LinearState>(
     override val pointer: UniqueIdentifier, 
     override val type: Class<T>
@@ -193,6 +198,7 @@ class LinearPointer<T : LinearState>(
 ```
 ```java
 // java
+
 public class LinearPointer<T extends LinearState> extends StatePointer<T> {
 
     private final UniqueIdentifier pointer;
@@ -277,6 +283,7 @@ digits. Therefore, to be able to reason about amounts of tokens arithmetically, 
 
 ```kotlin
 // kotlin
+
 @CordaSerializable
 @DoNotImplement
 open class TokenType(
@@ -309,6 +316,7 @@ open class TokenType(
 ```
 ```java
 // java - for reference only
+
 @CordaSerializable
 @DoNotImplement
 public class TokenType implements TokenizableAssetInfo {
@@ -388,6 +396,7 @@ security held in custody would be implied via some of information contained with
 
 ```kotlin
 // kotlin
+
 @CordaSerializable
 data class IssuedTokenType(
     val issuer: Party,
@@ -398,6 +407,7 @@ data class IssuedTokenType(
 ```
 ```java
 // java
+
 @CordaSerializable
 public class IssuedTokenType extends TokenType {
     private final Party issuer;
@@ -422,6 +432,7 @@ That's what `TokenPointer` is for (see below). This way, the token can evolve in
 
 ```kotlin
 // kotlin
+
 abstract class EvolvableTokenType : LinearState {
     abstract val maintainers: List<Party>
 
@@ -439,6 +450,7 @@ abstract class EvolvableTokenType : LinearState {
 ```
 ```java
 // java
+
 abstract class EvolvableTokenType implements LinearState {
     private final List<Party> maintainers;
     private final Integer fractionDigits;
@@ -480,6 +492,7 @@ it, as the data is held in a separate state object.
 
 ```kotlin
 // kotlin
+
 class TokenPointer<T : EvolvableTokenType>(
         val pointer: LinearPointer<T>,
         fractionDigits: Int
@@ -494,6 +507,7 @@ class TokenPointer<T : EvolvableTokenType>(
 ```
 ```java
 // java
+
 public class TokenPointer2<T extends EvolvableTokenType> extends TokenType {
     private final LinearPointer<T> pointer;
     private final int fractionDigits;
@@ -542,6 +556,7 @@ In effect, the `FungibleToken` conveys a right for the holder to make a claim on
 
 ```kotlin
 // kotlin
+
 @BelongsToContract(FungibleTokenContract::class)
 open class FungibleToken(
         override val amount: Amount<IssuedTokenType>,
@@ -553,6 +568,7 @@ open class FungibleToken(
 ```
 ```java
 // java
+
 @BelongsToContract(FungibleTokenContract.class)
 public class FungibleToken implements FungibleState<IssuedTokenType>, AbstractToken, QueryableState {
     private final Amount<IssuedTokenType> amount;
@@ -605,6 +621,7 @@ for whatever the `TokenType` represents. This is the equivalent of **ERC-721**.
 
 ```kotlin
 // kotlin
+
 @BelongsToContract(NonFungibleTokenContract::class)
 open class NonFungibleToken(
         val token: IssuedTokenType,
@@ -617,6 +634,7 @@ open class NonFungibleToken(
 ```
 ```java
 // java
+
 @BelongsToContract(NonFungibleTokenContract.class)
 public class NonFungibleToken implements AbstractToken, QueryableState, LinearState {
     private final IssuedTokenType token;
@@ -664,6 +682,7 @@ We can define example instances of a `TokenType`, in this case `FiatCurrency`—
 
 ```kotlin
 // kotlin
+
 // A simple definition of FiatCurrency using java.util.Currency.
 class FiatCurrency {
     companion object {
@@ -677,6 +696,7 @@ class FiatCurrency {
 ```
 ```java
 // java
+
 // A simple definition of FiatCurrency using java.util.Currency.
 public class FiatCurrency {
     public static TokenType getInstance(String currencyCode) {
@@ -689,6 +709,8 @@ public class FiatCurrency {
 We can now use the above definition to create some `FungibleToken`s:
 
 ```kotlin
+// kotlin
+
 // £10.
 val tenPounds: Amount<TokenType> = 10.GBP
 // £10 issued by Alice, where ALICE is a Party object.
@@ -700,6 +722,8 @@ val tenQuid = 10.GBP issuedBy ALICE heldBy BOB
 val oneMillionDollars = 1_000_000.USD issuedBy ZOE heldBy RICH
 ```
 ```java
+// java
+
 class CreateTokens {
     Amount<TokenType> tenPounds = UtilitiesKt.GBP(10);
     // £10 issued by Alice, where ALICE is a Party object.
@@ -716,6 +740,7 @@ The fungible tokens can be used to create transactions:
 
 ```kotlin
 // kotlin
+
 // Couple the dollars with an issuer, in this case ZOE.
 val zoeDollar: IssuedTokenType = USD issuedBy ZOE
 // Use "X of Y" syntax to create amounts of some IssuedTokenType.
@@ -732,6 +757,7 @@ val builder = TransactionBuilder(honestNotary).apply {
 ```
 ```java
 // java
+
 class CreateTokens {
     // Couple the dollars with an issuer, in this case ZOE.
     IssuedTokenType zoeDollar = AmountUtilitiesKt.issuedBy(UtilitiesKt.getUSD(), ZOE);
