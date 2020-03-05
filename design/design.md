@@ -111,8 +111,15 @@ is not always true, as fungible derivative contracts exist, for example.
 The new `FungibleState` is simply defined as:
 
 ```kotlin
+// kotlin
 interface FungibleState<T : Any> : ContractState {
     val amount: Amount<T>
+}
+```
+```java
+// java
+interface FungibleState<T> extends ContractState {
+    Amount<T> getAmount();
 }
 ```
 
@@ -129,7 +136,28 @@ This paper proposes to add a new type called `StatePointer `. `StatePointer`s fo
 refer to a state from inside another state. For example:
 
 ```kotlin
+// kotlin
 data class FooState(val ref: StateRef) : ContractState
+```
+```java
+// java
+class FooState implements ContractState {
+    private final StateRef ref;
+
+    public FooState(StateRef ref) {
+        this.ref = ref;
+    }
+
+    public StateRef getRef() {
+        return ref;
+    }
+
+    @NotNull
+    @Override
+    public List<AbstractParty> getParticipants() {
+        return null;
+    }
+}
 ```
 
 `StatePointer`s come in two variants:
@@ -144,6 +172,7 @@ expectation that the state being depended upon will evolve independently to the 
 responsibility for updates or to compartmentalise data for privacy reasons.
 
 ```kotlin
+// kotlin
 class LinearPointer<T : LinearState>(
     override val pointer: UniqueIdentifier, 
     override val type: Class<T>
@@ -160,6 +189,38 @@ class LinearPointer<T : LinearState>(
     }
 
     // Omitted code.
+}
+```
+```java
+// java
+public class LinearPointer<T extends LinearState> extends StatePointer<T> {
+
+    private final UniqueIdentifier pointer;
+    private final Class<T> type;
+    private final Boolean isResolved;
+
+    public LinearPointer(UniqueIdentifier pointer, Class<T> type, Boolean isResolved) {
+        super();
+        this.pointer = pointer;
+        this.type = type;
+        this.isResolved = isResolved;
+    }
+
+    // Getters Omitted
+
+    @NotNull
+    @Override
+    public StateAndRef<T> resolve(@NotNull ServiceHub services) {
+        // Omitted Code
+    }
+
+    @NotNull
+    @Override
+    public StateAndRef<T> resolve(@NotNull LedgerTransaction ltx) {
+        return ltx.referenceInputRefsOfType(type)
+                .stream()
+                .filter(it -> pointer.equals(it.getState().getData().getLinearId())).findFirst().orElseThrow(null);
+    }
 }
 ```
 
@@ -215,6 +276,7 @@ digits. Therefore, to be able to reason about amounts of tokens arithmetically, 
 `TokenType` also defines a class and identifier which are used for serialisation. The `tokenClass` property is implemented by default.
 
 ```kotlin
+// kotlin
 @CordaSerializable
 @DoNotImplement
 open class TokenType(
@@ -245,6 +307,59 @@ open class TokenType(
     open val tokenClass: Class<*> get() = javaClass
 }
 ```
+```java
+// java - for reference only
+@CordaSerializable
+@DoNotImplement
+public class TokenType implements TokenizableAssetInfo {
+    /**
+     * All [TokenType]s must have a [tokenIdentifier], which is typically a 3-4 character, upper case alphabetic string.
+     * The [tokenIdentifier] is used in conjunction with the [tokenClass] to create an instance of a [TokenType], for
+     * example: (FiatCurrency, GBP), (DigitalCurrency, BTC), or (Stock, GOOG). For [TokenPointer]s this property will
+     * contain the linearId of the [EvolvableTokenType] which is pointed to. The linearId can be used to obtain the
+     * underlying [EvolvableTokenType] from the vault.
+     */
+    private final String tokenIdentifier;
+
+    /**
+     * The number of fractional digits allowable for this token type. Specifying "0" will only allow integer amounts of
+     * the token type. Specifying "2", allows two decimal places, much like most fiat currencies, and so on...
+     */
+    private final Integer fractionDigits;
+    private final Class tokenClass = this.getClass();
+
+    public TokenType(String tokenIdentifier, Integer fractionDigits) {
+        this.tokenIdentifier = tokenIdentifier;
+        this.fractionDigits = fractionDigits;
+    }
+
+    public String getTokenIdentifier() {
+        return tokenIdentifier;
+    }
+
+    public Integer getFractionDigits() {
+        return fractionDigits;
+    }   
+
+    /**
+     * For use by the [Amount] class. There is no need to override this.
+     */
+    @NotNull
+    @Override
+    public BigDecimal getDisplayTokenSize() {
+        return null;
+    }
+
+    /**
+     * This property is used for when querying the vault for tokens. It allows us to construct an instance of a
+     * [TokenType] with a specified [tokenIdentifier], or for [EvolvableTokenType]s, as the [tokenIdentifier] is a
+     * linearId, which is opaque, the [tokenClass] provides a bit more context on what is being pointed to.
+     */
+    public Class getTokenClass() {
+        return tokenClass;
+    }
+}
+```
 
 `TokenType`s can be composed into a `NonFungibleToken` or a `FungibleToken` and they are almost always wrapped with an `IssuedTokenType` class.
 
@@ -272,11 +387,28 @@ The `Amount` of an `IssuedTokenType` they had issued would be the corresponding 
 security held in custody would be implied via some of information contained within the token type state. E.g. a stock symbol or ISIN.
 
 ```kotlin
+// kotlin
 @CordaSerializable
 data class IssuedTokenType(
     val issuer: Party,
     val tokenType: TokenType
 ) : TokenType(tokenType.tokenIdentifier, tokenType.fractionDigits) {
+    // Omitted code.
+}
+```
+```java
+// java
+@CordaSerializable
+public class IssuedTokenType extends TokenType {
+    private final Party issuer;
+    private final TokenType tokenType;
+
+    public IssuedTokenType(Party issuer, TokenType tokenType) {
+        super(tokenType.getTokenIdentifier(), tokenType.getFractionDigits());
+        this.issuer = issuer;
+        this.tokenType = tokenType;
+    }
+
     // Omitted code.
 }
 ```
@@ -289,6 +421,7 @@ That's what `TokenPointer` is for (see below). This way, the token can evolve in
 (some amount of) the token type.
 
 ```kotlin
+// kotlin
 abstract class EvolvableTokenType : LinearState {
     abstract val maintainers: List<Party>
 
@@ -301,6 +434,30 @@ abstract class EvolvableTokenType : LinearState {
     inline fun <reified T : EvolvableTokenType> toPointer(): TokenPointer<T> {
         val linearPointer = LinearPointer(linearId, T::class.java)
         return TokenPointer(linearPointer, displayTokenSize)
+    }
+}
+```
+```java
+// java
+abstract class EvolvableTokenType implements LinearState {
+    private final List<Party> maintainers;
+    private final Integer fractionDigits;
+
+    public EvolvableTokenType(List<Party> maintainers, Integer fractionDigits) {
+        this.maintainers = maintainers;
+        this.fractionDigits = fractionDigits;
+    }
+
+    // Defaults to the maintainer but can be overridden if necessary
+    @Override
+    public List<AbstractParty> getParticipants() {
+        return new ArrayList<>(maintainers);
+    }
+
+    // For obtaining a pointer to this [EvolveableToken].
+    public TokenPointer<EvolvableTokenType> toPointer() {
+        final LinearPointer<EvolvableTokenType> linearPointer = new LinearPointer<>(getLinearId(), EvolvableTokenType.class);
+        return new TokenPointer<>(linearPointer, fractionDigits);
     }
 }
 ```
@@ -322,11 +479,56 @@ the data within the `EvolvableTokenType`. This way, the `TokenType` can evolve i
 it, as the data is held in a separate state object.
 
 ```kotlin
-data class TokenPointer<T : EvolvableTokenType>(
+// kotlin
+class TokenPointer<T : EvolvableTokenType>(
         val pointer: LinearPointer<T>,
-        override val displayTokenSize: BigDecimal
-) : TokenType {
-    override fun toString(): String = "Pointer(${pointer.pointer.id}, ${pointer.type.canonicalName})"
+        fractionDigits: Int
+) : TokenType(pointer.pointer.id.toString(), fractionDigits) {
+    /**
+     * The fully qualified class name for the [EvolvableTokenType] being pointed to.
+     */
+    override val tokenClass: Class<*> get() = pointer.type
+
+    override fun toString(): String = "TokenPointer($tokenClass, $tokenIdentifier)"
+}
+```
+```java
+// java
+public class TokenPointer2<T extends EvolvableTokenType> extends TokenType {
+    private final LinearPointer<T> pointer;
+    private final int fractionDigits;
+    private final Class<T> tokenClass;
+
+    public TokenPointer2(LinearPointer<T> pointer, Integer fractionDigits) {
+        super(Objects.requireNonNull(pointer.getPointer().getExternalId()), fractionDigits);
+        this.pointer = pointer;
+        this.fractionDigits = fractionDigits;
+        this.tokenClass = pointer.getType();
+    }
+
+    @NotNull
+    @Override
+    public Class<T> getTokenClass() {
+        return tokenClass;
+    }
+
+    public LinearPointer<T> getPointer() {
+        return pointer;
+    }
+
+    @Override
+    public int getFractionDigits() {
+        return fractionDigits;
+    }
+
+    /**
+     * The fully qualified class name for the [EvolvableTokenType] being pointed to.
+     */
+    @NotNull
+    @Override
+    public String toString() {
+        return "TokenPointer(" + tokenClass + getTokenIdentifier() + ")";
+    }
 }
 ```
 
@@ -339,6 +541,7 @@ the `FungibleToken` represents an agreement between an issuer of the `IssuedToke
 In effect, the `FungibleToken` conveys a right for the holder to make a claim on the issuer for whatever the `TokenType` represents.
 
 ```kotlin
+// kotlin
 @BelongsToContract(FungibleTokenContract::class)
 open class FungibleToken(
         override val amount: Amount<IssuedTokenType>,
@@ -346,6 +549,29 @@ open class FungibleToken(
         override val tokenTypeJarHash: SecureHash? = amount.token.tokenType.getAttachmentIdForGenericParam()
 ) : FungibleState<IssuedTokenType>, AbstractToken, QueryableState {
     // Methods omitted.
+}
+```
+```java
+// java
+@BelongsToContract(FungibleTokenContract.class)
+public class FungibleToken implements FungibleState<IssuedTokenType>, AbstractToken, QueryableState {
+    private final Amount<IssuedTokenType> amount;
+    private final AbstractParty holder;
+    private final SecureHash tokenTypeJarHash;
+
+    public FungibleToken(Amount<IssuedTokenType> amount, AbstractParty holder) {
+        this.amount = amount;
+        this.holder = holder;
+        this.tokenTypeJarHash = TransactionUtilitiesKt.getAttachmentIdForGenericParam(amount.getToken().getTokenType());
+    }
+
+    @ConstructorForDeserialization
+    public FungibleToken(Amount<IssuedTokenType> amount, AbstractParty holder, SecureHash tokenTypeJarHash) {
+        this.amount = amount;
+        this.holder = holder;
+        this.tokenTypeJarHash = tokenTypeJarHash;
+    }
+    // Methods Omitted
 }
 ```
 
@@ -378,6 +604,7 @@ between the issuer and holder. In effect, the `NonFungibleToken` conveys a right
 for whatever the `TokenType` represents. This is the equivalent of **ERC-721**.
 
 ```kotlin
+// kotlin
 @BelongsToContract(NonFungibleTokenContract::class)
 open class NonFungibleToken(
         val token: IssuedTokenType,
@@ -386,6 +613,32 @@ open class NonFungibleToken(
         override val tokenTypeJarHash: SecureHash? = token.tokenType.getAttachmentIdForGenericParam()
 ) : AbstractToken, QueryableState, LinearState {
 	// Methods omitted.
+}
+```
+```java
+// java
+@BelongsToContract(NonFungibleTokenContract.class)
+public class NonFungibleToken implements AbstractToken, QueryableState, LinearState {
+    private final IssuedTokenType token;
+    private final AbstractParty holder;
+    private final UniqueIdentifier linearId;
+    private final SecureHash tokenTypeJarHash;
+
+    public NonFungibleToken(IssuedTokenType token, AbstractParty holder, UniqueIdentifier linearId) {
+        this.token = token;
+        this.holder = holder;
+        this.linearId = linearId;
+        this.tokenTypeJarHash = TransactionUtilitiesKt.getAttachmentIdForGenericParam(token.getTokenType());
+    }
+    
+    @ConstructorForDeserialization
+    public NonFungibleToken(IssuedTokenType token, AbstractParty holder, UniqueIdentifier linearId, SecureHash tokenTypeJarHash) {
+        this.token = token;
+        this.holder = holder;
+        this.linearId = linearId;
+        this.tokenTypeJarHash = tokenTypeJarHash;
+    }
+    // Methods Omitted
 }
 ```
 
@@ -410,6 +663,7 @@ within a `LinearState` which manages the workflow of the derivative contract.
 We can define example instances of a `TokenType`, in this case `FiatCurrency`—which is already included in the `money` module of the token SDK.
 
 ```kotlin
+// kotlin
 // A simple definition of FiatCurrency using java.util.Currency.
 class FiatCurrency {
     companion object {
@@ -418,6 +672,16 @@ class FiatCurrency {
             val currency = Currency.getInstance(currencyCode)
             return TokenType(currency.currencyCode, currency.defaultFractionDigits)
         }
+    }
+}
+```
+```java
+// java
+// A simple definition of FiatCurrency using java.util.Currency.
+public class FiatCurrency {
+    public static TokenType getInstance(String currencyCode) {
+        Currency currency = Currency.getInstance(currencyCode);
+        return new TokenType(currency.getCurrencyCode(), currency.getDefaultFractionDigits());
     }
 }
 ```
@@ -435,10 +699,23 @@ val ownedTenPounds: FungibleToken = issuedTenPounds heldBy BOB
 val tenQuid = 10.GBP issuedBy ALICE heldBy BOB
 val oneMillionDollars = 1_000_000.USD issuedBy ZOE heldBy RICH
 ```
+```java
+class CreateTokens {
+    Amount<TokenType> tenPounds = UtilitiesKt.GBP(10);
+    // £10 issued by Alice, where ALICE is a Party object.
+    Amount<IssuedTokenType> issuedTenPounds = AmountUtilitiesKt.issuedBy(tenPounds, ALICE);
+    // £10 issued by Alice and owned by Bob.
+    FungibleToken ownedTenPounds = TokenUtilitiesKt.heldBy(issuedTenPounds, BOB);
+    // Or all together with type inference.
+    FungibleToken tenQuid = TokenUtilitiesKt.heldBy(AmountUtilitiesKt.issuedBy(UtilitiesKt.GBP(10), ALICE), BOB);
+    FungibleToken oneMillionDollars = TokenUtilitiesKt.heldBy(AmountUtilitiesKt.issuedBy(UtilitiesKt.USD(1000000), ZOE), RICH);
+}
+```
 
 The fungible tokens can be used to create transactions:
 
 ```kotlin
+// kotlin
 // Couple the dollars with an issuer, in this case ZOE.
 val zoeDollar: IssuedTokenType = USD issuedBy ZOE
 // Use "X of Y" syntax to create amounts of some IssuedTokenType.
@@ -451,6 +728,20 @@ val builder = TransactionBuilder(honestNotary).apply {
     val zoeKey: PublicKey = zoeDollar.issuer.owningKey
     // Zoe is the signer to issue Zoe Dollars.
     addCommand(IssueTokenCommand(zoeDollar), listOf(zoeKey))
+}
+```
+```java
+// java
+class CreateTokens {
+    // Couple the dollars with an issuer, in this case ZOE.
+    IssuedTokenType zoeDollar = AmountUtilitiesKt.issuedBy(UtilitiesKt.getUSD(), ZOE);
+    // Use "X of Y" syntax to create amounts of some IssuedTokenType.
+    FungibleToken millionDollars = TokenUtilitiesKt.heldBy(AmountUtilitiesKt.of(1000000, zoeDollar), BOB);
+    // A transaction to issue a million Zoe Dollars.
+    TransactionBuilder builder = new TransactionBuilder(honestNotary)
+            .addOutputState(millionDollars)
+            .addCommand(new IssueTokenCommand(zoeDollar, Collections.emptyList()), 
+                    ImmutableList.of(zoeDollar.getIssuer().getOwningKey()));
 }
 ```
 
@@ -468,6 +759,8 @@ would subscribe to updates to ensure they have the most up-to-date version of th
 The MEGA CORP example in code would be as follows:
 
 ```kotlin
+// kotlin
+
 // Example stock token. This could be used for any stock type.
 @BelongsToContract(StockContract::class)
 data class Stock(
@@ -481,6 +774,7 @@ data class Stock(
   fun dividend(amount: TokenType): Stock
 }
 
+// To demonstrate using above definition
 // Define MEGA CORP Stock reference data then issue it on the ledger (not shown).
 val megaCorpStock = Stock(
     symbol = "MEGA",
@@ -497,12 +791,64 @@ val issuedMegaCorpStock = stockPointer issuedBy CUSTODIAN
 val stockTokensForAlice = 1_000 of issuedMegaCorpStock heldBy ALICE
 
 // MEGA CORP announces a dividend and commits the updated token type definition to ledger.
-megaCorpStock.dividend(10.POUNDS)
+val updatedStock = megaCorpStock.dividend(10.POUNDS)
 
-// MEGA CORP distributes the updated token type definition to those who require it.
+// MEGA CORP updates the token type definition using UpdateEvolvableTokenFlow()
+// with the option to distribute to groups
 
-// Resolving the pointer gives us the updated token type definition.
-val resolved = stockPointer.resolve(services)
+// Resolving the pointer now gives us the updated token type definition.
+val resolved = stockPointer.pointer.resolve(services)
+```
+```java
+@BelongsToContract(StockContract.class)
+public class Stock extends EvolvableTokenType {
+    private final String symbol;
+    private final String name;
+    private final BigDecimal displayTokenSize;
+    private final List<Party> maintainers;
+    private final UniqueIdentifier linearId;
+
+    public Stock(String symbol, String name, BigDecimal displayTokenSize, List<Party> maintainers) {
+        this.symbol = symbol;
+        this.name = name;
+        this.displayTokenSize = displayTokenSize;
+        this.maintainers = maintainers;
+        this.linearId = new UniqueIdentifier();
+    }
+    // Getters omitted.
+
+    // Things one can do with stock
+    public Stock dividend(Amount<Currency> amount) { 
+        // logic in here
+    }
+}
+
+class Eg {
+    // To demonstrate using the above definition
+    // Define MEGA CORP Stock reference data then issue it on the ledger (not shown)
+    Stock megaCorpStock = new Stock(
+            "MEGA",
+            "MEGA CORP",
+            BigDecimal.ONE,
+            ImmutableList.of(REF_DATA_MAINTAINER)
+    );
+
+    // Create a pointer to the MEGA CORP stock.
+    TokenPointer<Stock> stockPointer = megaCorpStock.toPointer(Stock.class);
+    // Create an issued token type for the MEGA CORP stock.
+    IssuedTokenType issuedMegaCorpStock = AmountUtilitiesKt.issuedBy(stockPointer, CUSTODIAN);
+    // Create a FungibleToken for some amount of MEGA CORP stock.
+    FungibleToken stockTokensForAlice = TokenUtilitiesKt.heldBy(AmountUtilitiesKt.of(1000, issuedMegaCorpStock), ALICE);
+
+    // MEGA CORP announces a dividend and commits the updated token type definition to ledger.
+    Stock updatedStock = megaCorpStock.dividend(Currencies.POUNDS(10));
+
+    // MEGA CORP updates the token type definition using UpdateEvolvableTokenFlow()
+    // with the option to distribute to groups
+
+    // Resolving the pointer gives us the updated token type definition
+    TokenType resolved = stockPointer.getPointer().resolve(getServiceHub());
+}
 ```
 
 Here, the `EvolvableTokenType` is linked to the `FungibleToken` via the `TokenPointer`. The pointer includes the `linearId`
