@@ -2,25 +2,20 @@ package com.r3.corda.lib.tokens.workflows.flows.rpc
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
-import com.r3.corda.lib.tokens.workflows.flows.evolvable.CreateEvolvableTokensFlow
-import com.r3.corda.lib.tokens.workflows.flows.evolvable.CreateEvolvableTokensFlowHandler
-import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableTokenFlow
-import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableTokenFlowHandler
-import com.r3.corda.lib.tokens.workflows.flows.evolvable.maintainers
-import com.r3.corda.lib.tokens.workflows.flows.evolvable.otherMaintainers
-import com.r3.corda.lib.tokens.workflows.flows.evolvable.participants
-import com.r3.corda.lib.tokens.workflows.flows.evolvable.subscribersForState
+import com.r3.corda.lib.tokens.workflows.flows.evolvable.*
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionState
-import net.corda.core.flows.FlowLogic
-import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatedBy
-import net.corda.core.flows.InitiatingFlow
-import net.corda.core.flows.StartableByRPC
+import net.corda.core.flows.*
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 
+/**
+ * Initiating flow for creating multiple tokens of evolvable token type.
+ *
+ * @property transactionStates a list of states to create evolvable token types with
+ * @param observers optional observing parties to which the transaction will be broadcast
+ */
 @InitiatingFlow
 @StartableByRPC
 class CreateEvolvableTokens
@@ -51,13 +46,22 @@ constructor(
         }
 }
 
+/**
+ * Responder flow for [CreateEvolvableTokens].
+ */
 @InitiatedBy(CreateEvolvableTokens::class)
 class CreateEvolvableTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() = subFlow(CreateEvolvableTokensFlowHandler(otherSession))
 }
 
-
+/**
+ * An initiating flow to update an existing evolvable token type which is already recorded on the ledger. This is an
+ *
+ * @property oldStateAndRef the existing evolvable token type to update
+ * @property newState the new version of the evolvable token type
+ * @param observers optional observing parties to which the transaction will be broadcast
+ */
 @InitiatingFlow
 @StartableByRPC
 class UpdateEvolvableToken
@@ -90,6 +94,9 @@ constructor(val oldStateAndRef: StateAndRef<EvolvableTokenType>,
         }
 }
 
+/**
+ * Responder flow for [UpdateEvolvableToken].
+ */
 @InitiatedBy(UpdateEvolvableToken::class)
 class UpdateEvolvableTokenHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable

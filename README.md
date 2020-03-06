@@ -78,7 +78,7 @@ wish to use and set the corda version that should've been installed locally::
 
     buildscript {
         ext {
-            tokens_release_version = '1.0'
+            tokens_release_version = '1.1'
             tokens_release_group = 'com.r3.corda.lib.tokens'
         }
     }
