@@ -303,6 +303,7 @@ subFlow(IssueTokensFlow(listOf(fungibleToken), listOf(holderSession)))
 subFlow(IssueTokensFlow(listOf(nonFungibleToken), listOf(holderSession)))
 ``` 
 ```java
+// java
 
 // We need to pass in counterparties sessions.
 FlowSession holderSession = initiateFlow(holder);
@@ -731,6 +732,7 @@ possible to create your own `TokenType` sub-type by sub-classing `TokenType`.
 class MyTokenType(override val tokenIdentifier: String, override val fractionDigits: Int = 0) : TokenType(tokenIdentifier, fractionDigits)
 ```
 ```java
+// java
 
 class MyTokenType extends TokenType {
     public MyTokenType(@NotNull String tokenIdentifier) { super(tokenIdentifier, 0); }
