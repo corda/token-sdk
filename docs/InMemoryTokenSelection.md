@@ -59,29 +59,54 @@ Let's take a look how to use the feature.
 From your flow construct `LocalTokenSelector` instance:
 
 ```kotlin
+// kotlin
+
 val localTokenSelector = LocalTokenSelector(serviceHub)
+```
+```java
+
+LocalTokenSelector localTokenSelector = new LocalTokenSelector(getServiceHub());
 ```
 
 After that you can choose states for move by either calling `selectTokens`:
 
 ```kotlin
+// kotlin
+
 val transactionBuilder: TransactionBuilder = ...
 val participantSessions: List<FlowSession> = ...
 val observerSessions: List<FlowSession> = ...
 val requiredAmount: Amount<TokenType> = ...
 val queryBy: TokenQueryBy = ...  // See section below on queries
 // Just select states for spend, without output and change calculation
-val selectedStates: List<StateAndRef<FungibleToken>> = localTokenSelector.selectStates(
+val selectedStates: List<StateAndRef<FungibleToken>> = localTokenSelector.selectTokens(
     lockID = transactionBuilder.lockId, // Defaults to FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     requiredAmount = requiredAmount,
     queryBy = queryBy)
+```
+```java
+// java
+        
+TransactionBuilder transactionBuilder = ...;
+FlowSession participantSession = ...;
+FlowSession observerSession = ...;
+Amount<TokenType> requiredAmount = ...;
+TokenQueryBy queryBy = ...; // See section below on queries
+// Just select states for spend, without output and change calculation
+List<StateAndRef<FungibleToken>> selectedState = localTokenSelector.selectTokens(
+        requiredAmount,
+        queryBy,
+        transactionBuilder.getLockId()
+);
 ```
 
 or even better `generateMove` method returns list of inputs and list of output states that can be passed to `addMove` or `MoveTokensFlow`:
 
 ```kotlin
+// kotlin
+
 // or generate inputs, outputs with change, grouped by issuers
-val partiesAndAmounts: List<PartyAndAmount<TokenType>> = ... // As in previous tutorials, list of parties that should receive amount of TokenType
+val partiesAndAmounts: List<Pair<Party, Amount<TokenType>>> = ... // As in previous tutorials, list of parties that should receive amount of TokenType
 val changeHolder: AbstractParty = ... // Party that should receive change
 val (inputs, outputs) = localTokenSelector.generateMove(
     lockId = transactionBuilder.lockId, // Defaults to FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
@@ -95,6 +120,26 @@ subflow(MoveTokensFlow(inputs, outputs, participantSessions, observerSessions))
 //... implement some business specific logic
 addMoveTokens(transactionBuilder, inputs, outputs)
 ```
+```java
+// java
+
+List<Pair<Party, Amount<TokenType>>> partiesAndAmounts = ...;
+AbstractParty changeHolder = ...;
+Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> selectedTokens = localTokenSelector.generateMove(
+        partiesAndAmounts,
+        changeHolder,
+        queryBy,
+        transactionBuilder.getLockId()
+);
+List<StateAndRef<FungibleToken>> inputs = selectedTokens.getFirst();
+List<FungibleToken> outputs = selectedTokens.getSecond();
+
+// Call subflow
+subFlow(new MoveTokensFlow(inputs, outputs, participantSessions, observerSessions));
+// or use utilities functions
+//... implement some business specific logic
+MoveTokensUtilitiesKt.addMoveTokens(transactionBuilder, inputs, outputs);
+```
 
 Then finalize transaction, update distribution list etc, see [Most common tasks](docs/IWantTo.md)
 
@@ -106,17 +151,19 @@ already performed selection and provide input and output states directly. Fungib
 Using in memory selection when redeeming tokens looks very similar to move:
 
 ```kotlin
+// kotlin
+
 val vaultWatcherService = serviceHub.cordaService(VaultWatcherService::class.java)
 val localTokenSelector = LocalTokenSelector(serviceHub, vaultWatcherService, autoUnlockDelay = autoUnlockDelay)
 
 // Smilar to previous case, we need to choose states that cover the amount.
-val exitStates: List<StateAndRef<FungibleToken>> = localTokenSelector.selectStates(
+val exitStates: List<StateAndRef<FungibleToken>> = localTokenSelector.selectTokens(
     lockID = transactionBuilder.lockId, // Defaults to FlowLogic.currentTopLevel?.runId?.uuid ?: UUID.randomUUID()
     requiredAmount = requiredAmount,
     queryBy = queryBy) // See section below on queries
     
 // Exit states and get possible change output.
-val (inputs, changeOutput) =  generateExit(
+val (inputs, changeOutput) =  localTokenSelector.generateExit(
     exitStates = exitStates,
     amount = requiredAmount,
     changeHolder = changeHolder
@@ -131,6 +178,38 @@ addTokensToRedeem(
     changeOutput = changeOutput
 )
 ```
+```java
+// java
+
+VaultWatcherService vaultWatcherService = getServiceHub().cordaService(VaultWatcherService.class);
+LocalTokenSelector localTokenSelector = new LocalTokenSelector(getServiceHub(), vaultWatcherService, autoUnlockDelay, null);
+
+// Smilar to previous case, we need to choose states that cover the amount.
+List<StateAndRef<FungibleToken>> exitStates = localTokenSelector.selectTokens(
+        requiredAmount,
+        queryBy,
+        transactionBuilder.getLockId()
+);
+
+// Exit states and get possible change output
+Pair<List<StateAndRef<FungibleToken>>, FungibleToken> statesSelectedFromExit = localTokenSelector.generateExit(
+        exitStates,
+        requiredAmount,
+        changeHolder
+);
+List<StateAndRef<FungibleToken>> inputs = statesSelectedFromExit.getFirst();
+FungibleToken changeOutput = statesSelectedFromExit.getSecond();
+// Call subflow top redeem states with the issuer
+FlowSession issuerSession = initiateFlow(issuer);
+FlowSession observerSession = initiateFlow(observer);
+subFlow(new RedeemTokensFlow(inputs, changeOutput, issuerSession, observerSessions));
+// or use utilites functions.
+RedeemFlowUtilitiesKt.addTokensToRedeem(
+        transactionBuilder,
+        inputs,
+        changeOutput
+);
+```
 
 ### Providing Queries to LocalTokenSelector
 
@@ -140,12 +219,28 @@ you can provide any states filtering as `predicate` function (don't use `queryCr
 and exists only to keep bakcwards compatibility with databse selection!).
 
 ```kotlin
+// kotlin
+
 val issuerParty: Party = ...
 val notaryParty: Party = ...
 // Get list of input and output states that can be passed to addMove or MoveTokensFlow
 val (inputs, outputs) = localTokenSelector.generateMove(
+        lockID = transactionBuilder.lockId,
         partiesAndAmounts = listOf(Pair(receivingParty,  tokensAmount)),
         changeHolder = this.ourIdentity,
         // Get tokens issued by issuerParty and notarised by notaryParty
         queryBy = TokenQueryBy(issuer = issuerParty, predicate = { it.state.notary == notaryParty }))
 ``` 
+```java
+// java
+
+Party issuerParty = ...;
+Party notaryParty = ...;
+// Get list of input and output states that can be passed to addMove or MoveTokensFlow
+Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> selectedTokens = localTokenSelector.generateMove(
+        Collections.singletonList(new Pair<AbstractParty, Amount<TokenType>>(receivingParty, tokensAmount)),
+        changeHolder,
+        queryBy = new TokenQueryBy(issuer, it -> (it.getState().getNotary().equals(notaryParty)), null),
+        transactionBuilder.getLockId()
+);
+```
