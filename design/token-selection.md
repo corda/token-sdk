@@ -58,12 +58,36 @@ fully resumed all existing flow checkpoints, a double spend error may occur.
 
 For the initial design, we will keep it simple and essentially have a map of maps. SoftLocking will be done by doing an atomic C-A-S (compare-and-swap) on a boolean.
 
+```kotlin
+// kotlin
+
     private val cache: ConcurrentMap<TokenIndex, TokenBucket> = ConcurrentHashMap()
 
     class TokenIndex(@Kdoc("Any because we support UUID and publickey) val owner: Any, val tokenClazz: Class<*>, val tokenIdentifier: String)
 
     class TokenBucket() : ConcurrentMap<StateAndRef<FungibleToken<TokenType>>, Boolean>
+```
+```java
+// java
 
+    private final ConcurrentMap<TokenIndex, TokenBucket> cache = new ConcurrentHashMap<>();
+    
+    class TokenIndex {
+        private final Object Owner;
+        private final Class<Object> tokenClazz;
+        private final String tokenIdentifier;
+    
+        public TokenIndex(Object owner, Class<Object> tokenClazz, String tokenIdentifier) {
+            Owner = owner;
+            this.tokenClazz = tokenClazz;
+            this.tokenIdentifier = tokenIdentifier;
+        }
+    }
+    
+    class TokenBucket extends ConcurrentMap<StateAndRef<FungibleToken<TokenType>>, boolean> {
+        // methods ommitted
+    }
+```
 #### Node Startup
 
 1. On startup, load all states within the vault
