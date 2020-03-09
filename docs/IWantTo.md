@@ -6,9 +6,18 @@ Two `TokenType` helpers already exist in the token SDK, `FiatCurrency` and
 `DigitalCurrency`. There are easy to use utilities for both, for example:
 
 ```kotlin
+// kotlin
+
     val pounds: TokenType = GBP
     val euros: TokenType = EUR
     val bitcoin: TokenType = BTC
+```
+```java
+// java
+
+    TokenType pounds = FiatCurrency.Companion.getInstance("GBP");
+    TokenType euros = FiatCurrency.Companion.getInstance("EUR");
+    TokenType bitcoin = FiatCurrency.Companion.getInstance("BTC");
 ```
 
 Creating your own tokens is easy; just create an instance of `TokenType` class. You 
@@ -22,7 +31,14 @@ amounts of this token can have. E.g.
 You can also add a `toString` override, if you like.
 
 ```kotlin
+// kotlin
+
     val myTokenType: TokenType = TokenType(tokenIdentifier = "TEST", fractionDigits = 2)
+```
+```java
+// java
+
+    TokenType myTokenType = new TokenType("TEST", 2);
 ```
 
 The `tokenIdentifier` is used along with the `tokenClass` property (defined
@@ -35,6 +51,8 @@ instances of one `tokenClass`, each with their own `tokenIdentifier`.
 Create an `IssuedTokenType` as follows
 
 ```kotlin
+// kotlin
+
     // With your own instance of token type.
     val issuer: Party = ...
     val myTokenType = TokenType("MyToken", 2)
@@ -42,7 +60,20 @@ Create an `IssuedTokenType` as follows
 
     // Or with the built in tokens.
     val issuedGbp: IssuedTokenType = GBP issuedBy issuer
-    val issuedGbp: IssuedTokenType  = BTC issuedBy issuer
+    val issuedBtc: IssuedTokenType  = BTC issuedBy issuer
+```
+```java
+// java
+
+    // With your own instance of token type.
+    Party issuer = ...;
+    TokenType myTokenType = new TokenType("MyToken", 2);
+    IssuedTokenType issuedTokenType = AmountUtilitiesKt.issuedBy(myTokenType, issuer);
+    
+    // Or with the built in tokens.
+    IssuedTokenType issuedGbp = AmountUtilitiesKt.issuedBy(FiatCurrency.Companion.getInstance("GBP"), issuer);
+    IssuedTokenType issuedBtc = AmountUtilitiesKt.issuedBy(FiatCurrency.Companion.getInstance("BTC"), issuer);
+
 ```
 
 The issuing party must be a `Party` as opposed to an `AbstractParty` or
@@ -56,22 +87,46 @@ Once you have an `IssuedTokenType` you can optionally create some amount
 of it using the `of` syntax. For example:
 
 ```kotlin
+// kotlin
+
     val issuer: Party = ...
     val myTokenType = TokenType("MyToken", 2)
     val myIssuedTokenType: IssuedTokenType = myTokenType issuedBy issuer
     val tenOfMyIssuedTokenType = 10 of myIssuedTokenType
 ```
+```java
+// java
 
-Or:
-
-```kotlin
-    val tenPounds: Amount<IssuedTokenType> = 10 of GBP issuedBy issuer
+    Party issuer = ...;
+    TokenType myTokenType = new TokenType("MyToken", 2);
+    IssuedTokenType myIssuedTokenType = AmountUtilitiesKt.issuedBy(myTokenType, issuer);
+    Amount<IssuedTokenType> tenOfMyIssuedTokenType = AmountUtilitiesKt.amount(10, myIssuedTokenType);
 ```
 
 Or:
 
 ```kotlin
+// kotlin
+
+    val tenPounds: Amount<IssuedTokenType> = 10 of GBP issuedBy issuer
+```
+```java
+// java
+
+    Amount<IssuedTokenType> tenPounds = AmountUtilitiesKt.amount(10, AmountUtilitiesKt.issuedBy(FiatCurrency.Companion.getInstance("GBP"), issuer));
+```
+
+Or:
+
+```kotlin
+// kotlin
+
     val tenPounds = 10.GBP issuedBy issuer
+```
+```java
+// java
+
+    Amount<IssuedTokenType> tenPounds = AmountUtilitiesKt.issuedBy(UtilitiesKt.GBP(10), issuer);
 ```
 
 If you do not need to create amounts of your token because it is always
@@ -85,6 +140,8 @@ token or fungible token, we need to specify which party the proposed holder
 is. This can be done using the `heldBy` syntax:
 
 ```kotlin
+// kotlin
+
     val issuer: Party = ...
     val holder: Party = ...
 
@@ -96,6 +153,21 @@ is. This can be done using the `heldBy` syntax:
     val fungibleToken: FungibleToken = tenOfMyIssuedTokenType heldBy holder
     // Adding a holder to a token type, creates a non-fungible token.
     val nonFungibleToken: NonFungibleToken = myIssuedTokenType heldBy holder
+```
+```java
+// java
+
+    Party issuer = ...;
+    Party holder = ...;
+    
+    TokenType myTokenType = new TokenType("MyToken", 2);
+    // Note: in java, Amounts and TokenTypes can also be instatiated with their constructors in addition to the provided utilities
+    IssuedTokenType myIssuedTokenType = new IssuedTokenType(issuer, myTokenType);
+    Amount<IssuedTokenType> tenOfMyIssuedTokenType = new Amount<>(10, myIssuedTokenType);
+    
+    // Adding a holder to an amount of a token type, creates a fungible token
+    FungibleToken fungibleToken = TokenUtilitiesKt.heldBy(tenOfMyIssuedTokenType, holder);
+    NonFungibleToken nonFungibleToken = TokenUtilities.heldBy(myIssuedTokenType, holder);
 ```
 
 Once you have a `FungibleToken` or a `NonFungibleToken`, you can then go
@@ -145,19 +217,69 @@ Confidential versions additionally request that the recipients generate new keys
 **Initiating**
 
 ```kotlin
+// kotlin
+
 // As in previous examples
 val fungibleToken: FungibleToken = ...
 val nonFungibleToken: NonFungibleToken = ...
 // Start flows via RPC or as a subFlow (it starts a new session with a holder of the token!)
 // All of the below flows can take a list of observer parties.
+
 // Fungible
-IssueTokens(fungibleToken)
-IssueTokens(10 of myTokenType, issuer, holder)
-IssueTokens(10 of myIssuedTokenType, holder)
+IssueTokens(listOf(fungibleToken))
+IssueTokens(listOf(10 of myTokenType issuedBy issuer heldBy holder))
+IssueTokens(listOf(10 of myIssuedTokenType heldBy holder))
+
 // Nonfungible
-IssueTokens(nonFungibleToken)
-IssueTokens(myTokenType, issuer, holder)
-IssueTokens(myIssuedTokenType, holder)
+IssueTokens(listOf(nonFungibleToken))
+IssueTokens(listOf(myTokenType issuedBy issuer heldBy holder))
+IssueTokens(listOf(myIssuedTokenType heldBy holder))
+```
+```java
+// java
+
+// As in previous examples
+FungibleToken fungibleToken = ...;
+NonFungibleToken nonFungibleToken = ...;
+// Start flows via RPC or as a subFlow (it starts a new session with a holder of the token!)
+// All of the below flows can take a list of observer parties.
+
+
+// Fungible
+new IssueTokens(Collections.singletonList(fungibleToken));
+new IssueTokens(Collections.singletonList(
+        TokenUtilitiesKt.heldBy(
+                AmountUtilitiesKt.issuedBy(
+                        AmountUtilitiesKt.amount(10, myTokenType),
+                        issuer
+                ),
+                holder
+        )
+));
+new IssueTokens(Collections.singletonList(
+        TokenUtilitiesKt.heldBy(
+                AmountUtilitiesKt.amount(10, myIssuedTokenType),
+                holder
+        )
+));
+
+// Nonfungible
+new IssueTokens(Collections.singletonList(nonFungibleToken));
+new IssueTokens(Collections.singletonList(
+        TokenUtilities.heldBy(
+                AmountUtilitiesKt.issuedBy(
+                        myTokenType,
+                        issuer
+                ),
+                holder
+        )
+));
+new IssueTokens(Collections.singletonList(
+        TokenUtilities.heldBy(
+                myIssuedTokenType,
+                holder
+        )
+));
 ```
 
 There are many other constructor overloads for initiating `IssueTokens` it's worth investigating the class itself.
@@ -169,15 +291,28 @@ _Conidential version:_ `ConfidentialIssueTokens`, _responder_: `ConfidentialIssu
 **Inline**
 
 ```kotlin
+// kotlin
+
 // We need to pass in counterparties sessions.
 val holderSession = initateFlow(holder)
 ...
 // All of the below flows can take a list of observer sessions.
 // Fungible
-subFlow(IssueTokensFlow(fungibleToken, listOf(holderSession)))
+subFlow(IssueTokensFlow(listOf(fungibleToken), listOf(holderSession)))
 // NonFungible
-subFlow(IssueTokensFlow(nonFungibleToken, listOf(holderSession)))
+subFlow(IssueTokensFlow(listOf(nonFungibleToken), listOf(holderSession)))
 ``` 
+```java
+
+// We need to pass in counterparties sessions.
+FlowSession holderSession = initiateFlow(holder);
+...
+// All of the below flows can take a list of observer sessions.
+// Fungible
+subFlow(new IssueTokensFlow(Collections.singletonList(fungibleToken), ImmutableList.of(holderSession)));
+// NonFungible
+subFlow(new IssueTokensFlow(Collections.singletonList(nonFungibleToken), ImmutableList.of(holderSession)));
+```
 
 There are other constructor overloads worth investigating.
 
@@ -186,14 +321,29 @@ _Responder flow:_ `IssueTokensFlowHandler`
 **Confidential inline**
 
 ```kotlin
+// kotlin
+
 // We need to pass in counterparties sessions.
 val holderSession = initateFlow(holder)
 ...
 // All of the below flows can take a list of observer sessions.
 // Fungible
-subFlow(ConfidentialIssueTokensFlow(fungibleToken, listOf(holderSession)))
+subFlow(ConfidentialIssueTokensFlow(listOf(fungibleToken), listOf(holderSession)))
 // NonFungible
-subFlow(ConfidentialIssueTokensFlow(nonFungibleToken, listOf(holderSession)))
+subFlow(ConfidentialIssueTokensFlow(listOf(nonFungibleToken), listOf(holderSession)))
+```
+```java
+// java
+
+// We need to pass in counterparties sessions.
+FlowSession holderSession = initiateFlow(holder);
+...
+// All of the below flows can take a list of observer sessions.
+// Fungible
+subFlow(new ConfidentialIssueTokensFlow(Collections.singletonList(fungibleToken), ImmutableList.of(holderSession)));
+// NonFungible
+subFlow(new ConfidentialIssueTokensFlow(Collections.singletonList(nonFungibleToken), ImmutableList.of(holderSession)));
+
 ```
 
 _Responder flow:_ `ConfidentialIssueTokensFlowHandler`
@@ -221,9 +371,12 @@ As usual you can provide additional observers parties/sessions for finalization 
 **Initiating**
 
 ```kotlin
+// kotlin
+
 val holder: Party = ...
 val otherHolder: Party = ...
 val issuer: Party = ...
+
 // Move amount of token to the new holder
 MoveFungibleTokens(100 of myTokenType, holder)
 // Move different amounts of token to multiple holders
@@ -236,6 +389,33 @@ MoveFungibleTokens(
     queryCriteria = tokenAmountWithIssuerCriteria(myTokenType, issuer)
 )
 ```
+```java
+// java
+
+Party holder = ...;
+Party otherHolder = ...;
+Party issuer = ...;
+
+// Move amount of token to the new holder
+new MoveFungibleTokens(
+        AmountUtilitiesKt.amount(10, myTokenType),
+        holder
+);
+// Move different amounts of token to multiple holders
+Amount<TokenType> amountOne = AmountUtilitiesKt.amount(13, myTokenType);
+Amount<TokenType> amountTwo = AmountUtilitiesKt.amount(44, myTokenType);
+new MoveFungibleTokens(ImmutableList.of(
+        new PartyAndAmount<>(holder, amountOne),
+        new PartyAndAmount<>(otherHolder, amountTwo)
+));
+// Move amount of token issued by particular issuer to the new holder - this is an example of using optional queryCriteria
+// parameter.
+new MoveFungibleTokens(
+        new PartyAndAmount<TokenType>(holder, amountOne),
+        Collections.emptyList(),
+        SelectionUtilitiesKt.tokenAmountWithIssuerCriteria(myTokenType, issuer)
+);
+```
 
 _Responder flow:_ `MoveFungibleTokensHandler`
 
@@ -244,6 +424,8 @@ _Confidential version:_ `ConfidentialMoveFungibleTokens`, _responder_: `Confiden
 **Inline**
 
 ```kotlin
+// kotlin
+
 // We need to pass in counterparties sessions.
 val holderSession = initateFlow(holder)
 val otherHolderSession = initateFlow(otherHolder)
@@ -261,6 +443,32 @@ subFlow(MoveFungibleTokensFlow(
     observers = emptyList<FlowSession>()    
 ))
 ```
+```java
+// java
+
+// We need to pass in counterparties sessions.
+FlowSession holderSession = initiateFlow(holder);
+FlowSession otherHolderSession = initiateFlow(otherHolder);
+...
+// All of the below flows can take a list of observer sessions.
+// Construct many moves in one transaction.
+Amount<TokenType> amountOne = AmountUtilitiesKt.amount(13, myTokenType);
+Amount<TokenType> amountTwo = AmountUtilitiesKt.amount(44, myTokenType);
+subFlow(new MoveFungibleTokensFlow(
+        ImmutableList.of(
+            new PartyAndAmount<TokenType>(holder, amountOne),
+            new PartyAndAmount<TokenType>(otherHolder, amountTwo)),
+        ImmutableList.of(holderSession, otherHolderSession)
+));
+// Move only tokens issued by particular issuer.
+Amount<TokenType> amount = new Amount<>(5, myTokenType);
+subFlow(new MoveFungibleTokensFlow(
+        new PartyAndAmount<TokenType>(holder, amount),
+        SelectionUtilitiesKt.tokenAmountWithIssuerCriteria(myTokenType, issuer),
+        ImmutableList.of(holderSession, otherHolderSession),
+        Collections.emptyList()
+));
+```
 
 _Responder flow:_ `MoveTokensFlowHandler`
 
@@ -271,10 +479,20 @@ _Confidential version:_ `ConfidentialMoveFungibleTokensFlow`, _responder:_ `Conf
 **Initiating**
 
 ```kotlin
+// kotlin
+
 val holder: Party = ...
 ...
 // Move non fungible token to the new holder
 MoveNonFungibleTokens(PartyAndToken(holder, myTokenType))
+```
+```java
+// java
+
+Party holder = ...
+...
+// Move non fungible token to the new holder
+new MoveNonFungibleTokens(new PartyAndToken(holder, myTokenType));
 ```
 
 Similar to previous examples you can provide `queryCriteria` and list of observer parties.
@@ -286,9 +504,22 @@ _Confidential version:_ `ConfidentialMoveNonFungibleTokens`, _responder_: `Confi
 **Inline**
 
 ```kotlin
+// kotlin
+
 val holderSession = initateFlow(holder)
 val observerSession = initatieFlow(observer)
 subFlow(MoveNonFungibleTokensFlow(PartyAndToken(holder, myTokenType), listOf(holderSession), listOf(observerSession)))
+```
+```java
+// java
+
+FlowSession holderSession = initiateFlow(holder);
+FlowSession observerSession = initiateFlow(observer);
+subFlow(new ConfidentialMoveNonFungibleTokensFlow(
+        new PartyAndToken(holder, myTokenType),
+        ImmutableList.of(holderSession),
+        ImmutableList.of(observerSession)
+));
 ```
 
 _Responder flow:_ `MoveTokensFlowHandler`
@@ -323,12 +554,28 @@ Selection is performed using the same utilities used in `MoveFungibleTokens`.
 **Initiating**
 
 ```kotlin
+// kotlin
+
 val amountToRedeem = 10.GBP
 val issuerParty: Party = ...
 val observerParty: Party = ...
 
 // It is also possible to provide custom query criteria for token selection.
 RedeemFungibleTokens(amount = amountToRedeem, issuer = issuerParty, observers = listOf(observerParty))
+```
+```java
+// java
+
+Party issuerParty = ...;
+Party observerParty = ...;
+Amount<TokenType> amountToRedeem = UtilitiesKt.GBP(10);
+
+// It is also possible to provide custom query criteria for token selection.
+new RedeemFungibleTokens(
+        amountToRedeem,
+        issuerParty,
+        ImmutableList.of(observerParty)
+);
 ```
 
 _Responder flow:_ `RedeemFungibleTokensHandler`
@@ -338,6 +585,8 @@ _Confidential version:_ `ConfidentialRedeemFungibleTokens`, _responder_: `Confid
 **Inline**
 
 ```kotlin
+// kotlin
+
 val issuerSession = initateFlow(issuer)
 val observerSession = initatieFlow(observer)
 val changeHolder: AbstractParty = ... // It can be either confidential identity belonging to tokens holder or well known identity of holder
@@ -348,6 +597,21 @@ subFlow(RedeemFungibleTokensFlow(
     changeHolder = changeHolder,
     observerSessions = listOf(observerSession)
 ))
+```
+```java
+// java
+
+FlowSession issuerSession = initiateFlow(issuer);
+FlowSession observerSession = initiateFlow(observer);
+AbstractParty changeHolder = ...; // It can be either confidential identity belonging to tokens holder or well known identity of holder
+// It is also possible to provide custom query criteria for token selection.
+
+subFlow(new RedeemFungibleTokensFlow(
+        UtilitiesKt.GBP(1000),
+        issuerSession,
+        changeHolder,
+        ImmutableList.of(observerSession)
+));
 ```
 
 _Responder flow:_ `RedeemTokensFlowHandler`
@@ -361,11 +625,22 @@ _Confidential version:_ `ConfidentialRedeemFungibleTokensFlow`,
 **Initiating**
 
 ```kotlin
+// kotlin
+
 val myTokenType: TokenType = ...
 val issuerParty: Party = ...
 val observerParty: Party = ...
 
 RedeemNonFungibleTokens(myTokenType, issuerParty, listOf(observerParty))
+```
+```java
+// java
+
+TokenType myTokenType = ...;
+Party issuerParty = ...;
+Party observerParty = ...;
+
+new RedeemNonFungibleTokens(myTokenType, issuerParty, ImmutableList.of(observerParty));
 ```
 
 _Responder flow:_ `RedeemNonFungibleTokensHandler`
@@ -373,10 +648,20 @@ _Responder flow:_ `RedeemNonFungibleTokensHandler`
 **Inline**
 
 ```kotlin
+// kotlin
+
 val myTokenType: TokenType = ...
 val issuerSession = initateFlow(issuerParty)
 val observerSession = initatieFlow(observerParty)
-subFlow(RedeemNonFungibleTokensFlow(myTokenType, listOf(issuerSession), listOf(observerSession)))
+subFlow(RedeemNonFungibleTokensFlow(myTokenType, issuerSession, listOf(observerSession)))
+```
+```java
+// java
+
+TokenType myTokenType = ...;
+FlowSession issuerSession = initiateFlow(issuerParty);
+FlowSession observerSession = initiateFlow(observerParty);
+subFlow(new RedeemNonFungibleTokensFlow(myTokenType, issuerSession, ImmutableList.of(observerSession)));
 ```
 
 _Responder flow:_ `RedeemTokensFlowHandler`
@@ -396,10 +681,21 @@ Observers record states in `StatesToRecord.ALL_VISIBLE` mode. Participants handl
 You can call it at the finalisation step:
 
 ```kotlin
+// kotlin
+
 val stx: SignedTransaction = ...
-val participantSession: FlowSession = initFlow(participantParty)
-val observerSession: FlowSession = initFlow(observerParty)
+val participantSession: FlowSession = initiateFlow(participantParty)
+val observerSession: FlowSession = initiateFlow(observerParty)
 subFlow(ObserverAwareFinalityFlow(stx, listOf(participantSession, observerSession)))
+```
+```java
+// java
+
+SignedTransaction stx = ...;
+FlowSession participantSession = initiateFlow(participantParty);
+FlowSession observerSession = initiateFlow(observerParty);
+subFlow(new ObserverAwareFinalityFlow(stx, ImmutableList.of(participantSession, observerSession)));
+
 ```
 
 **Keeping distribution lists up-to-date**
@@ -411,8 +707,16 @@ that takes care of adding new parties to the distribution list kept by the token
 Simply call at the end of your flow:
 
 ```kotlin
+// kotlin
+
 val stx: SignedTransaction = ...
 subFlow(UpdateDistributionListFlow(stx))
+```
+```java
+// java
+
+SignedTransaction stx = ...;
+subFlow(new UpdateDistributionListFlow(stx));
 ```
 
 ### Creating your own subtypes of TokenType
@@ -422,7 +726,18 @@ top of the `tokenIdentifier` and `fractionDigits` then it is still
 possible to create your own `TokenType` sub-type by sub-classing `TokenType`.
 
 ```kotlin
-class MyTokenType(override val tokenIdentifier: String, override val fractionDigits: Int = 0) : TokenType
+// kotlin
+
+class MyTokenType(override val tokenIdentifier: String, override val fractionDigits: Int = 0) : TokenType(tokenIdentifier, fractionDigits)
+```
+```java
+
+class MyTokenType extends TokenType {
+    public MyTokenType(@NotNull String tokenIdentifier) { super(tokenIdentifier, 0); }
+    public MyTokenType(@NotNull String tokenIdentifier, int fractionDigits) {
+        super(tokenIdentifier, fractionDigits);
+    }
+}
 ```
 
 The above defined token type, allows CorDapp developers to create multiple
@@ -436,21 +751,44 @@ instances of the token type with different identifiers, for example:
 Create an instance of your new token type like you would a regular object.
 
 ```kotlin
+// kotlin
+
     val myTokenType = MyTokenType("TEST", 2)
+```
+```java
+// java
+
+    MyTokenType myTokenType = new MyTokenType("TEST", 2);
 ```
 
 This creates a token of
 
 ```kotlin
+// kotlin
+
     val tokenClass: MyTokenType
     val tokenIdentifier: TEST
+```
+```java
+// java
+
+    Class tokenClass = MyTokenType.class
+    String tokenIdentifier = "TEST" 
 ```
 
 Similar to the above you can create `IssuedTokenType` using your new token:
 
 ```kotlin
+// kotlin
+
 val issuer: Party = ...
 val issuedTokenType: IssuedTokenType = myTokenType issuedBy issuer
+```
+```java
+// java
+
+Party issuer = ...;
+IssuedTokenType issuedTokenType = AmountUtilitiesKt.issuedBy(myTokenType, issuer);        
 ```
 
 #### Specyfing the notary from the notary list in network parameters
@@ -466,7 +804,15 @@ notary = "O=Notary,L=London,C=GB"
 All flows from `token-sdk` will use this notary. If you want to use it from your custom flows, you can call:
 
 ```kotlin
+// kotlin
+
 val notary = getPreferredNotary(serviceHub)
 // And pass it to transaction builder
 TransactionBuilder(notary = notary)
+```
+```java
+// java
+
+Party notary = NotaryUtilitiesKt.getPreferredNotary(getServiceHub(), NotaryUtilitiesKt.firstNotary());
+new TransactionBuilder(notary);
 ```
