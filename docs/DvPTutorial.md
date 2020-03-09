@@ -47,6 +47,8 @@ data class House(
 ) : EvolvableTokenType()
 ```
 ```java
+// java
+
 @BelongsToContract(HouseContract.class)
 public class House extends EvolvableTokenType {
     private final String address;
