@@ -852,7 +852,7 @@ public class Stock extends EvolvableTokenType {
     }
 }
 
-class Eg {
+class Demonstrate {
     // To demonstrate using the above definition
     // Define MEGA CORP Stock reference data then issue it on the ledger (not shown)
     Stock megaCorpStock = new Stock(
