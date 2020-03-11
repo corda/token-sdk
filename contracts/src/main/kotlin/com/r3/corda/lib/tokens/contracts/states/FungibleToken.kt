@@ -1,8 +1,10 @@
 package com.r3.corda.lib.tokens.contracts.states
 
 import com.r3.corda.lib.tokens.contracts.FungibleTokenContract
+import com.r3.corda.lib.tokens.contracts.internal.schemas.FungibleTokenOwnerSchemaV1
 import com.r3.corda.lib.tokens.contracts.internal.schemas.FungibleTokenSchemaV1
 import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleToken
+import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleTokenOwner
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
@@ -12,6 +14,7 @@ import net.corda.core.contracts.Amount
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.FungibleState
 import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
@@ -58,10 +61,11 @@ open class FungibleToken(
                 tokenClass = amount.token.tokenType.tokenClass,
                 tokenIdentifier = amount.token.tokenType.tokenIdentifier
         )
+        is FungibleTokenOwnerSchemaV1 -> PersistentFungibleTokenOwner(holder.owningKey.toStringShort())
         else -> throw IllegalArgumentException("Unrecognised schema $schema")
     }
 
-    override fun supportedSchemas() = listOf(FungibleTokenSchemaV1)
+    override fun supportedSchemas() = listOf(FungibleTokenSchemaV1, FungibleTokenOwnerSchemaV1)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
