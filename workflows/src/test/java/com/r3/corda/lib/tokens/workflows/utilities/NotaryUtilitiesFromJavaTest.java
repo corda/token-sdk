@@ -1,10 +1,5 @@
 package com.r3.corda.lib.tokens.workflows.utilities;
 
-import com.r3.corda.lib.tokens.contracts.types.TokenType;
-import com.r3.corda.lib.tokens.money.DigitalCurrency;
-import com.r3.corda.lib.tokens.money.FiatCurrency;
-import com.r3.corda.lib.tokens.workflows.JITMockNetworkTests;
-import com.r3.corda.lib.tokens.workflows.MockNetworkTest;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
 import net.corda.testing.node.MockNetwork;
@@ -19,9 +14,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class NotaryUtilitiesFromJavaTest {
 
@@ -54,15 +47,15 @@ public class NotaryUtilitiesFromJavaTest {
     @Test
     public void javaWrappedNotarySelectionIsIdenticalToKotlinCompanionObject() throws Exception {
         Party kotlinPreferredNotary = NotaryUtilitiesKt.getPreferredNotary(a.getServices(), NotaryUtilitiesKt.firstNotary());
-        Party javaWrappedPreferredNotary = new NotaryUtilities(a.getServices()).getPreferred();
+        Party javaWrappedPreferredNotary = NotaryUtilities.getPreferred(a.getServices());
         assert(kotlinPreferredNotary.equals(javaWrappedPreferredNotary));
 
-        Party kotlinFirstNotary = NotaryUtilitiesKt.getPreferredNotary(a.getServices(), NotaryUtilitiesKt.firstNotary());
-        Party javaWrappedFirstNotary = new NotaryUtilities(a.getServices()).getPreferred();
+        Party kotlinFirstNotary = NotaryUtilitiesKt.firstNotary().invoke(a.getServices());
+        Party javaWrappedFirstNotary = NotaryUtilities.getFirst(a.getServices());
         assert(kotlinFirstNotary.equals(javaWrappedFirstNotary));
 
-        Party kotlinRandomNotary = NotaryUtilitiesKt.getPreferredNotary(a.getServices(), NotaryUtilitiesKt.firstNotary());
-        Party javaWrappedRandomNotary = new NotaryUtilities(a.getServices()).getPreferred();
+        Party kotlinRandomNotary = NotaryUtilitiesKt.randomNotary().invoke(a.getServices());
+        Party javaWrappedRandomNotary = NotaryUtilities.getPreferred(a.getServices());
         assert(kotlinRandomNotary.equals(javaWrappedRandomNotary));
     }
 }

@@ -93,14 +93,26 @@ internal fun addNotaryWithCheck(txb: TransactionBuilder, notary: Party): Transac
  * This is a simple wrapping class for convenient access from Java code. This class
  * is only syntactic sugar for Java developers and does not change or modify the utilities
  * in this class.
- *
- * @param services The [ServiceHub] of the node that will be using the utilities in this class.
  */
-class NotaryUtilities(val services: ServiceHub) {
-    fun getPreferred() = getPreferredNotary(services)
-    fun getFirst() = firstNotary()
-    fun getRandom() = randomNotary()
-    fun getRandomNonValidating() = randomNonValidatingNotary()
-    fun getRandomValidating() = randomValidatingNotary()
-    fun addNotaryToTx(tb: TransactionBuilder) = addNotary(services, tb)
+class NotaryUtilities {
+    companion object {
+
+        @JvmStatic
+        fun getPreferred(services: ServiceHub): Party = getPreferredNotary(services)
+
+        @JvmStatic
+        fun getFirst(services: ServiceHub): Party = firstNotary().invoke(services)
+
+        @JvmStatic
+        fun getRandom(services: ServiceHub): Party = randomNotary().invoke(services)
+
+        @JvmStatic
+        fun getRandomNonValidating(services: ServiceHub): Party? = randomNonValidatingNotary().invoke(services)
+
+        @JvmStatic
+        fun getRandomValidating(services: ServiceHub): Party? = randomValidatingNotary().invoke(services)
+
+        @JvmStatic
+        fun addNotaryToTx(services: ServiceHub, tb: TransactionBuilder): TransactionBuilder = addNotary(services, tb)
+    }
 }
