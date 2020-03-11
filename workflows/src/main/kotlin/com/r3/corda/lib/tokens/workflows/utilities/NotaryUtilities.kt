@@ -100,9 +100,11 @@ class NotaryUtilities {
          * A static method to pipe the classless [getPreferredNotary] function.
          *
          * @param services The [ServiceHub] we will use to execute [getPreferredNotary]
+         * @param backupSelector A function that will be used to select a notary should a preferred notary not be found.
          */
         @JvmStatic
-        fun getPreferred(services: ServiceHub): Party = getPreferredNotary(services)
+        @JvmOverloads
+        fun getPreferred(services: ServiceHub, backupSelector: ((ServiceHub) -> Party) = ::getFirst): Party = getPreferredNotary(services, backupSelector)
 
         /**
          * A static method to pipe the classless [getFirst] function.

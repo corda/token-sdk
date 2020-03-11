@@ -58,5 +58,15 @@ public class NotaryUtilitiesFromJavaTest {
         Party javaWrappedRandomNotary = NotaryUtilities.getPreferred(a.getServices());
         assert(kotlinRandomNotary.equals(javaWrappedRandomNotary));
     }
+
+    /**
+     * Sanity check for preferred notary backup selector.
+     */
+    @Test
+    public void javaWrappedNotarySelectionWorksWithBackupSelection() throws Exception {
+        Party preferredNotary = NotaryUtilities.getPreferred(a.getServices());
+        Party preferredNotaryWithBackup = NotaryUtilities.getPreferred(a.getServices(), NotaryUtilitiesKt.firstNotary());
+        assert(preferredNotary.equals(preferredNotaryWithBackup));
+    }
 }
 
