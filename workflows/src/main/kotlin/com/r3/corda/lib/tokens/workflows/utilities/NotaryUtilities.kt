@@ -38,6 +38,13 @@ fun getPreferredNotary(services: ServiceHub, backupSelector: (ServiceHub) -> Par
     }
 }
 
+/**
+ * This is a simple wrapping class for convenient access from Java code.
+ */
+class PreferredNotary(val services: ServiceHub) {
+    fun get() = getPreferredNotary(services)
+}
+
 /** Choose the first notary in the list. */
 @Suspendable
 fun firstNotary() = { services: ServiceHub ->

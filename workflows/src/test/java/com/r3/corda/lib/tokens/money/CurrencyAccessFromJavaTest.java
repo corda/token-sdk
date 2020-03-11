@@ -1,4 +1,4 @@
-package com.r3.corda.lib.tokens.workflows.java;
+package com.r3.corda.lib.tokens.money;
 
 import com.r3.corda.lib.tokens.contracts.types.TokenType;
 import com.r3.corda.lib.tokens.money.DigitalCurrency;
