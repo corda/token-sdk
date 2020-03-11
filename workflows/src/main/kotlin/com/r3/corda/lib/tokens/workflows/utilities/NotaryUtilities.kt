@@ -90,28 +90,57 @@ internal fun addNotaryWithCheck(txb: TransactionBuilder, notary: Party): Transac
 }
 
 /**
- * This is a simple wrapping class for convenient access from Java code. This class
- * is only syntactic sugar for Java developers and does not change or modify the utilities
- * in this class.
+ * This is a simple wrapping class for convenient access to the classless utility functions in this file from Java code.
+ * This class is only syntactic sugar for Java developers and does not change or modify the functionality of any utility.
  */
 class NotaryUtilities {
     companion object {
 
+        /**
+         * A static method to pipe the classless [getPreferredNotary] function.
+         *
+         * @param services The [ServiceHub] we will use to execute [getPreferredNotary]
+         */
         @JvmStatic
         fun getPreferred(services: ServiceHub): Party = getPreferredNotary(services)
 
+        /**
+         * A static method to pipe the classless [getFirst] function.
+         *
+         * @param services The [ServiceHub] we will use to execute [getFirst]
+         */
         @JvmStatic
         fun getFirst(services: ServiceHub): Party = firstNotary().invoke(services)
 
+        /**
+         * A static method to pipe the classless [getRandom] function.
+         *
+         * @param services The [ServiceHub] we will use to execute [getRandom]
+         */
         @JvmStatic
         fun getRandom(services: ServiceHub): Party = randomNotary().invoke(services)
 
+        /**
+         * A static method to pipe the classless [getRandomNonValidating] function.
+         *
+         * @param services The [ServiceHub] we will use to execute [getRandomNonValidating]
+         */
         @JvmStatic
         fun getRandomNonValidating(services: ServiceHub): Party? = randomNonValidatingNotary().invoke(services)
 
+        /**
+         * A static method to pipe the classless [getRandomValidating] function.
+         *
+         * @param services The [ServiceHub] we will use to execute [getRandomValidating]
+         */
         @JvmStatic
         fun getRandomValidating(services: ServiceHub): Party? = randomValidatingNotary().invoke(services)
 
+        /**
+         * A static method to pipe the classless [addNotary] function.
+         *
+         * @param services The [ServiceHub] we will use to execute [addNotary]
+         */
         @JvmStatic
         fun addNotaryToTx(services: ServiceHub, tb: TransactionBuilder): TransactionBuilder = addNotary(services, tb)
     }
