@@ -49,14 +49,21 @@ public class NotaryUtilitiesFromJavaTest {
     public final ExpectedException exception = ExpectedException.none();
 
     /**
-     * Sanity check for easy access of digital currency TokenTypes from java code
+     * Sanity check for notary utilities wrapped in class for access from Java.
      */
     @Test
     public void javaWrappedNotarySelectionIsIdenticalToKotlinCompanionObject() throws Exception {
-        Party kotlinParty = NotaryUtilitiesKt.getPreferredNotary(a.getServices(), NotaryUtilitiesKt.firstNotary());
-        Party javaWrappedParty = new PreferredNotary(a.getServices()).get();
+        Party kotlinPreferredNotary = NotaryUtilitiesKt.getPreferredNotary(a.getServices(), NotaryUtilitiesKt.firstNotary());
+        Party javaWrappedPreferredNotary = new NotaryUtilities(a.getServices()).getPreferred();
+        assert(kotlinPreferredNotary.equals(javaWrappedPreferredNotary));
 
-        assert(kotlinParty.equals(javaWrappedParty));
+        Party kotlinFirstNotary = NotaryUtilitiesKt.getPreferredNotary(a.getServices(), NotaryUtilitiesKt.firstNotary());
+        Party javaWrappedFirstNotary = new NotaryUtilities(a.getServices()).getPreferred();
+        assert(kotlinFirstNotary.equals(javaWrappedFirstNotary));
+
+        Party kotlinRandomNotary = NotaryUtilitiesKt.getPreferredNotary(a.getServices(), NotaryUtilitiesKt.firstNotary());
+        Party javaWrappedRandomNotary = new NotaryUtilities(a.getServices()).getPreferred();
+        assert(kotlinRandomNotary.equals(javaWrappedRandomNotary));
     }
 }
 

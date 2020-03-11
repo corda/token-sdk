@@ -38,13 +38,6 @@ fun getPreferredNotary(services: ServiceHub, backupSelector: (ServiceHub) -> Par
     }
 }
 
-/**
- * This is a simple wrapping class for convenient access from Java code.
- */
-class PreferredNotary(val services: ServiceHub) {
-    fun get() = getPreferredNotary(services)
-}
-
 /** Choose the first notary in the list. */
 @Suspendable
 fun firstNotary() = { services: ServiceHub ->
@@ -94,4 +87,20 @@ internal fun addNotaryWithCheck(txb: TransactionBuilder, notary: Party): Transac
         "Notary passed to transaction builder (${txb.notary}) should be the same as the one used by input states ($notary)."
     }
     return txb
+}
+
+/**
+ * This is a simple wrapping class for convenient access from Java code. This class
+ * is only syntactic sugar for Java developers and does not change or modify the utilities
+ * in this class.
+ *
+ * @param services The [ServiceHub] of the node that will be using the utilities in this class.
+ */
+class NotaryUtilities(val services: ServiceHub) {
+    fun getPreferred() = getPreferredNotary(services)
+    fun getFirst() = firstNotary()
+    fun getRandom() = randomNotary()
+    fun getRandomNonValidating() = randomNonValidatingNotary()
+    fun getRandomValidating() = randomValidatingNotary()
+    fun addNotaryToTx(tb: TransactionBuilder) = addNotary(services, tb)
 }
