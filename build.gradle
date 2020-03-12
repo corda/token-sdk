@@ -3,7 +3,7 @@ import static org.gradle.api.JavaVersion.VERSION_1_8
 buildscript {
     ext {
         corda_release_group = 'net.corda'
-        corda_release_version = '4.3'
+        corda_release_version = '4.5-SNAPSHOT'
         tokens_release_group = "com.r3.corda.lib.tokens"
         tokens_release_version = "1.2-SNAPSHOT"
         corda_gradle_plugins_version = '4.0.45'
@@ -13,7 +13,7 @@ buildscript {
         kotlin_version = '1.2.71'
         junit_version = '4.12'
         dokka_version = '0.9.17'
-        quasar_version = '0.7.10'
+        quasar_version = '0.7.13_r3-SNAPSHOT'
         slf4j_version = '1.7.25'
         log4j_version = '2.9.1'
         jackson_version = '2.9.0'
@@ -26,7 +26,6 @@ buildscript {
         mavenCentral()
         mavenLocal()
         maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-releases" }
-        maven { url "https://repo.gradle.org/gradle/libs-releases-local/" }
     }
 
     dependencies {
@@ -66,13 +65,11 @@ subprojects {
         jcenter()
         mavenCentral()
         mavenLocal()
-        maven { url 'https://jitpack.io' }
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-dev" }
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-releases" }
+        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-dependencies-dev" }
+        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-dependencies" }
         maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib" }
         maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib-dev" }
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib" }
-        maven { url "https://repo.gradle.org/gradle/libs-releases-local/" }
+        maven { url "https://repo.gradle.org/gradle/libs-releases/" }
     }
 
     apply plugin: 'kotlin'

@@ -8,9 +8,8 @@ import net.corda.core.contracts.Amount
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.crypto.SecureHash
-import net.corda.core.crypto.sha256
 import net.corda.core.identity.Party
-import net.corda.core.internal.location
+import net.corda.core.node.services.getAttachmentFor
 import net.corda.core.transactions.LedgerTransaction
 
 // Transaction helpers.
@@ -95,13 +94,12 @@ fun TokenType.getAttachmentIdForGenericParam(): SecureHash? {
             while (classToSearch != this.tokenClass && classToSearch != TokenPointer::class.java) {
                 classToSearch = this.tokenClass
             }
-            if (classToSearch.location == TokenType::class.java.location) {
+            val hash = TokenType::class.java.classLoader.getAttachmentFor(classToSearch, TokenType::class.java)
+            if (hash == null) {
                 TokenUtilities.logger.debug("${this.javaClass} is provided by tokens-sdk")
                 NULL_SECURE_HASH
             } else {
-                val hash = classToSearch.location.readBytes().sha256()
-                TokenUtilities.logger.debug("looking for jar which provides: $classToSearch FOUND AT: " +
-                        "${classToSearch.location.path} with hash $hash")
+                TokenUtilities.logger.debug("looking for jar which provides: $classToSearch FOUND with hash $hash")
                 hash
             }
         }

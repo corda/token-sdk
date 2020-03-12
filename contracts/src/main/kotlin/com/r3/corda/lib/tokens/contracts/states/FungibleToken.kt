@@ -13,10 +13,10 @@ import com.r3.corda.lib.tokens.contracts.utilities.holderString
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.FungibleState
-import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
+import net.corda.core.node.services.AttachmentId
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.schemas.PersistentState
 import net.corda.core.schemas.QueryableState
@@ -38,7 +38,7 @@ import net.corda.core.schemas.QueryableState
 open class FungibleToken @JvmOverloads constructor(
         override val amount: Amount<IssuedTokenType>,
         override val holder: AbstractParty,
-        override val tokenTypeJarHash: SecureHash? = amount.token.tokenType.getAttachmentIdForGenericParam()
+        override val tokenTypeJarHash: AttachmentId? = amount.token.tokenType.getAttachmentIdForGenericParam()
 ) : FungibleState<IssuedTokenType>, AbstractToken, QueryableState {
 
     override val tokenType: TokenType get() = amount.token.tokenType
