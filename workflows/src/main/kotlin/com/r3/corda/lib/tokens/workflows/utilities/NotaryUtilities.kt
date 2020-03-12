@@ -106,7 +106,7 @@ class NotaryUtilities {
         @JvmStatic
         @JvmOverloads
         fun getPreferredNotary(services: ServiceHub, backupSelector: ((ServiceHub) -> Party) = ::firstNotary): Party
-                = getPreferredNotary(services, backupSelector)
+                = com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary(services, backupSelector)
 
         /**
          * A static method to pipe the classless [getFirst] function.
@@ -115,7 +115,7 @@ class NotaryUtilities {
          */
         @JvmStatic
         fun firstNotary(services: ServiceHub): Party
-                = firstNotary().invoke(services)
+                = com.r3.corda.lib.tokens.workflows.utilities.firstNotary().invoke(services)
 
         /**
          * A static method to pipe the classless [getRandom] function.
@@ -124,7 +124,7 @@ class NotaryUtilities {
          */
         @JvmStatic
         fun randomNotary(services: ServiceHub): Party
-                = randomNotary().invoke(services)
+                = com.r3.corda.lib.tokens.workflows.utilities.randomNotary().invoke(services)
 
         /**
          * A static method to pipe the classless [getRandomNonValidating] function.
@@ -133,7 +133,7 @@ class NotaryUtilities {
          */
         @JvmStatic
         fun randomNonValidatingNotary(services: ServiceHub): Party?
-                = randomNonValidatingNotary().invoke(services)
+                = com.r3.corda.lib.tokens.workflows.utilities.randomNonValidatingNotary().invoke(services)
 
         /**
          * A static method to pipe the classless [getRandomValidating] function.
@@ -142,7 +142,7 @@ class NotaryUtilities {
          */
         @JvmStatic
         fun randomValidatingNotary(services: ServiceHub): Party?
-                = randomValidatingNotary().invoke(services)
+                = com.r3.corda.lib.tokens.workflows.utilities.randomValidatingNotary().invoke(services)
 
         /**
          * A static method to pipe the classless [addNotary] function.

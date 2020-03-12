@@ -1,8 +1,6 @@
 package com.r3.corda.lib.tokens.money;
 
 import com.r3.corda.lib.tokens.contracts.types.TokenType;
-import com.r3.corda.lib.tokens.money.DigitalCurrency;
-import com.r3.corda.lib.tokens.money.FiatCurrency;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -43,6 +41,5 @@ public class CurrencyAccessFromJavaTest {
             assert(kotlinFiat.getFractionDigits() == javaWrappedFiat.getFractionDigits());
         });
     }
-
 }
 
