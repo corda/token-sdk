@@ -6,8 +6,10 @@ import com.r3.corda.lib.tokens.contracts.utilities.AmountUtilitiesKt;
 import com.r3.corda.lib.tokens.contracts.utilities.TokenUtilitiesKt;
 import com.r3.corda.lib.tokens.selection.SelectionUtilities;
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens;
+import net.corda.core.concurrent.CordaFuture;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.node.services.Vault;
+import net.corda.core.transactions.SignedTransaction;
 import net.corda.testing.node.MockNetwork;
 import net.corda.testing.node.MockNetworkNotarySpec;
 import net.corda.testing.node.MockNetworkParameters;
@@ -61,7 +63,7 @@ public class SelectionUtilitiesFromJavaTest {
     public void javaWrappedSelectionCriteriaIsIdenticalToKotlinCompanionObject() throws Exception {
 
         TokenType testTokenType = new TokenType("TEST", 1);
-        a.startFlow(
+        CordaFuture<SignedTransaction> futureWithTokens = a.startFlow(
             new IssueTokens(Collections.singletonList(
                 TokenUtilitiesKt.heldBy(
                         AmountUtilitiesKt.issuedBy(
@@ -71,6 +73,7 @@ public class SelectionUtilitiesFromJavaTest {
                         a.getInfo().getLegalIdentities().get(0)
                 )
         )));
+        mockNetwork.runNetwork();
 
         Vault.Page<FungibleToken> tokenAmountResultsClassLess = a.getServices().getVaultService().queryBy(FungibleToken.class, SelectionUtilities.tokenAmountCriteria(testTokenType));
         assert(tokenAmountResultsClassLess.getStates().size() == 1);
