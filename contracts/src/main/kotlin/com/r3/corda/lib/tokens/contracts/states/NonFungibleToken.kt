@@ -37,7 +37,7 @@ import net.corda.core.schemas.QueryableState
  * @param TokenType the [TokenType].
  */
 @BelongsToContract(NonFungibleTokenContract::class)
-open class NonFungibleToken(
+open class NonFungibleToken @JvmOverloads constructor(
         val token: IssuedTokenType,
         override val holder: AbstractParty,
         override val linearId: UniqueIdentifier,
