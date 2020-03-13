@@ -28,17 +28,15 @@ public class NotaryUtilitiesFromJavaTest extends JITMockNetworkTests {
      */
     @Test
     public void javaWrappedNotarySelectionIsIdenticalToKotlinCompanionObject() throws Exception {
-        Party kotlinPreferredNotary = NotaryUtilitiesKt.getPreferredNotary(a.getServices(), NotaryUtilitiesKt.firstNotary());
-        Party javaWrappedPreferredNotary = NotaryUtilities.getPreferredNotary(a.getServices());
-        assert(kotlinPreferredNotary.equals(javaWrappedPreferredNotary));
+        Party javaWrappedAllArgs = NotaryUtilities.getPreferredNotary(a.getServices(), NotaryUtilities.firstNotary());
+        Party javaWrappedDefaultArgs = NotaryUtilities.getPreferredNotary(a.getServices());
+        assert(javaWrappedAllArgs.equals(javaWrappedDefaultArgs));
 
-        Party kotlinFirstNotary = NotaryUtilitiesKt.firstNotary().invoke(a.getServices());
         Party javaWrappedFirstNotary = NotaryUtilities.getPreferredNotary(a.getServices());
-        assert(kotlinFirstNotary.equals(javaWrappedFirstNotary));
+        assert(javaWrappedAllArgs.equals(javaWrappedFirstNotary));
 
-        Party kotlinRandomNotary = NotaryUtilitiesKt.randomNotary().invoke(a.getServices());
-        Party javaWrappedRandomNotary = NotaryUtilities.randomNotary(a.getServices());
-        assert(kotlinRandomNotary.equals(javaWrappedRandomNotary));
+        Party kotlinRandomNotary = NotaryUtilities.randomNotary().invoke(a.getServices());
+        assert(javaWrappedAllArgs.equals(kotlinRandomNotary));
     }
 
     /**
@@ -46,8 +44,8 @@ public class NotaryUtilitiesFromJavaTest extends JITMockNetworkTests {
      */
     @Test
     public void javaWrappedNotarySelectionWorksWithBackupSelection() throws Exception {
+        Party preferredNotaryWithBackup = NotaryUtilities.getPreferredNotary(a.getServices(), NotaryUtilities.firstNotary());
         Party preferredNotary = NotaryUtilities.getPreferredNotary(a.getServices());
-        Party preferredNotaryWithBackup = NotaryUtilities.getPreferredNotary(a.getServices(), NotaryUtilitiesKt.firstNotary());
         assert(preferredNotary.equals(preferredNotaryWithBackup));
     }
 }

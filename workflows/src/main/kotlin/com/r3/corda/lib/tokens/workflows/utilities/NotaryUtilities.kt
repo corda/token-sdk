@@ -1,3 +1,4 @@
+@file:JvmName("NotaryUtilities")
 package com.r3.corda.lib.tokens.workflows.utilities
 
 import co.paralleluniverse.fibers.Suspendable
@@ -21,6 +22,7 @@ import net.corda.core.transactions.TransactionBuilder
  * @return the selected notary [Party] object.
  */
 @Suspendable
+@JvmOverloads
 fun getPreferredNotary(services: ServiceHub, backupSelector: (ServiceHub) -> Party = firstNotary()): Party {
     val notaryString = try {
         val config: CordappConfig = services.getAppContext().config
@@ -88,69 +90,4 @@ internal fun addNotaryWithCheck(txb: TransactionBuilder, notary: Party): Transac
         "Notary passed to transaction builder (${txb.notary}) should be the same as the one used by input states ($notary)."
     }
     return txb
-}
-
-/**
- * This is a simple wrapping class for convenient access to the classless utility functions in this file from Java code.
- * This class is only syntactic sugar for Java developers and does not change or modify the functionality of any utility.
- */
-class NotaryUtilities {
-    companion object {
-
-        /**
-         * A static method to pipe the classless [getPreferredNotary] function.
-         *
-         * @param services The [ServiceHub] we will use to execute [getPreferredNotary]
-         * @param backupSelector A function that will be used to select a notary should a preferred notary not be found.
-         */
-        @JvmStatic
-        @JvmOverloads
-        fun getPreferredNotary(services: ServiceHub, backupSelector: ((ServiceHub) -> Party) = ::firstNotary): Party
-                = com.r3.corda.lib.tokens.workflows.utilities.getPreferredNotary(services, backupSelector)
-
-        /**
-         * A static method to pipe the classless [getFirst] function.
-         *
-         * @param services The [ServiceHub] we will use to execute [getFirst]
-         */
-        @JvmStatic
-        fun firstNotary(services: ServiceHub): Party
-                = com.r3.corda.lib.tokens.workflows.utilities.firstNotary().invoke(services)
-
-        /**
-         * A static method to pipe the classless [getRandom] function.
-         *
-         * @param services The [ServiceHub] we will use to execute [getRandom]
-         */
-        @JvmStatic
-        fun randomNotary(services: ServiceHub): Party
-                = com.r3.corda.lib.tokens.workflows.utilities.randomNotary().invoke(services)
-
-        /**
-         * A static method to pipe the classless [getRandomNonValidating] function.
-         *
-         * @param services The [ServiceHub] we will use to execute [getRandomNonValidating]
-         */
-        @JvmStatic
-        fun randomNonValidatingNotary(services: ServiceHub): Party?
-                = com.r3.corda.lib.tokens.workflows.utilities.randomNonValidatingNotary().invoke(services)
-
-        /**
-         * A static method to pipe the classless [getRandomValidating] function.
-         *
-         * @param services The [ServiceHub] we will use to execute [getRandomValidating]
-         */
-        @JvmStatic
-        fun randomValidatingNotary(services: ServiceHub): Party?
-                = com.r3.corda.lib.tokens.workflows.utilities.randomValidatingNotary().invoke(services)
-
-        /**
-         * A static method to pipe the classless [addNotary] function.
-         *
-         * @param services The [ServiceHub] we will use to execute [addNotary]
-         */
-        @JvmStatic
-        fun addNotary(services: ServiceHub, tb: TransactionBuilder): TransactionBuilder
-                = com.r3.corda.lib.tokens.workflows.utilities.addNotary(services, tb)
-    }
 }

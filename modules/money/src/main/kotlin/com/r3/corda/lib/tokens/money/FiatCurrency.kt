@@ -16,6 +16,7 @@ class FiatCurrency(currencyCode: String): TokenType(
 ) {
     companion object {
         // Uses the java money registry.
+        @JvmStatic
         fun getInstance(currencyCode: String): TokenType {
             val currency = Currency.getInstance(currencyCode)
             return TokenType(currency.currencyCode, currency.defaultFractionDigits)

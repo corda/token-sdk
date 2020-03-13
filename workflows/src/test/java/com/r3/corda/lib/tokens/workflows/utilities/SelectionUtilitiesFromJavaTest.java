@@ -5,7 +5,6 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType;
 import com.r3.corda.lib.tokens.contracts.utilities.AmountUtilitiesKt;
 import com.r3.corda.lib.tokens.contracts.utilities.TokenUtilitiesKt;
 import com.r3.corda.lib.tokens.selection.SelectionUtilities;
-import com.r3.corda.lib.tokens.selection.SelectionUtilitiesKt;
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.node.services.Vault;
@@ -62,7 +61,6 @@ public class SelectionUtilitiesFromJavaTest {
     public void javaWrappedSelectionCriteriaIsIdenticalToKotlinCompanionObject() throws Exception {
 
         TokenType testTokenType = new TokenType("TEST", 1);
-
         a.startFlow(
             new IssueTokens(Collections.singletonList(
                 TokenUtilitiesKt.heldBy(
@@ -74,16 +72,13 @@ public class SelectionUtilitiesFromJavaTest {
                 )
         )));
 
-        Vault.Page<FungibleToken> tokenAmountResultsClassLess = a.getServices().getVaultService().queryBy(FungibleToken.class, SelectionUtilitiesKt.tokenAmountCriteria(testTokenType));
-        Vault.Page<FungibleToken> tokenAmountResultsClassWrapped = a.getServices().getVaultService().queryBy(FungibleToken.class, SelectionUtilities.tokenAmountCriteria(testTokenType));
-        assert(tokenAmountResultsClassLess.equals(tokenAmountResultsClassWrapped));
+        Vault.Page<FungibleToken> tokenAmountResultsClassLess = a.getServices().getVaultService().queryBy(FungibleToken.class, SelectionUtilities.tokenAmountCriteria(testTokenType));
+        assert(tokenAmountResultsClassLess.getStates().size() == 1);
 
-        Vault.Page<FungibleToken> tokenAmountWithHolderResultsClassLess = a.getServices().getVaultService().queryBy(FungibleToken.class, SelectionUtilitiesKt.tokenAmountWithHolderCriteria(testTokenType, a.getInfo().getLegalIdentities().get(0)));
-        Vault.Page<FungibleToken> tokenAmountWithHolderResultsClassWrapped = a.getServices().getVaultService().queryBy(FungibleToken.class, SelectionUtilities.tokenAmountWithHolderCriteria(testTokenType, a.getInfo().getLegalIdentities().get(0)));
-        assert(tokenAmountWithHolderResultsClassLess.equals(tokenAmountWithHolderResultsClassWrapped));
+        Vault.Page<FungibleToken> tokenAmountWithHolderResultsClassLess = a.getServices().getVaultService().queryBy(FungibleToken.class, SelectionUtilities.tokenAmountWithHolderCriteria(testTokenType, a.getInfo().getLegalIdentities().get(0)));
+        assert(tokenAmountWithHolderResultsClassLess.getStates().size() == 1);
 
-        Vault.Page<FungibleToken> tokenAmountWithIssuerResultsClassLess = a.getServices().getVaultService().queryBy(FungibleToken.class, SelectionUtilitiesKt.tokenAmountWithIssuerCriteria(testTokenType, a.getInfo().getLegalIdentities().get(0)));
-        Vault.Page<FungibleToken> tokenAmountWithIssuerResultsClassWrapped = a.getServices().getVaultService().queryBy(FungibleToken.class, SelectionUtilities.tokenAmountWithIssuerCriteria(testTokenType, a.getInfo().getLegalIdentities().get(0)));
-        assert(tokenAmountWithIssuerResultsClassLess.equals(tokenAmountWithIssuerResultsClassWrapped));
+        Vault.Page<FungibleToken> tokenAmountWithIssuerResultsClassLess = a.getServices().getVaultService().queryBy(FungibleToken.class, SelectionUtilities.tokenAmountWithIssuerCriteria(testTokenType, a.getInfo().getLegalIdentities().get(0)));
+        assert(tokenAmountWithIssuerResultsClassLess.getStates().size() == 1);
     }
 }

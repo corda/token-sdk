@@ -110,7 +110,7 @@ class DatabaseTokenSelection(
     }
 
     @Suspendable
-    override protected fun selectTokens(
+    override fun selectTokens(
             holder: Holder,
             lockId: UUID,
             requiredAmount: Amount<TokenType>,

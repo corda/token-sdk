@@ -18,10 +18,13 @@ public class CurrencyAccessFromJavaTest {
 
         digitalCurrencies.forEach((currencyCode) -> {
             TokenType kotlinFiat = DigitalCurrency.Companion.getInstance(currencyCode);
+            TokenType javaStatic = DigitalCurrency.getInstance(currencyCode);
             TokenType javaWrappedFiat = new DigitalCurrency(currencyCode);
 
             assert(kotlinFiat.getTokenIdentifier().equals(javaWrappedFiat.getTokenIdentifier()));
+            assert(kotlinFiat.getTokenIdentifier().equals(javaStatic.getTokenIdentifier()));
             assert(kotlinFiat.getFractionDigits() == javaWrappedFiat.getFractionDigits());
+            assert(kotlinFiat.getFractionDigits() == javaStatic.getFractionDigits());
         });
     }
 
@@ -35,9 +38,12 @@ public class CurrencyAccessFromJavaTest {
 
         fiatCurrencies.forEach((currencyCode) -> {
             TokenType kotlinFiat = FiatCurrency.Companion.getInstance(currencyCode);
+            TokenType javaStatic = FiatCurrency.getInstance(currencyCode);
             TokenType javaWrappedFiat = new FiatCurrency(currencyCode);
 
             assert(kotlinFiat.getTokenIdentifier().equals(javaWrappedFiat.getTokenIdentifier()));
+            assert(kotlinFiat.getTokenIdentifier().equals(javaStatic.getTokenIdentifier()));
+            assert(kotlinFiat.getFractionDigits() == javaStatic.getFractionDigits());
             assert(kotlinFiat.getFractionDigits() == javaWrappedFiat.getFractionDigits());
         });
     }
