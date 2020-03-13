@@ -41,7 +41,7 @@ import java.util.*
  *
  * @param services for performing vault queries.
  */
-class DatabaseTokenSelection(
+class DatabaseTokenSelection @JvmOverloads constructor(
         override val services: ServiceHub,
         private val maxRetries: Int = MAX_RETRIES_DEFAULT,
         private val retrySleep: Int = RETRY_SLEEP_DEFAULT,
