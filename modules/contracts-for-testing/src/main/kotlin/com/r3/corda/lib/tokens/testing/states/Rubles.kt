@@ -1,3 +1,4 @@
+@file:JvmName("Rubles")
 package com.r3.corda.lib.tokens.testing.states
 
 import com.r3.corda.lib.tokens.contracts.FungibleTokenContract
@@ -30,7 +31,9 @@ class PhoBowl : TokenType("PTK", 0) {
 
 }
 
+@JvmField
 val RUB = Ruble()
+@JvmField
 val PTK = PhoBowl()
 
 data class Appartment(val id: String = "Foo") : TokenType(id, 0)

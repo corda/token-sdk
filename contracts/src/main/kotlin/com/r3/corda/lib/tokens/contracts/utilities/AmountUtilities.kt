@@ -1,3 +1,4 @@
+@file:JvmName("AmountUtilities")
 package com.r3.corda.lib.tokens.contracts.utilities
 
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType

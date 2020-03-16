@@ -35,7 +35,7 @@ import net.corda.core.schemas.QueryableState
  * @property holder the [AbstractParty] which has a claim on the issuer of the [IssuedTokenType].
  */
 @BelongsToContract(FungibleTokenContract::class)
-open class FungibleToken(
+open class FungibleToken @JvmOverloads constructor(
         override val amount: Amount<IssuedTokenType>,
         override val holder: AbstractParty,
         override val tokenTypeJarHash: SecureHash? = amount.token.tokenType.getAttachmentIdForGenericParam()
