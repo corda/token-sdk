@@ -2,7 +2,7 @@ package com.r3.corda.lib.tokens.workflows.utilities;
 
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken;
 import com.r3.corda.lib.tokens.contracts.types.TokenType;
-import com.r3.corda.lib.tokens.contracts.utilities.AmountUtilitiesKt;
+import com.r3.corda.lib.tokens.contracts.utilities.AmountUtilities;
 import com.r3.corda.lib.tokens.contracts.utilities.TokenUtilitiesKt;
 import com.r3.corda.lib.tokens.selection.SelectionUtilities;
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens;
@@ -66,8 +66,8 @@ public class SelectionUtilitiesFromJavaTest {
         CordaFuture<SignedTransaction> futureWithTokens = a.startFlow(
             new IssueTokens(Collections.singletonList(
                 TokenUtilitiesKt.heldBy(
-                        AmountUtilitiesKt.issuedBy(
-                                AmountUtilitiesKt.amount(10, testTokenType),
+                        AmountUtilities.issuedBy(
+                                AmountUtilities.amount(10, testTokenType),
                                 a.getInfo().getLegalIdentities().get(0)
                         ),
                         a.getInfo().getLegalIdentities().get(0)
