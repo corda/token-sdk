@@ -1,3 +1,4 @@
+@file:JvmName("RedeemFlowUtilities")
 package com.r3.corda.lib.tokens.workflows.flows.redeem
 
 import co.paralleluniverse.fibers.Suspendable

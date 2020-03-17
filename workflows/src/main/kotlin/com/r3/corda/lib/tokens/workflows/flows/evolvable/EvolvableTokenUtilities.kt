@@ -1,3 +1,4 @@
+@file:JvmName("EvolvableTokenUtilities")
 package com.r3.corda.lib.tokens.workflows.flows.evolvable
 
 import com.r3.corda.lib.tokens.contracts.commands.Create

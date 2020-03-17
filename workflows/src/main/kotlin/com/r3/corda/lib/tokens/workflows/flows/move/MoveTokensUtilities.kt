@@ -1,3 +1,4 @@
+@file:JvmName("MoveTokensUtilities")
 package com.r3.corda.lib.tokens.workflows.flows.move
 
 import co.paralleluniverse.fibers.Suspendable

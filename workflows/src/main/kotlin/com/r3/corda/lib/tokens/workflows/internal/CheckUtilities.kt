@@ -1,3 +1,4 @@
+@file:JvmName("CheckUtilities")
 package com.r3.corda.lib.tokens.workflows.internal
 
 import co.paralleluniverse.fibers.Suspendable

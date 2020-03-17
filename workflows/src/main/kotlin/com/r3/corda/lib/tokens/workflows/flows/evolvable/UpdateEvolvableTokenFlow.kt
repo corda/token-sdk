@@ -22,7 +22,7 @@ import net.corda.core.transactions.TransactionBuilder
  * @property participantSessions a list of sessions for participants in the evolvable token types
  * @property observerSessions a list of sessions for any observers to the create observable token transaction
  */
-class UpdateEvolvableTokenFlow(
+class UpdateEvolvableTokenFlow @JvmOverloads constructor(
         val oldStateAndRef: StateAndRef<EvolvableTokenType>,
         val newState: EvolvableTokenType,
         val participantSessions: List<FlowSession>,

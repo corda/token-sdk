@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicReference
  * @property vaultObserver corda service that watches and caches new states
  * @property autoUnlockDelay Time after which the tokens that are not spent will be automatically released. Defaults to Duration.ofMinutes(5).
  */
-class LocalTokenSelector(
+class LocalTokenSelector @JvmOverloads constructor(
         override val services: ServiceHub,
         private val vaultObserver: VaultWatcherService,
         private val autoUnlockDelay: Duration = Duration.ofMinutes(5),
@@ -38,6 +38,7 @@ class LocalTokenSelector(
     constructor(services: ServiceHub) : this(services, getVaultObserver(services))
 
     companion object {
+        @JvmStatic
         private fun getVaultObserver(services: ServiceHub): VaultWatcherService {
             return services.cordaService(VaultWatcherService::class.java)
         }
