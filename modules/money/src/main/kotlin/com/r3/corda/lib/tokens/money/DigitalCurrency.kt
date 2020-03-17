@@ -13,6 +13,7 @@ class DigitalCurrency {
                 Pair("DOGE", TokenType("Dogecoin", 8))
         )
 
+        @JvmStatic
         fun getInstance(currencyCode: String): TokenType {
             return registry[currencyCode] ?: throw IllegalArgumentException("$currencyCode doesn't exist.")
         }
