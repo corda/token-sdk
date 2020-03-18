@@ -10,7 +10,11 @@ pipeline {
             filename '.ci/Dockerfile'
         }
     }
-    options { timestamps() }
+    options { 
+        timestamps()
+        timeout(time: 3, unit: 'HOURS')
+        buildDiscarder(logRotator(daysToKeepStr: '7', artifactDaysToKeepStr: '7'))
+    }
 
     environment {
         EXECUTOR_NUMBER = "${env.EXECUTOR_NUMBER}"
