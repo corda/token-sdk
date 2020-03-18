@@ -18,9 +18,21 @@ public class TokenTypeBuilderTest extends JITMockNetworkTests {
         Party aliceParty = alice.getInfo().getLegalIdentities().get(0);
 
         new TokenBuilder()
-                .amount(1)
+                .withAmount(1)
+                .of(DigitalCurrency.getInstance("BTC"))
+                .resolveAmountTokenType();
+
+        new TokenBuilder()
+                .withAmount(1)
                 .of(DigitalCurrency.getInstance("BTC"))
                 .issuedBy(aliceParty)
-                .heldBy(aliceParty);
+                .resolveAmountIssuedTokenType();
+
+        new TokenBuilder()
+                .withAmount(1)
+                .of(DigitalCurrency.getInstance("BTC"))
+                .issuedBy(aliceParty)
+                .heldBy(aliceParty)
+                .resolveFungibleState();
     }
 }

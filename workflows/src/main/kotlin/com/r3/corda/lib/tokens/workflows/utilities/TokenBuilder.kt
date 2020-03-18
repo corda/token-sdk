@@ -40,10 +40,10 @@ class TokenBuilder {
         return this
     }
 
-    fun amount(intAmount: Int) = initializeAmountOrThrow { this.intAmount = intAmount }
-    fun amount(longAmount: Long) = initializeAmountOrThrow { this.longAmount = longAmount}
-    fun amount(doubleAmount: Double) = initializeAmountOrThrow { this.doubleAmount = doubleAmount }
-    fun amount(bigDecimalAmount: BigDecimal) = initializeAmountOrThrow { this.bigDecimalAmount = bigDecimalAmount }
+    fun withAmount(intAmount: Int) = initializeAmountOrThrow { this.intAmount = intAmount }
+    fun withAmount(longAmount: Long) = initializeAmountOrThrow { this.longAmount = longAmount}
+    fun withAmount(doubleAmount: Double) = initializeAmountOrThrow { this.doubleAmount = doubleAmount }
+    fun withAmount(bigDecimalAmount: BigDecimal) = initializeAmountOrThrow { this.bigDecimalAmount = bigDecimalAmount }
 
     fun <T: TokenType> of(t: T): TokenBuilder = when(getInitializedAmount()) {
         Int -> {
@@ -81,4 +81,9 @@ class TokenBuilder {
         }
         return this
     }
+
+    fun resolveAmountTokenType() = this.amountTokenType
+    fun resolveAmountIssuedTokenType() = this.amountIssuedTokenType
+    fun resolveFungibleState() = this.fungibleToken
 }
+
