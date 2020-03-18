@@ -10,13 +10,9 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 
-public class CurrencyAccessFromJavaTest extends JITMockNetworkTests {
-
-    /**
-     * Sanity check for easy access of digital currency TokenTypes from java code
-     */
+public class TokenTypeBuilderTest extends JITMockNetworkTests {
     @Test
-    public void javaWrappedDigitalCurrencyIsIdenticalToKotlinCompanionObject() throws Exception {
+    public void exampleOfTokenBuilder() throws Exception {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         StartedMockNode alice = node(aliceX500Name);
         Party aliceParty = alice.getInfo().getLegalIdentities().get(0);
