@@ -38,6 +38,7 @@ abstract class Selector {
      */
     // Token Only
     @Suspendable
+    @JvmOverloads
     fun selectTokens(
             requiredAmount: Amount<TokenType>,
             queryBy: TokenQueryBy = TokenQueryBy(),
@@ -61,6 +62,7 @@ abstract class Selector {
      */
     // From external id
     @Suspendable
+    @JvmOverloads
     fun selectTokens(
             externalId: UUID,
             requiredAmount: Amount<TokenType>,
@@ -85,6 +87,7 @@ abstract class Selector {
      */
     // From a given key
     @Suspendable
+    @JvmOverloads
     fun selectTokens(
             holdingKey: PublicKey,
             requiredAmount: Amount<TokenType>,
@@ -104,6 +107,7 @@ abstract class Selector {
      */
     // Token only
     @Suspendable
+    @JvmOverloads
     fun generateMove(
             partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
             changeHolder: AbstractParty,
@@ -123,6 +127,7 @@ abstract class Selector {
      */
     // External id
     @Suspendable
+    @JvmOverloads
     fun generateMove(
             externalId: UUID,
             partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
@@ -143,6 +148,7 @@ abstract class Selector {
      */
     // From public key
     @Suspendable
+    @JvmOverloads
     fun generateMove(
             holdingKey: PublicKey,
             partiesAndAmounts: List<Pair<AbstractParty, Amount<TokenType>>>,
