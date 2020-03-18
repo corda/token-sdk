@@ -20,7 +20,9 @@ class AnonymisePartiesFlow(
     @Suspendable
     override fun call(): Map<Party, AnonymousParty> {
         val sessionParties = sessions.map(FlowSession::counterparty)
-        require(sessionParties.containsAll(parties)) { "You must provide sessions for all parties." }
+        val partiesWithoutASession = parties.minus(sessionParties)
+        require(partiesWithoutASession.isEmpty()) { "You must provide sessions for all parties. " +
+                "No sessions provided for parties: $partiesWithoutASession" }
         return sessions.mapNotNull { session ->
             val party = session.counterparty
             if (party in parties) {
