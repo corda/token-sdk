@@ -169,6 +169,26 @@ class VaultWatcherServiceTest {
     }
 
     @Test
+    fun `should remove states which have been spent via redeem`() {
+        val (VaultObserver,
+                observable) = getDefaultVaultObserver()
+
+        val vaultWatcherService = VaultWatcherService(VaultObserver, InMemorySelectionConfig.defaultConfig())
+        val owner = Crypto.generateKeyPair(Crypto.DEFAULT_SIGNATURE_SCHEME).public
+
+        for (i in 1..100) {
+            createNewFiatCurrencyTokenRef((Math.random() * 10).toLong(), owner, notary1, issuer1, GBP, observable, database)
+        }
+
+        val selectedTokens = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(50, GBP), selectionId = "abc").toSet()
+        executeConsumption(selectedTokens, observable, database)
+
+        val selectedTokensAfterSpend = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(10000000000, GBP), allowShortfall = true, selectionId = "abc")
+
+        Assert.assertThat(selectedTokens, everyItem(not(isIn(selectedTokensAfterSpend))))
+    }
+
+    @Test
     fun `should allow selection by multiple holder types`() {
 
         val accountsAndKeys = (0 until 10).map {
@@ -501,7 +521,7 @@ class VaultWatcherServiceTest {
 
             observable?.let {
                 database.transaction {
-                    observable.onNext(Vault.Update((inputStates), produced = setOf(changeState, movedState)))
+                    observable.onNext(Vault.Update(consumed = inputStates, produced = setOf(changeState, movedState)))
                 }
             }
 
@@ -515,6 +535,13 @@ class VaultWatcherServiceTest {
             }
             return inputStates to setOf(changeState, movedState)
         }
+
+        fun executeConsumption(inputStates: Set<StateAndRef<FungibleToken>>,
+                          observable: PublishSubject<Vault.Update<FungibleToken>>,
+                          database: CordaPersistence) =
+                database.transaction {
+                    observable.onNext(Vault.Update(consumed = inputStates, produced = setOf()))
+                }
 
         fun getDefaultVaultObserver(): Pair<TokenObserver, PublishSubject<Vault.Update<FungibleToken>>> {
             val observable = PublishSubject.create<Vault.Update<FungibleToken>>()

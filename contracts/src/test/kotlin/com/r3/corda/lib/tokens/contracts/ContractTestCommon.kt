@@ -31,11 +31,17 @@ import org.junit.Rule
 abstract class ContractTestCommon {
 
     protected companion object {
+        @JvmField
         val NOTARY = TestIdentity(DUMMY_NOTARY_NAME, 20)
+        @JvmField
         val ISSUER = TestIdentity(CordaX500Name("ISSUER", "London", "GB"))
+        @JvmField
         val ALICE = TestIdentity(CordaX500Name("ALICE", "London", "GB"))
+        @JvmField
         val BOB = TestIdentity(CordaX500Name("BOB", "London", "GB"))
+        @JvmField
         val CHARLIE = TestIdentity(CordaX500Name("CHARLIE", "London", "GB"))
+        @JvmField
         val DAENERYS = TestIdentity(CordaX500Name("DAENERYS", "London", "GB"))
     }
 

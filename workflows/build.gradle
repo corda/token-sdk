@@ -49,7 +49,6 @@ dependencies {
     cordaCompile ("$corda_release_group:corda-core:$corda_release_version") {
         changing = true
     }
-    cordaCompile "$confidential_id_release_group:ci-workflows:$confidential_id_release_version"
 
     // Logging.
     testCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
@@ -61,9 +60,14 @@ dependencies {
 
     // CorDapp dependencies.
     cordaCompile project(":contracts")
-    cordaCompile project(":modules:money")
+    cordaCompile "$confidential_id_release_group:ci-workflows:$confidential_id_release_version"
+
+    compile project(":modules:money")
+    compile project(":modules:selection")
+
+    //just for testing - this means you MUST specify the contracts-for-testing cordapp as a cordapp in all tests using test flows
     cordaCompile project(":modules:contracts-for-testing")
-    cordaCompile project(":modules:selection")
+
 }
 
 jar {

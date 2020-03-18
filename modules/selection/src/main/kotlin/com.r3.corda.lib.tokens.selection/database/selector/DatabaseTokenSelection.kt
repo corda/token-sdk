@@ -60,7 +60,7 @@ class DatabaseTokenSelection(
             additionalCriteria: QueryCriteria,
             sorter: Sort,
             stateAndRefs: MutableList<StateAndRef<FungibleToken>>,
-            softLockingType: QueryCriteria.SoftLockingType = QueryCriteria.SoftLockingType.UNLOCKED_AND_SPECIFIED
+            softLockingType: QueryCriteria.SoftLockingType = QueryCriteria.SoftLockingType.UNLOCKED_ONLY
     ): Boolean {
         // Didn't need to select any tokens.
         if (requiredAmount.quantity == 0L) {
