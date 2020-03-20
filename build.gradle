@@ -5,7 +5,7 @@ buildscript {
         corda_release_group = 'net.corda'
         corda_release_version = '4.3'
         tokens_release_group = "com.r3.corda.lib.tokens"
-        tokens_release_version = "1.1"
+        tokens_release_version = "1.2-SNAPSHOT"
         corda_gradle_plugins_version = '4.0.45'
         aetherVersion = '1.0.0.v20140518'
         mavenVersion = '3.1.0'
@@ -95,8 +95,6 @@ subprojects {
 
 // Don't publish an empty "modules" JAR.
 def publishProjects = [
-        project(":modules:selection"),
-        project(":modules:money"),
         project(":contracts"),
         project(":workflows")
 ]
