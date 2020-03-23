@@ -19,7 +19,7 @@ import java.math.BigDecimal;
 public class TokenBuilderTests extends JITMockNetworkTests {
 
     @Test
-    public void TokenBuilderTest() throws Exception {
+    public void TokenBuilderResolvesWithoutThrowing() throws Exception {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         StartedMockNode alice = node(aliceX500Name);
         Party aliceParty = alice.getInfo().getLegalIdentities().get(0);
@@ -87,6 +87,7 @@ public class TokenBuilderTests extends JITMockNetworkTests {
                     .withAmount(1);
             assert(false);
         } catch(Exception ex) {
+            assert(ex instanceof TokenBuilderException);
             assert(ex.getLocalizedMessage().equals("The token amount has already been initialized"));
         }
     }

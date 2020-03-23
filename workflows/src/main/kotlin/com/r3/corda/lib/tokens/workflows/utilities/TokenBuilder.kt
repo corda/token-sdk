@@ -7,9 +7,9 @@ import com.r3.corda.lib.tokens.contracts.utilities.amount
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
+import com.r3.corda.lib.tokens.workflows.TokenBuilderException
 import net.corda.core.contracts.Amount
 import net.corda.core.identity.Party
-import java.lang.IllegalArgumentException
 import java.math.BigDecimal
 
 /**
@@ -40,7 +40,7 @@ class TokenBuilder {
         if (listOf(longAmount, intAmount, doubleAmount, bigDecimalAmount).all { it == null }) {
             callbackSetter()
         } else {
-            throw IllegalArgumentException("The token amount has already been initialized")
+            throw TokenBuilderException("The token amount has already been initialized")
         }
         return this
     }
@@ -113,7 +113,7 @@ class TokenBuilder {
                 this.amountTokenType = amount(this.bigDecimalAmount!!, t)
                 this
             }
-            else -> { throw IllegalArgumentException("The builder has failed, an appropriate amount type was not provided.") }
+            else -> { throw TokenBuilderException("The builder has failed, an appropriate amount type was not provided.") }
     }
 
     /**
@@ -126,7 +126,7 @@ class TokenBuilder {
     fun issuedBy(party: Party): TokenBuilder {
         this.amountIssuedTokenType = when {
             ::amountTokenType.isInitialized -> { this.amountTokenType.issuedBy(party) }
-            else -> { throw IllegalArgumentException("An amountTokenType has not been initialized") }
+            else -> { throw TokenBuilderException("An amountTokenType has not been initialized") }
         }
         return this
     }
@@ -142,7 +142,7 @@ class TokenBuilder {
     fun heldBy(party: Party): TokenBuilder {
         this.fungibleToken = when {
             ::amountIssuedTokenType.isInitialized -> { this.amountIssuedTokenType heldBy party }
-            else -> { throw IllegalArgumentException("Neither amountTokenType or amount IssuedTokenType is initialized") }
+            else -> { throw TokenBuilderException("Neither amountTokenType or amount IssuedTokenType is initialized") }
         }
         return this
     }
