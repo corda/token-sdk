@@ -1,7 +1,9 @@
 package com.r3.corda.lib.tokens.workflows;
 
+import com.r3.corda.lib.tokens.contracts.types.TokenType;
 import com.r3.corda.lib.tokens.money.DigitalCurrency;
 import com.r3.corda.lib.tokens.workflows.utilities.TokenBuilder;
+import net.corda.core.contracts.Amount;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
 import net.corda.testing.node.StartedMockNode;
@@ -37,35 +39,36 @@ public class TokenBuilderTests extends JITMockNetworkTests {
     }
 
     @Test
-    public void AmountTokenTypeWithInt() {
-        new TokenBuilder()
+    public void VaryingInputAmountTypesAreEquivalent() {
+        Amount<TokenType> intAmountTokenType = new TokenBuilder()
                 .withAmount(1)
                 .of(DigitalCurrency.getInstance("BTC"))
                 .resolveAmountTokenType();
-    }
 
-    @Test
-    public void AmountTokenTypeWithDouble() {
-        new TokenBuilder()
+        Amount<TokenType> doubleAmountTokenType = new TokenBuilder()
                 .withAmount(1.0)
                 .of(DigitalCurrency.getInstance("BTC"))
                 .resolveAmountTokenType();
-    }
 
-    @Test
-    public void AmountTokenTypeWithBigDecimal() {
-        new TokenBuilder()
+        Amount<TokenType> bigDecimalAmountTokenType = new TokenBuilder()
                 .withAmount(BigDecimal.ONE)
                 .of(DigitalCurrency.getInstance("BTC"))
                 .resolveAmountTokenType();
-    }
 
-    @Test
-    public void AmountTokenTypeWithLong() {
-        new TokenBuilder()
+        Amount<TokenType> longAmountTokenType = new TokenBuilder()
                 .withAmount(new Long(1))
                 .of(DigitalCurrency.getInstance("BTC"))
                 .resolveAmountTokenType();
+
+        Amount<TokenType> total = intAmountTokenType
+                .plus(doubleAmountTokenType)
+                .plus(bigDecimalAmountTokenType)
+                .plus(longAmountTokenType);
+
+        System.out.println("FIND ME");
+        System.out.println(total.getQuantity());
+        System.out.println(new Long(4));
+        assert(total.getQuantity() == new Long(4));
     }
 
     @Test
