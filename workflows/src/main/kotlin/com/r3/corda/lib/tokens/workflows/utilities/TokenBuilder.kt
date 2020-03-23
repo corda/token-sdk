@@ -166,6 +166,6 @@ class TokenBuilder {
      * This function will throw a not initialized exception if the appropriate
      * builder methods have not been called: [withAmount], [of], [issuedBy], [heldBy].
      */
-    fun resolveFungibleState() = this.fungibleToken
+    fun resolveFungibleToken() = this.fungibleToken
 }
 
