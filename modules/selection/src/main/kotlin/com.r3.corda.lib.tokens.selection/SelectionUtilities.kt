@@ -1,3 +1,4 @@
+@file:JvmName("SelectionUtilities")
 package com.r3.corda.lib.tokens.selection
 
 import co.paralleluniverse.fibers.Suspendable
@@ -50,4 +51,10 @@ fun tokenAmountWithHolderCriteria(token: TokenType, holder: AbstractParty): Quer
     return tokenAmountCriteria(token).and(issuerCriteria)
 }
 
+/**
+ * An exception that is thrown where the specified criteria returns an amount of tokens
+ * that is not sufficient for the specified spend.
+ *
+ * @param message The exception message that should be thrown in this context
+ */
 class InsufficientBalanceException(message: String) : RuntimeException(message)

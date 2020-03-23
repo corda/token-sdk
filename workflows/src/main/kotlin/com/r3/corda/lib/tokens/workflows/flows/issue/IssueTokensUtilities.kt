@@ -1,3 +1,4 @@
+@file:JvmName("IssueTokensUtilities")
 package com.r3.corda.lib.tokens.workflows.flows.issue
 
 import co.paralleluniverse.fibers.Suspendable

@@ -1,5 +1,4 @@
 @file:JvmName("TokenUtilities")
-
 package com.r3.corda.lib.tokens.workflows.utilities
 
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken

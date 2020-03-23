@@ -11,11 +11,13 @@ import org.slf4j.LoggerFactory
 
 const val CACHE_SIZE_DEFAULT = 1024 // TODO Return good default, for now it's not wired, it will be done in separate PR.
 
-data class InMemorySelectionConfig(val enabled: Boolean,
+data class InMemorySelectionConfig @JvmOverloads constructor(val enabled: Boolean,
                                    val indexingStrategies: List<VaultWatcherService.IndexingType>,
                                    val cacheSize: Int = CACHE_SIZE_DEFAULT) : StateSelectionConfig {
     companion object {
         private val logger = LoggerFactory.getLogger("inMemoryConfigSelectionLogger")
+
+        @JvmStatic
         fun parse(config: CordappConfig): InMemorySelectionConfig {
             val enabled = if (!config.exists("stateSelection.inMemory.enabled")) {
                 logger.warn("Did not detect a configuration for InMemory selection - enabling memory usage for token indexing. Please set stateSelection.inMemory.enabled to \"false\" to disable this")

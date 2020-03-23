@@ -1,3 +1,4 @@
+@file:JvmName("DistributionUtilities")
 package com.r3.corda.lib.tokens.workflows.internal.flows.distribution
 
 import co.paralleluniverse.fibers.Suspendable
