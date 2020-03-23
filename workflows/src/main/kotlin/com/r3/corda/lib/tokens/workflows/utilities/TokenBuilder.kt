@@ -16,23 +16,13 @@ import java.math.BigDecimal
  * access Kotlin infix functions to build token types.
  */
 class TokenBuilder {
-    private var intAmount: Int? = null
     private var longAmount: Long? = null
-    private var doubleAmount: Double? = null
-    private var bigDecimalAmount: BigDecimal? = null
     private lateinit var amountTokenType: Amount<TokenType>
     private lateinit var amountIssuedTokenType: Amount<IssuedTokenType>
     private lateinit var fungibleToken: FungibleToken
 
-    private fun getInitializedAmount() = if (!amountInitialized()) {
-        listOfNotNull(intAmount, longAmount, doubleAmount, bigDecimalAmount).single()
-    } else {
-        throw IllegalArgumentException("The token amount hasn't been initialized")
-    }
-
-    private fun amountInitialized() = listOf(intAmount, longAmount, doubleAmount, bigDecimalAmount).all { it != null }
     private fun initializeAmountOrThrow(callbackSetter: () -> Unit): TokenBuilder {
-        if (!amountInitialized()) {
+        if (longAmount == null) {
             callbackSetter()
         } else {
             throw IllegalArgumentException("The token amount has already been initialized")
@@ -40,29 +30,14 @@ class TokenBuilder {
         return this
     }
 
-    fun withAmount(intAmount: Int) = initializeAmountOrThrow { this.intAmount = intAmount }
-    fun withAmount(longAmount: Long) = initializeAmountOrThrow { this.longAmount = longAmount}
-    fun withAmount(doubleAmount: Double) = initializeAmountOrThrow { this.doubleAmount = doubleAmount }
-    fun withAmount(bigDecimalAmount: BigDecimal) = initializeAmountOrThrow { this.bigDecimalAmount = bigDecimalAmount }
+    fun withAmount(intAmount: Int) = initializeAmountOrThrow { this.longAmount= intAmount.toLong() }
+    fun withAmount(longAmount: Long) = initializeAmountOrThrow { this.longAmount = longAmount }
+    fun withAmount(doubleAmount: Double) = initializeAmountOrThrow { this.longAmount = doubleAmount.toLong() }
+    fun withAmount(bigDecimalAmount: BigDecimal) = initializeAmountOrThrow { this.longAmount = bigDecimalAmount.toLong() }
 
-    fun <T: TokenType> of(t: T): TokenBuilder = when(getInitializedAmount()) {
-        Int -> {
-            this.amountTokenType = this.intAmount!!.of(t)
-            this
-        }
-        Long -> {
-            this.amountTokenType = this.longAmount!!.of(t)
-            this
-        }
-        Double -> {
-            this.amountTokenType = this.doubleAmount!!.of(t)
-            this
-        }
-        getInitializedAmount() is BigDecimal -> {
-            this.amountTokenType = this.doubleAmount!!.of(t)
-            this
-        }
-        else -> { throw IllegalArgumentException("This should never happen") }
+    fun <T: TokenType> of(t: T): TokenBuilder {
+        this.amountTokenType = this.longAmount!!.of(t)
+        return this
     }
 
     fun issuedBy(party: Party): TokenBuilder {
