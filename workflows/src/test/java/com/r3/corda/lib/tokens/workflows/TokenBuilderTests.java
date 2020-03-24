@@ -76,19 +76,13 @@ public class TokenBuilderTests extends JITMockNetworkTests {
     }
 
     @Test
-    public void AmountInitializationFailsWhenAmountIsAlreadyInitialized() throws Exception {
-        CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
-        StartedMockNode alice = node(aliceX500Name);
-        Party aliceParty = alice.getInfo().getLegalIdentities().get(0);
-        try {
-            new TokenBuilder()
-                    .withAmountValue(new Long(1))
-                    .withAmountValue(1);
-            assert(false);
-        } catch(Exception ex) {
-            assert(ex instanceof TokenBuilderException);
-            assert(ex.getLocalizedMessage().equals("The token amount has already been initialized"));
-        }
+    public void AmountMayBeSetMoreThanOnce() throws Exception {
+        Amount<TokenType> amount = new TokenBuilder()
+                .withAmountValue(new Long(1))
+                .withAmountValue(2)
+                .of(FiatCurrency.getInstance("USD"))
+                .buildAmountTokenType();
+        assert (amount.getQuantity() == 200L);
     }
 
     @Test
@@ -100,7 +94,7 @@ public class TokenBuilderTests extends JITMockNetworkTests {
             assert(false);
         } catch(Exception ex) {
             assert(ex instanceof TokenBuilderException);
-            assert(ex.getLocalizedMessage().equals("An amount value has not been provided to the builder."));
+            assert(ex.getLocalizedMessage().equals("A Token Type has not been provided to the builder."));
         }
     }
 

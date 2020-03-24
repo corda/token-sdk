@@ -22,73 +22,38 @@ import java.math.BigDecimal
  * developer experience in Java.
  */
 class TokenBuilder {
-    private var longAmount: Long? = null
-    private var intAmount: Int? = null
-    private var doubleAmount: Double? = null
     private var bigDecimalAmount: BigDecimal? = null
     private lateinit var tokenType: TokenType
     private lateinit var issuer: Party
     private lateinit var holder: Party
 
     /**
-     * This is a helper function that will set one of the viable amount types if none has been
-     * previously provided to the builder. If another amount type has been previously
-     * provided, it will throw an exception.
+     * Set the [bigDecimalAmount] member property of the builder using a provided [Long].
      *
-     * @param callbackSetter A function that sets a particular member property
+     * @param longAmount The [Long] that will be converted to set the [bigDecimalAmount] member property
      */
-    private fun initializeAmountOrThrow(callbackSetter: () -> Unit): TokenBuilder {
-        if (listOf(longAmount, intAmount, doubleAmount, bigDecimalAmount).all { it == null }) {
-            callbackSetter()
-        } else {
-            throw TokenBuilderException("The token amount has already been initialized")
-        }
-        return this
-    }
+    fun withAmountValue(longAmount: Long) = this.apply { bigDecimalAmount = BigDecimal.valueOf(longAmount) }
 
     /**
-     * Gets the amount value that has been initialized.
-     */
-    private fun getInitializedAmount() = listOfNotNull(longAmount, intAmount, doubleAmount, bigDecimalAmount).singleOrNull()
-
-    /**
-     * Allow the developer to add an amount in any of the following classes to the TokenBuilder
-     * [Long], [Int], [Double], [BigDecimal]. The types of the amount values must be preserved
-     * as their eventual conversion to [Long] requires information from the [TokenType] which
-     * may or may not be initialized yet.
-     */
-
-    /**
-     * Initialize the [longAmount] member property of the builder. Throws an exception if another
-     * possible amount has already been initialized.
+     * Set the [bigDecimalAmount] member property of the builder using a provided [Int].
      *
-     * @param longAmount The [Long] we will use to set the [longAmount] member property.
+     * @param intAmount The [Int] that will be converted to set the [bigDecimalAmount] member property
      */
-    fun withAmountValue(longAmount: Long) = initializeAmountOrThrow { this.longAmount = longAmount }
+    fun withAmountValue(intAmount: Int) = this.apply { bigDecimalAmount = BigDecimal.valueOf(intAmount.toLong()) }
 
     /**
-     * Initialize the [intAmount] member property of the builder. Throws an exception if another
-     * possible amount has already been initialized.
+     * Set the [bigDecimalAmount] member property of the builder using a provided [Double].
      *
-     * @param intAmount The [Int] we will use to set the [intAmount] member property.
+     * @param doubleAmount The [Double] that will be converted to set the [bigDecimalAmount] member property
      */
-    fun withAmountValue(intAmount: Int) = initializeAmountOrThrow { this.intAmount = intAmount }
+    fun withAmountValue(doubleAmount: Double) = this.apply { bigDecimalAmount = BigDecimal.valueOf(doubleAmount) }
 
     /**
-     * Initialize the [doubleAmount] member property of the builder. Throws an exception if another
-     * possible amount has already been initialized.
+     * Set the [bigDecimalAmount] member property of the builder using a provided [BigDecimal].
      *
-     * @param doubleAmount The [Double] we will use to set the [doubleAmount] member property.
+     * @param bigDecimal The [BigDecimal] that will be used to set the [bigDecimalAmount] member property
      */
-    fun withAmountValue(doubleAmount: Double) = initializeAmountOrThrow { this.doubleAmount = doubleAmount }
-
-    /**
-     * Initialize the [bigDecimalAmount] member property of the builder. Throws an exception if another
-     * possible amount has already been initialized.
-     *
-     * @param bigDecimalAmount The [BigDecimal] we will use to set the [bigDecimalAmount] member property.
-     */
-    fun withAmountValue(bigDecimalAmount: BigDecimal) = initializeAmountOrThrow { this.bigDecimalAmount = bigDecimalAmount }
+    fun withAmountValue(bigDecimal: BigDecimal) = this.apply { bigDecimalAmount = bigDecimal }
 
     /**
      * Replicates the Kotlin DSL [of] infix function. Supplies a [TokenType] to the builder
@@ -96,9 +61,7 @@ class TokenBuilder {
      *
      * @param t The token type that will be used to build an [Amount] of a [TokenType]
      */
-    fun <T: TokenType> of(t: T): TokenBuilder = this.apply {
-        this.tokenType = t
-    }
+    fun <T: TokenType> of(t: T): TokenBuilder = this.apply { this.tokenType = t }
 
     /**
      * Replicates the Kotlin DSL [issuedBy] infix function. Supplies a [Party] to the builder
@@ -124,16 +87,10 @@ class TokenBuilder {
      * Builds an [Amount] of a [TokenType]. This function will throw a [TokenBuilderException]
      * exception if the appropriate builder methods have not been called: [withAmountValue], [of].
      */
-    fun buildAmountTokenType(): Amount<TokenType> = try {
-        when (getInitializedAmount()) {
-            is Long -> { amount(this.longAmount!!, tokenType) }
-            is Int -> amount(this.intAmount!!, tokenType)
-            is Double -> { amount(this.doubleAmount!!, tokenType) }
-            is BigDecimal -> { amount(this.bigDecimalAmount!!, tokenType) }
-            else -> { throw TokenBuilderException("The builder has failed, an appropriate amount type was not provided.") }
-        }
-    } catch (ex: UninitializedPropertyAccessException) {
-        throw TokenBuilderException("An amount value has not been provided to the builder.")
+    fun buildAmountTokenType(): Amount<TokenType> = when {
+        !::tokenType.isInitialized -> { throw TokenBuilderException("A Token Type has not been provided to the builder.") }
+        bigDecimalAmount != null -> { bigDecimalAmount!! of tokenType }
+        else -> { throw TokenBuilderException("An amount value has not been provided to the builder.") }
     }
 
     /**
@@ -154,4 +111,3 @@ class TokenBuilder {
         else -> { throw TokenBuilderException("A token holder has not been provided to the builder.") }
     }
 }
-
