@@ -7,7 +7,6 @@ import com.r3.corda.lib.tokens.contracts.utilities.AmountUtilities;
 import com.r3.corda.lib.tokens.money.DigitalCurrency;
 import com.r3.corda.lib.tokens.money.FiatCurrency;
 import com.r3.corda.lib.tokens.workflows.utilities.TokenBuilder;
-import kotlin.UninitializedPropertyAccessException;
 import net.corda.core.contracts.Amount;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
@@ -26,47 +25,47 @@ public class TokenBuilderTests extends JITMockNetworkTests {
 
         // Token builder resolves to Amount<TokenType>
         Amount<TokenType> amountTokenType = new TokenBuilder()
-                .withAmount(1)
+                .withAmountValue(1)
                 .of(DigitalCurrency.getInstance("BTC"))
-                .resolveAmountTokenType();
+                .buildAmountTokenType();
 
         // Token builder resolves to Amount<IssuedTokenType>
         Amount<IssuedTokenType> amountIssuedTokenType = new TokenBuilder()
-                .withAmount(1)
+                .withAmountValue(1)
                 .of(DigitalCurrency.getInstance("BTC"))
                 .issuedBy(aliceParty)
-                .resolveAmountIssuedTokenType();
+                .buildAmountIssuedTokenType();
 
         // Token builder resolves to FungibleState
         FungibleToken fungibleToken = new TokenBuilder()
-                .withAmount(1)
+                .withAmountValue(1)
                 .of(DigitalCurrency.getInstance("BTC"))
                 .issuedBy(aliceParty)
                 .heldBy(aliceParty)
-                .resolveFungibleToken();
+                .buildFungibleToken();
     }
 
     @Test
     public void VaryingInputAmountTypesAreEquivalent() {
         Amount<TokenType> intAmountTokenType = new TokenBuilder()
-                .withAmount(1)
+                .withAmountValue(1)
                 .of(FiatCurrency.getInstance("USD"))
-                .resolveAmountTokenType();
+                .buildAmountTokenType();
 
         Amount<TokenType> doubleAmountTokenType = new TokenBuilder()
-                .withAmount(1.0)
+                .withAmountValue(1.0)
                 .of(FiatCurrency.getInstance("USD"))
-                .resolveAmountTokenType();
+                .buildAmountTokenType();
 
         Amount<TokenType> bigDecimalAmountTokenType = new TokenBuilder()
-                .withAmount(BigDecimal.ONE)
+                .withAmountValue(BigDecimal.ONE)
                 .of(FiatCurrency.getInstance("USD"))
-                .resolveAmountTokenType();
+                .buildAmountTokenType();
 
         Amount<TokenType> longAmountTokenType = new TokenBuilder()
-                .withAmount(new Long(1))
+                .withAmountValue(new Long(1))
                 .of(FiatCurrency.getInstance("USD"))
-                .resolveAmountTokenType();
+                .buildAmountTokenType();
 
         Amount<TokenType> total = intAmountTokenType
                 .plus(doubleAmountTokenType)
@@ -83,8 +82,8 @@ public class TokenBuilderTests extends JITMockNetworkTests {
         Party aliceParty = alice.getInfo().getLegalIdentities().get(0);
         try {
             new TokenBuilder()
-                    .withAmount(new Long(1))
-                    .withAmount(1);
+                    .withAmountValue(new Long(1))
+                    .withAmountValue(1);
             assert(false);
         } catch(Exception ex) {
             assert(ex instanceof TokenBuilderException);
@@ -96,11 +95,12 @@ public class TokenBuilderTests extends JITMockNetworkTests {
     public void UnableToRetrieveAmountTokenTypeWithoutTokenType() throws Exception {
         try {
             new TokenBuilder()
-                    .withAmount(new Long(1))
-                    .resolveAmountTokenType();
+                    .withAmountValue(new Long(1))
+                    .buildAmountTokenType();
             assert(false);
-        } catch(UninitializedPropertyAccessException ex) {
-            assert(ex.getLocalizedMessage().equals("lateinit property amountTokenType has not been initialized"));
+        } catch(Exception ex) {
+            assert(ex instanceof TokenBuilderException);
+            assert(ex.getLocalizedMessage().equals("An amount value has not been provided to the builder."));
         }
     }
 
@@ -108,12 +108,13 @@ public class TokenBuilderTests extends JITMockNetworkTests {
     public void UnableToRetrieveAmountIssuedTokenTypeWithoutIssuer() throws Exception {
         try {
             new TokenBuilder()
-                    .withAmount(new Long(1))
+                    .withAmountValue(new Long(1))
                     .of(FiatCurrency.getInstance("USD"))
-                    .resolveAmountIssuedTokenType();
+                    .buildAmountIssuedTokenType();
             assert(false);
-        } catch(UninitializedPropertyAccessException ex) {
-            assert(ex.getLocalizedMessage().equals("lateinit property amountIssuedTokenType has not been initialized"));
+        } catch(Exception ex) {
+            assert(ex instanceof TokenBuilderException);
+            assert(ex.getLocalizedMessage().equals("An token issuer has not been provided to the builder."));
         }
     }
 
@@ -124,13 +125,14 @@ public class TokenBuilderTests extends JITMockNetworkTests {
         Party aliceParty = alice.getInfo().getLegalIdentities().get(0);
         try {
             new TokenBuilder()
-                    .withAmount(new Long(1))
+                    .withAmountValue(new Long(1))
                     .of(FiatCurrency.getInstance("USD"))
                     .issuedBy(aliceParty)
-                    .resolveFungibleToken();
+                    .buildFungibleToken();
             assert(false);
-        } catch(UninitializedPropertyAccessException ex) {
-            assert(ex.getLocalizedMessage().equals("lateinit property fungibleToken has not been initialized"));
+        } catch(Exception ex) {
+            assert(ex instanceof TokenBuilderException);
+            assert(ex.getLocalizedMessage().equals("A token holder has not been provided to the builder."));
         }
     }
 }
