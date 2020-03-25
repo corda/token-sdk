@@ -89,8 +89,8 @@ class TokenBuilder {
     @Throws(TokenBuilderException::class)
     fun buildAmountTokenType(): Amount<TokenType> = when {
         !::tokenType.isInitialized -> { throw TokenBuilderException("A Token Type has not been provided to the builder.") }
-        amount != null -> { amount!! of tokenType }
-        else -> { throw TokenBuilderException("An amount value has not been provided to the builder.") }
+        amount == null -> { throw TokenBuilderException("An amount value has not been provided to the builder.") }
+        else -> { amount!! of tokenType }
     }
 
     /**
