@@ -18,27 +18,27 @@ import java.math.BigDecimal;
 public class TokenBuilderTests extends JITMockNetworkTests {
 
     @Test
-    public void TokenBuilderResolvesWithoutThrowing() throws Exception {
+    public void TokenBuilderResolvesWithoutThrowing() throws TokenBuilderException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         StartedMockNode alice = node(aliceX500Name);
         Party aliceParty = alice.getInfo().getLegalIdentities().get(0);
 
         // Token builder resolves to Amount<TokenType>
         Amount<TokenType> amountTokenType = new TokenBuilder()
-                .withAmountValue(1)
+                .withAmount(1)
                 .of(DigitalCurrency.getInstance("BTC"))
                 .buildAmountTokenType();
 
         // Token builder resolves to Amount<IssuedTokenType>
         Amount<IssuedTokenType> amountIssuedTokenType = new TokenBuilder()
-                .withAmountValue(1)
+                .withAmount(1)
                 .of(DigitalCurrency.getInstance("BTC"))
                 .issuedBy(aliceParty)
                 .buildAmountIssuedTokenType();
 
         // Token builder resolves to FungibleState
         FungibleToken fungibleToken = new TokenBuilder()
-                .withAmountValue(1)
+                .withAmount(1)
                 .of(DigitalCurrency.getInstance("BTC"))
                 .issuedBy(aliceParty)
                 .heldBy(aliceParty)
@@ -46,24 +46,24 @@ public class TokenBuilderTests extends JITMockNetworkTests {
     }
 
     @Test
-    public void VaryingInputAmountTypesAreEquivalent() {
+    public void VaryingInputAmountTypesAreEquivalent() throws TokenBuilderException {
         Amount<TokenType> intAmountTokenType = new TokenBuilder()
-                .withAmountValue(1)
+                .withAmount(1)
                 .of(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
 
         Amount<TokenType> doubleAmountTokenType = new TokenBuilder()
-                .withAmountValue(1.0)
+                .withAmount(1.0)
                 .of(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
 
         Amount<TokenType> bigDecimalAmountTokenType = new TokenBuilder()
-                .withAmountValue(BigDecimal.ONE)
+                .withAmount(BigDecimal.ONE)
                 .of(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
 
         Amount<TokenType> longAmountTokenType = new TokenBuilder()
-                .withAmountValue(new Long(1))
+                .withAmount(new Long(1))
                 .of(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
 
@@ -78,8 +78,8 @@ public class TokenBuilderTests extends JITMockNetworkTests {
     @Test
     public void AmountMayBeSetMoreThanOnce() throws Exception {
         Amount<TokenType> amount = new TokenBuilder()
-                .withAmountValue(new Long(1))
-                .withAmountValue(2)
+                .withAmount(new Long(1))
+                .withAmount(2)
                 .of(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
         assert (amount.getQuantity() == 200L);
@@ -89,11 +89,10 @@ public class TokenBuilderTests extends JITMockNetworkTests {
     public void UnableToRetrieveAmountTokenTypeWithoutTokenType() throws Exception {
         try {
             new TokenBuilder()
-                    .withAmountValue(new Long(1))
+                    .withAmount(new Long(1))
                     .buildAmountTokenType();
             assert(false);
-        } catch(Exception ex) {
-            assert(ex instanceof TokenBuilderException);
+        } catch(TokenBuilderException ex) {
             assert(ex.getLocalizedMessage().equals("A Token Type has not been provided to the builder."));
         }
     }
@@ -102,30 +101,28 @@ public class TokenBuilderTests extends JITMockNetworkTests {
     public void UnableToRetrieveAmountIssuedTokenTypeWithoutIssuer() throws Exception {
         try {
             new TokenBuilder()
-                    .withAmountValue(new Long(1))
+                    .withAmount(new Long(1))
                     .of(FiatCurrency.getInstance("USD"))
                     .buildAmountIssuedTokenType();
             assert(false);
-        } catch(Exception ex) {
-            assert(ex instanceof TokenBuilderException);
+        } catch(TokenBuilderException ex) {
             assert(ex.getLocalizedMessage().equals("An token issuer has not been provided to the builder."));
         }
     }
 
     @Test
-    public void UnableToRetrieveFungibleTokenWithoutHolder() throws Exception {
+    public void UnableToRetrieveFungibleTokenWithoutHolder() throws TokenBuilderException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         StartedMockNode alice = node(aliceX500Name);
         Party aliceParty = alice.getInfo().getLegalIdentities().get(0);
         try {
-            new TokenBuilder()
-                    .withAmountValue(new Long(1))
+            FungibleToken test = new TokenBuilder()
+                    .withAmount(new Long(1))
                     .of(FiatCurrency.getInstance("USD"))
                     .issuedBy(aliceParty)
                     .buildFungibleToken();
             assert(false);
-        } catch(Exception ex) {
-            assert(ex instanceof TokenBuilderException);
+        } catch(TokenBuilderException ex) {
             assert(ex.getLocalizedMessage().equals("A token holder has not been provided to the builder."));
         }
     }

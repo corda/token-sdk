@@ -10,7 +10,6 @@ import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.workflows.TokenBuilderException
 import net.corda.core.contracts.Amount
 import net.corda.core.identity.Party
-import java.lang.Exception
 import java.math.BigDecimal
 
 /**
@@ -22,38 +21,38 @@ import java.math.BigDecimal
  * developer experience in Java.
  */
 class TokenBuilder {
-    private var bigDecimalAmount: BigDecimal? = null
+    private var amount: BigDecimal? = null
     private lateinit var tokenType: TokenType
     private lateinit var issuer: Party
     private lateinit var holder: Party
 
     /**
-     * Set the [bigDecimalAmount] member property of the builder using a provided [Long].
+     * Set the [amount] member property of the builder using a provided [Long].
      *
-     * @param longAmount The [Long] that will be converted to set the [bigDecimalAmount] member property
+     * @param longAmount The [Long] that will be converted to set the [amount] member property
      */
-    fun withAmountValue(longAmount: Long) = this.apply { bigDecimalAmount = BigDecimal.valueOf(longAmount) }
+    fun withAmount(longAmount: Long) = this.apply { amount = BigDecimal.valueOf(longAmount) }
 
     /**
-     * Set the [bigDecimalAmount] member property of the builder using a provided [Int].
+     * Set the [amount] member property of the builder using a provided [Int].
      *
-     * @param intAmount The [Int] that will be converted to set the [bigDecimalAmount] member property
+     * @param intAmount The [Int] that will be converted to set the [amount] member property
      */
-    fun withAmountValue(intAmount: Int) = this.apply { bigDecimalAmount = BigDecimal.valueOf(intAmount.toLong()) }
+    fun withAmount(intAmount: Int) = this.apply { amount = BigDecimal(intAmount) }
 
     /**
-     * Set the [bigDecimalAmount] member property of the builder using a provided [Double].
+     * Set the [amount] member property of the builder using a provided [Double].
      *
-     * @param doubleAmount The [Double] that will be converted to set the [bigDecimalAmount] member property
+     * @param doubleAmount The [Double] that will be converted to set the [amount] member property
      */
-    fun withAmountValue(doubleAmount: Double) = this.apply { bigDecimalAmount = BigDecimal.valueOf(doubleAmount) }
+    fun withAmount(doubleAmount: Double) = this.apply { amount = BigDecimal.valueOf(doubleAmount) }
 
     /**
-     * Set the [bigDecimalAmount] member property of the builder using a provided [BigDecimal].
+     * Set the [amount] member property of the builder using a provided [BigDecimal].
      *
-     * @param bigDecimal The [BigDecimal] that will be used to set the [bigDecimalAmount] member property
+     * @param bigDecimal The [BigDecimal] that will be used to set the [amount] member property
      */
-    fun withAmountValue(bigDecimal: BigDecimal) = this.apply { bigDecimalAmount = bigDecimal }
+    fun withAmount(bigDecimal: BigDecimal) = this.apply { amount = bigDecimal }
 
     /**
      * Replicates the Kotlin DSL [of] infix function. Supplies a [TokenType] to the builder
@@ -85,18 +84,20 @@ class TokenBuilder {
 
     /**
      * Builds an [Amount] of a [TokenType]. This function will throw a [TokenBuilderException]
-     * exception if the appropriate builder methods have not been called: [withAmountValue], [of].
+     * exception if the appropriate builder methods have not been called: [withAmount], [of].
      */
+    @Throws(TokenBuilderException::class)
     fun buildAmountTokenType(): Amount<TokenType> = when {
         !::tokenType.isInitialized -> { throw TokenBuilderException("A Token Type has not been provided to the builder.") }
-        bigDecimalAmount != null -> { bigDecimalAmount!! of tokenType }
+        amount != null -> { amount!! of tokenType }
         else -> { throw TokenBuilderException("An amount value has not been provided to the builder.") }
     }
 
     /**
      * Builds an [Amount] of an [IssuedTokenType]. This function will throw a [TokenBuilderException]
-     * if the appropriate builder methods have not been called: [withAmountValue], [of], [issuedBy].
+     * if the appropriate builder methods have not been called: [withAmount], [of], [issuedBy].
      */
+    @Throws(TokenBuilderException::class)
     fun buildAmountIssuedTokenType(): Amount<IssuedTokenType> = when {
         ::issuer.isInitialized -> { buildAmountTokenType() issuedBy issuer }
         else -> { throw TokenBuilderException("An token issuer has not been provided to the builder.") }
@@ -104,8 +105,9 @@ class TokenBuilder {
 
     /**
      * Builds an [FungibleToken] state. This function will throw a [TokenBuilderException]
-     * if the appropriate builder methods have not been called: [withAmountValue], [of], [issuedBy], [heldBy].
+     * if the appropriate builder methods have not been called: [withAmount], [of], [issuedBy], [heldBy].
      */
+    @Throws(TokenBuilderException::class)
     fun buildFungibleToken() = when {
         ::holder.isInitialized -> { buildAmountIssuedTokenType() heldBy holder }
         else -> { throw TokenBuilderException("A token holder has not been provided to the builder.") }
