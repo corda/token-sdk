@@ -10,10 +10,7 @@ import java.util.*
  *
  * @param currencyCode The currency code that represents the TokenType which the developer wishes to instantiate.
  */
-class FiatCurrency(currencyCode: String): TokenType(
-        getInstance(currencyCode).tokenIdentifier,
-        getInstance(currencyCode).fractionDigits
-) {
+class FiatCurrency {
     companion object {
         // Uses the java money registry.
         @JvmStatic

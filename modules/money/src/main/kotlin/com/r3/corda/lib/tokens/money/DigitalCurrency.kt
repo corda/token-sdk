@@ -10,10 +10,7 @@ import java.util.*
  *
  * @param currencyCode The currency code that represents the TokenType which the developer wishes to instantiate.
  */
-class DigitalCurrency(currencyCode: String): TokenType(
-    getInstance(currencyCode).tokenIdentifier,
-    getInstance(currencyCode).fractionDigits
-) {
+class DigitalCurrency {
     companion object {
         private val registry = mapOf(
                 Pair("XRP", TokenType("Ripple", 6)),
