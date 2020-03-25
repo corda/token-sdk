@@ -52,7 +52,7 @@ class TokenBuilder {
      *
      * @param bigDecimal The [BigDecimal] that will be used to set the [amount] member property
      */
-    fun withAmount(bigDecimal: BigDecimal) = this.apply { amount = bigDecimal }
+    fun withAmount(bigDecimalAmount: BigDecimal) = this.apply { amount = bigDecimalAmount }
 
     /**
      * Replicates the Kotlin DSL [of] infix function. Supplies a [TokenType] to the builder
