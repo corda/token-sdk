@@ -55,12 +55,12 @@ class FungibleTokenBuilder {
     fun withAmount(bigDecimalAmount: BigDecimal) = this.apply { amount = bigDecimalAmount }
 
     /**
-     * Replicates the Kotlin DSL [of] infix function. Supplies a [TokenType] to the builder
+     * Replicates the Kotlin DSL [ofTokenType] infix function. Supplies a [TokenType] to the builder
      * which will be used to build an [Amount] of a [TokenType].
      *
      * @param t The token type that will be used to build an [Amount] of a [TokenType]
      */
-    fun <T: TokenType> of(t: T): FungibleTokenBuilder = this.apply { this.tokenType = t }
+    fun <T: TokenType> ofTokenType(t: T): FungibleTokenBuilder = this.apply { this.tokenType = t }
 
     /**
      * Replicates the Kotlin DSL [issuedBy] infix function. Supplies a [Party] to the builder
@@ -84,7 +84,7 @@ class FungibleTokenBuilder {
 
     /**
      * Builds an [Amount] of a [TokenType]. This function will throw a [TokenBuilderException]
-     * exception if the appropriate builder methods have not been called: [withAmount], [of].
+     * exception if the appropriate builder methods have not been called: [withAmount], [ofTokenType].
      */
     @Throws(TokenBuilderException::class)
     fun buildAmountTokenType(): Amount<TokenType> = when {
@@ -95,7 +95,7 @@ class FungibleTokenBuilder {
 
     /**
      * Builds an [Amount] of an [IssuedTokenType]. This function will throw a [TokenBuilderException]
-     * if the appropriate builder methods have not been called: [withAmount], [of], [issuedBy].
+     * if the appropriate builder methods have not been called: [withAmount], [ofTokenType], [issuedBy].
      */
     @Throws(TokenBuilderException::class)
     fun buildAmountIssuedTokenType(): Amount<IssuedTokenType> = when {
@@ -105,7 +105,7 @@ class FungibleTokenBuilder {
 
     /**
      * Builds an [FungibleToken] state. This function will throw a [TokenBuilderException]
-     * if the appropriate builder methods have not been called: [withAmount], [of], [issuedBy], [heldBy].
+     * if the appropriate builder methods have not been called: [withAmount], [ofTokenType], [issuedBy], [heldBy].
      */
     @Throws(TokenBuilderException::class)
     fun buildFungibleToken() = when {

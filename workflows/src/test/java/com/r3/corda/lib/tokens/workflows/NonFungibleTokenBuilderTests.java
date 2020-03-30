@@ -1,21 +1,14 @@
 package com.r3.corda.lib.tokens.workflows;
 
-import com.r3.corda.lib.tokens.contracts.states.FungibleToken;
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken;
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType;
-import com.r3.corda.lib.tokens.contracts.types.TokenType;
-import com.r3.corda.lib.tokens.contracts.utilities.AmountUtilities;
 import com.r3.corda.lib.tokens.money.DigitalCurrency;
 import com.r3.corda.lib.tokens.money.FiatCurrency;
-import com.r3.corda.lib.tokens.workflows.utilities.FungibleTokenBuilder;
 import com.r3.corda.lib.tokens.workflows.utilities.NonFungibleTokenBuilder;
-import net.corda.core.contracts.Amount;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
-import net.corda.testing.node.StartedMockNode;
 import org.junit.Test;
 
-import java.math.BigDecimal;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -30,13 +23,13 @@ public class NonFungibleTokenBuilderTests {
 
         // Token builder resolves to Amount<TokenType>
         IssuedTokenType issuedTokenType = new NonFungibleTokenBuilder()
-                .of(DigitalCurrency.getInstance("BTC"))
+                .ofTokenType(DigitalCurrency.getInstance("BTC"))
                 .issuedBy(aliceParty)
                 .buildIssuedTokenType();
 
         // Token builder resolves to Amount<IssuedTokenType>
         NonFungibleToken amountIssuedTokenType = new NonFungibleTokenBuilder()
-                .of(DigitalCurrency.getInstance("BTC"))
+                .ofTokenType(DigitalCurrency.getInstance("BTC"))
                 .issuedBy(aliceParty)
                 .heldBy(aliceParty)
                 .buildNonFungibleToken();
@@ -48,8 +41,8 @@ public class NonFungibleTokenBuilderTests {
         PublicKey aliceKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
         Party aliceParty = new Party(aliceX500Name, aliceKey);
         IssuedTokenType issuedTokenType = new NonFungibleTokenBuilder()
-                .of(FiatCurrency.getInstance("USD"))
-                .of(FiatCurrency.getInstance("CAD"))
+                .ofTokenType(FiatCurrency.getInstance("USD"))
+                .ofTokenType(FiatCurrency.getInstance("CAD"))
                 .issuedBy(aliceParty)
                 .buildIssuedTokenType();
         assert (issuedTokenType.getIssuer() == aliceParty);
@@ -74,7 +67,7 @@ public class NonFungibleTokenBuilderTests {
     public void UnableToRetrieveIssuedTokenTypeWithoutIssuer() throws TokenBuilderException {
         try {
             new NonFungibleTokenBuilder()
-                    .of(FiatCurrency.getInstance("USD"))
+                    .ofTokenType(FiatCurrency.getInstance("USD"))
                     .buildIssuedTokenType();
             assert(false);
         } catch(TokenBuilderException ex) {
@@ -89,7 +82,7 @@ public class NonFungibleTokenBuilderTests {
         Party aliceParty = new Party(aliceX500Name, aliceKey);
         try {
             NonFungibleToken testToken = new NonFungibleTokenBuilder()
-                    .of(FiatCurrency.getInstance("USD"))
+                    .ofTokenType(FiatCurrency.getInstance("USD"))
                     .issuedBy(aliceParty)
                     .buildNonFungibleToken();
             assert(false);

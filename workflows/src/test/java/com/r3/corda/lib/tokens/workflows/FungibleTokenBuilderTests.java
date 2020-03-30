@@ -28,20 +28,20 @@ public class FungibleTokenBuilderTests {
         // Token builder resolves to Amount<TokenType>
         Amount<TokenType> amountTokenType = new FungibleTokenBuilder()
                 .withAmount(1)
-                .of(DigitalCurrency.getInstance("BTC"))
+                .ofTokenType(DigitalCurrency.getInstance("BTC"))
                 .buildAmountTokenType();
 
         // Token builder resolves to Amount<IssuedTokenType>
         Amount<IssuedTokenType> amountIssuedTokenType = new FungibleTokenBuilder()
                 .withAmount(1)
-                .of(DigitalCurrency.getInstance("BTC"))
+                .ofTokenType(DigitalCurrency.getInstance("BTC"))
                 .issuedBy(aliceParty)
                 .buildAmountIssuedTokenType();
 
         // Token builder resolves to FungibleState
         FungibleToken fungibleToken = new FungibleTokenBuilder()
                 .withAmount(1)
-                .of(DigitalCurrency.getInstance("BTC"))
+                .ofTokenType(DigitalCurrency.getInstance("BTC"))
                 .issuedBy(aliceParty)
                 .heldBy(aliceParty)
                 .buildFungibleToken();
@@ -51,22 +51,22 @@ public class FungibleTokenBuilderTests {
     public void VaryingInputAmountTypesAreEquivalent() throws TokenBuilderException {
         Amount<TokenType> intAmountTokenType = new FungibleTokenBuilder()
                 .withAmount(1)
-                .of(FiatCurrency.getInstance("USD"))
+                .ofTokenType(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
 
         Amount<TokenType> doubleAmountTokenType = new FungibleTokenBuilder()
                 .withAmount(1.0)
-                .of(FiatCurrency.getInstance("USD"))
+                .ofTokenType(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
 
         Amount<TokenType> bigDecimalAmountTokenType = new FungibleTokenBuilder()
                 .withAmount(BigDecimal.ONE)
-                .of(FiatCurrency.getInstance("USD"))
+                .ofTokenType(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
 
         Amount<TokenType> longAmountTokenType = new FungibleTokenBuilder()
                 .withAmount(new Long(1))
-                .of(FiatCurrency.getInstance("USD"))
+                .ofTokenType(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
 
         Amount<TokenType> total = intAmountTokenType
@@ -82,7 +82,7 @@ public class FungibleTokenBuilderTests {
         Amount<TokenType> amount = new FungibleTokenBuilder()
                 .withAmount(new Long(1))
                 .withAmount(2)
-                .of(FiatCurrency.getInstance("USD"))
+                .ofTokenType(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
         assert (amount.getQuantity() == 200L);
     }
@@ -104,7 +104,7 @@ public class FungibleTokenBuilderTests {
         try {
             new FungibleTokenBuilder()
                     .withAmount(new Long(1))
-                    .of(FiatCurrency.getInstance("USD"))
+                    .ofTokenType(FiatCurrency.getInstance("USD"))
                     .buildAmountIssuedTokenType();
             assert(false);
         } catch(TokenBuilderException ex) {
@@ -120,7 +120,7 @@ public class FungibleTokenBuilderTests {
         try {
             FungibleToken test = new FungibleTokenBuilder()
                     .withAmount(new Long(1))
-                    .of(FiatCurrency.getInstance("USD"))
+                    .ofTokenType(FiatCurrency.getInstance("USD"))
                     .issuedBy(aliceParty)
                     .buildFungibleToken();
             assert(false);

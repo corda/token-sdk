@@ -1,12 +1,10 @@
 package com.r3.corda.lib.tokens.workflows.utilities
 
-import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
-import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.workflows.TokenBuilderException
 import net.corda.core.contracts.Amount
 import net.corda.core.identity.Party
@@ -25,12 +23,12 @@ class NonFungibleTokenBuilder {
     private lateinit var holder: Party
 
     /**
-     * Replicates the Kotlin DSL [of] infix function. Supplies a [TokenType] to the builder
+     * Replicates the Kotlin DSL [ofTokenType] infix function. Supplies a [TokenType] to the builder
      * which will be used to build an [IssuedTokenType].
      *
      * @param t The token type that will be used to build an [IssuedTokenType]
      */
-    fun <T: TokenType> of(t: T): NonFungibleTokenBuilder = this.apply { this.tokenType = t }
+    fun <T: TokenType> ofTokenType(t: T): NonFungibleTokenBuilder = this.apply { this.tokenType = t }
 
     /**
      * Replicates the Kotlin DSL [issuedBy] infix function. Supplies a [Party] to the builder
@@ -50,7 +48,7 @@ class NonFungibleTokenBuilder {
 
     /**
      * Builds an [IssuedTokenType]. This function will throw a [TokenBuilderException] if the appropriate
-     * builder methods have not been called: [of], [issuedBy].
+     * builder methods have not been called: [ofTokenType], [issuedBy].
      */
     @Throws(TokenBuilderException::class)
     fun buildIssuedTokenType(): IssuedTokenType = when {
@@ -61,7 +59,7 @@ class NonFungibleTokenBuilder {
 
     /**
      * Builds a [NonFungibleToken] state. This function will throw a [TokenBuilderException] if the appropriate
-     * builder methods have not been called: [of], [issuedBy], [heldBy].
+     * builder methods have not been called: [ofTokenType], [issuedBy], [heldBy].
      */
     @Throws(TokenBuilderException::class)
     fun buildNonFungibleToken(): NonFungibleToken = when {
