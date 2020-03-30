@@ -14,13 +14,13 @@ import java.math.BigDecimal
 
 /**
  * A utility class designed for Java developers to more easily access Kotlin DSL
- * functions to build token types.
+ * functions to build Fungible tokens and their component classes.
  *
  * This function vaguely follows a builder pattern, design choices were made
  * to emulate Kotlin syntax as closely as possible for an easily transferable
  * developer experience in Java.
  */
-class TokenBuilder {
+class FungibleTokenBuilder {
     private var amount: BigDecimal? = null
     private lateinit var tokenType: TokenType
     private lateinit var issuer: Party
@@ -60,7 +60,7 @@ class TokenBuilder {
      *
      * @param t The token type that will be used to build an [Amount] of a [TokenType]
      */
-    fun <T: TokenType> of(t: T): TokenBuilder = this.apply { this.tokenType = t }
+    fun <T: TokenType> of(t: T): FungibleTokenBuilder = this.apply { this.tokenType = t }
 
     /**
      * Replicates the Kotlin DSL [issuedBy] infix function. Supplies a [Party] to the builder
@@ -68,7 +68,7 @@ class TokenBuilder {
      *
      * @param party The issuing identity that will be used to build an [Amount] of an [IssuedTokenType]
      */
-    fun issuedBy(party: Party): TokenBuilder = this.apply {
+    fun issuedBy(party: Party): FungibleTokenBuilder = this.apply {
         this.issuer = party
     }
 
@@ -78,7 +78,7 @@ class TokenBuilder {
      *
      * @param party The identity of the holder that will be used to build an [Amount] of an [IssuedTokenType].
      */
-    fun heldBy(party: Party) = this.apply {
+    fun heldBy(party: Party): FungibleTokenBuilder = this.apply {
         this.holder = party
     }
 
@@ -99,8 +99,8 @@ class TokenBuilder {
      */
     @Throws(TokenBuilderException::class)
     fun buildAmountIssuedTokenType(): Amount<IssuedTokenType> = when {
-        ::issuer.isInitialized -> { buildAmountTokenType() issuedBy issuer }
-        else -> { throw TokenBuilderException("An token issuer has not been provided to the builder.") }
+        !::issuer.isInitialized -> { throw TokenBuilderException("A token issuer has not been provided to the builder.") }
+        else -> { buildAmountTokenType() issuedBy issuer }
     }
 
     /**
@@ -109,7 +109,7 @@ class TokenBuilder {
      */
     @Throws(TokenBuilderException::class)
     fun buildFungibleToken() = when {
-        ::holder.isInitialized -> { buildAmountIssuedTokenType() heldBy holder }
-        else -> { throw TokenBuilderException("A token holder has not been provided to the builder.") }
+        !::holder.isInitialized -> { throw TokenBuilderException("A token holder has not been provided to the builder.") }
+        else -> { buildAmountIssuedTokenType() heldBy holder }
     }
 }

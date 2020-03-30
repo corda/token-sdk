@@ -6,38 +6,40 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType;
 import com.r3.corda.lib.tokens.contracts.utilities.AmountUtilities;
 import com.r3.corda.lib.tokens.money.DigitalCurrency;
 import com.r3.corda.lib.tokens.money.FiatCurrency;
-import com.r3.corda.lib.tokens.workflows.utilities.TokenBuilder;
+import com.r3.corda.lib.tokens.workflows.utilities.FungibleTokenBuilder;
 import net.corda.core.contracts.Amount;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
-import net.corda.testing.node.StartedMockNode;
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 
-public class TokenBuilderTests extends JITMockNetworkTests {
+public class FungibleTokenBuilderTests {
 
     @Test
-    public void TokenBuilderResolvesWithoutThrowing() throws TokenBuilderException {
+    public void FungibleTokenBuilderResolvesWithoutThrowing() throws TokenBuilderException, NoSuchAlgorithmException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
-        StartedMockNode alice = node(aliceX500Name);
-        Party aliceParty = alice.getInfo().getLegalIdentities().get(0);
+        PublicKey aliceKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
+        Party aliceParty = new Party(aliceX500Name, aliceKey);
 
         // Token builder resolves to Amount<TokenType>
-        Amount<TokenType> amountTokenType = new TokenBuilder()
+        Amount<TokenType> amountTokenType = new FungibleTokenBuilder()
                 .withAmount(1)
                 .of(DigitalCurrency.getInstance("BTC"))
                 .buildAmountTokenType();
 
         // Token builder resolves to Amount<IssuedTokenType>
-        Amount<IssuedTokenType> amountIssuedTokenType = new TokenBuilder()
+        Amount<IssuedTokenType> amountIssuedTokenType = new FungibleTokenBuilder()
                 .withAmount(1)
                 .of(DigitalCurrency.getInstance("BTC"))
                 .issuedBy(aliceParty)
                 .buildAmountIssuedTokenType();
 
         // Token builder resolves to FungibleState
-        FungibleToken fungibleToken = new TokenBuilder()
+        FungibleToken fungibleToken = new FungibleTokenBuilder()
                 .withAmount(1)
                 .of(DigitalCurrency.getInstance("BTC"))
                 .issuedBy(aliceParty)
@@ -47,22 +49,22 @@ public class TokenBuilderTests extends JITMockNetworkTests {
 
     @Test
     public void VaryingInputAmountTypesAreEquivalent() throws TokenBuilderException {
-        Amount<TokenType> intAmountTokenType = new TokenBuilder()
+        Amount<TokenType> intAmountTokenType = new FungibleTokenBuilder()
                 .withAmount(1)
                 .of(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
 
-        Amount<TokenType> doubleAmountTokenType = new TokenBuilder()
+        Amount<TokenType> doubleAmountTokenType = new FungibleTokenBuilder()
                 .withAmount(1.0)
                 .of(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
 
-        Amount<TokenType> bigDecimalAmountTokenType = new TokenBuilder()
+        Amount<TokenType> bigDecimalAmountTokenType = new FungibleTokenBuilder()
                 .withAmount(BigDecimal.ONE)
                 .of(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
 
-        Amount<TokenType> longAmountTokenType = new TokenBuilder()
+        Amount<TokenType> longAmountTokenType = new FungibleTokenBuilder()
                 .withAmount(new Long(1))
                 .of(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
@@ -77,7 +79,7 @@ public class TokenBuilderTests extends JITMockNetworkTests {
 
     @Test
     public void AmountMayBeSetMoreThanOnce() throws Exception {
-        Amount<TokenType> amount = new TokenBuilder()
+        Amount<TokenType> amount = new FungibleTokenBuilder()
                 .withAmount(new Long(1))
                 .withAmount(2)
                 .of(FiatCurrency.getInstance("USD"))
@@ -88,7 +90,7 @@ public class TokenBuilderTests extends JITMockNetworkTests {
     @Test
     public void UnableToRetrieveAmountTokenTypeWithoutTokenType() throws Exception {
         try {
-            new TokenBuilder()
+            new FungibleTokenBuilder()
                     .withAmount(new Long(1))
                     .buildAmountTokenType();
             assert(false);
@@ -100,23 +102,23 @@ public class TokenBuilderTests extends JITMockNetworkTests {
     @Test
     public void UnableToRetrieveAmountIssuedTokenTypeWithoutIssuer() throws Exception {
         try {
-            new TokenBuilder()
+            new FungibleTokenBuilder()
                     .withAmount(new Long(1))
                     .of(FiatCurrency.getInstance("USD"))
                     .buildAmountIssuedTokenType();
             assert(false);
         } catch(TokenBuilderException ex) {
-            assert(ex.getLocalizedMessage().equals("An token issuer has not been provided to the builder."));
+            assert(ex.getLocalizedMessage().equals("A token issuer has not been provided to the builder."));
         }
     }
 
     @Test
-    public void UnableToRetrieveFungibleTokenWithoutHolder() throws TokenBuilderException {
+    public void UnableToRetrieveFungibleTokenWithoutHolder() throws TokenBuilderException, NoSuchAlgorithmException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
-        StartedMockNode alice = node(aliceX500Name);
-        Party aliceParty = alice.getInfo().getLegalIdentities().get(0);
+        PublicKey aliceKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
+        Party aliceParty = new Party(aliceX500Name, aliceKey);
         try {
-            FungibleToken test = new TokenBuilder()
+            FungibleToken test = new FungibleTokenBuilder()
                     .withAmount(new Long(1))
                     .of(FiatCurrency.getInstance("USD"))
                     .issuedBy(aliceParty)
