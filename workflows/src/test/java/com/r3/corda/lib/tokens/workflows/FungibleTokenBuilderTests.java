@@ -20,7 +20,7 @@ import java.security.PublicKey;
 public class FungibleTokenBuilderTests {
 
     @Test
-    public void FungibleTokenBuilderResolvesWithoutThrowing() throws TokenBuilderException, NoSuchAlgorithmException {
+    public void fungibleTokenBuilderResolvesWithoutThrowing() throws TokenBuilderException, NoSuchAlgorithmException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         PublicKey aliceKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
         Party aliceParty = new Party(aliceX500Name, aliceKey);
@@ -48,7 +48,7 @@ public class FungibleTokenBuilderTests {
     }
 
     @Test
-    public void VaryingInputAmountTypesAreEquivalent() throws TokenBuilderException {
+    public void varyingInputAmountTypesAreEquivalent() throws TokenBuilderException {
         Amount<TokenType> intAmountTokenType = new FungibleTokenBuilder()
                 .withAmount(1)
                 .ofTokenType(FiatCurrency.getInstance("USD"))
@@ -78,7 +78,7 @@ public class FungibleTokenBuilderTests {
     }
 
     @Test
-    public void AmountMayBeSetMoreThanOnce() throws Exception {
+    public void amountMayBeSetMoreThanOnce() throws Exception {
         Amount<TokenType> amount = new FungibleTokenBuilder()
                 .withAmount(new Long(1))
                 .withAmount(2)
@@ -88,7 +88,7 @@ public class FungibleTokenBuilderTests {
     }
 
     @Test
-    public void UnableToRetrieveAmountTokenTypeWithoutTokenType() throws Exception {
+    public void unableToRetrieveAmountTokenTypeWithoutTokenType() throws Exception {
         try {
             new FungibleTokenBuilder()
                     .withAmount(new Long(1))
@@ -100,7 +100,7 @@ public class FungibleTokenBuilderTests {
     }
 
     @Test
-    public void UnableToRetrieveAmountIssuedTokenTypeWithoutIssuer() throws Exception {
+    public void unableToRetrieveAmountIssuedTokenTypeWithoutIssuer() throws Exception {
         try {
             new FungibleTokenBuilder()
                     .withAmount(new Long(1))
@@ -113,7 +113,7 @@ public class FungibleTokenBuilderTests {
     }
 
     @Test
-    public void UnableToRetrieveFungibleTokenWithoutHolder() throws TokenBuilderException, NoSuchAlgorithmException {
+    public void unableToRetrieveFungibleTokenWithoutHolder() throws TokenBuilderException, NoSuchAlgorithmException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         PublicKey aliceKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
         Party aliceParty = new Party(aliceX500Name, aliceKey);

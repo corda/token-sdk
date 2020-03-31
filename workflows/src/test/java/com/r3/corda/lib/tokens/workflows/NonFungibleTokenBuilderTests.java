@@ -16,7 +16,7 @@ import java.security.PublicKey;
 public class NonFungibleTokenBuilderTests {
 
     @Test
-    public void NonFungibleTokenBuilderResolvesWithoutThrowing() throws TokenBuilderException, NoSuchAlgorithmException {
+    public void nonFungibleTokenBuilderResolvesWithoutThrowing() throws TokenBuilderException, NoSuchAlgorithmException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         PublicKey aliceKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
         Party aliceParty = new Party(aliceX500Name, aliceKey);
@@ -36,7 +36,7 @@ public class NonFungibleTokenBuilderTests {
     }
 
     @Test
-    public void TokenTypeMayBeSetMoreThanOnce() throws NoSuchAlgorithmException, TokenBuilderException {
+    public void tokenTypeMayBeSetMoreThanOnce() throws NoSuchAlgorithmException, TokenBuilderException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         PublicKey aliceKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
         Party aliceParty = new Party(aliceX500Name, aliceKey);
@@ -49,7 +49,7 @@ public class NonFungibleTokenBuilderTests {
     }
 
     @Test
-    public void UnableToRetrieveIssuedTokenTypeWithoutTokenType() throws NoSuchAlgorithmException, TokenBuilderException {
+    public void unableToRetrieveIssuedTokenTypeWithoutTokenType() throws NoSuchAlgorithmException, TokenBuilderException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         PublicKey aliceKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
         Party aliceParty = new Party(aliceX500Name, aliceKey);
@@ -64,7 +64,7 @@ public class NonFungibleTokenBuilderTests {
     }
 
     @Test
-    public void UnableToRetrieveIssuedTokenTypeWithoutIssuer() throws TokenBuilderException {
+    public void unableToRetrieveIssuedTokenTypeWithoutIssuer() throws TokenBuilderException {
         try {
             new NonFungibleTokenBuilder()
                     .ofTokenType(FiatCurrency.getInstance("USD"))
@@ -76,7 +76,7 @@ public class NonFungibleTokenBuilderTests {
     }
 
     @Test
-    public void UnableToRetrieveNonFungibleTokenWithoutHolder() throws TokenBuilderException, NoSuchAlgorithmException {
+    public void unableToRetrieveNonFungibleTokenWithoutHolder() throws TokenBuilderException, NoSuchAlgorithmException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         PublicKey aliceKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
         Party aliceParty = new Party(aliceX500Name, aliceKey);
