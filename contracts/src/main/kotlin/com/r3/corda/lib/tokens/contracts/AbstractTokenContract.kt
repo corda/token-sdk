@@ -12,8 +12,6 @@ import net.corda.core.contracts.*
 import net.corda.core.crypto.SecureHash
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.transactions.LedgerTransaction
-import net.corda.core.utilities.loggerFor
-
 /**
  * This is an abstract contract which contains common functionality used by [FungibleTokenContract] and
  * [NonFungibleTokenContract]. It works by grouping tokens by type and then verifying each group individually. It must

@@ -32,12 +32,12 @@ inline fun <reified T : LinearState> StateAndRef<T>.linearId() = state.data.line
  * It's internal because it uses deprecated [internalVerifiedTransactionsFeed].
  */
 fun CordaRPCOps.watchForTransaction(tx: SignedTransaction): CordaFuture<SignedTransaction> {
-	val (snapshot, feed) = internalVerifiedTransactionsFeed()
-	return if (tx in snapshot) {
-		doneFuture(tx)
-	} else {
-		feed.filter { it == tx }.toFuture()
-	}
+    val (snapshot, feed) = internalVerifiedTransactionsFeed()
+    return if (tx in snapshot) {
+        doneFuture(tx)
+    } else {
+        feed.filter { it == tx }.toFuture()
+    }
 }
 
 /**
@@ -50,24 +50,24 @@ fun CordaRPCOps.watchForTransaction(tx: SignedTransaction): CordaFuture<SignedTr
  * explicitly.
  */
 fun assertHasTransaction(tx: SignedTransaction, network: MockNetwork, vararg nodes: StartedMockNode) {
-	network.waitQuiescent()
-	nodes.forEach {
-		assertNotNull(it.services.validatedTransactions.getTransaction(tx.id), "Could not find ${tx.id} in ${it.legalIdentity()} validated transactions")
-	}
+    network.waitQuiescent()
+    nodes.forEach {
+        assertNotNull(it.services.validatedTransactions.getTransaction(tx.id), "Could not find ${tx.id} in ${it.legalIdentity()} validated transactions")
+    }
 }
 
 fun assertHasTransaction(tx: SignedTransaction, network: InternalMockNetwork, vararg nodes: StartedMockNode) {
-	network.waitQuiescent()
-	nodes.forEach {
-		assertNotNull(it.services.validatedTransactions.getTransaction(tx.id), "Could not find ${tx.id} in ${it.legalIdentity()} validated transactions")
-	}
+    network.waitQuiescent()
+    nodes.forEach {
+        assertNotNull(it.services.validatedTransactions.getTransaction(tx.id), "Could not find ${tx.id} in ${it.legalIdentity()} validated transactions")
+    }
 }
 
 fun assertNotHasTransaction(tx: SignedTransaction, network: InternalMockNetwork, vararg nodes: StartedMockNode) {
-	network.waitQuiescent()
-	nodes.forEach {
-		assertNull(it.services.validatedTransactions.getTransaction(tx.id), "Found ${tx.id} in ${it.legalIdentity()} validated transactions")
-	}
+    network.waitQuiescent()
+    nodes.forEach {
+        assertNull(it.services.validatedTransactions.getTransaction(tx.id), "Found ${tx.id} in ${it.legalIdentity()} validated transactions")
+    }
 }
 
 /**
@@ -80,30 +80,22 @@ fun assertNotHasTransaction(tx: SignedTransaction, network: InternalMockNetwork,
  * explicitly.
  */
 fun assertNotHasTransaction(tx: SignedTransaction, network: MockNetwork, vararg nodes: StartedMockNode) {
-	network.waitQuiescent()
-	nodes.forEach {
-		assertNull(it.services.validatedTransactions.getTransaction(tx.id), "Found ${tx.id} in ${it.legalIdentity()} validated transactions")
-	}
+    network.waitQuiescent()
+    nodes.forEach {
+        assertNull(it.services.validatedTransactions.getTransaction(tx.id), "Found ${tx.id} in ${it.legalIdentity()} validated transactions")
+    }
 }
 
-inline fun <reified T : ContractState> assertHasStateAndRef(
-	stateAndRef: StateAndRef<T>,
-	vararg nodes: StartedMockNode,
-	stateStatus: Vault.StateStatus = Vault.StateStatus.UNCONSUMED
-) {
-	val criteria = QueryCriteria.VaultQueryCriteria(stateStatus)
-	nodes.forEach {
-		assert(it.services.vaultService.queryBy<T>(criteria).states.contains(stateAndRef)) { "Could not find $stateAndRef in ${it.legalIdentity()} vault" }
-	}
+inline fun <reified T : ContractState> assertHasStateAndRef(stateAndRef: StateAndRef<T>, vararg nodes: StartedMockNode, stateStatus: Vault.StateStatus = Vault.StateStatus.UNCONSUMED) {
+    val criteria = QueryCriteria.VaultQueryCriteria(stateStatus)
+    nodes.forEach {
+        assert(it.services.vaultService.queryBy<T>(criteria).states.contains(stateAndRef)) { "Could not find $stateAndRef in ${it.legalIdentity()} vault" }
+    }
 }
 
-inline fun <reified T : ContractState> assertNotHasStateAndRef(
-	stateAndRef: StateAndRef<T>,
-	vararg nodes: StartedMockNode,
-	stateStatus: Vault.StateStatus = Vault.StateStatus.UNCONSUMED
-) {
-	val criteria = QueryCriteria.VaultQueryCriteria(stateStatus)
-	nodes.forEach {
-		assert(!it.services.vaultService.queryBy<T>(criteria).states.contains(stateAndRef)) { "Found $stateAndRef in ${it.legalIdentity()} vault" }
-	}
+inline fun <reified T : ContractState> assertNotHasStateAndRef(stateAndRef: StateAndRef<T>, vararg nodes: StartedMockNode, stateStatus: Vault.StateStatus = Vault.StateStatus.UNCONSUMED) {
+    val criteria = QueryCriteria.VaultQueryCriteria(stateStatus)
+    nodes.forEach {
+        assert(!it.services.vaultService.queryBy<T>(criteria).states.contains(stateAndRef)) { "Found $stateAndRef in ${it.legalIdentity()} vault" }
+    }
 }

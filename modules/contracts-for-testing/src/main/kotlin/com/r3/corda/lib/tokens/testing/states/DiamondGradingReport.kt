@@ -14,36 +14,35 @@ import java.math.BigDecimal
  */
 @BelongsToContract(DiamondGradingReportContract::class)
 data class DiamondGradingReport(
-	val caratWeight: BigDecimal,
-	val color: ColorScale,
-	val clarity: ClarityScale,
-	val cut: CutScale,
-	val assessor: Party,
-	val requester: Party,
-	override val linearId: UniqueIdentifier = UniqueIdentifier()
+        val caratWeight: BigDecimal,
+        val color: ColorScale,
+        val clarity: ClarityScale,
+        val cut: CutScale,
+        val assessor: Party,
+        val requester: Party,
+        override val linearId: UniqueIdentifier = UniqueIdentifier()
 ) : EvolvableTokenType() {
-	constructor(
-		caratWeight: String,
-		color: ColorScale,
-		clarity: ClarityScale,
-		cut: CutScale,
-		assessor: Party,
-		requester: Party,
-		linearId: UniqueIdentifier = UniqueIdentifier()
-	) : this(BigDecimal(caratWeight), color, clarity, cut, assessor, requester, linearId)
+    constructor(
+            caratWeight: String,
+            color: ColorScale,
+            clarity: ClarityScale,
+            cut: CutScale,
+            assessor: Party,
+            requester: Party,
+            linearId: UniqueIdentifier = UniqueIdentifier()) : this(BigDecimal(caratWeight), color, clarity, cut, assessor, requester, linearId)
 
-	@CordaSerializable
-	enum class ColorScale { A, B, C, D, E, F }
+    @CordaSerializable
+    enum class ColorScale { A, B, C, D, E, F }
 
-	@CordaSerializable
-	enum class ClarityScale { A, B, C, D, E, F }
+    @CordaSerializable
+    enum class ClarityScale { A, B, C, D, E, F }
 
-	@CordaSerializable
-	enum class CutScale { A, B, C, D, E, F }
+    @CordaSerializable
+    enum class CutScale { A, B, C, D, E, F }
 
-	override val maintainers get() = listOf(assessor)
+    override val maintainers get() = listOf(assessor)
 
-	override val participants get() = setOf(assessor, requester).toList()
+    override val participants get() = setOf(assessor, requester).toList()
 
-	override val fractionDigits: Int get() = 0
+    override val fractionDigits: Int get() = 0
 }

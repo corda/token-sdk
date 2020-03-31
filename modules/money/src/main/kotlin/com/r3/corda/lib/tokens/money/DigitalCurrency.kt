@@ -11,17 +11,17 @@ import java.util.*
  * @param currencyCode The currency code that represents the TokenType which the developer wishes to instantiate.
  */
 class DigitalCurrency {
-	companion object {
-		private val registry = mapOf(
-			Pair("XRP", TokenType("Ripple", 6)),
-			Pair("BTC", TokenType("Bitcoin", 8)),
-			Pair("ETH", TokenType("Ethereum", 18)),
-			Pair("DOGE", TokenType("Dogecoin", 8))
-		)
+    companion object {
+        private val registry = mapOf(
+                Pair("XRP", TokenType("Ripple", 6)),
+                Pair("BTC", TokenType("Bitcoin", 8)),
+                Pair("ETH", TokenType("Ethereum", 18)),
+                Pair("DOGE", TokenType("Dogecoin", 8))
+        )
 
-		@JvmStatic
-		fun getInstance(currencyCode: String): TokenType {
-			return registry[currencyCode] ?: throw IllegalArgumentException("$currencyCode doesn't exist.")
-		}
-	}
+        @JvmStatic
+        fun getInstance(currencyCode: String): TokenType {
+            return registry[currencyCode] ?: throw IllegalArgumentException("$currencyCode doesn't exist.")
+        }
+    }
 }

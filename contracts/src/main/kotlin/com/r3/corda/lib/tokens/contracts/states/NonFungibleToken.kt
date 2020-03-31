@@ -38,56 +38,56 @@ import net.corda.core.schemas.QueryableState
  */
 @BelongsToContract(NonFungibleTokenContract::class)
 open class NonFungibleToken @JvmOverloads constructor(
-	val token: IssuedTokenType,
-	override val holder: AbstractParty,
-	override val linearId: UniqueIdentifier,
-	override val tokenTypeJarHash: SecureHash? = token.tokenType.getAttachmentIdForGenericParam()
+        val token: IssuedTokenType,
+        override val holder: AbstractParty,
+        override val linearId: UniqueIdentifier,
+        override val tokenTypeJarHash: SecureHash? = token.tokenType.getAttachmentIdForGenericParam()
 ) : AbstractToken, QueryableState, LinearState {
 
-	override val issuedTokenType: IssuedTokenType get() = token
+    override val issuedTokenType: IssuedTokenType get() = token
 
-	final override val tokenType: TokenType get() = token.tokenType
+    final override val tokenType: TokenType get() = token.tokenType
 
-	override val issuer: Party get() = token.issuer
+    override val issuer: Party get() = token.issuer
 
-	override fun toString(): String = "$token held by $holderString"
+    override fun toString(): String = "$token held by $holderString"
 
-	override fun withNewHolder(newHolder: AbstractParty): NonFungibleToken {
-		return NonFungibleToken(token = token, holder = newHolder, linearId = linearId, tokenTypeJarHash = tokenTypeJarHash)
-	}
+    override fun withNewHolder(newHolder: AbstractParty): NonFungibleToken {
+        return NonFungibleToken(token = token, holder = newHolder, linearId = linearId, tokenTypeJarHash = tokenTypeJarHash)
+    }
 
-	override fun generateMappedObject(schema: MappedSchema): PersistentState = when (schema) {
-		is NonFungibleTokenSchemaV1 -> PersistentNonFungibleToken(
-			issuer = token.issuer,
-			holder = holder,
-			tokenClass = token.tokenType.tokenClass,
-			tokenIdentifier = token.tokenType.tokenIdentifier
-		)
-		else -> throw IllegalArgumentException("Unrecognised schema $schema")
-	}
+    override fun generateMappedObject(schema: MappedSchema): PersistentState = when (schema) {
+        is NonFungibleTokenSchemaV1 -> PersistentNonFungibleToken(
+                issuer = token.issuer,
+                holder = holder,
+                tokenClass = token.tokenType.tokenClass,
+                tokenIdentifier = token.tokenType.tokenIdentifier
+        )
+        else -> throw IllegalArgumentException("Unrecognised schema $schema")
+    }
 
-	override fun supportedSchemas() = listOf(NonFungibleTokenSchemaV1)
-	override fun equals(other: Any?): Boolean {
-		if (this === other) return true
-		if (javaClass != other?.javaClass) return false
+    override fun supportedSchemas() = listOf(NonFungibleTokenSchemaV1)
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
 
-		other as NonFungibleToken
+        other as NonFungibleToken
 
-		if (token != other.token) return false
-		if (holder != other.holder) return false
-		if (linearId != other.linearId) return false
-		if (tokenTypeJarHash != other.tokenTypeJarHash) return false
+        if (token != other.token) return false
+        if (holder != other.holder) return false
+        if (linearId != other.linearId) return false
+        if (tokenTypeJarHash != other.tokenTypeJarHash) return false
 
-		return true
-	}
+        return true
+    }
 
-	override fun hashCode(): Int {
-		var result = token.hashCode()
-		result = 31 * result + holder.hashCode()
-		result = 31 * result + linearId.hashCode()
-		result = 31 * result + (tokenTypeJarHash?.hashCode() ?: 0)
-		return result
-	}
+    override fun hashCode(): Int {
+        var result = token.hashCode()
+        result = 31 * result + holder.hashCode()
+        result = 31 * result + linearId.hashCode()
+        result = 31 * result + (tokenTypeJarHash?.hashCode() ?: 0)
+        return result
+    }
 
 
 }

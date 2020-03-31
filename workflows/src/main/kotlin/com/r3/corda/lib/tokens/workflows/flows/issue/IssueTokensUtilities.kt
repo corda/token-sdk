@@ -1,5 +1,4 @@
 @file:JvmName("IssueTokensUtilities")
-
 package com.r3.corda.lib.tokens.workflows.flows.issue
 
 import co.paralleluniverse.fibers.Suspendable
@@ -16,20 +15,20 @@ import net.corda.core.transactions.TransactionBuilder
  */
 @Suspendable
 fun addIssueTokens(transactionBuilder: TransactionBuilder, outputs: List<AbstractToken>): TransactionBuilder {
-	val outputGroups: Map<IssuedTokenType, List<AbstractToken>> = outputs.groupBy { it.issuedTokenType }
-	return transactionBuilder.apply {
-		outputGroups.forEach { (issuedTokenType: IssuedTokenType, states: List<AbstractToken>) ->
-			val issuers = states.map { it.issuer }.toSet()
-			require(issuers.size == 1) { "All tokensToIssue must have the same issuer." }
-			val issuer = issuers.single()
-			var startingIndex = outputStates().size
-			val indexesAdded = states.map { state ->
-				addOutputState(state)
-				startingIndex++
-			}
-			addCommand(IssueTokenCommand(issuedTokenType, indexesAdded), issuer.owningKey)
-		}
-	}
+    val outputGroups: Map<IssuedTokenType, List<AbstractToken>> = outputs.groupBy { it.issuedTokenType }
+    return transactionBuilder.apply {
+        outputGroups.forEach { (issuedTokenType: IssuedTokenType, states: List<AbstractToken>) ->
+            val issuers = states.map { it.issuer }.toSet()
+            require(issuers.size == 1) { "All tokensToIssue must have the same issuer." }
+            val issuer = issuers.single()
+            var startingIndex = outputStates().size
+            val indexesAdded = states.map { state ->
+                addOutputState(state)
+                startingIndex++
+            }
+            addCommand(IssueTokenCommand(issuedTokenType, indexesAdded), issuer.owningKey)
+        }
+    }
 }
 
 /**
@@ -39,7 +38,7 @@ fun addIssueTokens(transactionBuilder: TransactionBuilder, outputs: List<Abstrac
  */
 @Suspendable
 fun addIssueTokens(transactionBuilder: TransactionBuilder, vararg outputs: AbstractToken): TransactionBuilder {
-	return addIssueTokens(transactionBuilder, outputs.toList())
+    return addIssueTokens(transactionBuilder, outputs.toList())
 }
 
 /**
@@ -49,5 +48,5 @@ fun addIssueTokens(transactionBuilder: TransactionBuilder, vararg outputs: Abstr
  */
 @Suspendable
 fun addIssueTokens(transactionBuilder: TransactionBuilder, output: AbstractToken): TransactionBuilder {
-	return addIssueTokens(transactionBuilder, listOf(output))
+    return addIssueTokens(transactionBuilder, listOf(output))
 }

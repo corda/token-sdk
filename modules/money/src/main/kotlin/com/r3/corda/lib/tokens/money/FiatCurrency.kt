@@ -11,12 +11,12 @@ import java.util.*
  * @param currencyCode The currency code that represents the TokenType which the developer wishes to instantiate.
  */
 class FiatCurrency {
-	companion object {
-		// Uses the java money registry.
-		@JvmStatic
-		fun getInstance(currencyCode: String): TokenType {
-			val currency = Currency.getInstance(currencyCode)
-			return TokenType(currency.currencyCode, currency.defaultFractionDigits)
-		}
-	}
+    companion object {
+        // Uses the java money registry.
+        @JvmStatic
+        fun getInstance(currencyCode: String): TokenType {
+            val currency = Currency.getInstance(currencyCode)
+            return TokenType(currency.currencyCode, currency.defaultFractionDigits)
+        }
+    }
 }

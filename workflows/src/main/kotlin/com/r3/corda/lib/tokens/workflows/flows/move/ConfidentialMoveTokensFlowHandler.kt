@@ -13,12 +13,12 @@ import net.corda.core.utilities.unwrap
  * [ConfidentialMoveFungibleTokensFlow].
  */
 class ConfidentialMoveTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
-	@Suspendable
-	override fun call() {
-		val role = otherSession.receive<TransactionRole>().unwrap { it }
-		if (role == TransactionRole.PARTICIPANT) {
-			subFlow(ConfidentialTokensFlowHandler(otherSession))
-		}
-		subFlow(ObserverAwareFinalityFlowHandler(otherSession))
-	}
+    @Suspendable
+    override fun call() {
+        val role = otherSession.receive<TransactionRole>().unwrap { it }
+        if (role == TransactionRole.PARTICIPANT) {
+            subFlow(ConfidentialTokensFlowHandler(otherSession))
+        }
+        subFlow(ObserverAwareFinalityFlowHandler(otherSession))
+    }
 }

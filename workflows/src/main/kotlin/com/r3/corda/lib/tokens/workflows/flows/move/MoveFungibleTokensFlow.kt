@@ -25,30 +25,30 @@ import net.corda.core.transactions.TransactionBuilder
 class MoveFungibleTokensFlow
 @JvmOverloads
 constructor(
-	val partiesAndAmounts: List<PartyAndAmount<TokenType>>,
-	override val participantSessions: List<FlowSession>,
-	override val observerSessions: List<FlowSession> = emptyList(),
-	val queryCriteria: QueryCriteria? = null,
-	val changeHolder: AbstractParty? = null
+        val partiesAndAmounts: List<PartyAndAmount<TokenType>>,
+        override val participantSessions: List<FlowSession>,
+        override val observerSessions: List<FlowSession> = emptyList(),
+        val queryCriteria: QueryCriteria? = null,
+        val changeHolder: AbstractParty? = null
 ) : AbstractMoveTokensFlow() {
 
-	@JvmOverloads
-	constructor(
-		partyAndAmount: PartyAndAmount<TokenType>,
-		queryCriteria: QueryCriteria? = null,
-		participantSessions: List<FlowSession>,
-		observerSessions: List<FlowSession> = emptyList(),
-		changeHolder: AbstractParty? = null
-	) : this(listOf(partyAndAmount), participantSessions, observerSessions, queryCriteria, changeHolder)
+    @JvmOverloads
+    constructor(
+            partyAndAmount: PartyAndAmount<TokenType>,
+            queryCriteria: QueryCriteria? = null,
+            participantSessions: List<FlowSession>,
+            observerSessions: List<FlowSession> = emptyList(),
+            changeHolder: AbstractParty? = null
+    ) : this(listOf(partyAndAmount), participantSessions, observerSessions, queryCriteria, changeHolder)
 
-	@Suspendable
-	override fun addMove(transactionBuilder: TransactionBuilder) {
-		addMoveFungibleTokens(
-			transactionBuilder = transactionBuilder,
-			serviceHub = serviceHub,
-			partiesAndAmounts = partiesAndAmounts,
-			changeHolder = changeHolder ?: ourIdentity,
-			queryCriteria = queryCriteria
-		)
-	}
+    @Suspendable
+    override fun addMove(transactionBuilder: TransactionBuilder) {
+        addMoveFungibleTokens(
+                transactionBuilder = transactionBuilder,
+                serviceHub = serviceHub,
+                partiesAndAmounts = partiesAndAmounts,
+                changeHolder = changeHolder ?: ourIdentity,
+                queryCriteria = queryCriteria
+        )
+    }
 }

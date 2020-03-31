@@ -13,23 +13,23 @@ import java.math.BigDecimal
  */
 class DiamondGradingReportContract : EvolvableTokenContract(), Contract {
 
-	override fun additionalCreateChecks(tx: LedgerTransaction) {
-		val outputDiamond = tx.outputsOfType<DiamondGradingReport>().first()
-		requireThat {
-			"Diamond's carat weight must be greater than 0 (zero)" using (outputDiamond.caratWeight > BigDecimal.ZERO)
-		}
-	}
+    override fun additionalCreateChecks(tx: LedgerTransaction) {
+        val outputDiamond = tx.outputsOfType<DiamondGradingReport>().first()
+        requireThat {
+            "Diamond's carat weight must be greater than 0 (zero)" using (outputDiamond.caratWeight > BigDecimal.ZERO)
+        }
+    }
 
-	override fun additionalUpdateChecks(tx: LedgerTransaction) {
-		val inDiamond = tx.outputsOfType<DiamondGradingReport>().first()
-		val outDiamond = tx.outputsOfType<DiamondGradingReport>().first()
-		requireThat {
-			"Diamond's carat weight may not be changed" using (inDiamond.caratWeight == outDiamond.caratWeight)
-			"Diamond's color may not be changed" using (inDiamond.color == outDiamond.color)
-			"Diamond's clarity may not be changed" using (inDiamond.clarity == outDiamond.clarity)
-			"Diamond's cut may not be changed" using (inDiamond.cut == outDiamond.cut)
-		}
-	}
+    override fun additionalUpdateChecks(tx: LedgerTransaction) {
+        val inDiamond = tx.outputsOfType<DiamondGradingReport>().first()
+        val outDiamond = tx.outputsOfType<DiamondGradingReport>().first()
+        requireThat {
+            "Diamond's carat weight may not be changed" using (inDiamond.caratWeight == outDiamond.caratWeight)
+            "Diamond's color may not be changed" using (inDiamond.color == outDiamond.color)
+            "Diamond's clarity may not be changed" using (inDiamond.clarity == outDiamond.clarity)
+            "Diamond's cut may not be changed" using (inDiamond.cut == outDiamond.cut)
+        }
+    }
 
 
 }

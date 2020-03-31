@@ -12,28 +12,28 @@ import net.corda.core.utilities.unwrap
 
 /** In-line counter-flow for [UpdateEvolvableTokenFlow]. */
 class UpdateEvolvableTokenFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
-	@Suspendable
-	override fun call() {
-		// Receive the notification
-		val notification = otherSession.receive<UpdateEvolvableTokenFlow.Notification>().unwrap { it }
+    @Suspendable
+    override fun call() {
+        // Receive the notification
+        val notification = otherSession.receive<UpdateEvolvableTokenFlow.Notification>().unwrap { it }
 
-		// Sign the transaction proposal, if required
-		if (notification.signatureRequired) {
-			val signTransactionFlow = object : SignTransactionFlow(otherSession) {
-				override fun checkTransaction(stx: SignedTransaction) = requireThat {
-					val ledgerTransaction = stx.toLedgerTransaction(serviceHub, checkSufficientSignatures = false)
-					val evolvableTokenTypeStateRef = ledgerTransaction.inRefsOfType<EvolvableTokenType>().single()
-					val oldMaintainers = evolvableTokenTypeStateRef.state.data.maintainers
-					require(otherSession.counterparty in oldMaintainers) {
-						"This flow can only be started by existing maintainers of the EvolvableTokenType. However it " +
-								"was started by ${otherSession.counterparty} who is not a maintainer."
-					}
-				}
-			}
-			subFlow(signTransactionFlow)
-		}
+        // Sign the transaction proposal, if required
+        if (notification.signatureRequired) {
+            val signTransactionFlow = object : SignTransactionFlow(otherSession) {
+                override fun checkTransaction(stx: SignedTransaction) = requireThat {
+                    val ledgerTransaction = stx.toLedgerTransaction(serviceHub, checkSufficientSignatures = false)
+                    val evolvableTokenTypeStateRef = ledgerTransaction.inRefsOfType<EvolvableTokenType>().single()
+                    val oldMaintainers = evolvableTokenTypeStateRef.state.data.maintainers
+                    require(otherSession.counterparty in oldMaintainers) {
+                        "This flow can only be started by existing maintainers of the EvolvableTokenType. However it " +
+                                "was started by ${otherSession.counterparty} who is not a maintainer."
+                    }
+                }
+            }
+            subFlow(signTransactionFlow)
+        }
 
-		// Resolve the update transaction.
-		return subFlow(ObserverAwareFinalityFlowHandler(otherSession))
-	}
+        // Resolve the update transaction.
+        return subFlow(ObserverAwareFinalityFlowHandler(otherSession))
+    }
 }

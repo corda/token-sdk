@@ -17,93 +17,93 @@ import net.corda.core.transactions.LedgerTransaction
  */
 abstract class EvolvableTokenContract : Contract {
 
-	override fun verify(tx: LedgerTransaction) {
-		// Only allow a single command.
-		require(tx.commandsOfType<EvolvableTokenTypeCommand>().size == 1) {
-			"Evolvable token transactions support exactly one command only."
-		}
-		// Dispatch based on command.
-		val command = tx.commands.requireSingleCommand<EvolvableTokenTypeCommand>()
-		when (command.value) {
-			is Create -> verifyCreate(tx)
-			is Update -> verifyUpdate(tx)
-		}
-	}
+    override fun verify(tx: LedgerTransaction) {
+        // Only allow a single command.
+        require(tx.commandsOfType<EvolvableTokenTypeCommand>().size == 1) {
+            "Evolvable token transactions support exactly one command only."
+        }
+        // Dispatch based on command.
+        val command = tx.commands.requireSingleCommand<EvolvableTokenTypeCommand>()
+        when (command.value) {
+            is Create -> verifyCreate(tx)
+            is Update -> verifyUpdate(tx)
+        }
+    }
 
-	/** For CorDapp developers to implement. */
-	abstract fun additionalCreateChecks(tx: LedgerTransaction)
+    /** For CorDapp developers to implement. */
+    abstract fun additionalCreateChecks(tx: LedgerTransaction)
 
-	/** For CorDapp developers to implement. */
-	abstract fun additionalUpdateChecks(tx: LedgerTransaction)
+    /** For CorDapp developers to implement. */
+    abstract fun additionalUpdateChecks(tx: LedgerTransaction)
 
-	private fun verifyCreate(tx: LedgerTransaction) {
-		// Check commands.
-		val command = tx.commands.requireSingleCommand<Create>()
+    private fun verifyCreate(tx: LedgerTransaction) {
+        // Check commands.
+        val command = tx.commands.requireSingleCommand<Create>()
 
-		// Check inputs.
-		require(tx.inputs.isEmpty()) { "Create evolvable token transactions must not contain any inputs." }
+        // Check inputs.
+        require(tx.inputs.isEmpty()) { "Create evolvable token transactions must not contain any inputs." }
 
-		// Check outputs.
-		require(tx.outputs.size == 1) { "Create evolvable token transactions must contain exactly one output." }
-		val output = tx.singleOutput<EvolvableTokenType>()
+        // Check outputs.
+        require(tx.outputs.size == 1) { "Create evolvable token transactions must contain exactly one output." }
+        val output = tx.singleOutput<EvolvableTokenType>()
 
-		// Normalise participants and maintainers for ease of reference.
-		val participants = output.participants.toSet()
-		val maintainers = output.maintainers.toSet()
-		val maintainerKeys = maintainers.map(AbstractParty::owningKey).toSet()
+        // Normalise participants and maintainers for ease of reference.
+        val participants = output.participants.toSet()
+        val maintainers = output.maintainers.toSet()
+        val maintainerKeys = maintainers.map(AbstractParty::owningKey).toSet()
 
-		// Check participants.
-		require(participants.containsAll(maintainers)) { "All evolvable token maintainers must also be participants." }
+        // Check participants.
+        require(participants.containsAll(maintainers)) { "All evolvable token maintainers must also be participants." }
 
-		// Check signatures.
-		require(command.signers.toSet() == maintainerKeys) {
-			"Only evolvable token maintainers may sign the create evolvable token transaction."
-		}
+        // Check signatures.
+        require(command.signers.toSet() == maintainerKeys) {
+            "Only evolvable token maintainers may sign the create evolvable token transaction."
+        }
 
-		// Perform additional checks as implemented by subclasses.
-		additionalCreateChecks(tx)
-	}
+        // Perform additional checks as implemented by subclasses.
+        additionalCreateChecks(tx)
+    }
 
-	private fun verifyUpdate(tx: LedgerTransaction) {
-		// Check commands.
-		val command = tx.commands.requireSingleCommand<Update>()
+    private fun verifyUpdate(tx: LedgerTransaction) {
+        // Check commands.
+        val command = tx.commands.requireSingleCommand<Update>()
 
-		// Check inputs.
-		require(tx.inputs.size == 1) { "Update evolvable token transactions must contain exactly one input." }
-		val input = tx.singleInput<EvolvableTokenType>()
+        // Check inputs.
+        require(tx.inputs.size == 1) { "Update evolvable token transactions must contain exactly one input." }
+        val input = tx.singleInput<EvolvableTokenType>()
 
-		// Check participants.
-		require(input.participants.containsAll(input.maintainers)) {
-			"All evolvable token maintainers must also be participants."
-		}
+        // Check participants.
+        require(input.participants.containsAll(input.maintainers)) {
+            "All evolvable token maintainers must also be participants."
+        }
 
-		// Check outputs.
-		require(tx.outputs.size == 1) { "Update evolvable token transactions must contain exactly one output." }
-		val output = tx.singleOutput<EvolvableTokenType>()
+        // Check outputs.
+        require(tx.outputs.size == 1) { "Update evolvable token transactions must contain exactly one output." }
+        val output = tx.singleOutput<EvolvableTokenType>()
 
-		// Check participants.
-		require(output.participants.containsAll(output.maintainers)) {
-			"All evolvable token maintainers must also be participants."
-		}
+        // Check participants.
+        require(output.participants.containsAll(output.maintainers)) {
+            "All evolvable token maintainers must also be participants."
+        }
 
-		// Normalise participants and maintainers for ease of reference.
-		val maintainers = (input.maintainers + output.maintainers).toSet()
-		val maintainerKeys = maintainers.map(AbstractParty::owningKey).toSet()
+        // Normalise participants and maintainers for ease of reference.
+        val maintainers = (input.maintainers + output.maintainers).toSet()
+        val maintainerKeys = maintainers.map(AbstractParty::owningKey).toSet()
 
-		// Check signatures.
-		require(command.signers.toSet() == maintainerKeys) {
-			"Only evolvable token maintainers (from inputs and outputs) may sign the update evolvable token transaction."
-		}
+        // Check signatures.
+        require(command.signers.toSet() == maintainerKeys) {
+            "Only evolvable token maintainers (from inputs and outputs) may sign the update evolvable token transaction."
+        }
 
-		// Verify linear IDs does not change.
-		require(input.linearId == output.linearId) {
-			"The Linear ID of the evolvable token cannot change during an update."
-		}
+        // Verify linear IDs does not change.
+        require(input.linearId == output.linearId) {
+            "The Linear ID of the evolvable token cannot change during an update."
+        }
 
-		// Fraction digits should be updatable, therefore isn't checked as a constant here.
+        // Fraction digits should be updatable, therefore isn't checked as a constant here.
 
-		// Perform additional checks as implemented by subclasses.
-		additionalUpdateChecks(tx)
-	}
+        // Perform additional checks as implemented by subclasses.
+        additionalUpdateChecks(tx)
+    }
 
 }

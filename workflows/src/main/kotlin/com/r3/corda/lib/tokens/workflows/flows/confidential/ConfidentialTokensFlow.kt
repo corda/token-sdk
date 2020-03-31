@@ -26,25 +26,25 @@ import net.corda.core.identity.Party
  * @property sessions a list of participants' sessions which may contain sessions for observers.
  */
 class ConfidentialTokensFlow(
-	val tokens: List<AbstractToken>,
-	val sessions: List<FlowSession>
+        val tokens: List<AbstractToken>,
+        val sessions: List<FlowSession>
 ) : FlowLogic<List<AbstractToken>>() {
-	@Suspendable
-	override fun call(): List<AbstractToken> {
-		// Some holders might be anonymous already. E.g. if some token selection has been performed and a confidential
-		// change address was requested.
-		val tokensWithWellKnownHolders = tokens.filter { it.holder is Party }
-		val tokensWithAnonymousHolders = tokens - tokensWithWellKnownHolders
-		val wellKnownTokenHolders = tokensWithWellKnownHolders
-			.map(AbstractToken::holder)
-			.toWellKnownParties(serviceHub)
-		val anonymousParties = subFlow(AnonymisePartiesFlow(wellKnownTokenHolders, sessions))
-		// Replace Party with AnonymousParty.
-		return tokensWithWellKnownHolders.map { token ->
-			val holder = token.holder
-			val anonymousParty = anonymousParties[holder]
-				?: throw IllegalStateException("Missing anonymous party for $holder.")
-			token.withNewHolder(anonymousParty)
-		} + tokensWithAnonymousHolders
-	}
+    @Suspendable
+    override fun call(): List<AbstractToken> {
+        // Some holders might be anonymous already. E.g. if some token selection has been performed and a confidential
+        // change address was requested.
+        val tokensWithWellKnownHolders = tokens.filter { it.holder is Party }
+        val tokensWithAnonymousHolders = tokens - tokensWithWellKnownHolders
+        val wellKnownTokenHolders = tokensWithWellKnownHolders
+                .map(AbstractToken::holder)
+                .toWellKnownParties(serviceHub)
+        val anonymousParties = subFlow(AnonymisePartiesFlow(wellKnownTokenHolders, sessions))
+        // Replace Party with AnonymousParty.
+        return tokensWithWellKnownHolders.map { token ->
+            val holder = token.holder
+            val anonymousParty = anonymousParties[holder]
+                    ?: throw IllegalStateException("Missing anonymous party for $holder.")
+            token.withNewHolder(anonymousParty)
+        } + tokensWithAnonymousHolders
+    }
 }

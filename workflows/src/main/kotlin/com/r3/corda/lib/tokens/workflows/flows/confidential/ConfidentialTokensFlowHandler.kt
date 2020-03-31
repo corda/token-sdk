@@ -10,6 +10,6 @@ import net.corda.core.flows.FlowSession
  * of a new key pair by calling [RequestConfidentialIdentityFlowHandler].
  */
 class ConfidentialTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
-	@Suspendable
-	override fun call() = subFlow(AnonymisePartiesFlowHandler(otherSession))
+    @Suspendable
+    override fun call() = subFlow(AnonymisePartiesFlowHandler(otherSession))
 }

@@ -14,27 +14,25 @@ import net.corda.core.identity.Party
  * [ActionRequest.DO_NOTHING].
  */
 class AnonymisePartiesFlow(
-	val parties: List<Party>,
-	val sessions: List<FlowSession>
+        val parties: List<Party>,
+        val sessions: List<FlowSession>
 ) : FlowLogic<Map<Party, AnonymousParty>>() {
-	@Suspendable
-	override fun call(): Map<Party, AnonymousParty> {
-		val sessionParties = sessions.map(FlowSession::counterparty)
-		val partiesWithoutASession = parties.minus(sessionParties)
-		require(partiesWithoutASession.isEmpty()) {
-			"You must provide sessions for all parties. " +
-					"No sessions provided for parties: $partiesWithoutASession"
-		}
-		return sessions.mapNotNull { session ->
-			val party = session.counterparty
-			if (party in parties) {
-				session.send(ActionRequest.CREATE_NEW_KEY)
-				val anonParty = subFlow(RequestKeyFlow(session))
-				Pair(party, anonParty)
-			} else {
-				session.send(ActionRequest.DO_NOTHING)
-				null
-			}
-		}.toMap()
-	}
+    @Suspendable
+    override fun call(): Map<Party, AnonymousParty> {
+        val sessionParties = sessions.map(FlowSession::counterparty)
+        val partiesWithoutASession = parties.minus(sessionParties)
+        require(partiesWithoutASession.isEmpty()) { "You must provide sessions for all parties. " +
+                "No sessions provided for parties: $partiesWithoutASession" }
+        return sessions.mapNotNull { session ->
+            val party = session.counterparty
+            if (party in parties) {
+                session.send(ActionRequest.CREATE_NEW_KEY)
+                val anonParty = subFlow(RequestKeyFlow(session))
+                Pair(party, anonParty)
+            } else {
+                session.send(ActionRequest.DO_NOTHING)
+                null
+            }
+        }.toMap()
+    }
 }

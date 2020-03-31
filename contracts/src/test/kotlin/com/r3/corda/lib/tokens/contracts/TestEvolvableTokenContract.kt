@@ -8,21 +8,21 @@ import net.corda.core.identity.Party
 import net.corda.core.transactions.LedgerTransaction
 
 class TestEvolvableTokenContract : EvolvableTokenContract(), Contract {
-	companion object {
-		val ID: String = this::class.java.enclosingClass.canonicalName
-	}
+    companion object {
+        val ID: String = this::class.java.enclosingClass.canonicalName
+    }
 
-	override fun additionalCreateChecks(tx: LedgerTransaction) = Unit
-	override fun additionalUpdateChecks(tx: LedgerTransaction) = Unit
+    override fun additionalCreateChecks(tx: LedgerTransaction) = Unit
+    override fun additionalUpdateChecks(tx: LedgerTransaction) = Unit
 }
 
 @BelongsToContract(TestEvolvableTokenContract::class)
 data class TestEvolvableTokenType(
-	override val maintainers: List<Party>,
-	val observers: List<Party> = emptyList(),
-	override val participants: List<Party> = maintainers + observers,
-	override val linearId: UniqueIdentifier = UniqueIdentifier()
+        override val maintainers: List<Party>,
+        val observers: List<Party> = emptyList(),
+        override val participants: List<Party> = maintainers + observers,
+        override val linearId: UniqueIdentifier = UniqueIdentifier()
 ) : EvolvableTokenType() {
 
-	override val fractionDigits: Int get() = 0
+    override val fractionDigits: Int get() = 0
 }

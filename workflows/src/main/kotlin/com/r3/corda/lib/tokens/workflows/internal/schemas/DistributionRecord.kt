@@ -10,9 +10,9 @@ import javax.persistence.*
 object DistributionRecordSchema
 
 object DistributionRecordSchemaV1 : MappedSchema(
-	schemaFamily = DistributionRecordSchema.javaClass,
-	version = 1,
-	mappedTypes = listOf(DistributionRecord::class.java)
+        schemaFamily = DistributionRecordSchema.javaClass,
+        version = 1,
+        mappedTypes = listOf(DistributionRecord::class.java)
 )
 
 @CordaSerializable
@@ -20,17 +20,17 @@ object DistributionRecordSchemaV1 : MappedSchema(
 @Table(name = "distribution_record", indexes = [Index(name = "dist_record_idx", columnList = "linear_id")])
 class DistributionRecord(
 
-	@Id
-	@GeneratedValue
-	var id: Long,
+        @Id
+        @GeneratedValue
+        var id: Long,
 
-	@Column(name = "linear_id", nullable = false)
-	@Type(type = "uuid-char")
-	var linearId: UUID,
+        @Column(name = "linear_id", nullable = false)
+        @Type(type = "uuid-char")
+        var linearId: UUID,
 
-	@Column(name = "party", nullable = false)
-	var party: Party
+        @Column(name = "party", nullable = false)
+        var party: Party
 
 ) {
-	constructor(linearId: UUID, party: Party) : this(0, linearId, party)
+    constructor(linearId: UUID, party: Party) : this(0, linearId, party)
 }

@@ -8,8 +8,8 @@ import net.corda.core.node.ServiceHub
 import org.slf4j.LoggerFactory
 
 interface StateSelectionConfig {
-	@Suspendable
-	fun toSelector(services: ServiceHub): Selector
+    @Suspendable
+    fun toSelector(services: ServiceHub): Selector
 }
 
 /**
@@ -34,21 +34,21 @@ interface StateSelectionConfig {
  * token selection.
  */
 object ConfigSelection {
-	val logger = LoggerFactory.getLogger("configSelectionLogger")
-	@Suspendable
-	fun getPreferredSelection(services: ServiceHub, config: CordappConfig = services.getAppContext().config): Selector {
-		val hasSelection = config.exists("stateSelection")
-		return if (!hasSelection) {
-			logger.warn("No configuration for state selection, defaulting to database selection.")
-			DatabaseSelectionConfig().toSelector(services) // Return default database selection
-		} else {
-			if (config.exists("stateSelection.database")) {
-				DatabaseSelectionConfig.parse(config).toSelector(services)
-			} else if (config.exists("stateSelection.inMemory")) {
-				InMemorySelectionConfig.parse(config).toSelector(services)
-			} else {
-				throw IllegalArgumentException("Provide correct state-selection type string in the config, see kdocs for ConfigSelection.")
-			}
-		}
-	}
+    val logger = LoggerFactory.getLogger("configSelectionLogger")
+    @Suspendable
+    fun getPreferredSelection(services: ServiceHub, config: CordappConfig = services.getAppContext().config): Selector {
+        val hasSelection = config.exists("stateSelection")
+        return if (!hasSelection) {
+            logger.warn("No configuration for state selection, defaulting to database selection.")
+            DatabaseSelectionConfig().toSelector(services) // Return default database selection
+        } else {
+            if (config.exists("stateSelection.database")) {
+                DatabaseSelectionConfig.parse(config).toSelector(services)
+            } else if (config.exists("stateSelection.inMemory")) {
+                InMemorySelectionConfig.parse(config).toSelector(services)
+            } else {
+                throw IllegalArgumentException("Provide correct state-selection type string in the config, see kdocs for ConfigSelection.")
+            }
+        }
+    }
 }

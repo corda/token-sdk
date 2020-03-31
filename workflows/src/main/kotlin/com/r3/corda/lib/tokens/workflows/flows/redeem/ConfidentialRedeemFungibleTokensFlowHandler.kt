@@ -8,8 +8,8 @@ import net.corda.core.flows.FlowSession
  * Responder flow to [ConfidentialRedeemFungibleTokensFlow].
  */
 class ConfidentialRedeemFungibleTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
-	@Suspendable
-	override fun call() {
-		subFlow(RedeemTokensFlowHandler(otherSession))
-	}
+    @Suspendable
+    override fun call() {
+        subFlow(RedeemTokensFlowHandler(otherSession))
+    }
 }

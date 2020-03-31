@@ -22,13 +22,13 @@ import net.corda.core.transactions.TransactionBuilder
 class MoveNonFungibleTokensFlow
 @JvmOverloads
 constructor(
-	val partyAndToken: PartyAndToken,
-	override val participantSessions: List<FlowSession>,
-	override val observerSessions: List<FlowSession> = emptyList(),
-	val queryCriteria: QueryCriteria?
+        val partyAndToken: PartyAndToken,
+        override val participantSessions: List<FlowSession>,
+        override val observerSessions: List<FlowSession> = emptyList(),
+        val queryCriteria: QueryCriteria?
 ) : AbstractMoveTokensFlow() {
-	@Suspendable
-	override fun addMove(transactionBuilder: TransactionBuilder) {
-		addMoveNonFungibleTokens(transactionBuilder, serviceHub, partyAndToken, queryCriteria)
-	}
+    @Suspendable
+    override fun addMove(transactionBuilder: TransactionBuilder) {
+        addMoveNonFungibleTokens(transactionBuilder, serviceHub, partyAndToken, queryCriteria)
+    }
 }

@@ -1,5 +1,4 @@
 @file:JvmName("MoveTokensUtilities")
-
 package com.r3.corda.lib.tokens.workflows.flows.move
 
 import co.paralleluniverse.fibers.Suspendable
@@ -28,48 +27,48 @@ import net.corda.core.transactions.TransactionBuilder
  */
 @Suspendable
 fun addMoveTokens(
-	transactionBuilder: TransactionBuilder,
-	inputs: List<StateAndRef<AbstractToken>>,
-	outputs: List<AbstractToken>
+        transactionBuilder: TransactionBuilder,
+        inputs: List<StateAndRef<AbstractToken>>,
+        outputs: List<AbstractToken>
 ): TransactionBuilder {
-	val outputGroups: Map<IssuedTokenType, List<AbstractToken>> = outputs.groupBy { it.issuedTokenType }
-	val inputGroups: Map<IssuedTokenType, List<StateAndRef<AbstractToken>>> = inputs.groupBy {
-		it.state.data.issuedTokenType
-	}
+    val outputGroups: Map<IssuedTokenType, List<AbstractToken>> = outputs.groupBy { it.issuedTokenType }
+    val inputGroups: Map<IssuedTokenType, List<StateAndRef<AbstractToken>>> = inputs.groupBy {
+        it.state.data.issuedTokenType
+    }
 
-	check(outputGroups.keys == inputGroups.keys) {
-		"Input and output token types must correspond to each other when moving tokensToIssue"
-	}
+    check(outputGroups.keys == inputGroups.keys) {
+        "Input and output token types must correspond to each other when moving tokensToIssue"
+    }
 
-	transactionBuilder.apply {
-		// Add a notary to the transaction.
-		// TODO: Deal with notary change.
-		notary = inputs.map { it.state.notary }.toSet().single()
-		outputGroups.forEach { issuedTokenType: IssuedTokenType, outputStates: List<AbstractToken> ->
-			val inputGroup = inputGroups[issuedTokenType]
-				?: throw IllegalArgumentException("No corresponding inputs for the outputs issued token type: $issuedTokenType")
-			val keys = inputGroup.map { it.state.data.holder.owningKey }
+    transactionBuilder.apply {
+        // Add a notary to the transaction.
+        // TODO: Deal with notary change.
+        notary = inputs.map { it.state.notary }.toSet().single()
+        outputGroups.forEach { issuedTokenType: IssuedTokenType, outputStates: List<AbstractToken> ->
+            val inputGroup = inputGroups[issuedTokenType]
+                    ?: throw IllegalArgumentException("No corresponding inputs for the outputs issued token type: $issuedTokenType")
+            val keys = inputGroup.map { it.state.data.holder.owningKey }
 
-			var inputStartingIdx = inputStates().size
-			var outputStartingIdx = outputStates().size
+            var inputStartingIdx = inputStates().size
+            var outputStartingIdx = outputStates().size
 
-			val inputIdx = inputGroup.map {
-				addInputState(it)
-				inputStartingIdx++
-			}
+            val inputIdx = inputGroup.map {
+                addInputState(it)
+                inputStartingIdx++
+            }
 
-			val outputIdx = outputStates.map {
-				addOutputState(it)
-				outputStartingIdx++
-			}
+            val outputIdx = outputStates.map {
+                addOutputState(it)
+                outputStartingIdx++
+            }
 
-			addCommand(MoveTokenCommand(issuedTokenType, inputs = inputIdx, outputs = outputIdx), keys)
-		}
-	}
+            addCommand(MoveTokenCommand(issuedTokenType, inputs = inputIdx, outputs = outputIdx), keys)
+        }
+    }
 
-	addTokenTypeJar(inputs.map { it.state.data } + outputs, transactionBuilder)
+    addTokenTypeJar(inputs.map { it.state.data } + outputs, transactionBuilder)
 
-	return transactionBuilder
+    return transactionBuilder
 }
 
 /**
@@ -77,11 +76,11 @@ fun addMoveTokens(
  */
 @Suspendable
 fun addMoveTokens(
-	transactionBuilder: TransactionBuilder,
-	input: StateAndRef<AbstractToken>,
-	output: AbstractToken
+        transactionBuilder: TransactionBuilder,
+        input: StateAndRef<AbstractToken>,
+        output: AbstractToken
 ): TransactionBuilder {
-	return addMoveTokens(transactionBuilder = transactionBuilder, inputs = listOf(input), outputs = listOf(output))
+    return addMoveTokens(transactionBuilder = transactionBuilder, inputs = listOf(input), outputs = listOf(output))
 }
 
 /**
@@ -94,22 +93,17 @@ fun addMoveTokens(
 @Suspendable
 @JvmOverloads
 fun addMoveFungibleTokens(
-	transactionBuilder: TransactionBuilder,
-	serviceHub: ServiceHub,
-	partiesAndAmounts: List<PartyAndAmount<TokenType>>,
-	changeHolder: AbstractParty,
-	queryCriteria: QueryCriteria? = null
+        transactionBuilder: TransactionBuilder,
+        serviceHub: ServiceHub,
+        partiesAndAmounts: List<PartyAndAmount<TokenType>>,
+        changeHolder: AbstractParty,
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-	// TODO For now default to database query, but switch this line on after we can change API in 2.0
+    // TODO For now default to database query, but switch this line on after we can change API in 2.0
 //    val selector: Selector = ConfigSelection.getPreferredSelection(serviceHub)
-	val selector = DatabaseTokenSelection(serviceHub)
-	val (inputs, outputs) = selector.generateMove(
-		partiesAndAmounts.toPairs(),
-		changeHolder,
-		TokenQueryBy(queryCriteria = queryCriteria),
-		transactionBuilder.lockId
-	)
-	return addMoveTokens(transactionBuilder = transactionBuilder, inputs = inputs, outputs = outputs)
+    val selector = DatabaseTokenSelection(serviceHub)
+    val (inputs, outputs) = selector.generateMove(partiesAndAmounts.toPairs(), changeHolder, TokenQueryBy(queryCriteria = queryCriteria), transactionBuilder.lockId)
+    return addMoveTokens(transactionBuilder = transactionBuilder, inputs = inputs, outputs = outputs)
 }
 
 /**
@@ -122,20 +116,20 @@ fun addMoveFungibleTokens(
 @Suspendable
 @JvmOverloads
 fun addMoveFungibleTokens(
-	transactionBuilder: TransactionBuilder,
-	serviceHub: ServiceHub,
-	amount: Amount<TokenType>,
-	holder: AbstractParty,
-	changeHolder: AbstractParty,
-	queryCriteria: QueryCriteria? = null
+        transactionBuilder: TransactionBuilder,
+        serviceHub: ServiceHub,
+        amount: Amount<TokenType>,
+        holder: AbstractParty,
+        changeHolder: AbstractParty,
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-	return addMoveFungibleTokens(
-		transactionBuilder = transactionBuilder,
-		serviceHub = serviceHub,
-		partiesAndAmounts = listOf(PartyAndAmount(holder, amount)),
-		changeHolder = changeHolder,
-		queryCriteria = queryCriteria
-	)
+    return addMoveFungibleTokens(
+            transactionBuilder = transactionBuilder,
+            serviceHub = serviceHub,
+            partiesAndAmounts = listOf(PartyAndAmount(holder, amount)),
+            changeHolder = changeHolder,
+            queryCriteria = queryCriteria
+    )
 }
 
 /* For non-fungible tokens. */
@@ -147,13 +141,13 @@ fun addMoveFungibleTokens(
 @Suspendable
 @JvmOverloads
 fun addMoveNonFungibleTokens(
-	transactionBuilder: TransactionBuilder,
-	serviceHub: ServiceHub,
-	token: TokenType,
-	holder: AbstractParty,
-	queryCriteria: QueryCriteria? = null
+        transactionBuilder: TransactionBuilder,
+        serviceHub: ServiceHub,
+        token: TokenType,
+        holder: AbstractParty,
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-	return generateMoveNonFungible(transactionBuilder, PartyAndToken(holder, token), serviceHub.vaultService, queryCriteria)
+    return generateMoveNonFungible(transactionBuilder, PartyAndToken(holder, token), serviceHub.vaultService, queryCriteria)
 }
 
 /**
@@ -163,10 +157,10 @@ fun addMoveNonFungibleTokens(
 @Suspendable
 @JvmOverloads
 fun addMoveNonFungibleTokens(
-	transactionBuilder: TransactionBuilder,
-	serviceHub: ServiceHub,
-	partyAndToken: PartyAndToken,
-	queryCriteria: QueryCriteria? = null
+        transactionBuilder: TransactionBuilder,
+        serviceHub: ServiceHub,
+        partyAndToken: PartyAndToken,
+        queryCriteria: QueryCriteria? = null
 ): TransactionBuilder {
-	return generateMoveNonFungible(transactionBuilder, partyAndToken, serviceHub.vaultService, queryCriteria)
+    return generateMoveNonFungible(transactionBuilder, partyAndToken, serviceHub.vaultService, queryCriteria)
 }
