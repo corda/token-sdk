@@ -31,9 +31,9 @@ import java.sql.ResultSet
 
 class OwnerMigration : CustomSqlChange {
 
-    companion object {
-        private val logger = contextLogger()
-    }
+	companion object {
+		private val logger = contextLogger()
+	}
 
     private object AMQPInspectorSerializationScheme : AbstractAMQPSerializationScheme(emptyList()) {
         override fun canDeserializeVersion(magic: CordaSerializationMagic, target: SerializationContext.UseCase): Boolean {
@@ -44,112 +44,81 @@ class OwnerMigration : CustomSqlChange {
         override fun rpcServerSerializerFactory(context: SerializationContext) = throw UnsupportedOperationException()
     }
 
-    private fun initialiseSerialization() {
-        // Deserialise with the lenient carpenter as we only care for the AMQP field getters
-        _inheritableContextSerializationEnv.set(SerializationEnvironment.with(
-                SerializationFactoryImpl().apply {
-                    registerScheme(AMQPInspectorSerializationScheme)
-                },
-                p2pContext = AMQP_P2P_CONTEXT.withLenientCarpenter(),
-                storageContext = AMQP_STORAGE_CONTEXT.withLenientCarpenter()
-        ))
-    }
-
-    private fun disableSerialization() {
-        _inheritableContextSerializationEnv.set(null)
-    }
+	val serializationFactory = SerializationFactoryImpl().apply {
+		registerScheme(AMQPInspectorSerializationScheme)
+	}
+	val context = AMQP_STORAGE_CONTEXT.withLenientCarpenter()
 
 
-    fun withSerializationEnv(block: () -> Unit) {
-        val newEnv = if (_allEnabledSerializationEnvs.isEmpty()) {
-            initialiseSerialization()
-            true
-        } else {
-            false
-        }
-        effectiveSerializationEnv.serializationFactory.withCurrentContext(effectiveSerializationEnv.storageContext.withLenientCarpenter()) {
-            block()
-        }
+	override fun validate(database: Database?): ValidationErrors? {
+		return null
+	}
 
-        if (newEnv) {
-            disableSerialization()
-        }
-    }
+	override fun getConfirmationMessage(): String? {
+		return null
+	}
 
-    override fun validate(database: Database?): ValidationErrors? {
-        return null
-    }
+	override fun setFileOpener(resourceAccessor: ResourceAccessor?) {
+	}
 
-    override fun getConfirmationMessage(): String? {
-        return null
-    }
-
-    override fun setFileOpener(resourceAccessor: ResourceAccessor?) {
-    }
-
-    override fun setUp() {
-    }
+	override fun setUp() {
+	}
 
 
-    override fun generateStatements(database: Database?): Array<SqlStatement> {
+	override fun generateStatements(database: Database?): Array<SqlStatement> {
 
-        if (database == null) {
-            throw IllegalStateException("Cannot migrate tokens without owner as Liquibase failed to provide a suitable connection")
-        }
-
-        val selectStatement = """
+		if (database == null) {
+			throw IllegalStateException("Cannot migrate tokens without owner as Liquibase failed to provide a suitable connection")
+		}
+		val selectStatement = """
             SELECT output_index, transaction_id, transaction_value 
             FROM fungible_token, node_transactions 
             WHERE holding_key IS NULL and node_transactions.tx_id = fungible_token.transaction_id
         """.trimIndent()
+		val connection = (database.connection as JdbcConnection).wrappedConnection
+		val preparedStatement = connection.prepareStatement(selectStatement)
+		val resultSet = preparedStatement.executeQuery()
+		val listOfUpdates = mutableListOf<Pair<StateRef, String>>()
+		resultSet.use { rs ->
+			while (rs.next()) {
+				val outputIdx = rs.getInt(1)
+				val txId = rs.getString(2)
+				val txBytes = getBytes(database, resultSet)
+				val signedTx: SignedTransaction = txBytes.deserialize(serializationFactory, context)
+				val fungibleTokensOutRefs = signedTx.coreTransaction.outRefsOfType(FungibleToken::class.java)
+				val tokenMatchingRef = fungibleTokensOutRefs.singleOrNull { it.ref.index == outputIdx }
+				tokenMatchingRef?.state?.data?.holder?.owningKey?.toStringShort()?.let { ownerHash ->
+					listOfUpdates.add(StateRef(SecureHash.parse(txId), outputIdx) to ownerHash)
+				}
+			}
+		}
 
+		return listOfUpdates.map { (stateRef, holdingKeyHash) ->
+			UpdateStatement(connection.catalog, connection.schema, "fungible_token")
+				.setWhereClause("output_index=? AND transaction_id=?")
+				.addNewColumnValue("holding_key", holdingKeyHash)
+				.addWhereParameters(stateRef.index, stateRef.txhash.toString())
+		}.toTypedArray()
 
-        val connection = (database.connection as JdbcConnection).wrappedConnection
-        val preparedStatement = connection.prepareStatement(selectStatement)
-        val resultSet = preparedStatement.executeQuery()
-        val listOfUpdates = mutableListOf<Pair<StateRef, String>>()
-        withSerializationEnv {
-            resultSet.use { rs ->
-                while (rs.next()) {
-                    val outputIdx = rs.getInt(1)
-                    val txId = rs.getString(2)
-                    val txBytes = getBytes(database, resultSet)
-                    val signedTx: SignedTransaction = txBytes.deserialize()
-                    val fungibleTokensOutRefs = signedTx.coreTransaction.outRefsOfType(FungibleToken::class.java)
-                    val tokenMatchingRef = fungibleTokensOutRefs.singleOrNull { it.ref.index == outputIdx }
-                    tokenMatchingRef?.state?.data?.holder?.owningKey?.toStringShort()?.let { ownerHash ->
-                        listOfUpdates.add(StateRef(SecureHash.parse(txId), outputIdx) to ownerHash)
-                    }
-                }
-            }
-        }
-
-        return listOfUpdates.map { (stateRef, holdingKeyHash) ->
-            UpdateStatement(connection.catalog, connection.schema, "fungible_token")
-                    .setWhereClause("output_index=? AND transaction_id=?")
-                    .addNewColumnValue("holding_key", holdingKeyHash)
-                    .addWhereParameters(stateRef.index, stateRef.txhash.toString())
-        }.toTypedArray()
-
-    }
+	}
 
 
 }
 
 fun getBytes(database: Database, resultSet: ResultSet): ByteArray {
 
-    return if (database is PostgresDatabase) {
-        val lom: org.postgresql.largeobject.LargeObjectManager =
-                (database.connection as JdbcConnection).underlyingConnection.unwrap(org.postgresql.PGConnection::class.java).largeObjectAPI
+	return if (database is PostgresDatabase) {
+		val lom: org.postgresql.largeobject.LargeObjectManager =
+			(database.connection as JdbcConnection).underlyingConnection.unwrap(org.postgresql.PGConnection::class.java).largeObjectAPI
 
-        val oid = resultSet.getLong("transaction_value")
-        val loadedbject: org.postgresql.largeobject.LargeObject = lom.open(oid)
-        loadedbject.use {
-            loadedbject.inputStream.readFully()
-        }
-    } else {
-        resultSet.getBytes("transaction_value")
-    }
+		val oid = resultSet.getLong("transaction_value")
+		val loadedbject: org.postgresql.largeobject.LargeObject = lom.open(oid)
+		loadedbject.use {
+			loadedbject.inputStream.readFully()
+		}
+	} else {
+		resultSet.getBytes("transaction_value")
+	}
 
 }
 
