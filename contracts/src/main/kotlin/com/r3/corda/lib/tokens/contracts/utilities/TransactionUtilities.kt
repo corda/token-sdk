@@ -96,14 +96,9 @@ fun TokenType.getAttachmentIdForGenericParam(): SecureHash? {
 				classToSearch = this.tokenClass
 			}
 			if (classToSearch.location == TokenType::class.java.location) {
-				TokenUtilities.logger.debug("${this.javaClass} is provided by tokens-sdk")
 				NULL_SECURE_HASH
 			} else {
 				val hash = classToSearch.location.readBytes().sha256()
-				TokenUtilities.logger.debug(
-					"looking for jar which provides: $classToSearch FOUND AT: " +
-							"${classToSearch.location.path} with hash $hash"
-				)
 				hash
 			}
 		}

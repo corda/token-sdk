@@ -15,6 +15,9 @@ buildscript {
         jackson_version = '2.9.0'
         confidential_id_release_group = "com.r3.corda.lib.ci"
         confidential_id_release_version = "1.0"
+        aetherVersion = '1.0.0.v20140518'
+        mavenVersion = '3.1.0'
+        maven_resolver_version = "1.1.1"
     }
 
     repositories {
@@ -86,6 +89,11 @@ subprojects {
         jar {
             exclude "**/log4j2*.xml"
         }
+    }
+
+    tasks.withType(Test){
+        minHeapSize = "128m"
+        maxHeapSize = "4096m"
     }
 }
 

@@ -12,12 +12,7 @@ import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.utilities.contextLogger
 
-class TokenUtilities {
-	companion object {
-		val logger = contextLogger()
-
-	}
-}
+class TokenUtilities
 
 // ------------------------------------------------------
 // Creates a tokens from (amounts of) issued token types.

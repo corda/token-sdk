@@ -128,10 +128,6 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
 
 		val allMatchedCommands = groupsAndCommands.map { it.first.first() }.toSet()
 		val extraCommands = (tokenCommands - allMatchedCommands).toSet()
-		if (extraCommands.isNotEmpty()) {
-			loggerFor<AbstractTokenContract<AT>>().warn("Unprocessed commands: ${extraCommands}")
-		}
-
 	}
 
 	private fun groupMatchesCommand(it: CommandWithParties<TokenCommand>, group: IndexedInOutGroup<AbstractToken, TokenInfo>): Boolean {
