@@ -1,9 +1,9 @@
 @file:JvmName("QueryUtilities")
+
 package com.r3.corda.lib.tokens.workflows.utilities
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleToken
-import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleTokenOwner
 import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentNonFungibleToken
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
@@ -53,7 +53,7 @@ fun tokenAmountWithIssuerCriteria(token: TokenType, issuer: Party): QueryCriteri
 
 fun heldTokenAmountCriteria(token: TokenType, holder: AbstractParty): QueryCriteria {
     val holderCriteria = QueryCriteria.VaultCustomQueryCriteria(builder {
-        PersistentFungibleTokenOwner::owningKeyHash.equal(holder.owningKey.toStringShort())
+        PersistentFungibleToken::owningKeyHash.equal(holder.owningKey.toStringShort())
     })
     return tokenAmountCriteria(token).and(holderCriteria)
 }

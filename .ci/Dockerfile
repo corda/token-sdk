@@ -1,2 +1,3 @@
 FROM azul/zulu-openjdk-debian:8
-RUN useradd -m buildUser
+ARG USER="stresstester"
+RUN useradd -m ${USER}

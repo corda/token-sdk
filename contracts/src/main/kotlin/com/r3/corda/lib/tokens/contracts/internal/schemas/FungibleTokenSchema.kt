@@ -15,16 +15,11 @@ object FungibleTokenSchemaV1 : MappedSchema(
         mappedTypes = listOf(PersistentFungibleToken::class.java)
 )
 
-object FungibleTokenOwnerSchemaV1 : MappedSchema(
-        schemaFamily = FungibleTokenSchema.javaClass,
-        version = 1,
-        mappedTypes = listOf(PersistentFungibleTokenOwner::class.java)
-)
-
 @Entity
 @Table(name = "fungible_token", indexes = [
     Index(name = "amount_idx", columnList = "amount"),
-    Index(name = "held_token_amount_idx", columnList = "token_class, token_identifier")
+    Index(name = "held_token_amount_idx", columnList = "token_class, token_identifier"),
+    Index(name = "holding_key_idx", columnList = "holding_key")
 ])
 class PersistentFungibleToken(
         @Column(name = "issuer", nullable = false)
@@ -47,12 +42,8 @@ class PersistentFungibleToken(
         // It is expected that the combination of token_class and token_symbol will be enough to identity a unique
         // token.
         @Column(name = "token_identifier", nullable = true)
-        var tokenIdentifier: String
-) : PersistentState()
+        var tokenIdentifier: String,
 
-@Entity
-@Table(name = "fungible_token_owner", indexes = [Index(name = "owning_key_idx", columnList = "holding_key")])
-class PersistentFungibleTokenOwner(
-        @Column(name = "holding_key")
-        val owningKeyHash: String
+        @Column(name = "holding_key", nullable = true)
+        val owningKeyHash: String?
 ) : PersistentState()

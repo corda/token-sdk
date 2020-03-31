@@ -3,26 +3,21 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
 
-    <changeSet author="R3.Corda" id="create_fungible_token_owner_table">
-        <createTable tableName="fungible_token_owner">
-            <column name="output_index" type="INTEGER">
-                <constraints nullable="false"/>
-            </column>
-            <column name="transaction_id" type="NVARCHAR(64)">
-                <constraints nullable="false"/>
-            </column>
+    <changeSet author="R3.Corda" id="create_fungible_token_owner_column">
+        <addColumn tableName="fungible_token">
             <column name="holding_key" type="NVARCHAR(64)">
-                <constraints nullable="false"/>
+                <constraints nullable="true"/>
             </column>
-        </createTable>
+        </addColumn>
     </changeSet>
-    <changeSet author="R3.Corda" id="fungible_token_pkey_id">
-        <addPrimaryKey columnNames="output_index, transaction_id" constraintName="fungible_token_owner_pkey"
-                       tableName="fungible_token_owner"/>
-    </changeSet>
-    <changeSet author="R3.Corda" id="held_token_amount_idx_id">
-        <createIndex indexName="owning_key_idx" tableName="fungible_token_owner">
+    <changeSet author="R3.Corda" id="create_holding_key_idx">
+        <createIndex indexName="holding_key_idx" tableName="fungible_token">
             <column name="holding_key"/>
         </createIndex>
     </changeSet>
+
+    <changeSet author="R3.Corda" id="map_owning_keys_from_transactionstore">
+        <customChange class="com.r3.corda.lib.tokens.workflows.OwnerMigration"/>
+    </changeSet>
+
 </databaseChangeLog>
