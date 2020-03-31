@@ -9,11 +9,11 @@ import net.corda.core.flows.FlowSession
  * Responder flow for [MoveTokensFlow], [MoveFungibleTokensFlow], [MoveNonFungibleTokensFlow]
  */
 class MoveTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
-    @Suspendable
-    override fun call() {
-        // Resolve the move transaction.
-        if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
-            subFlow(ObserverAwareFinalityFlowHandler(otherSession))
-        }
-    }
+	@Suspendable
+	override fun call() {
+		// Resolve the move transaction.
+		if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
+			subFlow(ObserverAwareFinalityFlowHandler(otherSession))
+		}
+	}
 }

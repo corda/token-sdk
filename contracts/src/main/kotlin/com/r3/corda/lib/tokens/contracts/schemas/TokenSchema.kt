@@ -8,7 +8,7 @@ import net.corda.core.schemas.MappedSchema
 object TokenSchema
 
 object TokenSchemaV1 : MappedSchema(
-        schemaFamily = TokenSchema.javaClass,
-        version = 1,
-        mappedTypes = listOf()
+	schemaFamily = TokenSchema.javaClass,
+	version = 1,
+	mappedTypes = listOf()
 )

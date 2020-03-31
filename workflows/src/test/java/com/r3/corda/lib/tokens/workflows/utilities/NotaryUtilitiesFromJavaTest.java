@@ -30,13 +30,13 @@ public class NotaryUtilitiesFromJavaTest extends JITMockNetworkTests {
     public void javaWrappedNotarySelectionIsIdenticalToKotlinCompanionObject() throws Exception {
         Party javaWrappedAllArgs = NotaryUtilities.getPreferredNotary(a.getServices(), NotaryUtilities.firstNotary());
         Party javaWrappedDefaultArgs = NotaryUtilities.getPreferredNotary(a.getServices());
-        assert(javaWrappedAllArgs.equals(javaWrappedDefaultArgs));
+        assert (javaWrappedAllArgs.equals(javaWrappedDefaultArgs));
 
         Party javaWrappedFirstNotary = NotaryUtilities.getPreferredNotary(a.getServices());
-        assert(javaWrappedAllArgs.equals(javaWrappedFirstNotary));
+        assert (javaWrappedAllArgs.equals(javaWrappedFirstNotary));
 
         Party kotlinRandomNotary = NotaryUtilities.randomNotary().invoke(a.getServices());
-        assert(javaWrappedAllArgs.equals(kotlinRandomNotary));
+        assert (javaWrappedAllArgs.equals(kotlinRandomNotary));
     }
 
     /**
@@ -46,7 +46,7 @@ public class NotaryUtilitiesFromJavaTest extends JITMockNetworkTests {
     public void javaWrappedNotarySelectionWorksWithBackupSelection() throws Exception {
         Party preferredNotaryWithBackup = NotaryUtilities.getPreferredNotary(a.getServices(), NotaryUtilities.firstNotary());
         Party preferredNotary = NotaryUtilities.getPreferredNotary(a.getServices());
-        assert(preferredNotary.equals(preferredNotaryWithBackup));
+        assert (preferredNotary.equals(preferredNotaryWithBackup));
     }
 }
 

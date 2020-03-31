@@ -8,9 +8,9 @@ import net.corda.core.identity.Party
 
 @BelongsToContract(TestEvolvableTokenContract::class)
 data class TestEvolvableTokenType(
-        override val maintainers: List<Party>,
-        val observers: List<Party> = emptyList(),
-        override val participants: List<Party> = (maintainers + observers),
-        override val linearId: UniqueIdentifier = UniqueIdentifier(),
-        override val fractionDigits: Int = 0
+	override val maintainers: List<Party>,
+	val observers: List<Party> = emptyList(),
+	override val participants: List<Party> = (maintainers + observers),
+	override val linearId: UniqueIdentifier = UniqueIdentifier(),
+	override val fractionDigits: Int = 0
 ) : EvolvableTokenType()

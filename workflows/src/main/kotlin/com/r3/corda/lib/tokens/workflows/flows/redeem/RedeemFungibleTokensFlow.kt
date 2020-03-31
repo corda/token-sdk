@@ -21,21 +21,21 @@ import net.corda.core.transactions.TransactionBuilder
 class RedeemFungibleTokensFlow
 @JvmOverloads
 constructor(
-        val amount: Amount<TokenType>,
-        override val issuerSession: FlowSession,
-        val changeHolder: AbstractParty? = null,
-        override val observerSessions: List<FlowSession> = emptyList(),
-        val additionalQueryCriteria: QueryCriteria? = null
+	val amount: Amount<TokenType>,
+	override val issuerSession: FlowSession,
+	val changeHolder: AbstractParty? = null,
+	override val observerSessions: List<FlowSession> = emptyList(),
+	val additionalQueryCriteria: QueryCriteria? = null
 ) : AbstractRedeemTokensFlow() {
-    @Suspendable
-    override fun generateExit(transactionBuilder: TransactionBuilder) {
-        addFungibleTokensToRedeem(
-                transactionBuilder = transactionBuilder,
-                serviceHub = serviceHub,
-                amount = amount,
-                issuer = issuerSession.counterparty,
-                changeHolder = changeHolder ?: ourIdentity,
-                additionalQueryCriteria = additionalQueryCriteria
-        )
-    }
+	@Suspendable
+	override fun generateExit(transactionBuilder: TransactionBuilder) {
+		addFungibleTokensToRedeem(
+			transactionBuilder = transactionBuilder,
+			serviceHub = serviceHub,
+			amount = amount,
+			issuer = issuerSession.counterparty,
+			changeHolder = changeHolder ?: ourIdentity,
+			additionalQueryCriteria = additionalQueryCriteria
+		)
+	}
 }

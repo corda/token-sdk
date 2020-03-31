@@ -22,21 +22,21 @@ import net.corda.core.transactions.TransactionBuilder
 class MoveTokensFlow
 @JvmOverloads
 constructor(
-        val inputs: List<StateAndRef<AbstractToken>>,
-        val outputs: List<AbstractToken>,
-        override val participantSessions: List<FlowSession>,
-        override val observerSessions: List<FlowSession> = emptyList()
+	val inputs: List<StateAndRef<AbstractToken>>,
+	val outputs: List<AbstractToken>,
+	override val participantSessions: List<FlowSession>,
+	override val observerSessions: List<FlowSession> = emptyList()
 ) : AbstractMoveTokensFlow() {
-    @JvmOverloads
-    constructor(
-            input: StateAndRef<AbstractToken>,
-            output: AbstractToken,
-            participantSessions: List<FlowSession>,
-            observerSessions: List<FlowSession> = emptyList()
-    ) : this(listOf(input), listOf(output), participantSessions, observerSessions)
+	@JvmOverloads
+	constructor(
+		input: StateAndRef<AbstractToken>,
+		output: AbstractToken,
+		participantSessions: List<FlowSession>,
+		observerSessions: List<FlowSession> = emptyList()
+	) : this(listOf(input), listOf(output), participantSessions, observerSessions)
 
-    @Suspendable
-    override fun addMove(transactionBuilder: TransactionBuilder) {
-        addMoveTokens(transactionBuilder, inputs, outputs)
-    }
+	@Suspendable
+	override fun addMove(transactionBuilder: TransactionBuilder) {
+		addMoveTokens(transactionBuilder, inputs, outputs)
+	}
 }

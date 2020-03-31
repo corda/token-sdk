@@ -21,29 +21,29 @@ import net.corda.core.transactions.SignedTransaction
 class CreateEvolvableTokens
 @JvmOverloads
 constructor(
-        val transactionStates: List<TransactionState<EvolvableTokenType>>,
-        val observers: List<Party> = emptyList()
+	val transactionStates: List<TransactionState<EvolvableTokenType>>,
+	val observers: List<Party> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
-    @JvmOverloads
-    constructor(transactionState: TransactionState<EvolvableTokenType>, observers: List<Party> = emptyList()) : this(listOf(transactionState), observers)
+	@JvmOverloads
+	constructor(transactionState: TransactionState<EvolvableTokenType>, observers: List<Party> = emptyList()) : this(listOf(transactionState), observers)
 
-    @Suspendable
-    override fun call(): SignedTransaction {
-        // Initiate sessions to all observers.
-        val observersSessions = (observers + statesObservers).toSet().map { initiateFlow(it) }
-        // Initiate sessions to all maintainers but our node.
-        val participantsSessions: List<FlowSession> = evolvableTokens.otherMaintainers(ourIdentity).map { initiateFlow(it) }
-        return subFlow(CreateEvolvableTokensFlow(transactionStates, participantsSessions, observersSessions))
-    }
+	@Suspendable
+	override fun call(): SignedTransaction {
+		// Initiate sessions to all observers.
+		val observersSessions = (observers + statesObservers).toSet().map { initiateFlow(it) }
+		// Initiate sessions to all maintainers but our node.
+		val participantsSessions: List<FlowSession> = evolvableTokens.otherMaintainers(ourIdentity).map { initiateFlow(it) }
+		return subFlow(CreateEvolvableTokensFlow(transactionStates, participantsSessions, observersSessions))
+	}
 
-    private val evolvableTokens = transactionStates.map { it.data }
+	private val evolvableTokens = transactionStates.map { it.data }
 
-    // TODO Refactor it more.
-    private val statesObservers
-        get(): List<Party> {
-            val observers = evolvableTokens.participants().minus(evolvableTokens.maintainers()).minus(this.ourIdentity)
-            return observers.map { serviceHub.identityService.wellKnownPartyFromAnonymous(it)!! }
-        }
+	// TODO Refactor it more.
+	private val statesObservers
+		get(): List<Party> {
+			val observers = evolvableTokens.participants().minus(evolvableTokens.maintainers()).minus(this.ourIdentity)
+			return observers.map { serviceHub.identityService.wellKnownPartyFromAnonymous(it)!! }
+		}
 }
 
 /**
@@ -51,8 +51,8 @@ constructor(
  */
 @InitiatedBy(CreateEvolvableTokens::class)
 class CreateEvolvableTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
-    @Suspendable
-    override fun call() = subFlow(CreateEvolvableTokensFlowHandler(otherSession))
+	@Suspendable
+	override fun call() = subFlow(CreateEvolvableTokensFlowHandler(otherSession))
 }
 
 /**
@@ -66,32 +66,33 @@ class CreateEvolvableTokensHandler(val otherSession: FlowSession) : FlowLogic<Un
 @StartableByRPC
 class UpdateEvolvableToken
 @JvmOverloads
-constructor(val oldStateAndRef: StateAndRef<EvolvableTokenType>,
-            val newState: EvolvableTokenType,
-            val observers: List<Party> = emptyList()
+constructor(
+	val oldStateAndRef: StateAndRef<EvolvableTokenType>,
+	val newState: EvolvableTokenType,
+	val observers: List<Party> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
-    @Suspendable
-    override fun call(): SignedTransaction {
-        // Initiate sessions to all observers.
-        val observersSessions = (observers + statesObservers).toSet().map { initiateFlow(it) }
-        // Initiate sessions to all maintainers but our node.
-        val participantsSessions: List<FlowSession> = evolvableTokens.otherMaintainers(ourIdentity).map { initiateFlow(it) }
-        return subFlow(UpdateEvolvableTokenFlow(oldStateAndRef, newState, participantsSessions, observersSessions))
-    }
+	@Suspendable
+	override fun call(): SignedTransaction {
+		// Initiate sessions to all observers.
+		val observersSessions = (observers + statesObservers).toSet().map { initiateFlow(it) }
+		// Initiate sessions to all maintainers but our node.
+		val participantsSessions: List<FlowSession> = evolvableTokens.otherMaintainers(ourIdentity).map { initiateFlow(it) }
+		return subFlow(UpdateEvolvableTokenFlow(oldStateAndRef, newState, participantsSessions, observersSessions))
+	}
 
-    private val oldState get() = oldStateAndRef.state.data
-    private val evolvableTokens = listOf(oldState, newState)
+	private val oldState get() = oldStateAndRef.state.data
+	private val evolvableTokens = listOf(oldState, newState)
 
-    // TODO Refactor it more.
-    private val otherObservers
-        get(): Set<AbstractParty> {
-            return (evolvableTokens.participants() + subscribersForState(newState, serviceHub)).minus(evolvableTokens.maintainers()).minus(this.ourIdentity)
-        }
+	// TODO Refactor it more.
+	private val otherObservers
+		get(): Set<AbstractParty> {
+			return (evolvableTokens.participants() + subscribersForState(newState, serviceHub)).minus(evolvableTokens.maintainers()).minus(this.ourIdentity)
+		}
 
-    private val statesObservers
-        get(): List<Party> {
-            return otherObservers.map { serviceHub.identityService.wellKnownPartyFromAnonymous(it)!! }
-        }
+	private val statesObservers
+		get(): List<Party> {
+			return otherObservers.map { serviceHub.identityService.wellKnownPartyFromAnonymous(it)!! }
+		}
 }
 
 /**
@@ -99,6 +100,6 @@ constructor(val oldStateAndRef: StateAndRef<EvolvableTokenType>,
  */
 @InitiatedBy(UpdateEvolvableToken::class)
 class UpdateEvolvableTokenHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
-    @Suspendable
-    override fun call() = subFlow(UpdateEvolvableTokenFlowHandler(otherSession))
+	@Suspendable
+	override fun call() = subFlow(UpdateEvolvableTokenFlowHandler(otherSession))
 }

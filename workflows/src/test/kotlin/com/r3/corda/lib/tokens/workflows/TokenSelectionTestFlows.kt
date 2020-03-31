@@ -20,41 +20,43 @@ import java.util.concurrent.Future
 
 val e = Executors.newSingleThreadExecutor()
 
-class SuspendingSelector(val owningKey: PublicKey,
-                         val amount: Amount<TokenType>) : FlowLogic<List<StateAndRef<FungibleToken>>>() {
+class SuspendingSelector(
+	val owningKey: PublicKey,
+	val amount: Amount<TokenType>
+) : FlowLogic<List<StateAndRef<FungibleToken>>>() {
 
 
-    @Suspendable
-    override fun call(): List<StateAndRef<FungibleToken>> {
-        val vaultWatcherService = serviceHub.cordaService(VaultWatcherService::class.java)
-        val localTokenSelector = LocalTokenSelector(serviceHub, vaultWatcherService)
+	@Suspendable
+	override fun call(): List<StateAndRef<FungibleToken>> {
+		val vaultWatcherService = serviceHub.cordaService(VaultWatcherService::class.java)
+		val localTokenSelector = LocalTokenSelector(serviceHub, vaultWatcherService)
 
-        val selectedTokens = localTokenSelector.selectTokens(requiredAmount = amount, queryBy = TokenQueryBy())
+		val selectedTokens = localTokenSelector.selectTokens(requiredAmount = amount, queryBy = TokenQueryBy())
 
-        println("SUSPENDING:::: ${runId.uuid}")
+		println("SUSPENDING:::: ${runId.uuid}")
 
-        val string = executeAsync(object : FlowAsyncOperation<String> {
-            override fun execute(deduplicationId: String): CordaFuture<String> {
-                val f = CompletableFuture<String>()
-                e.submit {
-                    Thread.sleep(1000)
-                    f.complete("yes")
-                }
-                return object : Future<String> by f, CordaFuture<String> {
-                    override fun <W> then(callback: (CordaFuture<String>) -> W) {
-                        f.thenAccept { callback(this) }
-                    }
+		val string = executeAsync(object : FlowAsyncOperation<String> {
+			override fun execute(deduplicationId: String): CordaFuture<String> {
+				val f = CompletableFuture<String>()
+				e.submit {
+					Thread.sleep(1000)
+					f.complete("yes")
+				}
+				return object : Future<String> by f, CordaFuture<String> {
+					override fun <W> then(callback: (CordaFuture<String>) -> W) {
+						f.thenAccept { callback(this) }
+					}
 
-                    override fun toCompletableFuture(): CompletableFuture<String> {
-                        return f
-                    }
-                }
-            }
-        })
+					override fun toCompletableFuture(): CompletableFuture<String> {
+						return f
+					}
+				}
+			}
+		})
 
-        println("RESUMED:::: ${runId.uuid} :: $string")
+		println("RESUMED:::: ${runId.uuid} :: $string")
 
-        return selectedTokens
-    }
+		return selectedTokens
+	}
 
 }

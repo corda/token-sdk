@@ -64,24 +64,24 @@ public class SelectionUtilitiesFromJavaTest {
 
         TokenType testTokenType = new TokenType("TEST", 1);
         CordaFuture<SignedTransaction> futureWithTokens = a.startFlow(
-            new IssueTokens(Collections.singletonList(
-                TokenUtilitiesKt.heldBy(
-                        AmountUtilities.issuedBy(
-                                AmountUtilities.amount(10, testTokenType),
+                new IssueTokens(Collections.singletonList(
+                        TokenUtilitiesKt.heldBy(
+                                AmountUtilities.issuedBy(
+                                        AmountUtilities.amount(10, testTokenType),
+                                        a.getInfo().getLegalIdentities().get(0)
+                                ),
                                 a.getInfo().getLegalIdentities().get(0)
-                        ),
-                        a.getInfo().getLegalIdentities().get(0)
-                )
-        )));
+                        )
+                )));
         mockNetwork.runNetwork();
 
         Vault.Page<FungibleToken> tokenAmountResultsClassLess = a.getServices().getVaultService().queryBy(FungibleToken.class, SelectionUtilities.tokenAmountCriteria(testTokenType));
-        assert(tokenAmountResultsClassLess.getStates().size() == 1);
+        assert (tokenAmountResultsClassLess.getStates().size() == 1);
 
         Vault.Page<FungibleToken> tokenAmountWithHolderResultsClassLess = a.getServices().getVaultService().queryBy(FungibleToken.class, SelectionUtilities.tokenAmountWithHolderCriteria(testTokenType, a.getInfo().getLegalIdentities().get(0)));
-        assert(tokenAmountWithHolderResultsClassLess.getStates().size() == 1);
+        assert (tokenAmountWithHolderResultsClassLess.getStates().size() == 1);
 
         Vault.Page<FungibleToken> tokenAmountWithIssuerResultsClassLess = a.getServices().getVaultService().queryBy(FungibleToken.class, SelectionUtilities.tokenAmountWithIssuerCriteria(testTokenType, a.getInfo().getLegalIdentities().get(0)));
-        assert(tokenAmountWithIssuerResultsClassLess.getStates().size() == 1);
+        assert (tokenAmountWithIssuerResultsClassLess.getStates().size() == 1);
     }
 }

@@ -27,40 +27,40 @@ import net.corda.core.utilities.unwrap
  */
 object RequestAdditionToDistributionList {
 
-    sealed class FlowResult {
-        object Success : FlowResult()
-        // No failure for now!
-    }
+	sealed class FlowResult {
+		object Success : FlowResult()
+		// No failure for now!
+	}
 
-    @InitiatingFlow
-    class Initiator(val stateAndRef: StateAndRef<EvolvableTokenType>) : FlowLogic<Unit>() {
-        @Suspendable
-        override fun call() {
-            val state = stateAndRef.state.data
-            // Pick the first maintainer.
-            // TODO: Try each maintainer.
-            val maintainer = state.maintainers.first()
-            val session = initiateFlow(maintainer)
-            logger.info("Requesting addition to $maintainer distribution list for ${state.linearId}.")
-            val result = session.sendAndReceive<FlowResult>(stateAndRef).unwrap { it }
-            // Don't do anything with the flow result for now.
-            return when (result) {
-                FlowResult.Success -> Unit
-            }
-        }
-    }
+	@InitiatingFlow
+	class Initiator(val stateAndRef: StateAndRef<EvolvableTokenType>) : FlowLogic<Unit>() {
+		@Suspendable
+		override fun call() {
+			val state = stateAndRef.state.data
+			// Pick the first maintainer.
+			// TODO: Try each maintainer.
+			val maintainer = state.maintainers.first()
+			val session = initiateFlow(maintainer)
+			logger.info("Requesting addition to $maintainer distribution list for ${state.linearId}.")
+			val result = session.sendAndReceive<FlowResult>(stateAndRef).unwrap { it }
+			// Don't do anything with the flow result for now.
+			return when (result) {
+				FlowResult.Success -> Unit
+			}
+		}
+	}
 
-    @InitiatedBy(Initiator::class)
-    class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
-        @Suspendable
-        override fun call() {
-            // Receive the stateAndRef that the requesting party wants updates for.
-            val stateAndRef = otherSession.receive<StateAndRef<EvolvableTokenType>>().unwrap { it }
-            val linearId = stateAndRef.state.data.linearId
-            logger.info("Receiving request from ${otherSession.counterparty} to be added to the distribution list for $linearId.")
-            addPartyToDistributionList(otherSession.counterparty, linearId)
-            otherSession.send(FlowResult.Success)
-        }
-    }
+	@InitiatedBy(Initiator::class)
+	class Responder(val otherSession: FlowSession) : FlowLogic<Unit>() {
+		@Suspendable
+		override fun call() {
+			// Receive the stateAndRef that the requesting party wants updates for.
+			val stateAndRef = otherSession.receive<StateAndRef<EvolvableTokenType>>().unwrap { it }
+			val linearId = stateAndRef.state.data.linearId
+			logger.info("Receiving request from ${otherSession.counterparty} to be added to the distribution list for $linearId.")
+			addPartyToDistributionList(otherSession.counterparty, linearId)
+			otherSession.send(FlowResult.Success)
+		}
+	}
 
 }

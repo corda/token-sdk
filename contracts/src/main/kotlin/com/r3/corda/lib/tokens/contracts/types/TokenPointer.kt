@@ -17,15 +17,15 @@ import net.corda.core.contracts.LinearPointer
  * @param T the type of [EvolvableTokenType] which is being pointed to by this [TokenPointer].
  */
 class TokenPointer<T : EvolvableTokenType>(
-        val pointer: LinearPointer<T>,
-        fractionDigits: Int
+	val pointer: LinearPointer<T>,
+	fractionDigits: Int
 ) : TokenType(pointer.pointer.id.toString(), fractionDigits) {
-    /**
-     * The fully qualified class name for the [EvolvableTokenType] being pointed to.
-     */
-    override val tokenClass: Class<*> get() = pointer.type
+	/**
+	 * The fully qualified class name for the [EvolvableTokenType] being pointed to.
+	 */
+	override val tokenClass: Class<*> get() = pointer.type
 
-    override fun toString(): String = "TokenPointer($tokenClass, $tokenIdentifier)"
+	override fun toString(): String = "TokenPointer($tokenClass, $tokenIdentifier)"
 }
 
 

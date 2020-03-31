@@ -27,116 +27,134 @@ import kotlin.test.assertFailsWith
 // TODO: Improve these tests. E.g. Order states in a list by state ref, so we can specify exactly which will be picked.
 class DatabaseTokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
 
-    lateinit var A: StartedMockNode
-    lateinit var B: StartedMockNode
-    lateinit var I: StartedMockNode
-    lateinit var J: StartedMockNode
+	lateinit var A: StartedMockNode
+	lateinit var B: StartedMockNode
+	lateinit var I: StartedMockNode
+	lateinit var J: StartedMockNode
 
-    @Before
-    override fun initialiseNodes() {
-        A = nodes[0]
-        B = nodes[1]
-        I = nodes[2]
-        J = nodes[3]
-    }
+	@Before
+	override fun initialiseNodes() {
+		A = nodes[0]
+		B = nodes[1]
+		I = nodes[2]
+		J = nodes[3]
+	}
 
-    // List of tokensToIssue to create for the tests.
-    private val gbpTokens = listOf(100.GBP, 50.GBP, 25.GBP)
-    private val usdTokens = listOf(200.USD, 100.USD)
+	// List of tokensToIssue to create for the tests.
+	private val gbpTokens = listOf(100.GBP, 50.GBP, 25.GBP)
+	private val usdTokens = listOf(200.USD, 100.USD)
 
-    @Before
-    fun setUp() {
-        // Create some new token amounts.
-        I.issueFungibleTokens(A, 100.GBP).getOrThrow()
-        I.issueFungibleTokens(A, 50.GBP).getOrThrow()
-        J.issueFungibleTokens(A, 25.GBP).getOrThrow()
-        I.issueFungibleTokens(A, 200.USD).getOrThrow()
-        J.issueFungibleTokens(A, 100.USD).getOrThrow()
-        network.waitQuiescent()
-    }
+	@Before
+	fun setUp() {
+		// Create some new token amounts.
+		I.issueFungibleTokens(A, 100.GBP).getOrThrow()
+		I.issueFungibleTokens(A, 50.GBP).getOrThrow()
+		J.issueFungibleTokens(A, 25.GBP).getOrThrow()
+		I.issueFungibleTokens(A, 200.USD).getOrThrow()
+		J.issueFungibleTokens(A, 100.USD).getOrThrow()
+		network.waitQuiescent()
+	}
 
-    @Test
-    fun `select up to available amount with tokens sorted by state ref`() {
-        val tokenSelection = DatabaseTokenSelection(A.services)
-        val uuid = UUID.randomUUID()
-        val one = A.transaction { tokenSelection.selectTokens(160.GBP, lockId = uuid) }
-        // We need to release the soft lock after acquiring it, this is because we before we used LOCK_AND_SPECIFIED
-        // and now we use UNLOCKED_ONLY. The difference is that LOCK_AND_SPECIFIED lets you re lock tokens you have
-        // already locked, where as with UNLOCKED_ONLY, the tokens which have already been locked are out of scope for
-        // future selections. This _is_ a behavioural change but should only affect unit tests.
-        A.transaction { A.services.vaultService.softLockRelease(uuid) }
-        assertEquals(gbpTokens.size, one.size)
-        val two = A.transaction { tokenSelection.selectTokens(175.GBP, lockId = uuid) }
-        A.transaction { A.services.vaultService.softLockRelease(uuid) }
-        assertEquals(gbpTokens.size, two.size)
-        val results = A.transaction { tokenSelection.selectTokens(25.GBP, lockId = uuid) }
-        assertEquals(1, results.size)
-    }
+	@Test
+	fun `select up to available amount with tokens sorted by state ref`() {
+		val tokenSelection = DatabaseTokenSelection(A.services)
+		val uuid = UUID.randomUUID()
+		val one = A.transaction { tokenSelection.selectTokens(160.GBP, lockId = uuid) }
+		// We need to release the soft lock after acquiring it, this is because we before we used LOCK_AND_SPECIFIED
+		// and now we use UNLOCKED_ONLY. The difference is that LOCK_AND_SPECIFIED lets you re lock tokens you have
+		// already locked, where as with UNLOCKED_ONLY, the tokens which have already been locked are out of scope for
+		// future selections. This _is_ a behavioural change but should only affect unit tests.
+		A.transaction { A.services.vaultService.softLockRelease(uuid) }
+		assertEquals(gbpTokens.size, one.size)
+		val two = A.transaction { tokenSelection.selectTokens(175.GBP, lockId = uuid) }
+		A.transaction { A.services.vaultService.softLockRelease(uuid) }
+		assertEquals(gbpTokens.size, two.size)
+		val results = A.transaction { tokenSelection.selectTokens(25.GBP, lockId = uuid) }
+		assertEquals(1, results.size)
+	}
 
-    @Test
-    fun `not enough tokens available`() {
-        val tokenSelection = DatabaseTokenSelection(A.services)
-        val uuid = UUID.randomUUID()
-        assertFailsWith<InsufficientBalanceException> {
-            A.transaction {
-                tokenSelection.selectTokens(176.GBP, lockId = uuid)
-            }
-        }
-    }
+	@Test
+	fun `not enough tokens available`() {
+		val tokenSelection = DatabaseTokenSelection(A.services)
+		val uuid = UUID.randomUUID()
+		assertFailsWith<InsufficientBalanceException> {
+			A.transaction {
+				tokenSelection.selectTokens(176.GBP, lockId = uuid)
+			}
+		}
+	}
 
-    @Test
-    fun `generate move test`() {
-        val transactionBuilder = TransactionBuilder()
-        val moves = listOf(
-                PartyAndAmount(B.legalIdentity(), 140.GBP),
-                PartyAndAmount(I.legalIdentity(), 30.GBP)
-        )
+	@Test
+	fun `generate move test`() {
+		val transactionBuilder = TransactionBuilder()
+		val moves = listOf(
+			PartyAndAmount(B.legalIdentity(), 140.GBP),
+			PartyAndAmount(I.legalIdentity(), 30.GBP)
+		)
 
-        A.transaction {
-            addMoveFungibleTokens(transactionBuilder, A.services, moves, A.legalIdentity())
-        }
-        println(transactionBuilder.toWireTransaction(A.services))
-        // Just using this to check and see if the output is as expected.
-        // TODO: Assert something...
-    }
+		A.transaction {
+			addMoveFungibleTokens(transactionBuilder, A.services, moves, A.legalIdentity())
+		}
+		println(transactionBuilder.toWireTransaction(A.services))
+		// Just using this to check and see if the output is as expected.
+		// TODO: Assert something...
+	}
 
-    @Test
-    fun `select tokens by issuer`() {
-        // Issue some more tokens and wait til we are all done.
-        val one = I.issueFungibleTokens(A, 1.BTC).toCompletableFuture()
-        val two = I.issueFungibleTokens(A, 3.BTC).toCompletableFuture()
-        val three = J.issueFungibleTokens(A, 2.BTC).toCompletableFuture()
-        val four = J.issueFungibleTokens(A, 4.BTC).toCompletableFuture()
-        CompletableFuture.allOf(one, two, three, four)
+	@Test
+	fun `select tokens by issuer`() {
+		// Issue some more tokens and wait til we are all done.
+		val one = I.issueFungibleTokens(A, 1.BTC).toCompletableFuture()
+		val two = I.issueFungibleTokens(A, 3.BTC).toCompletableFuture()
+		val three = J.issueFungibleTokens(A, 2.BTC).toCompletableFuture()
+		val four = J.issueFungibleTokens(A, 4.BTC).toCompletableFuture()
+		CompletableFuture.allOf(one, two, three, four)
 
-        val tokenSelection = DatabaseTokenSelection(A.services)
-        val uuid = UUID.randomUUID()
+		val tokenSelection = DatabaseTokenSelection(A.services)
+		val uuid = UUID.randomUUID()
 
-        val resultOne = A.transaction { tokenSelection.selectTokens(4.BTC, TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, I.legalIdentity())), lockId = uuid) }
-        assertEquals(4.BTC issuedBy I.legalIdentity(), resultOne.sumTokenStateAndRefs())
+		val resultOne = A.transaction {
+			tokenSelection.selectTokens(
+				4.BTC,
+				TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, I.legalIdentity())),
+				lockId = uuid
+			)
+		}
+		assertEquals(4.BTC issuedBy I.legalIdentity(), resultOne.sumTokenStateAndRefs())
 
-        // Not enough tokens as only 4 BTC on issuer I.
-        assertFailsWith<InsufficientBalanceException> {
-            A.transaction { tokenSelection.selectTokens(5.BTC, TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, I.legalIdentity())), lockId = uuid) }
-        }
+		// Not enough tokens as only 4 BTC on issuer I.
+		assertFailsWith<InsufficientBalanceException> {
+			A.transaction {
+				tokenSelection.selectTokens(
+					5.BTC,
+					TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, I.legalIdentity())),
+					lockId = uuid
+				)
+			}
+		}
 
-        val resultTwo = A.transaction { tokenSelection.selectTokens(6.BTC, TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, J.legalIdentity())), lockId = uuid) }
-        assertEquals(6.BTC issuedBy J.legalIdentity(), resultTwo.sumTokenStateAndRefs())
-    }
+		val resultTwo = A.transaction {
+			tokenSelection.selectTokens(
+				6.BTC,
+				TokenQueryBy(queryCriteria = tokenAmountWithIssuerCriteria(BTC, J.legalIdentity())),
+				lockId = uuid
+			)
+		}
+		assertEquals(6.BTC issuedBy J.legalIdentity(), resultTwo.sumTokenStateAndRefs())
+	}
 
-    @Test
-    fun `should be able to select tokens if you need more than one page to fulfill`() {
-        (1..12).map { I.issueFungibleTokens(A, 1 of CHF).getOrThrow() }
-        val tokenSelection = DatabaseTokenSelection(A.services)
-        A.transaction {
-            val tokens = tokenSelection.selectTokens(12 of CHF)
-            val value = tokens.fold(0L) { acc, token ->
-                acc + token.state.data.amount.quantity
-            }
-            Assert.assertEquals("should be 12 tokens", 12, tokens.size)
-            Assert.assertEquals("value should be 1200", 1200L, value)
-        }
-    }
+	@Test
+	fun `should be able to select tokens if you need more than one page to fulfill`() {
+		(1..12).map { I.issueFungibleTokens(A, 1 of CHF).getOrThrow() }
+		val tokenSelection = DatabaseTokenSelection(A.services)
+		A.transaction {
+			val tokens = tokenSelection.selectTokens(12 of CHF)
+			val value = tokens.fold(0L) { acc, token ->
+				acc + token.state.data.amount.quantity
+			}
+			Assert.assertEquals("should be 12 tokens", 12, tokens.size)
+			Assert.assertEquals("value should be 1200", 1200L, value)
+		}
+	}
 
-    // TODO: Test with different notaries.
+	// TODO: Test with different notaries.
 }

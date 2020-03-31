@@ -30,59 +30,60 @@ import java.util.concurrent.atomic.AtomicReference
  * @property autoUnlockDelay Time after which the tokens that are not spent will be automatically released. Defaults to Duration.ofMinutes(5).
  */
 class LocalTokenSelector @JvmOverloads constructor(
-        override val services: ServiceHub,
-        private val vaultObserver: VaultWatcherService,
-        private val autoUnlockDelay: Duration = Duration.ofMinutes(5),
-        state: Pair<List<StateAndRef<FungibleToken>>, String>? = null // Used for deserializing
+	override val services: ServiceHub,
+	private val vaultObserver: VaultWatcherService,
+	private val autoUnlockDelay: Duration = Duration.ofMinutes(5),
+	state: Pair<List<StateAndRef<FungibleToken>>, String>? = null // Used for deserializing
 ) : SerializeAsToken, Selector() {
-    constructor(services: ServiceHub) : this(services, getVaultObserver(services))
+	constructor(services: ServiceHub) : this(services, getVaultObserver(services))
 
-    companion object {
-        @JvmStatic
-        private fun getVaultObserver(services: ServiceHub): VaultWatcherService {
-            return services.cordaService(VaultWatcherService::class.java)
-        }
-    }
+	companion object {
+		@JvmStatic
+		private fun getVaultObserver(services: ServiceHub): VaultWatcherService {
+			return services.cordaService(VaultWatcherService::class.java)
+		}
+	}
 
-    private val mostRecentlyLocked = AtomicReference<Pair<List<StateAndRef<FungibleToken>>, String>>(state)
+	private val mostRecentlyLocked = AtomicReference<Pair<List<StateAndRef<FungibleToken>>, String>>(state)
 
-    override protected fun selectTokens(
-            holder: Holder,
-            lockId: UUID,
-            requiredAmount: Amount<TokenType>,
-            queryBy: TokenQueryBy
-    ): List<StateAndRef<FungibleToken>> {
-        synchronized(mostRecentlyLocked) {
-            if (mostRecentlyLocked.get() == null) {
-                val additionalPredicate = queryBy.issuerAndPredicate()
-                return vaultObserver.selectTokens(
-                        holder, requiredAmount, additionalPredicate, false, autoUnlockDelay, lockId.toString()
-                ).also { mostRecentlyLocked.set(it to lockId.toString()) }
-            } else {
-                throw IllegalStateException("Each instance can only used to select tokens once")
-            }
-        }
-    }
+	override protected fun selectTokens(
+		holder: Holder,
+		lockId: UUID,
+		requiredAmount: Amount<TokenType>,
+		queryBy: TokenQueryBy
+	): List<StateAndRef<FungibleToken>> {
+		synchronized(mostRecentlyLocked) {
+			if (mostRecentlyLocked.get() == null) {
+				val additionalPredicate = queryBy.issuerAndPredicate()
+				return vaultObserver.selectTokens(
+					holder, requiredAmount, additionalPredicate, false, autoUnlockDelay, lockId.toString()
+				).also { mostRecentlyLocked.set(it to lockId.toString()) }
+			} else {
+				throw IllegalStateException("Each instance can only used to select tokens once")
+			}
+		}
+	}
 
-    // For manual rollback
-    fun rollback() {
-        val lockedStates = mostRecentlyLocked.get()
-        lockedStates?.first?.forEach {
-            vaultObserver.unlockToken(it, lockedStates.second)
-        }
-        mostRecentlyLocked.set(null)
-    }
+	// For manual rollback
+	fun rollback() {
+		val lockedStates = mostRecentlyLocked.get()
+		lockedStates?.first?.forEach {
+			vaultObserver.unlockToken(it, lockedStates.second)
+		}
+		mostRecentlyLocked.set(null)
+	}
 
-    override fun toToken(context: SerializeAsTokenContext): SerializationToken {
-        val lockedStateAndRefs = mostRecentlyLocked.get() ?: listOf<StateAndRef<FungibleToken>>() to ""
-        return SerialToken(lockedStateAndRefs.first, lockedStateAndRefs.second, autoUnlockDelay)
-    }
+	override fun toToken(context: SerializeAsTokenContext): SerializationToken {
+		val lockedStateAndRefs = mostRecentlyLocked.get() ?: listOf<StateAndRef<FungibleToken>>() to ""
+		return SerialToken(lockedStateAndRefs.first, lockedStateAndRefs.second, autoUnlockDelay)
+	}
 
-    private class SerialToken(val lockedStateAndRefs: List<StateAndRef<FungibleToken>>, val selectionId: String, val autoUnlockDelay: Duration) : SerializationToken {
-        override fun fromToken(context: SerializeAsTokenContext): LocalTokenSelector {
-            val watcherService = context.serviceHub.cordaService(VaultWatcherService::class.java)
-            watcherService.lockTokensExternal(lockedStateAndRefs, knownSelectionId = selectionId)
-            return LocalTokenSelector(context.serviceHub, watcherService, state = lockedStateAndRefs to selectionId, autoUnlockDelay = autoUnlockDelay)
-        }
-    }
+	private class SerialToken(val lockedStateAndRefs: List<StateAndRef<FungibleToken>>, val selectionId: String, val autoUnlockDelay: Duration) :
+		SerializationToken {
+		override fun fromToken(context: SerializeAsTokenContext): LocalTokenSelector {
+			val watcherService = context.serviceHub.cordaService(VaultWatcherService::class.java)
+			watcherService.lockTokensExternal(lockedStateAndRefs, knownSelectionId = selectionId)
+			return LocalTokenSelector(context.serviceHub, watcherService, state = lockedStateAndRefs to selectionId, autoUnlockDelay = autoUnlockDelay)
+		}
+	}
 }

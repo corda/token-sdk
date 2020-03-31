@@ -9,10 +9,10 @@ import net.corda.core.flows.FlowSession
  * The in-line flow handler for [IssueTokensFlow].
  */
 class IssueTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
-    @Suspendable
-    override fun call() {
-        if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
-            subFlow(ObserverAwareFinalityFlowHandler(otherSession))
-        }
-    }
+	@Suspendable
+	override fun call() {
+		if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
+			subFlow(ObserverAwareFinalityFlowHandler(otherSession))
+		}
+	}
 }

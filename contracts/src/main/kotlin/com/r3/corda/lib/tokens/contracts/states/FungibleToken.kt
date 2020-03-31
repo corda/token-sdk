@@ -34,53 +34,53 @@ import net.corda.core.schemas.QueryableState
  */
 @BelongsToContract(FungibleTokenContract::class)
 open class FungibleToken @JvmOverloads constructor(
-        override val amount: Amount<IssuedTokenType>,
-        override val holder: AbstractParty,
-        override val tokenTypeJarHash: SecureHash? = amount.token.tokenType.getAttachmentIdForGenericParam()
+	override val amount: Amount<IssuedTokenType>,
+	override val holder: AbstractParty,
+	override val tokenTypeJarHash: SecureHash? = amount.token.tokenType.getAttachmentIdForGenericParam()
 ) : FungibleState<IssuedTokenType>, AbstractToken, QueryableState {
 
-    override val tokenType: TokenType get() = amount.token.tokenType
+	override val tokenType: TokenType get() = amount.token.tokenType
 
-    override val issuedTokenType: IssuedTokenType get() = amount.token
+	override val issuedTokenType: IssuedTokenType get() = amount.token
 
-    override val issuer: Party get() = amount.token.issuer
+	override val issuer: Party get() = amount.token.issuer
 
-    override fun toString(): String = "$amount held by $holderString"
+	override fun toString(): String = "$amount held by $holderString"
 
-    override fun withNewHolder(newHolder: AbstractParty): FungibleToken {
-        return FungibleToken(amount = amount, holder = newHolder, tokenTypeJarHash = tokenTypeJarHash)
-    }
+	override fun withNewHolder(newHolder: AbstractParty): FungibleToken {
+		return FungibleToken(amount = amount, holder = newHolder, tokenTypeJarHash = tokenTypeJarHash)
+	}
 
-    override fun generateMappedObject(schema: MappedSchema): PersistentState = when (schema) {
-        is FungibleTokenSchemaV1 -> PersistentFungibleToken(
-                issuer = amount.token.issuer,
-                holder = holder,
-                amount = amount.quantity,
-                tokenClass = amount.token.tokenType.tokenClass,
-                tokenIdentifier = amount.token.tokenType.tokenIdentifier,
-                owningKeyHash = holder.owningKey.toStringShort()
-        )
-        else -> throw IllegalArgumentException("Unrecognised schema $schema")
-    }
+	override fun generateMappedObject(schema: MappedSchema): PersistentState = when (schema) {
+		is FungibleTokenSchemaV1 -> PersistentFungibleToken(
+			issuer = amount.token.issuer,
+			holder = holder,
+			amount = amount.quantity,
+			tokenClass = amount.token.tokenType.tokenClass,
+			tokenIdentifier = amount.token.tokenType.tokenIdentifier,
+			owningKeyHash = holder.owningKey.toStringShort()
+		)
+		else -> throw IllegalArgumentException("Unrecognised schema $schema")
+	}
 
-    override fun supportedSchemas() = listOf(FungibleTokenSchemaV1)
+	override fun supportedSchemas() = listOf(FungibleTokenSchemaV1)
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        other as FungibleToken
-        if (amount != other.amount) return false
-        if (holder != other.holder) return false
-        if (tokenTypeJarHash != other.tokenTypeJarHash) return false
+	override fun equals(other: Any?): Boolean {
+		if (this === other) return true
+		if (javaClass != other?.javaClass) return false
+		other as FungibleToken
+		if (amount != other.amount) return false
+		if (holder != other.holder) return false
+		if (tokenTypeJarHash != other.tokenTypeJarHash) return false
 
-        return true
-    }
+		return true
+	}
 
-    override fun hashCode(): Int {
-        var result = amount.hashCode()
-        result = 31 * result + holder.hashCode()
-        result = 31 * result + (tokenTypeJarHash?.hashCode() ?: 0)
-        return result
-    }
+	override fun hashCode(): Int {
+		var result = amount.hashCode()
+		result = 31 * result + holder.hashCode()
+		result = 31 * result + (tokenTypeJarHash?.hashCode() ?: 0)
+		return result
+	}
 
 }

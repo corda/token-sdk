@@ -25,27 +25,29 @@ import net.corda.core.transactions.SignedTransaction
 class ConfidentialRedeemFungibleTokensFlow
 @JvmOverloads
 constructor(
-        val amount: Amount<TokenType>,
-        val issuerSession: FlowSession,
-        val observerSessions: List<FlowSession> = emptyList(),
-        val additionalQueryCriteria: QueryCriteria? = null,
-        val changeHolder: AbstractParty? = null
+	val amount: Amount<TokenType>,
+	val issuerSession: FlowSession,
+	val observerSessions: List<FlowSession> = emptyList(),
+	val additionalQueryCriteria: QueryCriteria? = null,
+	val changeHolder: AbstractParty? = null
 ) : FlowLogic<SignedTransaction>() {
-    @Suspendable
-    override fun call(): SignedTransaction {
-        // If a change holder key is not specified then one will be created for you. NB. If you want to use accounts
-        // with tokens, then you must generate and allocate the key to an account up-front and pass the key in as the
-        // "changeHolder".
-        val confidentialHolder = changeHolder ?: let {
-            val key = serviceHub.keyManagementService.freshKey()
-            AnonymousParty(key)
-        }
-        return subFlow(RedeemFungibleTokensFlow(
-                amount = amount,
-                issuerSession = issuerSession,
-                changeHolder = confidentialHolder,  // This will never be null.
-                observerSessions = observerSessions,
-                additionalQueryCriteria = additionalQueryCriteria
-        ))
-    }
+	@Suspendable
+	override fun call(): SignedTransaction {
+		// If a change holder key is not specified then one will be created for you. NB. If you want to use accounts
+		// with tokens, then you must generate and allocate the key to an account up-front and pass the key in as the
+		// "changeHolder".
+		val confidentialHolder = changeHolder ?: let {
+			val key = serviceHub.keyManagementService.freshKey()
+			AnonymousParty(key)
+		}
+		return subFlow(
+			RedeemFungibleTokensFlow(
+				amount = amount,
+				issuerSession = issuerSession,
+				changeHolder = confidentialHolder,  // This will never be null.
+				observerSessions = observerSessions,
+				additionalQueryCriteria = additionalQueryCriteria
+			)
+		)
+	}
 }

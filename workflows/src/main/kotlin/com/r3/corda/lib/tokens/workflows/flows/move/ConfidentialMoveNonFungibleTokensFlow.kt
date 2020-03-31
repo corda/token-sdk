@@ -26,18 +26,18 @@ import net.corda.core.transactions.SignedTransaction
 class ConfidentialMoveNonFungibleTokensFlow
 @JvmOverloads
 constructor(
-        val partyAndToken: PartyAndToken,
-        val participantSessions: List<FlowSession>,
-        val observerSessions: List<FlowSession> = emptyList(),
-        val queryCriteria: QueryCriteria? = null
+	val partyAndToken: PartyAndToken,
+	val participantSessions: List<FlowSession>,
+	val observerSessions: List<FlowSession> = emptyList(),
+	val queryCriteria: QueryCriteria? = null
 ) : FlowLogic<SignedTransaction>() {
-    @Suspendable
-    override fun call(): SignedTransaction {
-        val (input, output) = generateMoveNonFungible(partyAndToken, serviceHub.vaultService, queryCriteria)
-        // TODO Not pretty fix, because we decided to go with sessions approach, we need to make sure that right responders are started depending on observer/participant role
-        participantSessions.forEach { it.send(TransactionRole.PARTICIPANT) }
-        observerSessions.forEach { it.send(TransactionRole.OBSERVER) }
-        val confidentialOutput = subFlow(ConfidentialTokensFlow(listOf(output), participantSessions)).single()
-        return subFlow(MoveTokensFlow(input, confidentialOutput, participantSessions, observerSessions))
-    }
+	@Suspendable
+	override fun call(): SignedTransaction {
+		val (input, output) = generateMoveNonFungible(partyAndToken, serviceHub.vaultService, queryCriteria)
+		// TODO Not pretty fix, because we decided to go with sessions approach, we need to make sure that right responders are started depending on observer/participant role
+		participantSessions.forEach { it.send(TransactionRole.PARTICIPANT) }
+		observerSessions.forEach { it.send(TransactionRole.OBSERVER) }
+		val confidentialOutput = subFlow(ConfidentialTokensFlow(listOf(output), participantSessions)).single()
+		return subFlow(MoveTokensFlow(input, confidentialOutput, participantSessions, observerSessions))
+	}
 }

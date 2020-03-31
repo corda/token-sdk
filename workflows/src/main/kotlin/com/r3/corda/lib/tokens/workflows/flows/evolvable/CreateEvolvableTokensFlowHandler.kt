@@ -11,22 +11,22 @@ import net.corda.core.utilities.unwrap
 
 /** In-line counter-flow to [CreateEvolvableTokensFlow]. */
 class CreateEvolvableTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
-    @Suspendable
-    override fun call() {
-        // Receive the notification
-        val notification = otherSession.receive<CreateEvolvableTokensFlow.Notification>().unwrap { it }
+	@Suspendable
+	override fun call() {
+		// Receive the notification
+		val notification = otherSession.receive<CreateEvolvableTokensFlow.Notification>().unwrap { it }
 
-        // Sign the transaction proposal, if required
-        if (notification.signatureRequired) {
-            val signTransactionFlow = object : SignTransactionFlow(otherSession) {
-                override fun checkTransaction(stx: SignedTransaction) = requireThat {
-                    // TODO
-                }
-            }
-            subFlow(signTransactionFlow)
-        }
+		// Sign the transaction proposal, if required
+		if (notification.signatureRequired) {
+			val signTransactionFlow = object : SignTransactionFlow(otherSession) {
+				override fun checkTransaction(stx: SignedTransaction) = requireThat {
+					// TODO
+				}
+			}
+			subFlow(signTransactionFlow)
+		}
 
-        // Resolve the creation transaction.
-        return subFlow(ObserverAwareFinalityFlowHandler(otherSession))
-    }
+		// Resolve the creation transaction.
+		return subFlow(ObserverAwareFinalityFlowHandler(otherSession))
+	}
 }

@@ -1,4 +1,5 @@
 @file:JvmName("TokenUtilities")
+
 package com.r3.corda.lib.tokens.workflows.utilities
 
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
@@ -14,5 +15,5 @@ import net.corda.core.identity.AbstractParty
 infix fun IssuedTokenType.heldBy(owner: AbstractParty): NonFungibleToken = _heldBy(owner)
 
 private infix fun IssuedTokenType._heldBy(owner: AbstractParty): NonFungibleToken {
-    return NonFungibleToken(this, owner, UniqueIdentifier())
+	return NonFungibleToken(this, owner, UniqueIdentifier())
 }

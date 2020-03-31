@@ -24,11 +24,11 @@ import java.math.BigDecimal
 data class IssuedTokenType(val issuer: Party, val tokenType: TokenType) : TokenType(tokenType.tokenIdentifier, tokenType.fractionDigits) {
 
 
-    /**
-     * This is required by [Amount] to determine the default fraction digits when adding or subtracting amounts of
-     * [IssuedTokenType].
-     */
-    override val displayTokenSize: BigDecimal get() = tokenType.displayTokenSize
+	/**
+	 * This is required by [Amount] to determine the default fraction digits when adding or subtracting amounts of
+	 * [IssuedTokenType].
+	 */
+	override val displayTokenSize: BigDecimal get() = tokenType.displayTokenSize
 
-    override fun toString(): String = "$tokenType issued by ${issuer.name.organisation}"
+	override fun toString(): String = "$tokenType issued by ${issuer.name.organisation}"
 }

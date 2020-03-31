@@ -46,50 +46,50 @@ import net.corda.core.transactions.TransactionBuilder
 class IssueTokensFlow
 @JvmOverloads
 constructor(
-        val tokensToIssue: List<AbstractToken>,
-        val participantSessions: List<FlowSession>,
-        val observerSessions: List<FlowSession> = emptyList()
+	val tokensToIssue: List<AbstractToken>,
+	val participantSessions: List<FlowSession>,
+	val observerSessions: List<FlowSession> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
 
-    /** Issue a single [FungibleToken]. */
-    @JvmOverloads
-    constructor(
-            token: FungibleToken,
-            participantSessions: List<FlowSession>,
-            observerSessions: List<FlowSession> = emptyList()
-    ) : this(listOf(token), participantSessions, observerSessions)
+	/** Issue a single [FungibleToken]. */
+	@JvmOverloads
+	constructor(
+		token: FungibleToken,
+		participantSessions: List<FlowSession>,
+		observerSessions: List<FlowSession> = emptyList()
+	) : this(listOf(token), participantSessions, observerSessions)
 
-    /** Issue a single [FungibleToken] to self with no observers. */
-    constructor(token: FungibleToken) : this(listOf(token), emptyList(), emptyList())
+	/** Issue a single [FungibleToken] to self with no observers. */
+	constructor(token: FungibleToken) : this(listOf(token), emptyList(), emptyList())
 
-    /** Issue a single [NonFungibleToken]. */
-    @JvmOverloads
-    constructor(
-            token: NonFungibleToken,
-            participantSessions: List<FlowSession>,
-            observerSessions: List<FlowSession> = emptyList()
-    ) : this(listOf(token), participantSessions, observerSessions)
+	/** Issue a single [NonFungibleToken]. */
+	@JvmOverloads
+	constructor(
+		token: NonFungibleToken,
+		participantSessions: List<FlowSession>,
+		observerSessions: List<FlowSession> = emptyList()
+	) : this(listOf(token), participantSessions, observerSessions)
 
-    /** Issue a single [NonFungibleToken] to self with no observers. */
-    constructor(token: NonFungibleToken) : this(listOf(token), emptyList(), emptyList())
+	/** Issue a single [NonFungibleToken] to self with no observers. */
+	constructor(token: NonFungibleToken) : this(listOf(token), emptyList(), emptyList())
 
-    @Suspendable
-    override fun call(): SignedTransaction {
-        // Initialise the transaction builder with a preferred notary or choose a random notary.
-        val transactionBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
-        // Add all the specified tokensToIssue to the transaction. The correct commands and signing keys are also added.
-        addIssueTokens(transactionBuilder, tokensToIssue)
-        addTokenTypeJar(tokensToIssue, transactionBuilder)
-        // Create new participantSessions if this is started as a top level flow.
-        val signedTransaction = subFlow(
-                ObserverAwareFinalityFlow(
-                        transactionBuilder = transactionBuilder,
-                        allSessions = participantSessions + observerSessions
-                )
-        )
-        // Update the distribution list.
-        subFlow(UpdateDistributionListFlow(signedTransaction))
-        // Return the newly created transaction.
-        return signedTransaction
-    }
+	@Suspendable
+	override fun call(): SignedTransaction {
+		// Initialise the transaction builder with a preferred notary or choose a random notary.
+		val transactionBuilder = TransactionBuilder(notary = getPreferredNotary(serviceHub))
+		// Add all the specified tokensToIssue to the transaction. The correct commands and signing keys are also added.
+		addIssueTokens(transactionBuilder, tokensToIssue)
+		addTokenTypeJar(tokensToIssue, transactionBuilder)
+		// Create new participantSessions if this is started as a top level flow.
+		val signedTransaction = subFlow(
+			ObserverAwareFinalityFlow(
+				transactionBuilder = transactionBuilder,
+				allSessions = participantSessions + observerSessions
+			)
+		)
+		// Update the distribution list.
+		subFlow(UpdateDistributionListFlow(signedTransaction))
+		// Return the newly created transaction.
+		return signedTransaction
+	}
 }

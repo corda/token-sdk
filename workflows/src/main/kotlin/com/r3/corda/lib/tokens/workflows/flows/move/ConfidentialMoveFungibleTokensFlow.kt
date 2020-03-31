@@ -30,37 +30,37 @@ import net.corda.core.transactions.SignedTransaction
 class ConfidentialMoveFungibleTokensFlow
 @JvmOverloads
 constructor(
-        val partiesAndAmounts: List<PartyAndAmount<TokenType>>,
-        val participantSessions: List<FlowSession>,
-        val changeHolder: AbstractParty,
-        val observerSessions: List<FlowSession> = emptyList(),
-        val queryCriteria: QueryCriteria? = null
+	val partiesAndAmounts: List<PartyAndAmount<TokenType>>,
+	val participantSessions: List<FlowSession>,
+	val changeHolder: AbstractParty,
+	val observerSessions: List<FlowSession> = emptyList(),
+	val queryCriteria: QueryCriteria? = null
 ) : FlowLogic<SignedTransaction>() {
 
-    @JvmOverloads
-    constructor(
-            partyAndAmount: PartyAndAmount<TokenType>,
-            participantSessions: List<FlowSession>,
-            changeHolder: AbstractParty,
-            queryCriteria: QueryCriteria? = null,
-            observerSessions: List<FlowSession> = emptyList()
+	@JvmOverloads
+	constructor(
+		partyAndAmount: PartyAndAmount<TokenType>,
+		participantSessions: List<FlowSession>,
+		changeHolder: AbstractParty,
+		queryCriteria: QueryCriteria? = null,
+		observerSessions: List<FlowSession> = emptyList()
 
-    ) : this(listOf(partyAndAmount), participantSessions, changeHolder, observerSessions, queryCriteria)
+	) : this(listOf(partyAndAmount), participantSessions, changeHolder, observerSessions, queryCriteria)
 
-    @Suspendable
-    override fun call(): SignedTransaction {
-        // TODO add in memory selection too
-        val tokenSelection = DatabaseTokenSelection(serviceHub)
-        val (inputs, outputs) = tokenSelection.generateMove(
-                lockId = stateMachine.id.uuid,
-                partiesAndAmounts = partiesAndAmounts.toPairs(),
-                changeHolder = changeHolder,
-                queryBy = TokenQueryBy(queryCriteria = queryCriteria)
-        )
-        // TODO Not pretty fix, because we decided to go with sessions approach, we need to make sure that right responders are started depending on observer/participant role
-        participantSessions.forEach { it.send(TransactionRole.PARTICIPANT) }
-        observerSessions.forEach { it.send(TransactionRole.OBSERVER) }
-        val confidentialOutputs = subFlow(ConfidentialTokensFlow(outputs, participantSessions))
-        return subFlow(MoveTokensFlow(inputs, confidentialOutputs, participantSessions, observerSessions))
-    }
+	@Suspendable
+	override fun call(): SignedTransaction {
+		// TODO add in memory selection too
+		val tokenSelection = DatabaseTokenSelection(serviceHub)
+		val (inputs, outputs) = tokenSelection.generateMove(
+			lockId = stateMachine.id.uuid,
+			partiesAndAmounts = partiesAndAmounts.toPairs(),
+			changeHolder = changeHolder,
+			queryBy = TokenQueryBy(queryCriteria = queryCriteria)
+		)
+		// TODO Not pretty fix, because we decided to go with sessions approach, we need to make sure that right responders are started depending on observer/participant role
+		participantSessions.forEach { it.send(TransactionRole.PARTICIPANT) }
+		observerSessions.forEach { it.send(TransactionRole.OBSERVER) }
+		val confidentialOutputs = subFlow(ConfidentialTokensFlow(outputs, participantSessions))
+		return subFlow(MoveTokensFlow(inputs, confidentialOutputs, participantSessions, observerSessions))
+	}
 }

@@ -26,16 +26,16 @@ import net.corda.core.transactions.SignedTransaction
 class IssueTokens
 @JvmOverloads
 constructor(
-        val tokensToIssue: List<AbstractToken>,
-        val observers: List<Party> = emptyList()
+	val tokensToIssue: List<AbstractToken>,
+	val observers: List<Party> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
 
-    @Suspendable
-    override fun call(): SignedTransaction {
-        val observerSessions = sessionsForParties(observers)
-        val participantSessions = sessionsForParticipants(tokensToIssue)
-        return subFlow(IssueTokensFlow(tokensToIssue, participantSessions, observerSessions))
-    }
+	@Suspendable
+	override fun call(): SignedTransaction {
+		val observerSessions = sessionsForParties(observers)
+		val participantSessions = sessionsForParticipants(tokensToIssue)
+		return subFlow(IssueTokensFlow(tokensToIssue, participantSessions, observerSessions))
+	}
 }
 
 /**
@@ -43,8 +43,8 @@ constructor(
  */
 @InitiatedBy(IssueTokens::class)
 class IssueTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
-    @Suspendable
-    override fun call() = subFlow(IssueTokensFlowHandler(otherSession))
+	@Suspendable
+	override fun call() = subFlow(IssueTokensFlowHandler(otherSession))
 }
 
 /**
@@ -61,15 +61,15 @@ class IssueTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
 class ConfidentialIssueTokens
 @JvmOverloads
 constructor(
-        val tokensToIssue: List<AbstractToken>,
-        val observers: List<Party> = emptyList()
+	val tokensToIssue: List<AbstractToken>,
+	val observers: List<Party> = emptyList()
 ) : FlowLogic<SignedTransaction>() {
-    @Suspendable
-    override fun call(): SignedTransaction {
-        val observerSessions = sessionsForParties(observers)
-        val participantSessions = sessionsForParticipants(tokensToIssue)
-        return subFlow(ConfidentialIssueTokensFlow(tokensToIssue, participantSessions, observerSessions))
-    }
+	@Suspendable
+	override fun call(): SignedTransaction {
+		val observerSessions = sessionsForParties(observers)
+		val participantSessions = sessionsForParticipants(tokensToIssue)
+		return subFlow(ConfidentialIssueTokensFlow(tokensToIssue, participantSessions, observerSessions))
+	}
 }
 
 /**
@@ -77,6 +77,6 @@ constructor(
  */
 @InitiatedBy(ConfidentialIssueTokens::class)
 class ConfidentialIssueTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
-    @Suspendable
-    override fun call() = subFlow(ConfidentialIssueTokensFlowHandler(otherSession))
+	@Suspendable
+	override fun call() = subFlow(ConfidentialIssueTokensFlowHandler(otherSession))
 }

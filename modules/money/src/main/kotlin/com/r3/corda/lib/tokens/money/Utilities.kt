@@ -1,4 +1,5 @@
 @file:JvmName("MoneyUtilities")
+
 package com.r3.corda.lib.tokens.money
 
 import com.r3.corda.lib.tokens.contracts.types.TokenType

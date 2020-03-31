@@ -13,17 +13,17 @@ import net.corda.core.transactions.TransactionBuilder
  * @param observerSessions optional sessions with the observer nodes, to witch the transaction will be broadcasted
  */
 class RedeemNonFungibleTokensFlow(
-        val heldToken: TokenType,
-        override val issuerSession: FlowSession,
-        override val observerSessions: List<FlowSession>
+	val heldToken: TokenType,
+	override val issuerSession: FlowSession,
+	override val observerSessions: List<FlowSession>
 ) : AbstractRedeemTokensFlow() {
-    @Suspendable
-    override fun generateExit(transactionBuilder: TransactionBuilder) {
-        addNonFungibleTokensToRedeem(
-                transactionBuilder = transactionBuilder,
-                serviceHub = serviceHub,
-                heldToken = heldToken,
-                issuer = issuerSession.counterparty
-        )
-    }
+	@Suspendable
+	override fun generateExit(transactionBuilder: TransactionBuilder) {
+		addNonFungibleTokensToRedeem(
+			transactionBuilder = transactionBuilder,
+			serviceHub = serviceHub,
+			heldToken = heldToken,
+			issuer = issuerSession.counterparty
+		)
+	}
 }
