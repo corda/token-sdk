@@ -1,10 +1,8 @@
 package com.r3.corda.lib.tokens.contracts.states
 
 import com.r3.corda.lib.tokens.contracts.FungibleTokenContract
-import com.r3.corda.lib.tokens.contracts.internal.schemas.FungibleTokenOwnerSchemaV1
 import com.r3.corda.lib.tokens.contracts.internal.schemas.FungibleTokenSchemaV1
 import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleToken
-import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleTokenOwner
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenPointer
 import com.r3.corda.lib.tokens.contracts.types.TokenType
@@ -59,13 +57,13 @@ open class FungibleToken @JvmOverloads constructor(
                 holder = holder,
                 amount = amount.quantity,
                 tokenClass = amount.token.tokenType.tokenClass,
-                tokenIdentifier = amount.token.tokenType.tokenIdentifier
+                tokenIdentifier = amount.token.tokenType.tokenIdentifier,
+                owningKeyHash = holder.owningKey.toStringShort()
         )
-        is FungibleTokenOwnerSchemaV1 -> PersistentFungibleTokenOwner(holder.owningKey.toStringShort())
         else -> throw IllegalArgumentException("Unrecognised schema $schema")
     }
 
-    override fun supportedSchemas() = listOf(FungibleTokenSchemaV1, FungibleTokenOwnerSchemaV1)
+    override fun supportedSchemas() = listOf(FungibleTokenSchemaV1)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

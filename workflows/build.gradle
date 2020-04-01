@@ -46,7 +46,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     // Corda dependencies.
-    cordaCompile ("$corda_release_group:corda-core:$corda_release_version") {
+    cordaCompile("$corda_release_group:corda-core:$corda_release_version") {
         changing = true
     }
 
@@ -59,14 +59,17 @@ dependencies {
     testCompile "junit:junit:$junit_version"
 
     // CorDapp dependencies.
-    cordaCompile project(":contracts")
-    cordaCompile "$confidential_id_release_group:ci-workflows:$confidential_id_release_version"
+    cordapp project(":contracts")
+    cordapp project(":modules:money")
+    cordapp project(":modules:selection")
 
-    compile project(":modules:money")
-    compile project(":modules:selection")
+    //CI for confidential tokens
+    cordapp "$confidential_id_release_group:ci-workflows:$confidential_id_release_version"
 
     //just for testing - this means you MUST specify the contracts-for-testing cordapp as a cordapp in all tests using test flows
     cordaCompile project(":modules:contracts-for-testing")
+
+    compileOnly("org.postgresql:postgresql:42.2.8")
 
 }
 
