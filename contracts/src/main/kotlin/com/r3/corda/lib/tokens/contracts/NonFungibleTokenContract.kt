@@ -2,17 +2,15 @@ package com.r3.corda.lib.tokens.contracts
 
 import com.r3.corda.lib.tokens.contracts.commands.TokenCommand
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
-import net.corda.core.contracts.Attachment
-import net.corda.core.contracts.CommandWithParties
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.*
 import net.corda.core.internal.uncheckedCast
+import net.corda.core.transactions.LedgerTransaction
 import java.security.PublicKey
 
 /**
  * See kdoc for [FungibleTokenContract].
  */
-class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>() {
+class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>(), DescribableContract {
 
     override val accepts: Class<NonFungibleToken> get() = uncheckedCast(NonFungibleToken::class.java)
 
@@ -47,7 +45,8 @@ class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>() {
             inputs: List<IndexedState<NonFungibleToken>>,
             outputs: List<IndexedState<NonFungibleToken>>,
             attachments: List<Attachment>,
-            references: List<StateAndRef<ContractState>>
+            references: List<StateAndRef<ContractState>>,
+            summary: List<String>
     ) {
         // There must be inputs and outputs present.
         require(inputs.isNotEmpty()) { "When moving a non fungible token, there must be one input state present." }
@@ -89,5 +88,19 @@ class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>() {
         require(signers.containsAll(holdersKeys)) {
             "Holders of redeemed states must be the signing parties."
         }
+    }
+
+    override fun describe(ltx: LedgerTransaction): List<String> {
+        return emptyList()
+    }
+
+    override fun describeTransaction(
+        inputs: List<TransactionState<ContractState>>,
+        outputs: List<TransactionState<ContractState>>,
+        commands: List<CommandWithParties<CommandData>>,
+        attachments: List<Attachment>,
+        references: List<StateAndRef<ContractState>>
+    ): List<String> {
+        TODO("Not yet implemented")
     }
 }
