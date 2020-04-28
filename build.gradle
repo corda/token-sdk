@@ -4,6 +4,8 @@ buildscript {
     ext {
         corda_release_group = 'net.corda'
         corda_release_version = '4.3'
+        corda_ent_release_group = 'com.r3.corda'
+        corda_ent_release_version = '4.5'
         tokens_release_group = "com.r3.corda.lib.tokens"
         tokens_release_version = "1.2-SNAPSHOT"
         corda_gradle_plugins_version = '5.0.8'
@@ -13,6 +15,7 @@ buildscript {
         slf4j_version = '1.7.25'
         log4j_version = '2.9.1'
         jackson_version = '2.9.0'
+        quasar_version = '0.7.11_r3'
         confidential_id_release_group = "com.r3.corda.lib.ci"
         confidential_id_release_version = "1.0"
         aetherVersion = '1.0.0.v20140518'
@@ -24,7 +27,10 @@ buildscript {
         jcenter()
         mavenCentral()
         mavenLocal()
+        maven { url "https://ci-artifactory.corda.r3cev.com/artifactory/corda-dependencies" }
         maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-releases" }
+        maven { url "https://ci-artifactory.corda.r3cev.com/artifactory/corda-dependencies-dev" }
+        maven { url "https://ci-artifactory.corda.r3cev.com/artifactory/corda-dev" }
         maven { url "https://repo.gradle.org/gradle/libs-releases-local/" }
     }
 
@@ -71,8 +77,11 @@ subprojects {
         maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib" }
         maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib-dev" }
         maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib" }
+        maven { url "https://ci-artifactory.corda.r3cev.com/artifactory/corda-dependencies" }
+        maven { url "https://ci-artifactory.corda.r3cev.com/artifactory/corda-dependencies-dev" }
         maven { url "https://repo.gradle.org/gradle/libs-releases-local/" }
     }
+
 
     apply plugin: 'kotlin'
 
