@@ -33,9 +33,11 @@ constructor(
 }
 
 @InitiatedBy(RedeemFungibleTokens::class)
-class RedeemFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
+open class RedeemFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
-    override fun call() = subFlow(RedeemTokensFlowHandler(otherSession))
+    override fun call() {
+        subFlow(RedeemTokensFlowHandler(otherSession))
+    }
 }
 
 @StartableByService
@@ -57,9 +59,11 @@ constructor(
 }
 
 @InitiatedBy(RedeemNonFungibleTokens::class)
-class RedeemNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
+open class RedeemNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
-    override fun call() = subFlow(RedeemTokensFlowHandler(otherSession))
+    override fun call() {
+        subFlow(RedeemTokensFlowHandler(otherSession))
+    }
 }
 
 /* Confidential flows. */
@@ -91,7 +95,9 @@ constructor(
 }
 
 @InitiatedBy(ConfidentialRedeemFungibleTokens::class)
-class ConfidentialRedeemFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
+open class ConfidentialRedeemFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
-    override fun call() = subFlow(ConfidentialRedeemFungibleTokensFlowHandler(otherSession))
+    override fun call() {
+        subFlow(RedeemTokensFlowHandler(otherSession))
+    }
 }

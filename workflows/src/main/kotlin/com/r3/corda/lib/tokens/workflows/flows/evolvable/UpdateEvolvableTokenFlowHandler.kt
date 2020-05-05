@@ -34,6 +34,6 @@ class UpdateEvolvableTokenFlowHandler(val otherSession: FlowSession) : FlowLogic
         }
 
         // Resolve the update transaction.
-        return subFlow(ObserverAwareFinalityFlowHandler(otherSession))
+        subFlow(ObserverAwareFinalityFlowHandler(otherSession))
     }
 }
