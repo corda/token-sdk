@@ -3,6 +3,7 @@ package com.r3.corda.lib.tokens.contracts
 import com.r3.corda.lib.tokens.contracts.commands.TokenCommand
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import net.corda.core.contracts.*
+import net.corda.core.crypto.SecureHash
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.transactions.LedgerTransaction
 import java.security.PublicKey
@@ -97,9 +98,8 @@ class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>(), Desc
     override fun describeTransaction(
         inputs: List<TransactionState<ContractState>>,
         outputs: List<TransactionState<ContractState>>,
-        commands: List<CommandWithParties<CommandData>>,
-        attachments: List<Attachment>,
-        references: List<StateAndRef<ContractState>>
+        commands: List<CommandData>,
+        attachments: List<SecureHash>
     ): List<String> {
         TODO("Not yet implemented")
     }

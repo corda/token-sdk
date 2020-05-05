@@ -96,7 +96,6 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
 	)
 
 	final override fun verify(tx: LedgerTransaction) {
-		val summaryOnTx = tx.summaries
 		// Group token amounts by token type. We need to do this because tokens of different types need to be
 		// verified separately. This works for the same token type with different issuers, or different token types
 		// altogether. The grouping function returns a list containing groups of input and output states grouped by
@@ -123,12 +122,11 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
 						"TokenCommand type per group! For example: You cannot map an Issue AND a Move command " +
 						"to one group of tokens in a transaction."
 			}
-			dispatchOnCommand(commands, group.inputs, group.outputs, tx.attachments, tx.references, tx.summaries)
+			dispatchOnCommand(commands, group.inputs, group.outputs, tx.attachments, tx.references, tx.summary)
 		}
 
 
 		val allMatchedCommands = groupsAndCommands.map { it.first.first() }.toSet()
-		val extraCommands = (tokenCommands - allMatchedCommands).toSet()
 	}
 
 	private fun groupMatchesCommand(it: CommandWithParties<TokenCommand>, group: IndexedInOutGroup<AbstractToken, TokenInfo>): Boolean {
