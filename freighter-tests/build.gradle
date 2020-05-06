@@ -26,7 +26,7 @@ task freighterTest(type: Test, dependsOn: [project(":workflows").jar]) {
     classpath = sourceSets.freighterTest.runtimeClasspath
     useJUnitPlatform {
         includeTags "DOCKER"
-        excludeTags "AZURE"
+        excludeTags "AZURE", "ORACLE"
         if (Os.isFamily(Os.FAMILY_WINDOWS) || Os.isFamily(Os.FAMILY_MAC)) {
             //windows + mac cannot run comcast tests and cannot run oracle tests due to credential store issues
             excludeTags "FULL_LINUX_KERNEL", "ORACLE"
@@ -45,11 +45,10 @@ configurations {
 
 dependencies {
     freighterTestCompile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    freighterTestCompile "freighter:freighter-testing-core:0.2-SNAPSHOT"
+    freighterTestCompile "freighter:freighter-testing-core-junit5:0.4.5-SNAPSHOT"
 
     freighterTestCompile project(":contracts")
     freighterTestCompile project(":workflows")
-    freighterTestCompile project(":modules:selection")
 }
 
 
