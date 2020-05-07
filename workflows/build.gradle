@@ -9,7 +9,7 @@ cordapp {
         name "Token SDK Workflows"
         vendor "R3"
         licence "Apache 2"
-        versionId 1
+        versionId 2
     }
     signing {
         enabled false
