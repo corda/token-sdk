@@ -50,13 +50,6 @@ class TokenSDKDBCompatibility : DockerRemoteMachineBasedTest() {
 
     val stressTesterCordapp = NodeBuilder.DeployedCordapp.fromClassPath("freighter-cordapp-flows")
 
-    lateinit var nms: CompletableFuture<DeploymentMachineProvider.NetworkServicesInfo>
-
-    @BeforeEach
-    fun setupNMS() {
-        val newInstance = DatabaseConfig::class.java.getConstructor().newInstance()
-        nms = machineProvider.generateNMSEnvironment()
-    }
 
     @Test
     fun `tokens can be loaded on a node running postgres 9_6`() {
@@ -87,12 +80,7 @@ class TokenSDKDBCompatibility : DockerRemoteMachineBasedTest() {
     private fun runTokensOnNodeRunningDatabase(db: DeploymentMachineProvider.DatabaseType) {
         val randomString = generateRandomString()
 
-        val userName = System.getenv("ARTIFACTORY_USERNAME")
-                ?: throw IllegalStateException("Please ensure that ARTIFACTORY_USERNAME is defined in the environment")
-        val password = System.getenv("ARTIFACTORY_PASSWORD")
-                ?: throw IllegalStateException("Please ensure that ARTIFACTORY_PASSWORD is defined in the environment")
-
-        val deploymentContext = DeploymentContext(machineProvider, nms, userName, password)
+        val deploymentContext = DeploymentContext(machineProvider, nms, artifactoryUsername, artifactoryPassword)
 
         val deploymentResult = SingleNodeDeployment(
                 NodeBuilder().withX500("O=PartyB, C=GB, L=LONDON, CN=$randomString")

@@ -9,7 +9,7 @@ cordapp {
         name "Token SDK Workflows"
         vendor "R3"
         licence "Apache 2"
-        versionId 1
+        versionId 2
     }
     signing {
         enabled false
@@ -60,8 +60,8 @@ dependencies {
 
     // CorDapp dependencies.
     cordapp project(":contracts")
-    cordapp project(":modules:money")
-    cordapp project(":modules:selection")
+    compile project(":modules:money")
+    compile project(":modules:selection")
 
     //CI for confidential tokens
     cordapp "$confidential_id_release_group:ci-workflows:$confidential_id_release_version"
