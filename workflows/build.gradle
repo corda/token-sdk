@@ -73,11 +73,11 @@ dependencies {
 
 }
 
-jar {
-    baseName "tokens-workflows"
-}
-
 task integrationTest(type: Test, dependsOn: []) {
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
+}
+
+jar {
+    baseName "tokens-workflows"
 }
