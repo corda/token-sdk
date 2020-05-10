@@ -68,6 +68,7 @@ dependencies {
 
     //just for testing - this means you MUST specify the contracts-for-testing cordapp as a cordapp in all tests using test flows
     compileOnly project(":modules:contracts-for-testing")
+    testCompileOnly project(":modules:contracts-for-testing")
 
     compileOnly("org.postgresql:postgresql:42.2.8")
 
