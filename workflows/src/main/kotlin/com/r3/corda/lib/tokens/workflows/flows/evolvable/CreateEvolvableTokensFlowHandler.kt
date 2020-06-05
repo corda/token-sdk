@@ -27,6 +27,6 @@ class CreateEvolvableTokensFlowHandler(val otherSession: FlowSession) : FlowLogi
         }
 
         // Resolve the creation transaction.
-        return subFlow(ObserverAwareFinalityFlowHandler(otherSession))
+        subFlow(ObserverAwareFinalityFlowHandler(otherSession))
     }
 }

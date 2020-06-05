@@ -19,9 +19,9 @@ import net.corda.core.utilities.unwrap
  * [RedeemNonFungibleTokensFlow], [RedeemTokensFlow].
  */
 // Called on Issuer side.
-class RedeemTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
+class RedeemTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<SignedTransaction?>() {
     @Suspendable
-    override fun call() {
+    override fun call(): SignedTransaction? {
         val role = otherSession.receive<TransactionRole>().unwrap { it }
         if (role == TransactionRole.PARTICIPANT) {
             // Synchronise all confidential identities, issuer isn't involved in move transactions, so states holders may
@@ -42,9 +42,9 @@ class RedeemTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>()
                 })
             }
         }
-        if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
+        return if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
             // Call observer aware finality flow handler.
             subFlow(ObserverAwareFinalityFlowHandler(otherSession))
-        }
+        } else null
     }
 }
