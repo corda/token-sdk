@@ -8,12 +8,12 @@ import com.r3.corda.lib.tokens.contracts.utilities.getAttachmentIdForGenericPara
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
-import com.r3.corda.lib.tokens.money.GBP
-import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.testing.states.DodgeToken
 import com.r3.corda.lib.tokens.testing.states.DodgeTokenContract
 import com.r3.corda.lib.tokens.testing.states.RUB
 import com.r3.corda.lib.tokens.testing.states.RubleToken
+import com.r3.corda.lib.tokens.contracts.CommonTokens.Companion.USD
+import com.r3.corda.lib.tokens.contracts.CommonTokens.Companion.GBP
 import org.junit.Test
 
 // TODO: Some of these tests are testing AbstractToken and should be moved into the super-class.
@@ -58,7 +58,7 @@ class FungibleTokenTests : ContractTestCommon() {
             }
             // Includes a group with no assigned command.
             tweak {
-                output(FungibleTokenContract.contractId, 10.USD issuedBy ISSUER.party heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 10.ofType(USD) issuedBy ISSUER.party heldBy ALICE.party)
                 command(ISSUER.publicKey, IssueTokenCommand(issuedToken, listOf(0)))
                 this `fails with` "There is a token group with no assigned command!"
             }
@@ -101,7 +101,7 @@ class FungibleTokenTests : ContractTestCommon() {
             // Includes the same token issued by a different issuer.
             // You wouldn't usually do this but it is possible.
             tweak {
-                output(FungibleTokenContract.contractId, 1.GBP issuedBy BOB.party heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 1.ofType(GBP) issuedBy BOB.party heldBy ALICE.party)
                 command(ISSUER.publicKey, IssueTokenCommand(issuedToken, listOf(0)))
                 command(BOB.publicKey, IssueTokenCommand(GBP issuedBy BOB.party, listOf(1)))
                 verifies()
@@ -131,7 +131,7 @@ class FungibleTokenTests : ContractTestCommon() {
 
             // Move coupled with an issue.
             tweak {
-                output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 10.ofType(USD) issuedBy BOB.party heldBy ALICE.party)
                 //the issue token is added after the move tokens, so it will have index(1)
                 command(BOB.publicKey, IssueTokenCommand(USD issuedBy BOB.party, outputs = listOf(1)))
 
@@ -140,7 +140,7 @@ class FungibleTokenTests : ContractTestCommon() {
 
             // Input missing.
             tweak {
-                output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy BOB.party)
+                output(FungibleTokenContract.contractId, 10.ofType(USD) issuedBy BOB.party heldBy BOB.party)
                 command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party, outputs = listOf(1)))
 
                 this `fails with` "When moving tokens, there must be input states present."
@@ -148,7 +148,7 @@ class FungibleTokenTests : ContractTestCommon() {
 
             // Output missing.
             tweak {
-                input(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
+                input(FungibleTokenContract.contractId, 10.ofType(USD) issuedBy BOB.party heldBy ALICE.party)
                 command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party, inputs = listOf(1)))
 
                 this `fails with` "When moving tokens, there must be output states present."
@@ -156,9 +156,9 @@ class FungibleTokenTests : ContractTestCommon() {
 
             // Inputs sum to zero.
             tweak {
-                input(FungibleTokenContract.contractId, 0.USD issuedBy BOB.party heldBy ALICE.party)
-                input(FungibleTokenContract.contractId, 0.USD issuedBy BOB.party heldBy ALICE.party)
-                output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy BOB.party)
+                input(FungibleTokenContract.contractId, 0.ofType(USD) issuedBy BOB.party heldBy ALICE.party)
+                input(FungibleTokenContract.contractId, 0.ofType(USD) issuedBy BOB.party heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 10.ofType(USD) issuedBy BOB.party heldBy BOB.party)
                 command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party, inputs = listOf(1, 2), outputs = listOf(1)))
                 // Command for the move.
                 this `fails with` "In move groups there must be an amount of input tokens > ZERO."
@@ -166,9 +166,9 @@ class FungibleTokenTests : ContractTestCommon() {
 
             // Outputs sum to zero.
             tweak {
-                input(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
-                output(FungibleTokenContract.contractId, 0.USD issuedBy BOB.party heldBy BOB.party)
-                output(FungibleTokenContract.contractId, 0.USD issuedBy BOB.party heldBy BOB.party)
+                input(FungibleTokenContract.contractId, 10.ofType(USD) issuedBy BOB.party heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 0.ofType(USD) issuedBy BOB.party heldBy BOB.party)
+                output(FungibleTokenContract.contractId, 0.ofType(USD) issuedBy BOB.party heldBy BOB.party)
                 command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party, inputs = listOf(1), outputs = listOf(1, 2)))
                 // Command for the move.
                 this `fails with` "In move groups there must be an amount of output tokens > ZERO."
@@ -176,8 +176,8 @@ class FungibleTokenTests : ContractTestCommon() {
 
             // Unbalanced move.
             tweak {
-                input(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
-                output(FungibleTokenContract.contractId, 11.USD issuedBy BOB.party heldBy BOB.party)
+                input(FungibleTokenContract.contractId, 10.ofType(USD) issuedBy BOB.party heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 11.ofType(USD) issuedBy BOB.party heldBy BOB.party)
                 command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party, inputs = listOf(1), outputs = listOf(1)))
                 // Command for the move.
                 this `fails with` "In move groups the amount of input tokens MUST EQUAL the amount of output tokens. " +
@@ -185,9 +185,9 @@ class FungibleTokenTests : ContractTestCommon() {
             }
 
             tweak {
-                input(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
-                output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy BOB.party)
-                output(FungibleTokenContract.contractId, 0.USD issuedBy BOB.party heldBy BOB.party)
+                input(FungibleTokenContract.contractId, 10.ofType(USD) issuedBy BOB.party heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 10.ofType(USD) issuedBy BOB.party heldBy BOB.party)
+                output(FungibleTokenContract.contractId, 0.ofType(USD) issuedBy BOB.party heldBy BOB.party)
                 command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party, inputs = listOf(1), outputs = listOf(1, 2)))
                 // Command for the move.
                 this `fails with` "You cannot create output token amounts with a ZERO amount."
@@ -195,8 +195,8 @@ class FungibleTokenTests : ContractTestCommon() {
 
             // Two moves (two different groups).
             tweak {
-                input(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
-                output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy BOB.party)
+                input(FungibleTokenContract.contractId, 10.ofType(USD) issuedBy BOB.party heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 10.ofType(USD) issuedBy BOB.party heldBy BOB.party)
                 command(ALICE.publicKey, MoveTokenCommand(USD issuedBy BOB.party, inputs = listOf(1), outputs = listOf(1)))
                 // Command for the move.
                 verifies()

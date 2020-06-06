@@ -3,10 +3,8 @@ apply plugin: 'net.corda.plugins.quasar-utils'
 apply plugin: 'net.corda.plugins.cordapp'
 
 
-evaluationDependsOn(":modules:money")
 evaluationDependsOn(":modules:selection")
 
-def moneyProject = project(":modules:money")
 def selectionProject = project(":modules:selection")
 
 cordapp {
@@ -49,7 +47,7 @@ configurations {
 }
 
 compileKotlin{
-    dependsOn (moneyProject.jar, selectionProject.jar)
+    dependsOn (selectionProject.jar)
 }
 
 dependencies {
@@ -76,7 +74,7 @@ dependencies {
     // CorDapp dependencies.
     cordapp project(":contracts")
 
-    compile(files(moneyProject.jar.archivePath, selectionProject.jar.archivePath))
+    compile(files(selectionProject.jar.archivePath))
 
     //CI for confidential tokens
     cordapp "$confidential_id_release_group:ci-workflows:$confidential_id_release_version"
