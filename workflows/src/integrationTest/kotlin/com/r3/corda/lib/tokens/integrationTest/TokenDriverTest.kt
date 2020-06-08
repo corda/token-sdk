@@ -130,7 +130,6 @@ class TokenDriverTest {
                 portAllocation = incrementalPortAllocation(),
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
@@ -156,7 +155,6 @@ class TokenDriverTest {
                 portAllocation = incrementalPortAllocation(),
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
@@ -265,7 +263,6 @@ class TokenDriverTest {
                 inMemoryDB = false,
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
@@ -323,7 +320,6 @@ class TokenDriverTest {
                 inMemoryDB = false,
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
