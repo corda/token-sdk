@@ -5,6 +5,7 @@ import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import net.corda.core.contracts.*
 import net.corda.core.crypto.SecureHash
 import net.corda.core.internal.uncheckedCast
+import net.corda.core.transactions.BaseTransaction
 import net.corda.core.transactions.LedgerTransaction
 import java.security.PublicKey
 
@@ -42,6 +43,7 @@ class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>(), Desc
     // Even if we have two tokens containing the same info, they will have different linear IDs so end up in different
     // groups.
     override fun verifyMove(
+            tx: LedgerTransaction,
             moveCommands: List<CommandWithParties<TokenCommand>>,
             inputs: List<IndexedState<NonFungibleToken>>,
             outputs: List<IndexedState<NonFungibleToken>>,
@@ -91,16 +93,16 @@ class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>(), Desc
         }
     }
 
-    override fun describe(ltx: LedgerTransaction): List<String> {
-        return emptyList()
-    }
-
     override fun describeTransaction(
         inputs: List<TransactionState<ContractState>>,
         outputs: List<TransactionState<ContractState>>,
         commands: List<CommandData>,
         attachments: List<SecureHash>
     ): List<String> {
-        TODO("Not yet implemented")
+        return emptyList()
+    }
+
+    override fun describeTx(tx: BaseTransaction): List<String> {
+        return emptyList()
     }
 }

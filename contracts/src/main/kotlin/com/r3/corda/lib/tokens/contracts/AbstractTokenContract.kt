@@ -31,6 +31,7 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
 	 * are not provided.
 	 */
 	open fun dispatchOnCommand(
+		tx: LedgerTransaction,
 		commands: List<CommandWithParties<TokenCommand>>,
 		inputs: List<IndexedState<AT>>,
 		outputs: List<IndexedState<AT>>,
@@ -50,7 +51,7 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
 			// Issuances should only contain one issue command.
 			is IssueTokenCommand -> verifyIssue(commands.single(), inputs, outputs, attachments, references)
 			// Moves may contain more than one move command.
-			is MoveTokenCommand -> verifyMove(commands, inputs, outputs, attachments, references, summary)
+			is MoveTokenCommand -> verifyMove(tx, commands, inputs, outputs, attachments, references, summary)
 			// Redeems must only contain one redeem command.
 			is RedeemTokenCommand -> verifyRedeem(commands.single(), inputs, outputs, attachments, references)
 		}
@@ -74,6 +75,7 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
 	 * own command with the required public keys for the tokens they are moving.
 	 */
 	abstract fun verifyMove(
+		tx: LedgerTransaction,
 		moveCommands: List<CommandWithParties<TokenCommand>>,
 		inputs: List<IndexedState<AT>>,
 		outputs: List<IndexedState<AT>>,
@@ -122,7 +124,7 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
 						"TokenCommand type per group! For example: You cannot map an Issue AND a Move command " +
 						"to one group of tokens in a transaction."
 			}
-			dispatchOnCommand(commands, group.inputs, group.outputs, tx.attachments, tx.references, tx.summary)
+			dispatchOnCommand(tx, commands, group.inputs, group.outputs, tx.attachments, tx.references, tx.summary)
 		}
 
 
