@@ -85,7 +85,7 @@ class ObserverAwareFinalityFlow private constructor(
             }
             await(SignTransactionOperation(transactionBuilder!!, ourSigningKeys, serviceHub))
         } else {
-            transactionBuilder.let {
+            transactionBuilder?.let {
                 serviceHub.signInitialTransaction(it!!, signingPubKeys = ourSigningKeys)
             } ?: signedTransaction
             ?: throw IllegalArgumentException("Didn't provide transactionBuilder nor signedTransaction to the flow.")
