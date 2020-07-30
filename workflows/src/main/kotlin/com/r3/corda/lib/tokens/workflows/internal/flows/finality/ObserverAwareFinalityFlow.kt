@@ -80,11 +80,15 @@ class ObserverAwareFinalityFlow private constructor(
         val ourSigningKeys = ledgerTransaction.ourSigningKeys(serviceHub)
 
         val stx = if (haltForExternalSigning) {
+            if (transactionBuilder == null) {
+                throw UnsupportedOperationException("You cannot halt for external signing without providing a transaction builder to the flow.")
+            }
             await(SignTransactionOperation(transactionBuilder!!, ourSigningKeys, serviceHub))
         } else {
             transactionBuilder.let {
                 serviceHub.signInitialTransaction(it!!, signingPubKeys = ourSigningKeys)
-            }
+            } ?: signedTransaction
+            ?: throw IllegalArgumentException("Didn't provide transactionBuilder nor signedTransaction to the flow.")
         }
 
         return subFlow(FinalityFlow(transaction = stx, sessions = finalSessions))
