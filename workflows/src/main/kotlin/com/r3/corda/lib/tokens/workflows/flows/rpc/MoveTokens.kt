@@ -26,6 +26,8 @@ import net.corda.core.transactions.SignedTransaction
  * @param queryCriteria additional criteria for token selection
  * @param changeHolder optional holder of the change outputs, it can be confidential identity, if not specified it
  *                     defaults to caller's legal identity
+ * @param haltForExternalSigning optional - halt the flow thread while waiting for signatures if a call to an external
+ *                               service is required to obtain them, to prevent blocking other work
  */
 @StartableByService
 @StartableByRPC
@@ -36,7 +38,8 @@ constructor(
         val partiesAndAmounts: List<PartyAndAmount<TokenType>>,
         val observers: List<Party> = emptyList(),
         val queryCriteria: QueryCriteria? = null,
-        val changeHolder: AbstractParty? = null
+        val changeHolder: AbstractParty? = null,
+        val haltForExternalSigning: Boolean = false
 ) : FlowLogic<SignedTransaction>() {
 
     @JvmOverloads
@@ -83,6 +86,8 @@ class MoveFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Unit>
  * @param partyAndToken pairing party - token that is to be moved to that party
  * @param observers optional observing parties to which the transaction will be broadcast
  * @param queryCriteria additional criteria for token selection
+ * @param haltForExternalSigning optional - halt the flow thread while waiting for signatures if a call to an external
+ *                               service is required to obtain them, to prevent blocking other work
  */
 @StartableByService
 @StartableByRPC
@@ -92,7 +97,8 @@ class MoveNonFungibleTokens
 constructor(
         val partyAndToken: PartyAndToken,
         val observers: List<Party> = emptyList(),
-        val queryCriteria: QueryCriteria? = null
+        val queryCriteria: QueryCriteria? = null,
+        val haltForExternalSigning: Boolean = false
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
@@ -129,6 +135,8 @@ class MoveNonFungibleTokensHandler(val otherSession: FlowSession) : FlowLogic<Un
  * @param observers optional observing parties to which the transaction will be broadcast
  * @param queryCriteria additional criteria for token selection
  * @param changeHolder holder of the change outputs, it can be confidential identity
+ * @param haltForExternalSigning optional - halt the flow thread while waiting for signatures if a call to an external
+ *                               service is required to obtain them, to prevent blocking other work
  */
 @StartableByService
 @StartableByRPC
@@ -137,7 +145,8 @@ class ConfidentialMoveFungibleTokens(
         val partiesAndAmounts: List<PartyAndAmount<TokenType>>,
         val observers: List<Party>,
         val queryCriteria: QueryCriteria? = null,
-        val changeHolder: AbstractParty? = null
+        val changeHolder: AbstractParty? = null,
+        val haltForExternalSigning: Boolean = false
 ) : FlowLogic<SignedTransaction>() {
 
     constructor(
@@ -191,6 +200,8 @@ class ConfidentialMoveFungibleTokensHandler(val otherSession: FlowSession) : Flo
  * @param partyAndToken list of pairing party - token that is to be moved to that party
  * @param observers optional observing parties to which the transaction will be broadcast
  * @param queryCriteria additional criteria for token selection
+ * @param haltForExternalSigning optional - halt the flow thread while waiting for signatures if a call to an external
+ *                               service is required to obtain them, to prevent blocking other work
  */
 @StartableByService
 @StartableByRPC
@@ -198,7 +209,8 @@ class ConfidentialMoveFungibleTokensHandler(val otherSession: FlowSession) : Flo
 class ConfidentialMoveNonFungibleTokens(
         val partyAndToken: PartyAndToken,
         val observers: List<Party>,
-        val queryCriteria: QueryCriteria? = null
+        val queryCriteria: QueryCriteria? = null,
+        val haltForExternalSigning: Boolean = false
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {

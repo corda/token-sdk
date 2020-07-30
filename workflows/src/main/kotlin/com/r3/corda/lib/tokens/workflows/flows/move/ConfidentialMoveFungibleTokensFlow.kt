@@ -26,6 +26,8 @@ import net.corda.core.transactions.SignedTransaction
  * @param changeHolder holder of the change outputs, it can be confidential identity
  * @param observerSessions optional sessions with the observer nodes, to witch the transaction will be broadcasted
  * @param queryCriteria additional criteria for token selection
+ * @param haltForExternalSigning optional - halt the flow thread while waiting for signatures if a call to an external
+ *                               service is required to obtain them, to prevent blocking other work
  */
 class ConfidentialMoveFungibleTokensFlow
 @JvmOverloads
@@ -34,7 +36,8 @@ constructor(
         val participantSessions: List<FlowSession>,
         val changeHolder: AbstractParty,
         val observerSessions: List<FlowSession> = emptyList(),
-        val queryCriteria: QueryCriteria? = null
+        val queryCriteria: QueryCriteria? = null,
+        val haltForExternalSigning: Boolean = false
 ) : FlowLogic<SignedTransaction>() {
 
     @JvmOverloads
@@ -61,6 +64,6 @@ constructor(
         participantSessions.forEach { it.send(TransactionRole.PARTICIPANT) }
         observerSessions.forEach { it.send(TransactionRole.OBSERVER) }
         val confidentialOutputs = subFlow(ConfidentialTokensFlow(outputs, participantSessions))
-        return subFlow(MoveTokensFlow(inputs, confidentialOutputs, participantSessions, observerSessions))
+        return subFlow(MoveTokensFlow(inputs, confidentialOutputs, participantSessions, observerSessions, haltForExternalSigning))
     }
 }

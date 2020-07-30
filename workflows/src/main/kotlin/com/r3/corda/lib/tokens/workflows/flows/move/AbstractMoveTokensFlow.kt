@@ -21,10 +21,13 @@ import net.corda.core.utilities.ProgressTracker
  *
  * @property participantSessions a list of flow participantSessions for the transaction participants.
  * @property observerSessions a list of flow participantSessions for the transaction observers.
+ * @property haltForExternalSigning whether to halt the flow thread while waiting for signatures if a call to an external
+ *                                  service is required to obtain them, to prevent blocking other work
  */
 abstract class AbstractMoveTokensFlow : FlowLogic<SignedTransaction>() {
     abstract val participantSessions: List<FlowSession>
     abstract val observerSessions: List<FlowSession>
+    abstract val haltForExternalSigning: Boolean
 
     companion object {
         object GENERATE : ProgressTracker.Step("Generating tokens to move.")
@@ -58,7 +61,8 @@ abstract class AbstractMoveTokensFlow : FlowLogic<SignedTransaction>() {
         val signedTransaction = subFlow(
                 ObserverAwareFinalityFlow(
                         transactionBuilder = transactionBuilder,
-                        allSessions = participantSessions + observerSessions
+                        allSessions = participantSessions + observerSessions,
+                        haltForExternalSigning = haltForExternalSigning
                 )
         )
         progressTracker.currentStep = UPDATING

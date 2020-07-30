@@ -8,13 +8,19 @@ import com.r3.corda.lib.tokens.workflows.utilities.requireSessionsForParticipant
 import com.r3.corda.lib.tokens.workflows.utilities.toWellKnownParties
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.flows.FinalityFlow
+import net.corda.core.flows.FlowExternalAsyncOperation
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
+import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
+import java.security.PublicKey
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
+import java.util.function.Supplier
 
 /**
  * This flow is a wrapper around [FinalityFlow] and properly handles broadcasting transactions to observers (those which
@@ -35,11 +41,15 @@ import net.corda.core.transactions.TransactionBuilder
 class ObserverAwareFinalityFlow private constructor(
         val allSessions: List<FlowSession>,
         val signedTransaction: SignedTransaction? = null,
-        val transactionBuilder: TransactionBuilder? = null
+        val transactionBuilder: TransactionBuilder? = null,
+        val haltForExternalSigning: Boolean = false
 ) : FlowLogic<SignedTransaction>() {
 
     constructor(transactionBuilder: TransactionBuilder, allSessions: List<FlowSession>)
             : this(allSessions, null, transactionBuilder)
+
+    constructor(transactionBuilder: TransactionBuilder, allSessions: List<FlowSession>, haltForExternalSigning: Boolean)
+            : this(allSessions, null, transactionBuilder, haltForExternalSigning)
 
     constructor(signedTransaction: SignedTransaction, allSessions: List<FlowSession>)
             : this(allSessions, signedTransaction)
@@ -68,10 +78,31 @@ class ObserverAwareFinalityFlow private constructor(
         }
         // Sign and finalise the transaction, obtaining the signing keys required from the LedgerTransaction.
         val ourSigningKeys = ledgerTransaction.ourSigningKeys(serviceHub)
-        val stx = transactionBuilder?.let {
-            serviceHub.signInitialTransaction(it, signingPubKeys = ourSigningKeys)
-        } ?: signedTransaction
-        ?: throw IllegalArgumentException("Didn't provide transactionBuilder nor signedTransaction to the flow.")
+
+        val stx = if (haltForExternalSigning) {
+            await(SignTransactionOperation(transactionBuilder!!, ourSigningKeys, serviceHub))
+        } else {
+            transactionBuilder.let {
+                serviceHub.signInitialTransaction(it!!, signingPubKeys = ourSigningKeys)
+            }
+        }
+
         return subFlow(FinalityFlow(transaction = stx, sessions = finalSessions))
     }
+
+}
+
+class SignTransactionOperation(private val transactionBuilder: TransactionBuilder, private val signingKeys: List<PublicKey>,
+                               private val serviceHub: ServiceHub) : FlowExternalAsyncOperation<SignedTransaction> {
+    override fun execute(deduplicationId: String) : CompletableFuture<SignedTransaction> {
+        return CompletableFuture.supplyAsync(
+            Supplier {
+                transactionBuilder.let {
+                    serviceHub.signInitialTransaction(it, signingPubKeys = signingKeys)
+                }
+            },
+            Executors.newFixedThreadPool(1)
+        )
+    }
+
 }

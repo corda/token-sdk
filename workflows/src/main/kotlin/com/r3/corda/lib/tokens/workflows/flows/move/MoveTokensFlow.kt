@@ -18,6 +18,8 @@ import net.corda.core.transactions.TransactionBuilder
  * @param outputs list of result token outputs
  * @param participantSessions session with the participants of move tokens transaction
  * @param observerSessions session with optional observers of the redeem transaction
+ * @param haltForExternalSigning optional - halt the flow thread while waiting for signatures if a call to an external
+ *                               service is required to obtain them, to prevent blocking other work
  */
 class MoveTokensFlow
 @JvmOverloads
@@ -25,7 +27,8 @@ constructor(
         val inputs: List<StateAndRef<AbstractToken>>,
         val outputs: List<AbstractToken>,
         override val participantSessions: List<FlowSession>,
-        override val observerSessions: List<FlowSession> = emptyList()
+        override val observerSessions: List<FlowSession> = emptyList(),
+        override val haltForExternalSigning: Boolean = false
 ) : AbstractMoveTokensFlow() {
     @JvmOverloads
     constructor(

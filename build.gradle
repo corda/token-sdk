@@ -3,9 +3,7 @@ import static org.gradle.api.JavaVersion.VERSION_1_8
 buildscript {
     ext {
         corda_release_group = 'net.corda'
-        corda_release_version = '4.3'
-        corda_ent_release_group = 'com.r3.corda'
-        corda_ent_release_version = '4.5'
+        corda_release_version = '4.6-SNAPSHOT'
         tokens_release_group = "com.r3.corda.lib.tokens"
         tokens_release_version = "1.2-SNAPSHOT"
         corda_gradle_plugins_version = '5.0.8'

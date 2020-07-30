@@ -18,6 +18,8 @@ import net.corda.core.transactions.TransactionBuilder
  * @param participantSessions sessions with the participants of move transaction
  * @param observerSessions optional sessions with the observer nodes, to witch the transaction will be broadcasted
  * @param queryCriteria additional criteria for token selection
+ * @param haltForExternalSigning optional - halt the flow thread while waiting for signatures if a call to an external
+ *                               service is required to obtain them, to prevent blocking other work
  */
 class MoveNonFungibleTokensFlow
 @JvmOverloads
@@ -25,7 +27,8 @@ constructor(
         val partyAndToken: PartyAndToken,
         override val participantSessions: List<FlowSession>,
         override val observerSessions: List<FlowSession> = emptyList(),
-        val queryCriteria: QueryCriteria?
+        val queryCriteria: QueryCriteria?,
+        override val haltForExternalSigning: Boolean = false
 ) : AbstractMoveTokensFlow() {
     @Suspendable
     override fun addMove(transactionBuilder: TransactionBuilder) {

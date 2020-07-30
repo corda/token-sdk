@@ -21,6 +21,8 @@ import net.corda.core.transactions.TransactionBuilder
  * @param queryCriteria additional criteria for token selection
  * @param changeHolder optional holder of the change outputs, it can be confidential identity, if not specified it
  *                     defaults to caller's legal identity
+ * @param haltForExternalSigning optional - halt the flow thread while waiting for signatures if a call to an external
+ *                               service is required to obtain them, to prevent blocking other work
  */
 class MoveFungibleTokensFlow
 @JvmOverloads
@@ -29,7 +31,8 @@ constructor(
         override val participantSessions: List<FlowSession>,
         override val observerSessions: List<FlowSession> = emptyList(),
         val queryCriteria: QueryCriteria? = null,
-        val changeHolder: AbstractParty? = null
+        val changeHolder: AbstractParty? = null,
+        override val haltForExternalSigning: Boolean = false
 ) : AbstractMoveTokensFlow() {
 
     @JvmOverloads

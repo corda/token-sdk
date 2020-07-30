@@ -91,10 +91,6 @@ class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>(), Desc
         }
     }
 
-    override fun describe(ltx: LedgerTransaction): List<String> {
-        return emptyList()
-    }
-
     override fun describeTransaction(
         inputs: List<TransactionState<ContractState>>,
         outputs: List<TransactionState<ContractState>>,

@@ -13,6 +13,7 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.toStringShort
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.transactions.LedgerTransaction
+import net.corda.core.contracts.DescribableContract
 import java.security.PublicKey
 
 /**
@@ -146,10 +147,6 @@ open class FungibleTokenContract : AbstractTokenContract<FungibleToken>(), Descr
                 "Owners of redeemed states must be the signing parties."
             }
         }
-    }
-
-    override fun describe(ltx: LedgerTransaction): List<String> {
-        return emptyList()
     }
 
     override fun describeTransaction(
