@@ -41,8 +41,9 @@ constructor(
             queryCriteria: QueryCriteria? = null,
             participantSessions: List<FlowSession>,
             observerSessions: List<FlowSession> = emptyList(),
-            changeHolder: AbstractParty? = null
-    ) : this(listOf(partyAndAmount), participantSessions, observerSessions, queryCriteria, changeHolder)
+            changeHolder: AbstractParty? = null,
+            haltForExternalSigning: Boolean = false
+    ) : this(listOf(partyAndAmount), participantSessions, observerSessions, queryCriteria, changeHolder, haltForExternalSigning)
 
     @Suspendable
     override fun addMove(transactionBuilder: TransactionBuilder) {

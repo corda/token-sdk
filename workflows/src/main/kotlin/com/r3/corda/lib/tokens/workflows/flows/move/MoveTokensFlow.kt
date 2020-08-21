@@ -35,8 +35,9 @@ constructor(
             input: StateAndRef<AbstractToken>,
             output: AbstractToken,
             participantSessions: List<FlowSession>,
-            observerSessions: List<FlowSession> = emptyList()
-    ) : this(listOf(input), listOf(output), participantSessions, observerSessions)
+            observerSessions: List<FlowSession> = emptyList(),
+            haltForExternalSigning: Boolean = false
+    ) : this(listOf(input), listOf(output), participantSessions, observerSessions, haltForExternalSigning)
 
     @Suspendable
     override fun addMove(transactionBuilder: TransactionBuilder) {

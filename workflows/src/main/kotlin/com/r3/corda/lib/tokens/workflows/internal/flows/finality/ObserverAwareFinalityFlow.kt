@@ -18,8 +18,11 @@ import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import java.security.PublicKey
+import java.util.concurrent.Callable
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.function.Supplier
 
 /**
@@ -37,6 +40,8 @@ import java.util.function.Supplier
  *  transaction with observers, notice that this flow can be called either with [transactionBuilder] or
  *  [signedTransaction]
  * @property allSessions a set of sessions for, at least, all the transaction participants and maybe observers
+ * @property haltForExternalSigning optional - halt the flow thread while waiting for signatures if a call to an external
+ *                                  service is required to obtain them, to prevent blocking other work
  */
 class ObserverAwareFinalityFlow private constructor(
         val allSessions: List<FlowSession>,
@@ -80,13 +85,10 @@ class ObserverAwareFinalityFlow private constructor(
         val ourSigningKeys = ledgerTransaction.ourSigningKeys(serviceHub)
 
         val stx = if (haltForExternalSigning) {
-            if (transactionBuilder == null) {
-                throw UnsupportedOperationException("You cannot halt for external signing without providing a transaction builder to the flow.")
-            }
             await(SignTransactionOperation(transactionBuilder!!, ourSigningKeys, serviceHub))
         } else {
             transactionBuilder?.let {
-                serviceHub.signInitialTransaction(it!!, signingPubKeys = ourSigningKeys)
+                serviceHub.signInitialTransaction(it, signingPubKeys = ourSigningKeys)
             } ?: signedTransaction
             ?: throw IllegalArgumentException("Didn't provide transactionBuilder nor signedTransaction to the flow.")
         }
@@ -98,14 +100,23 @@ class ObserverAwareFinalityFlow private constructor(
 
 class SignTransactionOperation(private val transactionBuilder: TransactionBuilder, private val signingKeys: List<PublicKey>,
                                private val serviceHub: ServiceHub) : FlowExternalAsyncOperation<SignedTransaction> {
+
     override fun execute(deduplicationId: String) : CompletableFuture<SignedTransaction> {
+        val executor = Executors.newFixedThreadPool(2)
         return CompletableFuture.supplyAsync(
             Supplier {
                 transactionBuilder.let {
-                    serviceHub.signInitialTransaction(it, signingPubKeys = signingKeys)
+                    val future = executor.submit(Callable {
+                        serviceHub.signInitialTransaction(it, signingPubKeys = signingKeys)
+                    })
+                    try {
+                        future.get(5, TimeUnit.MINUTES)
+                    } finally {
+                        future.cancel(true)
+                    }
                 }
             },
-            Executors.newFixedThreadPool(1)
+            executor
         )
     }
 

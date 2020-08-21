@@ -47,8 +47,9 @@ constructor(
             partyAndAmount: PartyAndAmount<TokenType>,
             observers: List<Party> = emptyList(),
             queryCriteria: QueryCriteria? = null,
-            changeHolder: AbstractParty? = null
-    ) : this(listOf(partyAndAmount), observers, queryCriteria, changeHolder)
+            changeHolder: AbstractParty? = null,
+            haltForExternalSigning: Boolean = false
+    ) : this(listOf(partyAndAmount), observers, queryCriteria, changeHolder, haltForExternalSigning)
 
     constructor(amount: Amount<TokenType>, holder: AbstractParty) : this(PartyAndAmount(holder, amount), emptyList())
 
@@ -62,7 +63,8 @@ constructor(
                 participantSessions = participantSessions,
                 observerSessions = observerSessions,
                 queryCriteria = queryCriteria,
-                changeHolder = changeHolder
+                changeHolder = changeHolder,
+                haltForExternalSigning = haltForExternalSigning
         ))
     }
 }
@@ -108,7 +110,8 @@ constructor(
                 partyAndToken = partyAndToken,
                 participantSessions = participantSessions,
                 observerSessions = observerSessions,
-                queryCriteria = queryCriteria
+                queryCriteria = queryCriteria,
+                haltForExternalSigning = haltForExternalSigning
         ))
     }
 }
@@ -153,8 +156,9 @@ class ConfidentialMoveFungibleTokens(
             partyAndAmount: PartyAndAmount<TokenType>,
             observers: List<Party>,
             queryCriteria: QueryCriteria? = null,
-            changeHolder: AbstractParty? = null
-    ) : this(listOf(partyAndAmount), observers, queryCriteria, changeHolder)
+            changeHolder: AbstractParty? = null,
+            haltForExternalSigning: Boolean = false
+    ) : this(listOf(partyAndAmount), observers, queryCriteria, changeHolder, haltForExternalSigning)
 
     @Suspendable
     override fun call(): SignedTransaction {
@@ -176,7 +180,8 @@ class ConfidentialMoveFungibleTokens(
                 participantSessions = participantSessions,
                 observerSessions = observerSessions,
                 queryCriteria = queryCriteria,
-                changeHolder = confidentialHolder
+                changeHolder = confidentialHolder,
+                haltForExternalSigning = haltForExternalSigning
         ))
     }
 }
@@ -220,7 +225,8 @@ class ConfidentialMoveNonFungibleTokens(
                 partyAndToken = partyAndToken,
                 participantSessions = participantSessions,
                 observerSessions = observerSessions,
-                queryCriteria = queryCriteria
+                queryCriteria = queryCriteria,
+                haltForExternalSigning = haltForExternalSigning
         ))
     }
 }

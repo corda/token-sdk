@@ -46,9 +46,9 @@ constructor(
             participantSessions: List<FlowSession>,
             changeHolder: AbstractParty,
             queryCriteria: QueryCriteria? = null,
-            observerSessions: List<FlowSession> = emptyList()
-
-    ) : this(listOf(partyAndAmount), participantSessions, changeHolder, observerSessions, queryCriteria)
+            observerSessions: List<FlowSession> = emptyList(),
+            haltForExternalSigning: Boolean = false
+    ) : this(listOf(partyAndAmount), participantSessions, changeHolder, observerSessions, queryCriteria, haltForExternalSigning)
 
     @Suspendable
     override fun call(): SignedTransaction {
