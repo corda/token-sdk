@@ -110,9 +110,10 @@ class SignTransactionOperation(private val transactionBuilder: TransactionBuilde
                         serviceHub.signInitialTransaction(it, signingPubKeys = signingKeys)
                     })
                     try {
-                        future.get(5, TimeUnit.MINUTES)
+                        future.get(30, TimeUnit.MINUTES)
                     } finally {
                         future.cancel(true)
+                        executor.shutdown()
                     }
                 }
             },
