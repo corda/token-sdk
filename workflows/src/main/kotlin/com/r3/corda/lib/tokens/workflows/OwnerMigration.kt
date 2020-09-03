@@ -15,12 +15,18 @@ import net.corda.core.crypto.toStringShort
 import net.corda.core.internal.readFully
 import net.corda.core.serialization.SerializationContext
 import net.corda.core.serialization.deserialize
+import net.corda.core.serialization.internal.SerializationEnvironment
+import net.corda.core.serialization.internal._allEnabledSerializationEnvs
+import net.corda.core.serialization.internal._inheritableContextSerializationEnv
+import net.corda.core.serialization.internal.effectiveSerializationEnv
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.contextLogger
+import net.corda.serialization.internal.AMQP_P2P_CONTEXT
 import net.corda.serialization.internal.AMQP_STORAGE_CONTEXT
 import net.corda.serialization.internal.CordaSerializationMagic
 import net.corda.serialization.internal.SerializationFactoryImpl
 import net.corda.serialization.internal.amqp.AbstractAMQPSerializationScheme
+import net.corda.serialization.internal.amqp.amqpMagic
 import java.sql.ResultSet
 
 
@@ -61,42 +67,43 @@ class OwnerMigration : CustomSqlChange {
 
 
 	override fun generateStatements(database: Database?): Array<SqlStatement> {
+		return withSerializationEnv {
 
-		if (database == null) {
-			throw IllegalStateException("Cannot migrate tokens without owner as Liquibase failed to provide a suitable connection")
-		}
-		val selectStatement = """
+			if (database == null) {
+				throw IllegalStateException("Cannot migrate tokens without owner as Liquibase failed to provide a suitable connection")
+			}
+			val selectStatement = """
             SELECT output_index, transaction_id, transaction_value 
             FROM fungible_token, node_transactions 
             WHERE holding_key IS NULL and node_transactions.tx_id = fungible_token.transaction_id
         """.trimIndent()
-		val connection = (database.connection as JdbcConnection).wrappedConnection
-		val preparedStatement = connection.prepareStatement(selectStatement)
-		val resultSet = preparedStatement.executeQuery()
-		val listOfUpdates = mutableListOf<Pair<StateRef, String>>()
-		resultSet.use { rs ->
-			while (rs.next()) {
-				val outputIdx = rs.getInt(1)
-				val txId = rs.getString(2)
-				val txBytes = getBytes(database, resultSet)
-				val signedTx: SignedTransaction = txBytes.deserialize(serializationFactory, context)
-				val fungibleTokensOutRefs = signedTx.coreTransaction.outRefsOfType(FungibleToken::class.java)
-				val tokenMatchingRef = fungibleTokensOutRefs.singleOrNull { it.ref.index == outputIdx }
-				tokenMatchingRef?.state?.data?.holder?.owningKey?.toStringShort()?.let { ownerHash ->
-					listOfUpdates.add(StateRef(SecureHash.parse(txId), outputIdx) to ownerHash)
+			val connection = (database.connection as JdbcConnection).wrappedConnection
+			val preparedStatement = connection.prepareStatement(selectStatement)
+			val resultSet = preparedStatement.executeQuery()
+			val listOfUpdates = mutableListOf<Pair<StateRef, String>>()
+			resultSet.use { rs ->
+				while (rs.next()) {
+					val outputIdx = rs.getInt(1)
+					val txId = rs.getString(2)
+					val txBytes = getBytes(database, resultSet)
+					val signedTx: SignedTransaction = txBytes.deserialize(serializationFactory, context)
+					val fungibleTokensOutRefs = signedTx.coreTransaction.outRefsOfType(FungibleToken::class.java)
+					val tokenMatchingRef = fungibleTokensOutRefs.singleOrNull { it.ref.index == outputIdx }
+					tokenMatchingRef?.state?.data?.holder?.owningKey?.toStringShort()?.let { ownerHash ->
+						listOfUpdates.add(StateRef(SecureHash.parse(txId), outputIdx) to ownerHash)
+					}
 				}
 			}
+
+			listOfUpdates.map { (stateRef, holdingKeyHash) ->
+				UpdateStatement(connection.catalog, connection.schema, "fungible_token")
+					.setWhereClause("output_index=? AND transaction_id=?")
+					.addNewColumnValue("holding_key", holdingKeyHash)
+					.addWhereParameters(stateRef.index, stateRef.txhash.toString())
+			}.toTypedArray()
+
 		}
-
-		return listOfUpdates.map { (stateRef, holdingKeyHash) ->
-			UpdateStatement(connection.catalog, connection.schema, "fungible_token")
-				.setWhereClause("output_index=? AND transaction_id=?")
-				.addNewColumnValue("holding_key", holdingKeyHash)
-				.addWhereParameters(stateRef.index, stateRef.txhash.toString())
-		}.toTypedArray()
-
 	}
-
 
 }
 
@@ -116,4 +123,46 @@ fun getBytes(database: Database, resultSet: ResultSet): ByteArray {
 	}
 
 }
+private object AMQPInspectorSerializationScheme : AbstractAMQPSerializationScheme(emptyList()) {
+	override fun canDeserializeVersion(magic: CordaSerializationMagic, target: SerializationContext.UseCase): Boolean {
+		return magic == amqpMagic
+	}
 
+	override fun rpcClientSerializerFactory(context: SerializationContext) = throw UnsupportedOperationException()
+	override fun rpcServerSerializerFactory(context: SerializationContext) = throw UnsupportedOperationException()
+}
+
+
+fun <T> withSerializationEnv(block: () -> T): T {
+	val newEnv = if (_allEnabledSerializationEnvs.isEmpty()) {
+		initialiseSerialization()
+		true
+	} else {
+		false
+	}
+	var result: T? = null
+	effectiveSerializationEnv.serializationFactory.withCurrentContext(effectiveSerializationEnv.storageContext.withLenientCarpenter()) {
+		result = block()
+	}
+
+	if (newEnv) {
+		disableSerialization()
+	}
+	return result!!
+}
+
+private fun initialiseSerialization() {
+	// Deserialise with the lenient carpenter as we only care for the AMQP field getters
+	_inheritableContextSerializationEnv.set(
+		SerializationEnvironment.with(
+			SerializationFactoryImpl().apply {
+				registerScheme(AMQPInspectorSerializationScheme)
+			},
+			p2pContext = AMQP_P2P_CONTEXT.withLenientCarpenter(),
+			storageContext = AMQP_STORAGE_CONTEXT.withLenientCarpenter()
+		))
+}
+
+private fun disableSerialization() {
+	_inheritableContextSerializationEnv.set(null)
+}
