@@ -48,7 +48,7 @@ class OwnerMigration : CustomSqlChange {
 	val serializationFactory = SerializationFactoryImpl().apply {
 		registerScheme(AMQPInspectorSerializationScheme)
 	}
-	val context = AMQP_STORAGE_CONTEXT.withLenientCarpenter()
+	val context = AMQP_STORAGE_CONTEXT
 
 
 	override fun validate(database: Database?): ValidationErrors? {
@@ -86,7 +86,7 @@ class OwnerMigration : CustomSqlChange {
 					val outputIdx = rs.getInt(1)
 					val txId = rs.getString(2)
 					val txBytes = getBytes(database, resultSet)
-					val signedTx: SignedTransaction = txBytes.deserialize(serializationFactory, context)
+					val signedTx: SignedTransaction = txBytes.deserialize(serializationFactory, AMQP_STORAGE_CONTEXT.withClassLoader(this.javaClass.classLoader).withoutCarpenter())
 					val fungibleTokensOutRefs = signedTx.coreTransaction.outRefsOfType(FungibleToken::class.java)
 					val tokenMatchingRef = fungibleTokensOutRefs.singleOrNull { it.ref.index == outputIdx }
 					tokenMatchingRef?.state?.data?.holder?.owningKey?.toStringShort()?.let { ownerHash ->
@@ -141,7 +141,7 @@ fun <T> withSerializationEnv(block: () -> T): T {
 		false
 	}
 	var result: T? = null
-	effectiveSerializationEnv.serializationFactory.withCurrentContext(effectiveSerializationEnv.storageContext.withLenientCarpenter()) {
+	effectiveSerializationEnv.serializationFactory.withCurrentContext(effectiveSerializationEnv.storageContext.withClassLoader(FungibleToken::class.java.classLoader)) {
 		result = block()
 	}
 
@@ -158,8 +158,8 @@ private fun initialiseSerialization() {
 			SerializationFactoryImpl().apply {
 				registerScheme(AMQPInspectorSerializationScheme)
 			},
-			p2pContext = AMQP_P2P_CONTEXT.withLenientCarpenter(),
-			storageContext = AMQP_STORAGE_CONTEXT.withLenientCarpenter()
+			p2pContext = AMQP_P2P_CONTEXT.withoutCarpenter(),
+			storageContext = AMQP_STORAGE_CONTEXT.withoutCarpenter()
 		))
 }
 
