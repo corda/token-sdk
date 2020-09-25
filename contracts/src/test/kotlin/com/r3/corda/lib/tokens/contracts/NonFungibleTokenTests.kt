@@ -7,7 +7,6 @@ import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.contracts.utilities.withNewHolder
-import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.testing.states.PTK
 import com.r3.corda.lib.tokens.testing.states.RUB
 import org.junit.Test
@@ -58,7 +57,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
             }
             // Includes a group with no assigned command.
             tweak {
-                output(FungibleTokenContract.contractId, 10.USD issuedBy ISSUER.party heldBy ALICE.party)
+                output(FungibleTokenContract.contractId, 10.ofType(CommonTokens.USD) issuedBy ISSUER.party heldBy ALICE.party)
                 command(ISSUER.publicKey, IssueTokenCommand(issuedToken, outputs = listOf(0)))
                 this `fails with` "There is a token group with no assigned command!"
             }
@@ -71,7 +70,7 @@ class NonFungibleTokenTests : ContractTestCommon() {
 
             // Includes another token type and a matching command.
             tweak {
-                val otherToken = USD issuedBy ISSUER.party
+                val otherToken = CommonTokens.USD issuedBy ISSUER.party
                 output(FungibleTokenContract.contractId, 10 of otherToken heldBy ALICE.party)
                 command(ISSUER.publicKey, IssueTokenCommand(issuedToken, outputs = listOf(0)))
                 command(ISSUER.publicKey, IssueTokenCommand(otherToken, outputs = listOf(1)))
@@ -118,8 +117,8 @@ class NonFungibleTokenTests : ContractTestCommon() {
 
             // Move coupled with an issue.
             tweak {
-                output(FungibleTokenContract.contractId, 10.USD issuedBy BOB.party heldBy ALICE.party)
-                command(BOB.publicKey, IssueTokenCommand(USD issuedBy BOB.party, outputs = listOf(1)))
+                output(FungibleTokenContract.contractId, 10.ofType(CommonTokens.USD) issuedBy BOB.party heldBy ALICE.party)
+                command(BOB.publicKey, IssueTokenCommand(CommonTokens.USD issuedBy BOB.party, outputs = listOf(1)))
                 // Command for the move.
                 command(ALICE.publicKey, MoveTokenCommand(issuedToken, inputs = listOf(0), outputs = listOf(0)))
                 verifies()

@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test
 import utility.getOrThrow
 import java.time.Duration
 
-class TokenSDKUpgradeDBCompatibility : DockerRemoteMachineBasedTest() {
+class TokenSDKUpgrade46Compatibility : DockerRemoteMachineBasedTest() {
 
 	//remove the prod key and sign with freighter key
 	val tokensV1Contracts = NodeBuilder.DeployedCordapp.fromGradleArtifact(
@@ -93,10 +93,7 @@ class TokenSDKUpgradeDBCompatibility : DockerRemoteMachineBasedTest() {
 
 	private fun runTokensOnNodeRunningDatabase(db: DeploymentMachineProvider.DatabaseType) {
 		val randomString = generateRandomString()
-
-
 		val deploymentContext = DeploymentContext(machineProvider, nms, artifactoryUsername, artifactoryPassword)
-
 		val deploymentResult = SingleNodeDeployment(
 			NodeBuilder().withX500("O=PartyB, C=GB, L=LONDON, CN=$randomString")
 				.withCordapp(tokensV1Contracts)
@@ -105,7 +102,7 @@ class TokenSDKUpgradeDBCompatibility : DockerRemoteMachineBasedTest() {
 				.withCordapp(modernCiV1)
 				.withCordapp(freighterHelperCordapp)
 				.withDatabase(machineProvider.requestDatabase(db))
-		).withVersion(UnitOfDeployment.CORDA_4_3)
+		).withVersion(UnitOfDeployment.CORDA_4_6_SNAPSHOT)
 			.deploy(deploymentContext)
 
 		val nodeMachine = deploymentResult.getOrThrow().nodeMachines.single()
