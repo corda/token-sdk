@@ -1,7 +1,6 @@
 package com.r3.corda.lib.tokens.integrationTest
 
 import com.r3.corda.lib.ci.workflows.RequestKey
-import com.r3.corda.lib.ci.workflows.RequestKeyFlow
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
@@ -9,6 +8,7 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.*
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
+import com.r3.corda.lib.tokens.selection.InsufficientNotLockedBalanceException
 import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.testing.states.Ruble
 import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
@@ -50,6 +50,7 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Assert
 import org.junit.Test
+import kotlin.test.assertFailsWith
 
 class TokenDriverTest {
 
@@ -297,14 +298,14 @@ class TokenDriverTest {
 
             // Restart the node
             val restartedNode = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
-            // Try to spend same states, they should be locked after restart, so we expect insufficient balance exception to be thrown.
-            assertThatExceptionOfType(CordaRuntimeException::class.java).isThrownBy {
+            // Try to spend same states, they should be locked after restart, so we expect insufficient not locked balance exception to be thrown.
+            assertFailsWith<InsufficientNotLockedBalanceException> {
                 restartedNode.rpc.startFlowDynamic(
-                        SelectAndLockFlow::class.java,
-                        50.GBP,
-                        10.millis
+                    SelectAndLockFlow::class.java,
+                    50.GBP,
+                    10.millis
                 ).returnValue.getOrThrow()
-            }.withMessageContaining("InsufficientBalanceException: Insufficient spendable states identified for 50.00 TokenType(tokenIdentifier='GBP', fractionDigits=2)")
+            }
             // This should just work.
             restartedNode.rpc.startFlowDynamic(
                     SelectAndLockFlow::class.java,
