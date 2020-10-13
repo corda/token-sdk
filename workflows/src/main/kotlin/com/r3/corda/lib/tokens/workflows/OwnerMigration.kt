@@ -36,14 +36,14 @@ class OwnerMigration : CustomSqlChange {
 		private val logger = contextLogger()
 	}
 
-    private object AMQPInspectorSerializationScheme : AbstractAMQPSerializationScheme(emptyList()) {
-        override fun canDeserializeVersion(magic: CordaSerializationMagic, target: SerializationContext.UseCase): Boolean {
-            return true
-        }
+	private object AMQPInspectorSerializationScheme : AbstractAMQPSerializationScheme(emptyList()) {
+		override fun canDeserializeVersion(magic: CordaSerializationMagic, target: SerializationContext.UseCase): Boolean {
+			return true
+		}
 
-        override fun rpcClientSerializerFactory(context: SerializationContext) = throw UnsupportedOperationException()
-        override fun rpcServerSerializerFactory(context: SerializationContext) = throw UnsupportedOperationException()
-    }
+		override fun rpcClientSerializerFactory(context: SerializationContext) = throw UnsupportedOperationException()
+		override fun rpcServerSerializerFactory(context: SerializationContext) = throw UnsupportedOperationException()
+	}
 
 	val serializationFactory = SerializationFactoryImpl().apply {
 		registerScheme(AMQPInspectorSerializationScheme)
