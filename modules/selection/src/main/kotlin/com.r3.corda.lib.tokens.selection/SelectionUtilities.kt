@@ -4,6 +4,7 @@ package com.r3.corda.lib.tokens.selection
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import net.corda.core.CordaRuntimeException
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.services.vault.QueryCriteria
@@ -53,8 +54,19 @@ fun tokenAmountWithHolderCriteria(token: TokenType, holder: AbstractParty): Quer
 
 /**
  * An exception that is thrown where the specified criteria returns an amount of tokens
- * that is not sufficient for the specified spend.
+ * that is not sufficient for the specified spend. If the amount of tokens *is* sufficient
+ * but there is not enough of non-locked tokens available to satisfy the amount then
+ * [InsufficientNotLockedBalanceException] will be thrown.
  *
  * @param message The exception message that should be thrown in this context
  */
-class InsufficientBalanceException(message: String) : RuntimeException(message)
+open class InsufficientBalanceException(message: String) : CordaRuntimeException(message)
+
+/**
+ * An exception that is thrown where the specified criteria returns an amount of tokens
+ * that is sufficient for the specified spend, however there is not enough of non-locked tokens
+ * available to satisfy the amount.
+ *
+ * @param message The exception message that should be thrown in this context
+ */
+class InsufficientNotLockedBalanceException(message: String) : InsufficientBalanceException(message)

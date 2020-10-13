@@ -4,6 +4,7 @@ import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
+import com.r3.corda.lib.tokens.selection.InsufficientNotLockedBalanceException
 import com.r3.corda.lib.tokens.selection.memory.config.InMemorySelectionConfig
 import com.r3.corda.lib.tokens.selection.memory.internal.Holder
 import com.r3.corda.lib.tokens.selection.memory.internal.lookupExternalIdFromKey
@@ -53,6 +54,24 @@ class InMemorySelectionTest {
         VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, GBP, observable, database)
         database.transaction {
             vaultWatcherService.selectTokens(Holder.MappedIdentity(uuid), Amount(10, GBP), selectionId = "abc")
+        }
+    }
+
+    @Test(expected = InsufficientNotLockedBalanceException::class)
+    fun `insufficient balance selection - should throw InsufficientNotLockedBalanceException when there is not enough not locked tokens available`() {
+        val (vaultObserver, observable) = getExternalIdVaultObserver()
+        val vaultWatcherService = VaultWatcherService(vaultObserver, InMemorySelectionConfig.defaultConfig())
+        val uuid = UUID.randomUUID()
+        val key = services.keyManagementService.freshKey(uuid)
+
+        // placing two states of 100 and 50 USD into the observer, then soft locking the 100-one.
+        // The test should fail with InsufficientNotLockedBalanceException when trying to select 60 USD.
+        val biggerStateAndRef = VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(100, key, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, USD, observable, database)
+        VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(50, key, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, USD, observable, database)
+        vaultWatcherService.lockTokensExternal(listOf(biggerStateAndRef), UUID.randomUUID().toString())
+
+        database.transaction {
+            vaultWatcherService.selectTokens(Holder.MappedIdentity(uuid), Amount(60, USD), selectionId = "abc")
         }
     }
 

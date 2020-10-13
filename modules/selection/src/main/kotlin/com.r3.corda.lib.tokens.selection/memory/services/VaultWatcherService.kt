@@ -6,6 +6,7 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.withoutIssuer
 import com.r3.corda.lib.tokens.selection.memory.config.InMemorySelectionConfig
 import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
+import com.r3.corda.lib.tokens.selection.InsufficientNotLockedBalanceException
 import com.r3.corda.lib.tokens.selection.memory.internal.Holder
 import com.r3.corda.lib.tokens.selection.memory.internal.lookupExternalIdFromKey
 import com.r3.corda.lib.tokens.selection.sortByStateRefAscending
@@ -266,19 +267,23 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
 
         val requiredAmountWithoutIssuer = requiredAmount.withoutIssuer()
         var amountLocked: Amount<TokenType> = requiredAmountWithoutIssuer.copy(quantity = 0)
+        // this is the running total of soft locked tokens that we encounter until the target token amount is reached
+        var amountAlreadySoftLocked: Amount<TokenType> = requiredAmountWithoutIssuer.copy(quantity = 0)
         val finalPredicate = enrichedPredicate.get()
         for (tokenStateAndRef in bucket) {
             // Does the token satisfy the (optional) predicate eg. issuer?
             if (finalPredicate.invoke(tokenStateAndRef)) {
+                val tokenAmount = uncheckedCast(tokenStateAndRef.state.data.amount.withoutIssuer())
                 // if so, race to lock the token, expected oldValue = PLACE_HOLDER
                 if (__backingMap.replace(tokenStateAndRef, PLACE_HOLDER, selectionId)) {
                     // we won the race to lock this token
                     lockedTokens.add(tokenStateAndRef)
-                    val token = tokenStateAndRef.state.data
-                    amountLocked += uncheckedCast(token.amount.withoutIssuer())
+                    amountLocked += tokenAmount
                     if (amountLocked >= requiredAmountWithoutIssuer) {
                         break
                     }
+                } else {
+                    amountAlreadySoftLocked += tokenAmount
                 }
             }
         }
@@ -287,7 +292,11 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
             lockedTokens.forEach {
                 unlockToken(it, selectionId)
             }
-            throw InsufficientBalanceException("Insufficient spendable states identified for $requiredAmount.")
+            if (amountLocked + amountAlreadySoftLocked < requiredAmountWithoutIssuer) {
+                throw InsufficientBalanceException("Insufficient spendable states identified for $requiredAmount.")
+            } else {
+                throw InsufficientNotLockedBalanceException("Insufficient not-locked spendable states identified for $requiredAmount.")
+            }
         }
 
         UPDATER.schedule({
