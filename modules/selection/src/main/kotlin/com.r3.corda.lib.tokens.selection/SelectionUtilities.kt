@@ -4,6 +4,7 @@ package com.r3.corda.lib.tokens.selection
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
+import net.corda.core.CordaRuntimeException
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.node.services.vault.QueryCriteria
@@ -59,7 +60,7 @@ fun tokenAmountWithHolderCriteria(token: TokenType, holder: AbstractParty): Quer
  *
  * @param message The exception message that should be thrown in this context
  */
-open class InsufficientBalanceException(message: String) : RuntimeException(message)
+open class InsufficientBalanceException(message: String) : CordaRuntimeException(message)
 
 /**
  * An exception that is thrown where the specified criteria returns an amount of tokens
