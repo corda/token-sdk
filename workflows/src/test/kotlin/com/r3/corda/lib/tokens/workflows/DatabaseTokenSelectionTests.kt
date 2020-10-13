@@ -8,13 +8,16 @@ import com.r3.corda.lib.tokens.money.CHF
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
+import com.r3.corda.lib.tokens.selection.InsufficientNotLockedBalanceException
 import com.r3.corda.lib.tokens.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveFungibleTokens
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountWithIssuerCriteria
+import net.corda.core.contracts.StateRef
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.getOrThrow
+import net.corda.core.utilities.toNonEmptySet
 import net.corda.testing.node.StartedMockNode
 import org.junit.Assert
 import org.junit.Before
@@ -83,6 +86,28 @@ class DatabaseTokenSelectionTests : MockNetworkTest(numberOfNodes = 4) {
             }
         }
     }
+
+    @Test
+    fun `not enough not locked tokens available`() {
+        val tokenSelection = DatabaseTokenSelection(A.services)
+        val uuid = UUID.randomUUID()
+
+        // issuing tokens in two tranches so we can lock one of those
+        val issueTransaction = I.issueFungibleTokens(A, 900.BTC).toCompletableFuture().get()
+        I.issueFungibleTokens(A, 100.BTC).toCompletableFuture().get()
+
+        // locking the bigger state
+        A.transaction {
+            A.services.vaultService.softLockReserve(uuid, setOf(StateRef(issueTransaction.tx.id, 0)).toNonEmptySet())
+        }
+
+        assertFailsWith<InsufficientNotLockedBalanceException> {
+            A.transaction {
+                tokenSelection.selectTokens(200.BTC, lockId = uuid)
+            }
+        }
+    }
+
 
     @Test
     fun `generate move test`() {

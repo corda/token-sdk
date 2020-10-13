@@ -53,8 +53,19 @@ fun tokenAmountWithHolderCriteria(token: TokenType, holder: AbstractParty): Quer
 
 /**
  * An exception that is thrown where the specified criteria returns an amount of tokens
- * that is not sufficient for the specified spend.
+ * that is not sufficient for the specified spend. If the amount of tokens *is* sufficient
+ * but there is not enough of non-locked tokens available to satisfy the amount then
+ * [InsufficientNotLockedBalanceException] will be thrown.
  *
  * @param message The exception message that should be thrown in this context
  */
-class InsufficientBalanceException(message: String) : RuntimeException(message)
+open class InsufficientBalanceException(message: String) : RuntimeException(message)
+
+/**
+ * An exception that is thrown where the specified criteria returns an amount of tokens
+ * that is sufficient for the specified spend, however there is not enough of non-locked tokens
+ * available to satisfy the amount.
+ *
+ * @param message The exception message that should be thrown in this context
+ */
+class InsufficientNotLockedBalanceException(message: String) : InsufficientBalanceException(message)
