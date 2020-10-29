@@ -261,7 +261,7 @@ It's sufficient for the issuer (or house state maintainer) to update that token 
     // Update that evolvable state on issuer node.
     val oldHouse: StateAndRef<House> = ... // Query for the state.
     val newHouse: House = oldHouse.state.data.copy(valuation = 800_000L.GBP)
-    subFlow(UpdateEvolvableToken(oldStateAndRef = old, newState = new))
+    subFlow(UpdateEvolvableToken(oldStateAndRef = oldHouse, newState = newHouse))
 ```
 
 
