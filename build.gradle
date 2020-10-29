@@ -5,8 +5,8 @@ buildscript {
         corda_release_group = 'net.corda'
         corda_release_version = '4.3'
         tokens_release_group = "com.r3.corda.lib.tokens"
-        tokens_release_version = "1.2-SNAPSHOT"
-        corda_gradle_plugins_version = '5.0.8'
+        tokens_release_version = "1.2.2-SNAPSHOT"
+        corda_gradle_plugins_version = '5.0.12'
         kotlin_version = '1.2.71'
         junit_version = '4.12'
         dokka_version = '0.9.17'
@@ -25,6 +25,7 @@ buildscript {
         mavenCentral()
         mavenLocal()
         maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-releases" }
+        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-dependencies" }
         maven { url "https://repo.gradle.org/gradle/libs-releases-local/" }
     }
 
@@ -72,6 +73,7 @@ subprojects {
         maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib-dev" }
         maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib" }
         maven { url "https://repo.gradle.org/gradle/libs-releases-local/" }
+        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-dependencies" }
     }
 
     apply plugin: 'kotlin'
