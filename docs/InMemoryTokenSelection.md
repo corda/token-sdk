@@ -23,9 +23,9 @@ stateSelection {
 }
 ```
 
-And choose a single indexing strategy, `EXTERNAL_ID` , `PUBLIC_KEY` or `TOKEN_ONLY`. Public key strategy makes a token bucket for each public key,
+And choose a single indexing strategy, `EXTERNAL_ID` or `PUBLIC_KEY`. Public key strategy makes a token bucket for each public key,
 so if you use accounts, probably it is better to use external id grouping that groups states
-from many public keys connected with given uuid. `TOKEN_ONLY` selection strategy indexes states only using token type and identifier.
+from many public keys connected with given uuid.
 
 For example, to configure token selection in your `deployNodes`:
 
