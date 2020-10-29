@@ -53,28 +53,41 @@ class DatabaseTokenSelection @JvmOverloads constructor(
         val logger = contextLogger()
     }
 
-    /** Queries for held token amounts with the specified token to the specified requiredAmount. */
+    /**
+     * Queries for held token amounts with the specified token to the specified requiredAmount.
+     *
+     * @return the amount of claimed tokens (effectively the sum of values of the states in [stateAndRefs]
+     * */
     private fun executeQuery(
             requiredAmount: Amount<TokenType>,
             lockId: UUID,
             additionalCriteria: QueryCriteria,
             sorter: Sort,
             stateAndRefs: MutableList<StateAndRef<FungibleToken>>,
+            includeSoftLocked: Boolean,
             softLockingType: QueryCriteria.SoftLockingType = QueryCriteria.SoftLockingType.UNLOCKED_ONLY
-    ): Boolean {
+    ): Amount<TokenType> {
         // Didn't need to select any tokens.
         if (requiredAmount.quantity == 0L) {
-            return false
+            return Amount(0, requiredAmount.token)
         }
 
         // Enrich QueryCriteria with additional default attributes (such as soft locks).
         // We only want to return RELEVANT states here.
-        val baseCriteria = QueryCriteria.VaultQueryCriteria(
+        val baseCriteria = if (!includeSoftLocked) {
+            QueryCriteria.VaultQueryCriteria(
                 contractStateTypes = setOf(FungibleToken::class.java),
                 softLockingCondition = QueryCriteria.SoftLockingCondition(softLockingType, listOf(lockId)),
                 relevancyStatus = Vault.RelevancyStatus.RELEVANT,
                 status = Vault.StateStatus.UNCONSUMED
-        )
+            )
+        } else {
+            QueryCriteria.VaultQueryCriteria(
+                contractStateTypes = setOf(FungibleToken::class.java),
+                relevancyStatus = Vault.RelevancyStatus.RELEVANT,
+                status = Vault.StateStatus.UNCONSUMED
+            )
+        }
 
         var pageNumber = DEFAULT_PAGE_NUM
         var claimedAmount = 0L
@@ -96,18 +109,36 @@ class DatabaseTokenSelection @JvmOverloads constructor(
 
         val claimedAmountWithToken = Amount(claimedAmount, requiredAmount.token)
         // No tokens available.
-        if (stateAndRefs.isEmpty()) return false
-        // There were not enough tokens available.
-        if (claimedAmountWithToken < requiredAmount) {
-            logger.trace("TokenType selection requested $requiredAmount but retrieved $claimedAmountWithToken with state refs: ${stateAndRefs.map { it.ref }}")
-            return false
-        }
+        if (stateAndRefs.isEmpty()) return Amount(0, requiredAmount.token)
 
-        // We picked enough tokensToIssue, so softlock and go.
-        logger.trace("TokenType selection for $requiredAmount retrieved ${stateAndRefs.count()} states totalling $claimedAmountWithToken: $stateAndRefs")
-        services.vaultService.softLockReserve(lockId, stateAndRefs.map { it.ref }.toNonEmptySet())
-        return true
+       return claimedAmountWithToken
     }
+
+    /**
+     * Queries for held token amounts with the specified token to the specified requiredAmount
+     * AND tries to soft lock the selected tokens.
+     */
+    private fun executeQueryAndReserve(
+        requiredAmount: Amount<TokenType>,
+        lockId: UUID,
+        additionalCriteria: QueryCriteria,
+        sorter: Sort,
+        stateAndRefs: MutableList<StateAndRef<FungibleToken>>,
+        softLockingType: QueryCriteria.SoftLockingType = QueryCriteria.SoftLockingType.UNLOCKED_ONLY
+    ): Boolean {
+        // not including soft locked tokens
+        val claimedAmount = executeQuery(requiredAmount, lockId, additionalCriteria, sorter, stateAndRefs, false, softLockingType)
+        return if (claimedAmount >= requiredAmount) {
+            // We picked enough tokensToIssue, so softlock and go.
+            logger.trace("TokenType selection for $requiredAmount retrieved ${stateAndRefs.count()} states totalling $claimedAmount: $stateAndRefs")
+            services.vaultService.softLockReserve(lockId, stateAndRefs.map { it.ref }.toNonEmptySet())
+            true
+        } else {
+            logger.trace("TokenType selection requested $requiredAmount but retrieved $claimedAmount with state refs: ${stateAndRefs.map { it.ref }}")
+            false
+        }
+    }
+
 
     @Suspendable
     override fun selectTokens(
@@ -119,7 +150,7 @@ class DatabaseTokenSelection @JvmOverloads constructor(
         val criteria = constructQueryCriteria(requiredAmount, holder, queryBy)
         val stateAndRefs = mutableListOf<StateAndRef<FungibleToken>>()
         for (retryCount in 1..maxRetries) {
-            if (!executeQuery(requiredAmount, lockId, criteria, sortByStateRefAscending(), stateAndRefs)) {
+            if (!executeQueryAndReserve(requiredAmount, lockId, criteria, sortByStateRefAscending(), stateAndRefs)) {
                 // TODO: Need to specify exactly why it fails. Locked states or literally _no_ states!
                 // No point in retrying if there will never be enough...
                 logger.warn("TokenType selection failed on attempt $retryCount.")
@@ -129,8 +160,16 @@ class DatabaseTokenSelection @JvmOverloads constructor(
                     val durationMillis = (minOf(retrySleep.shl(retryCount), retryCap / 2) * (1.0 + Math.random())).toInt()
                     FlowLogic.sleep(durationMillis.millis)
                 } else {
-                    logger.warn("Insufficient spendable states identified for $requiredAmount.")
-                    throw InsufficientBalanceException("Insufficient spendable states identified for $requiredAmount.")
+                    // if there is enough soft locked tokens available to satisfy the amount then we need to throw
+                    // [InsufficientNotLockedBalanceException] instead
+                    val amountWithSoftLocked = executeQuery(requiredAmount, lockId, criteria, sortByStateRefAscending(), mutableListOf(), true)
+                    if (amountWithSoftLocked < requiredAmount) {
+                        logger.warn("Insufficient spendable states identified for $requiredAmount.")
+                        throw InsufficientBalanceException("Insufficient spendable states identified for $requiredAmount.")
+                    } else {
+                        logger.warn("Insufficient not locked spendable states identified for $requiredAmount.")
+                        throw InsufficientNotLockedBalanceException("Insufficient not locked spendable states identified for $requiredAmount.")
+                    }
                 }
             } else {
                 break
