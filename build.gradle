@@ -24,7 +24,7 @@ buildscript {
         jcenter()
         mavenCentral()
         mavenLocal()
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-releases" }
+        maven { url "https://software.r3.com/artifactory/corda-releases" }
         maven { url "https://repo.gradle.org/gradle/libs-releases-local/" }
     }
 
@@ -66,11 +66,11 @@ subprojects {
         mavenCentral()
         mavenLocal()
         maven { url 'https://jitpack.io' }
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-dev" }
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-releases" }
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib" }
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib-dev" }
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib" }
+        maven { url "https://software.r3.com/artifactory/corda-dev" }
+        maven { url "https://software.r3.com/artifactory/corda-releases" }
+        maven { url "https://software.r3.com/artifactory/corda-lib" }
+        maven { url "https://software.r3.com/artifactory/corda-lib-dev" }
+        maven { url "https://software.r3.com/artifactory/corda-lib" }
         maven { url "https://repo.gradle.org/gradle/libs-releases-local/" }
     }
 
@@ -140,7 +140,7 @@ configure(publishProjects) { subproject ->
 
 artifactory {
     publish {
-        contextUrl = 'https://ci-artifactory.corda.r3cev.com/artifactory'
+        contextUrl = 'https://software.r3.com/artifactory'
         repository {
             repoKey = 'corda-lib-dev'
             username = System.getenv('CORDA_ARTIFACTORY_USERNAME') ?: System.getProperty('corda.artifactory.username')
