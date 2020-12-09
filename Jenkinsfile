@@ -5,7 +5,6 @@ killAllExistingBuildsForJob(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
 
 pipeline {
     agent {
-        label '64ram'
         dockerfile {
             filename '.ci/Dockerfile'
             additionalBuildArgs "--build-arg USER=stresstester"
