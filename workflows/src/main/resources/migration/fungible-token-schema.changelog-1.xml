@@ -20,4 +20,8 @@
         <customChange class="com.r3.corda.lib.tokens.workflows.OwnerMigration"/>
     </changeSet>
 
+    <changeSet author="R3.Corda" id="make_holder_column_nullable">
+        <dropNotNullConstraint tableName="fungible_token" columnName="holder" columnDataType="NVARCHAR(255)"/>
+    </changeSet>
+
 </databaseChangeLog>

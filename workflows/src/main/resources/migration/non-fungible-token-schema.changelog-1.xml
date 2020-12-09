@@ -3,6 +3,8 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
 
-    <include file="migration/non-fungible-token-schema.changelog-init.xml"/>
-    <include file="migration/non-fungible-token-schema.changelog-1.xml"/>
+    <changeSet author="R3.Corda" id="make_holder_column_nullable">
+        <dropNotNullConstraint tableName="non_fungible_token" columnName="holder" columnDataType="NVARCHAR(255)"/>
+    </changeSet>
+
 </databaseChangeLog>
