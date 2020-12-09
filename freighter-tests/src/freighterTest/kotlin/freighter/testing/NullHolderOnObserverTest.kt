@@ -41,33 +41,33 @@ class NullHolderOnObserverTest : DockerRemoteMachineBasedTest() {
 	val freighterHelperCordapp = NodeBuilder.DeployedCordapp.fromClassPath("freighter-cordapp-flows")
 
 	@Test
-	fun `tokens can be observed b node that does not know CI running postgres 9_6`() {
+	fun `tokens can be observed on node that does not know CI running postgres 9_6`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.PG_9_6)
 	}
 
 	@Test
-	fun `tokens can be observed b node that does not know CI running postgres H2`() {
+	fun `tokens can be observed on node that does not know CI running H2`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.H2)
 	}
 
 	@Test
-	fun `tokens can be observed b node that does not know CI running postgres 10_10`() {
+	fun `tokens can be observed on node that does not know CI running postgres 10_10`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.PG_10_10)
 	}
 
 	@Test
-	fun `tokens can be observed b node that does not know CI running postgres 11_5`() {
+	fun `tokens can be observed on node that does not know CI running postgres 11_5`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.PG_11_5)
 	}
 
 	@Test
-	fun `tokens can be observed b node that does not know CI running ms_sql`() {
+	fun `tokens can be observed on node that does not know CI running ms_sql`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.MS_SQL)
 	}
 
 	@Test
 	@OracleTest
-	fun `tokens can be observed b node that does not know CI running oracle 12 r2`() {
+	fun `tokens can be observed on node that does not know CI running oracle 12 r2`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.ORACLE_12_R2)
 	}
 
@@ -107,6 +107,9 @@ class NullHolderOnObserverTest : DockerRemoteMachineBasedTest() {
 		val issuedTokenType = IssuedTokenType(nodeMachine1.identity(), tokenType)
 		val amount = Amount(100_000_000, issuedTokenType)
 		val tokenToIssue1 = FungibleToken(amount, createdCi)
+
+		nodeMachine2.waitForNetworkMapToPopulate(nodeMachine1)
+		nodeMachine1.waitForNetworkMapToPopulate(nodeMachine2)
 
 		//issue tokens to the new CI on node1 - node2 does NOT know about this CI
 		//node2 is an observer of this TX
