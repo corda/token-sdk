@@ -23,6 +23,8 @@ import org.hamcrest.Matchers.containsInAnyOrder
 import org.junit.jupiter.api.Test
 import utility.getOrThrow
 import java.time.Duration
+import java.time.Instant
+import java.util.concurrent.TimeoutException
 
 class NullHolderOnObserverTest : DockerRemoteMachineBasedTest() {
 
@@ -121,10 +123,19 @@ class NullHolderOnObserverTest : DockerRemoteMachineBasedTest() {
 		}
 
 		//check that the observer (node2) has recorded the issue correctly
+		val maxLoopTime = Instant.now().plusSeconds(60)
 		nodeMachine2.rpc {
-			val keyCriteria = heldTokenAmountCriteria(tokenType, createdCi)
-			val actual = vaultQueryByCriteria(keyCriteria, FungibleToken::class.java).states.map { it.state.data }
-			MatcherAssert.assertThat(actual.map { it.amount }.sumByLong { it.quantity }, `is`(100_000_000L))
+			while (Instant.now().isBefore(maxLoopTime)) {
+				val keyCriteria = heldTokenAmountCriteria(tokenType, createdCi)
+				val actual = vaultQueryByCriteria(keyCriteria, FungibleToken::class.java).states.map { it.state.data }
+				if (actual.isEmpty()) {
+					Thread.sleep(10)
+					continue
+				}
+				MatcherAssert.assertThat(actual.map { it.amount }.sumByLong { it.quantity }, `is`(100_000_000L))
+				return@rpc
+			}
+			throw TimeoutException()
 		}
 
 	}
