@@ -20,7 +20,7 @@ sourceSets {
 
 evaluationDependsOn(":workflows")
 task freighterTest(type: Test, dependsOn: [project(":workflows").jar]) {
-    maxParallelForks 1
+    maxParallelForks 2
     systemProperty "java.util.concurrent.ForkJoinPool.common.parallelism", "128"
     testClassesDirs = sourceSets.freighterTest.output.classesDirs
     classpath = sourceSets.freighterTest.runtimeClasspath
