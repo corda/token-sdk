@@ -20,7 +20,7 @@ sourceSets {
 
 evaluationDependsOn(":workflows")
 task freighterTest(type: Test, dependsOn: [project(":workflows").jar]) {
-    maxParallelForks 1
+    maxParallelForks 2
     systemProperty "java.util.concurrent.ForkJoinPool.common.parallelism", "128"
     testClassesDirs = sourceSets.freighterTest.output.classesDirs
     classpath = sourceSets.freighterTest.runtimeClasspath
@@ -37,7 +37,7 @@ configurations {
 
 dependencies {
     freighterTestCompile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    freighterTestCompile "freighter:freighter-testing-core-junit5:0.7.1-SNAPSHOT"
+    freighterTestCompile "freighter:freighter-testing-core-junit5:0.7.3-TEST-SNAPSHOT"
 
     freighterTestCompile project(":contracts")
     freighterTestCompile project(":workflows")

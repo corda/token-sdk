@@ -5,4 +5,5 @@
 
     <include file="migration/fungible-token-schema.changelog-init.xml"/>
     <include file="migration/fungible-token-schema.changelog-1.xml"/>
+    <include file="migration/fungible-token-schema-update-1.xml"/>
 </databaseChangeLog>
