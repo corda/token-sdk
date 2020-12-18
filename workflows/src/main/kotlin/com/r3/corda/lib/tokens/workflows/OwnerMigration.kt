@@ -15,13 +15,8 @@ import net.corda.core.crypto.toStringShort
 import net.corda.core.internal.readFully
 import net.corda.core.serialization.SerializationContext
 import net.corda.core.serialization.deserialize
-import net.corda.core.serialization.internal.SerializationEnvironment
-import net.corda.core.serialization.internal._allEnabledSerializationEnvs
-import net.corda.core.serialization.internal._inheritableContextSerializationEnv
-import net.corda.core.serialization.internal.effectiveSerializationEnv
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.contextLogger
-import net.corda.serialization.internal.AMQP_P2P_CONTEXT
 import net.corda.serialization.internal.AMQP_STORAGE_CONTEXT
 import net.corda.serialization.internal.CordaSerializationMagic
 import net.corda.serialization.internal.SerializationFactoryImpl
