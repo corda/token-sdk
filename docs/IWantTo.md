@@ -164,7 +164,7 @@ There are many other constructor overloads for initiating `IssueTokens` it's wor
 
 _Responder flow:_ `IssueTokensHandler`
 
-_Conidential version:_ `ConfidentialIssueTokens`, _responder_: `ConfidentialIssueTokensHandler`
+_Confidential version:_ `ConfidentialIssueTokens`, _responder_: `ConfidentialIssueTokensHandler`
 
 **Inline**
 
@@ -211,7 +211,7 @@ Call these flows for one `TokenType` at a time. If you need to do multiple insta
 flow, calling `addMoveTokens` for each token.
 As previously confidential versions generate new identities for use in output states.
 
-#### Moving tokens fungible tokens
+#### Moving fungible tokens
 
 This family of flows chooses held amount of given token from vault. If you want to provide other criteria (for example tokens that
 come only from one issuer) use `queryCriteria`. `QueryUtilities` module provides many useful helpers i.e. `tokenAmountWithIssuerCriteria`.
