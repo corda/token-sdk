@@ -1,5 +1,7 @@
 package com.r3.corda.lib.tokens.workflows
 
+import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.tokens.contracts.commands.Create
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
 import com.r3.corda.lib.tokens.testing.states.TestEvolvableTokenType
 import com.r3.corda.lib.tokens.workflows.factories.TestEvolvableTokenTypeFactory
@@ -14,10 +16,17 @@ import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
 import com.r3.corda.lib.tokens.contracts.utilities.withNotary
 import com.r3.corda.lib.tokens.workflows.flows.rpc.UpdateEvolvableToken
 import com.r3.corda.lib.tokens.money.GBP
+import com.r3.corda.lib.tokens.testing.states.FakeEvolvableTokenType
+import com.r3.corda.lib.tokens.workflows.flows.evolvable.CreateEvolvableTokensFlow
+import com.r3.corda.lib.tokens.workflows.flows.evolvable.CreateEvolvableTokensFlowHandler
+import net.corda.core.contracts.*
+import net.corda.core.flows.*
 import kotlin.test.assertFailsWith
 import net.corda.core.identity.Party
-import net.corda.core.flows.NotaryException
-import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.transactions.SignedTransaction
+import net.corda.core.transactions.TransactionBuilder
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.test.fail
 
 class CreateEvolvableTokenTests : JITMockNetworkTests() {
 
@@ -398,5 +407,136 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         val updateTxBResult = bob.startFlow(UpdateEvolvableToken(updatedTokenA, newTokenB))
         val updateTxB = updateTxBResult.getOrThrow()
         assertHasTransaction(updateTxB, network, bob)
+    }
+
+    @Test
+    fun `signing party should be one of the Create command signers`() {
+        val token = factory.withTwoMaintainers()
+
+        bob.registerInitiatedFlow(FakeCreateEvolvableTokenInitiatorWithWrongSigners::class.java, CreateEvolvableTokensFlowHandler::class.java)
+
+        try {
+            alice.transaction { alice.startFlow(FakeCreateEvolvableTokenInitiatorWithWrongSigners(token, bob.legalIdentity(), notaryIdentity)) }.getOrThrow()
+            fail()
+        } catch (ex: FlowException) {
+            assertEquals("Signing party should be one of the Create command signers.", ex.message)
+        }
+    }
+
+    @Test
+    fun `signing party should be one of the token type maintainers`() {
+        val token = factory.withTwoMaintainers()
+
+        bob.registerInitiatedFlow(FakeCreateEvolvableTokenInitiatorWithWrongMaintainers::class.java, CreateEvolvableTokensFlowHandler::class.java)
+
+        try {
+            alice.transaction { alice.startFlow(FakeCreateEvolvableTokenInitiatorWithWrongMaintainers(token, bob.legalIdentity(), notaryIdentity)) }.getOrThrow()
+            fail()
+        } catch (ex: FlowException) {
+            assertEquals("Signing party should be one of the token type maintainers.", ex.message)
+        }
+    }
+
+    @Test
+    fun `signing party should be one of the token type participants`() {
+        val token = factory.withTwoMaintainers()
+
+        bob.registerInitiatedFlow(FakeCreateEvolvableTokenInitiatorWithWrongParticipant::class.java, CreateEvolvableTokensFlowHandler::class.java)
+
+        try {
+            alice.transaction { alice.startFlow(FakeCreateEvolvableTokenInitiatorWithWrongParticipant(token, bob.legalIdentity(), notaryIdentity)) }.getOrThrow()
+            fail()
+        } catch (ex: FlowException) {
+            assertEquals("Signing party should be one of the token type participants.", ex.message)
+        }
+    }
+
+    @Test
+    fun `signing party should call additional transaction check when provided`() {
+        val token = factory.withTwoMaintainers()
+
+        bob.registerInitiatedFlow(FakeCreateEvolvableTokenFlowWrapper::class.java, FakeCreateEvolvableTokenFlowHandlerWrapper::class.java)
+
+        assertEquals(0, FakeCreateEvolvableTokenFlowHandlerWrapper.counter.get())
+
+        alice.transaction { alice.startFlow(FakeCreateEvolvableTokenFlowWrapper(token, bob.legalIdentity(), notaryIdentity)) }.getOrThrow()
+
+        assertEquals(1, FakeCreateEvolvableTokenFlowHandlerWrapper.counter.get())
+    }
+}
+
+abstract class FakeCreateEvolvableTokenInitiator(val token : EvolvableTokenType, val otherParty: Party, val notary: Party) : FlowLogic<Unit>() {
+    @Suspendable
+    override fun call() {
+        val transactionBuilder = TransactionBuilder(notary)
+
+        val participants = getParticipants()
+        transactionBuilder
+            .addOutputState(getOutputState(participants, getMaintainers(participants)))
+        getCommands(participants).forEach { transactionBuilder.addCommand(it.value, it.signers) }
+
+        val ptx: SignedTransaction = serviceHub.signInitialTransaction(transactionBuilder)
+        val otherPartySession = initiateFlow(otherParty)
+
+        otherPartySession.send(CreateEvolvableTokensFlow.Notification(signatureRequired = true))
+        subFlow(CollectSignaturesFlow(
+            partiallySignedTx = ptx,
+            sessionsToCollectFrom = listOf(otherPartySession)
+            ))
+    }
+
+    protected open fun getParticipants() : List<Party> = listOf(ourIdentity, otherParty)
+    protected open fun getMaintainers(participants: List<Party>) = participants
+    protected open fun getOutputState(participants: List<Party>, maintainers: List<Party>) : EvolvableTokenType
+        = FakeEvolvableTokenType(participants = participants, maintainers = maintainers)
+    protected open fun getCommands(participants: List<Party>) : List<CommandWithParties<CommandData>>
+        = listOf(CommandWithParties(participants.map { it.owningKey }, participants, Create()))
+}
+
+@InitiatingFlow
+open class FakeCreateEvolvableTokenInitiatorWithWrongSigners(token : EvolvableTokenType, otherParty: Party, notary: Party) :
+    FakeCreateEvolvableTokenInitiator(token, otherParty, notary) {
+
+    override fun getCommands(participants: List<Party>) : List<CommandWithParties<CommandData>>
+            = listOf(CommandWithParties(listOf(ourIdentity.owningKey), listOf(ourIdentity), Create()),
+        CommandWithParties(listOf(otherParty.owningKey), listOf(otherParty), FakeCommand())
+    )
+
+    class FakeCommand : CommandData
+}
+
+@InitiatingFlow
+open class FakeCreateEvolvableTokenInitiatorWithWrongMaintainers(token : EvolvableTokenType, otherParty: Party, notary: Party) :
+    FakeCreateEvolvableTokenInitiator(token, otherParty, notary) {
+
+    override fun getMaintainers(participants: List<Party>) = listOf(ourIdentity)
+}
+
+@InitiatingFlow
+open class FakeCreateEvolvableTokenInitiatorWithWrongParticipant(token : EvolvableTokenType, otherParty: Party, notary: Party) :
+    FakeCreateEvolvableTokenInitiator(token, otherParty, notary) {
+
+    override fun getParticipants() = listOf(ourIdentity)
+    override fun getCommands(participants: List<Party>) : List<CommandWithParties<CommandData>>
+            = listOf(CommandWithParties(listOf(ourIdentity.owningKey, otherParty.owningKey), listOf(ourIdentity, otherParty), Create()))
+    override fun getMaintainers(participants: List<Party>) = listOf(ourIdentity, otherParty)
+}
+
+
+@InitiatingFlow
+class FakeCreateEvolvableTokenFlowWrapper(token : EvolvableTokenType, otherParty: Party, notary: Party) :
+    FakeCreateEvolvableTokenInitiator(token, otherParty, notary)
+
+@InitiatedBy(FakeCreateEvolvableTokenFlowWrapper::class)
+class FakeCreateEvolvableTokenFlowHandlerWrapper(val session: FlowSession) : FlowLogic<Unit>() {
+    companion object {
+        var counter = AtomicInteger(0)
+    }
+
+    @Suspendable
+    override fun call() {
+        subFlow(CreateEvolvableTokensFlowHandler(session) {
+            counter.incrementAndGet()
+        })
     }
 }

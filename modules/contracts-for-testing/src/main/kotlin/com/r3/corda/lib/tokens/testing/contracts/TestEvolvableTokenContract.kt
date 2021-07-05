@@ -24,3 +24,8 @@ class TestEvolvableTokenContract : EvolvableTokenContract(), Contract {
     }
 
 }
+
+class EmptyTestEvolvableTokenContract : Contract {
+    override fun verify(tx: LedgerTransaction) {
+    }
+}
