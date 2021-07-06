@@ -6,6 +6,7 @@ import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.*
+import com.r3.corda.lib.tokens.integration.workflows.*
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.selection.InsufficientNotLockedBalanceException
@@ -15,22 +16,26 @@ import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.UpdateEvolvableToken
-import com.r3.corda.lib.tokens.workflows.internal.testflows.*
-import com.r3.corda.lib.tokens.workflows.singleOutput
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
 import com.r3.corda.lib.tokens.workflows.utilities.heldTokenAmountCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.heldTokenCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
-import com.r3.corda.lib.tokens.workflows.watchForTransaction
 import net.corda.core.CordaRuntimeException
+import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.Amount
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
+import net.corda.core.internal.concurrent.doneFuture
 import net.corda.core.internal.concurrent.transpose
+import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.messaging.startFlow
 import net.corda.core.messaging.vaultQueryBy
+import net.corda.core.toFuture
+import net.corda.core.transactions.LedgerTransaction
+import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.millis
 import net.corda.core.utilities.seconds
@@ -60,10 +65,11 @@ class TokenDriverTest {
                 portAllocation = incrementalPortAllocation(),
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.integration.workflows"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci")
                 ),
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
         )) {
@@ -96,9 +102,9 @@ class TokenDriverTest {
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.integration.workflows"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci")
                 ),
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
         )) {
@@ -131,9 +137,9 @@ class TokenDriverTest {
                 portAllocation = incrementalPortAllocation(),
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.integration.workflows"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
                         TestCordapp.findCordapp("com.r3.corda.lib.ci")
                 ),
@@ -157,10 +163,10 @@ class TokenDriverTest {
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.integration.workflows"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci")
                 ),
                 // TODO this should be default to 4 in main corda no?
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
@@ -265,10 +271,10 @@ class TokenDriverTest {
                 startNodesInProcess = false,
                 cordappsForAllNodes = listOf(
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.integration.workflows"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci")
                 ),
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList()))
         ) {
@@ -323,9 +329,9 @@ class TokenDriverTest {
                 cordappsForAllNodes = listOf(
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.ci"),
-                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.selection")
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.integration.workflows"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci")
                 ),
                 networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList()))
         ) {
@@ -366,3 +372,22 @@ class TokenDriverTest {
         }
     }
 }
+
+/**
+ * It's internal because it uses deprecated [internalVerifiedTransactionsFeed].
+ */
+fun CordaRPCOps.watchForTransaction(tx: SignedTransaction): CordaFuture<SignedTransaction> {
+    val (snapshot, feed) = internalVerifiedTransactionsFeed()
+    return if (tx in snapshot) {
+        doneFuture(tx)
+    } else {
+        feed.filter { it == tx }.toFuture()
+    }
+}
+
+/** Get single input/output from ledger transaction. */
+inline fun <reified T : ContractState> LedgerTransaction.singleInput() = inputsOfType<T>().single()
+
+inline fun <reified T : ContractState> LedgerTransaction.singleOutput() = outputsOfType<T>().single()
+
+inline fun <reified T : ContractState> SignedTransaction.singleOutput() = tx.outRefsOfType<T>().single()

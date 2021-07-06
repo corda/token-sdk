@@ -1,5 +1,6 @@
 include 'contracts'
 include 'workflows'
+include 'workflows-integration-test'
 include 'modules:contracts-for-testing'
 include 'modules:selection'
 include 'freighter-tests'
