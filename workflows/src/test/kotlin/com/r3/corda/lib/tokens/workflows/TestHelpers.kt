@@ -29,18 +29,6 @@ inline fun <reified T : ContractState> SignedTransaction.singleOutput() = tx.out
 inline fun <reified T : LinearState> StateAndRef<T>.linearId() = state.data.linearId
 
 /**
- * It's internal because it uses deprecated [internalVerifiedTransactionsFeed].
- */
-fun CordaRPCOps.watchForTransaction(tx: SignedTransaction): CordaFuture<SignedTransaction> {
-    val (snapshot, feed) = internalVerifiedTransactionsFeed()
-    return if (tx in snapshot) {
-        doneFuture(tx)
-    } else {
-        feed.filter { it == tx }.toFuture()
-    }
-}
-
-/**
  * Check that each node has recorded the provided transaction. Since Corda is asynchronous, we must wait for the network
  * to stop moving before checking that transactions are recorded.
  *
