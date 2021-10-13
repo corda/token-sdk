@@ -63,7 +63,7 @@ open class FungibleToken @JvmOverloads constructor(
         else -> throw IllegalArgumentException("Unrecognised schema $schema")
     }
 
-    override fun supportedSchemas() = listOf(FungibleTokenSchemaV1)
+    override fun supportedSchemas() : Iterable<MappedSchema> = listOf(FungibleTokenSchemaV1)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
