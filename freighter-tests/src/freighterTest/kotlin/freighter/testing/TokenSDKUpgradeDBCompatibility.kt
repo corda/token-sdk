@@ -10,6 +10,7 @@ import com.stress.flows.CreateNewCIFlow
 import freighter.deployments.DeploymentContext
 import freighter.deployments.NodeBuilder
 import freighter.deployments.SingleNodeDeployment
+import freighter.deployments.UnitOfDeployment.DeploymentVersion
 import freighter.machine.DeploymentMachineProvider
 import freighter.machine.generateRandomString
 import net.corda.core.contracts.Amount
@@ -18,13 +19,14 @@ import net.corda.core.messaging.startFlow
 import net.corda.core.utilities.getOrThrow
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers.*
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
 import utility.getOrThrow
 import java.time.Duration
-import java.util.concurrent.CompletableFuture
 
 class TokenSDKUpgradeDBCompatibility : DockerRemoteMachineBasedTest() {
+	private val testCordaReleaseVersion: String = System.getProperty("test.corda.release.version")
+		?: fail("test.corda.release.version system property missing.")
 
 	//remove the prod key and sign with freighter key
 	val tokensV1Contracts = NodeBuilder.DeployedCordapp.fromGradleArtifact(
@@ -100,7 +102,7 @@ class TokenSDKUpgradeDBCompatibility : DockerRemoteMachineBasedTest() {
 				.withCordapp(modernCiV1)
 				.withCordapp(freighterHelperCordapp)
 				.withDatabase(machineProvider.requestDatabase(db))
-		).withVersion("4.3")
+		).withVersion(DeploymentVersion(testCordaReleaseVersion, false))
 			.deploy(deploymentContext)
 
 		val nodeMachine = deploymentResult.getOrThrow().nodeMachines.single()

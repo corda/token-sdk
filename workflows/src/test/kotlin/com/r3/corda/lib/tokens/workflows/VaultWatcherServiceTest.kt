@@ -39,9 +39,8 @@ import net.corda.testing.node.internal.InternalMockNetwork
 import net.corda.testing.node.internal.InternalMockNodeParameters
 import net.corda.testing.node.internal.startFlow
 import org.hamcrest.CoreMatchers.*
+import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers.greaterThanOrEqualTo
-import org.hamcrest.Matchers.isIn
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
@@ -53,6 +52,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
+import org.hamcrest.Matchers.`in`
 
 class VaultWatcherServiceTest {
     private lateinit var services: MockServices
@@ -80,7 +80,7 @@ class VaultWatcherServiceTest {
         val amountToIssue: Long = 100
         val stateAndRef = createNewFiatCurrencyTokenRef(amountToIssue, owner, notary1, issuer1, GBP, observable, database)
         val selectedTokens = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(5, GBP), selectionId = "abc")
-        Assert.assertThat(selectedTokens, `is`(equalTo(listOf(stateAndRef))))
+        MatcherAssert.assertThat(selectedTokens, `is`(equalTo(listOf(stateAndRef))))
     }
 
     @Test
@@ -95,7 +95,7 @@ class VaultWatcherServiceTest {
         }
 
         val selectedTokens = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(45, GBP), selectionId = "abc")
-        Assert.assertThat(selectedTokens.map { it.state.data.amount.quantity }.sumByLong { it }, `is`(greaterThanOrEqualTo(45L)))
+        MatcherAssert.assertThat(selectedTokens.map { it.state.data.amount.quantity }.sumByLong { it }, `is`(greaterThanOrEqualTo(45L)))
     }
 
     @Test(expected = InsufficientBalanceException::class)
@@ -110,7 +110,7 @@ class VaultWatcherServiceTest {
         val stateAndRef = createNewFiatCurrencyTokenRef(amountToIssue, owner, notary1, issuer1, GBP, observable, database)
 
         val selectedTokens = vaultWatcherService.selectTokens(Holder.TokenOnly(), Amount(5, IssuedTokenType(issuer1, GBP)), selectionId = "abc")
-        Assert.assertThat(selectedTokens, `is`(equalTo(listOf<StateAndRef<FungibleToken>>(stateAndRef))))
+        MatcherAssert.assertThat(selectedTokens, `is`(equalTo(listOf(stateAndRef))))
         vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(5, IssuedTokenType(issuer1, GBP)), selectionId = "abc")
     }
 
@@ -133,13 +133,13 @@ class VaultWatcherServiceTest {
             it.state.notary == notary1
         }, selectionId = "abc")
 
-        Assert.assertThat(selectedTokens, `is`(equalTo(listOf<StateAndRef<FungibleToken>>(stateAndRef))))
+        MatcherAssert.assertThat(selectedTokens, `is`(equalTo(listOf(stateAndRef))))
 
         val notary2Selected = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(amountToIssue * 2, GBP), {
             it.state.notary == notary2
         }, selectionId = "abc")
 
-        Assert.assertThat(notary2Selected, `is`(equalTo(notary2Selected.filter { it.state.notary == notary2 })))
+        MatcherAssert.assertThat(notary2Selected, `is`(equalTo(notary2Selected.filter { it.state.notary == notary2 })))
     }
 
     @Test
@@ -165,7 +165,7 @@ class VaultWatcherServiceTest {
 
         val selectedTokensAfterSpend = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(10000000000, GBP), allowShortfall = true, selectionId = "abc")
 
-        Assert.assertThat(spentInputs, everyItem(not(isIn(selectedTokensAfterSpend))))
+        MatcherAssert.assertThat(spentInputs, everyItem(`is`(not(`in`(selectedTokensAfterSpend)))))
     }
 
     @Test
@@ -185,7 +185,7 @@ class VaultWatcherServiceTest {
 
         val selectedTokensAfterSpend = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(10000000000, GBP), allowShortfall = true, selectionId = "abc")
 
-        Assert.assertThat(selectedTokens, everyItem(not(isIn(selectedTokensAfterSpend))))
+        MatcherAssert.assertThat(selectedTokens, everyItem(`is`(not(`in`(selectedTokensAfterSpend)))))
     }
 
     @Test
@@ -239,7 +239,7 @@ class VaultWatcherServiceTest {
             val account = accountsAndKeyEntry.key
             val selectedTokens = vaultWatcherService.selectTokens(Holder.MappedIdentity(account), Amount(10000000000, GBP), allowShortfall = true, selectionId = "CHEESEY_BITES").sortedBy { it.toString() }
             val expectedTokens = accountToIssuedTokensMap[account]!!.sortedBy { it.toString() }
-            Assert.assertThat(selectedTokens, `is`(equalTo(expectedTokens)))
+            MatcherAssert.assertThat(selectedTokens, `is`(equalTo(expectedTokens)))
             expectedTokens.forEach {
                 vaultWatcherService.unlockToken(it, "CHEESEY_BITES")
             }
@@ -250,7 +250,7 @@ class VaultWatcherServiceTest {
             val key = keyToTokenEntry.key
             val selectedTokens = vaultWatcherService.selectTokens(Holder.KeyIdentity(key), Amount(10000000000, GBP), allowShortfall = true, selectionId = "CHEESEY_BITES").sortedBy { it.toString() }
             val expectedTokens = listOf(keyToTokenEntry.value)
-            Assert.assertThat(selectedTokens, `is`(equalTo(expectedTokens)))
+            MatcherAssert.assertThat(selectedTokens, `is`(equalTo(expectedTokens)))
         }
     }
 
@@ -398,7 +398,7 @@ class VaultWatcherServiceTest {
         gbpSpendFuture2.getOrThrow()
 
 
-        Assert.assertThat(spendTracker.filter { it.value.get() > 1 }.toList(), `is`(equalTo(emptyList())))
+        MatcherAssert.assertThat(spendTracker.filter { it.value.get() > 1 }.toList(), `is`(equalTo(emptyList())))
     }
 
     @Test
@@ -427,7 +427,7 @@ class VaultWatcherServiceTest {
             mockNet.runNetwork()
             val selectedToken = tokensFuture.getOrThrow().single()
 
-            Assert.assertThat(issuedStateRef, `is`(equalTo(selectedToken)))
+            MatcherAssert.assertThat(issuedStateRef, `is`(equalTo(selectedToken)))
         }finally {
             mockNet.stopNodes()
         }

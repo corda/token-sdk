@@ -1,3 +1,20 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+
+    plugins {
+        id 'org.jetbrains.kotlin.jvm' version kotlin_version
+        id 'org.jetbrains.dokka' version dokka_version
+        id 'org.jetbrains.kotlin.plugin.jpa' version kotlin_version
+        id 'org.jetbrains.kotlin.plugin.allopen' version kotlin_version
+        id 'net.corda.plugins.cordformation' version corda_gradle_plugins_version
+        id 'net.corda.plugins.cordapp' version corda_gradle_plugins_version
+        id 'net.corda.plugins.quasar-utils' version corda_gradle_plugins_version
+        id 'com.jfrog.artifactory' version artifactory_version
+    }
+}
+
 include 'contracts'
 include 'workflows'
 include 'modules:contracts-for-testing'
