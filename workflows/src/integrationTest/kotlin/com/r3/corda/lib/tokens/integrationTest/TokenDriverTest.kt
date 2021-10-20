@@ -48,7 +48,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.equalTo
-import org.junit.Assert
+import org.hamcrest.MatcherAssert
 import org.junit.Test
 import kotlin.test.assertFailsWith
 
@@ -82,8 +82,8 @@ class TokenDriverTest {
             issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(tokenToIssueToIssuer, tokenToIssueToOther), emptyList<Party>()).returnValue.getOrThrow()
             val queryResult = issuer.rpc.vaultQueryByCriteria(heldTokenAmountCriteria(customToken, issuerParty), FungibleToken::class.java)
 
-            Assert.assertThat(queryResult.states.size, `is`(1))
-            Assert.assertThat(queryResult.states.first().state.data.holder, `is`(equalTo((issuerParty as AbstractParty))))
+            MatcherAssert.assertThat(queryResult.states.size, `is`(1))
+            MatcherAssert.assertThat(queryResult.states.first().state.data.holder, `is`(equalTo((issuerParty as AbstractParty))))
 
         }
     }
@@ -119,8 +119,8 @@ class TokenDriverTest {
 
             val queryResult = issuer.rpc.vaultQueryByCriteria(heldTokenAmountCriteria(customToken, newCi1), FungibleToken::class.java)
 
-            Assert.assertThat(queryResult.states.size, `is`(1))
-            Assert.assertThat(queryResult.states.first().state.data.holder, `is`(equalTo((newCi1 as AbstractParty))))
+            MatcherAssert.assertThat(queryResult.states.size, `is`(1))
+            MatcherAssert.assertThat(queryResult.states.first().state.data.holder, `is`(equalTo((newCi1 as AbstractParty))))
 
         }
     }

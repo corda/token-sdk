@@ -1,11 +1,10 @@
-apply plugin: 'kotlin-jpa'
-apply plugin: 'net.corda.plugins.quasar-utils'
-apply plugin: 'net.corda.plugins.cordapp'
-
-
-evaluationDependsOn(":modules:selection")
-
-def selectionProject = project(":modules:selection")
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+    id 'org.jetbrains.kotlin.plugin.jpa'
+    id 'org.jetbrains.kotlin.plugin.allopen'
+    id 'net.corda.plugins.quasar-utils'
+    id 'net.corda.plugins.cordapp'
+}
 
 cordapp {
     targetPlatformVersion 5
@@ -42,12 +41,13 @@ sourceSets {
 }
 
 configurations {
+    compileClasspath {
+        attributes { attr ->
+            attr.attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements, LibraryElements.JAR))
+        }
+    }
     integrationTestCompile.extendsFrom testCompile
     integrationTestRuntime.extendsFrom testRuntime
-}
-
-compileKotlin{
-    dependsOn (selectionProject.jar)
 }
 
 dependencies {
@@ -55,13 +55,8 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     // Corda dependencies.
-    cordaCompile("$corda_release_group:corda-core:$corda_release_version") {
-        changing = true
-    }
-
-    cordaCompile("$corda_release_group:corda-node-api:$corda_release_version") {
-        changing = true
-    }
+    cordaCompile "$corda_release_group:corda-core:$corda_release_version"
+    cordaCompile "$corda_release_group:corda-node-api:$corda_release_version"
 
     // Logging.
     testCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
@@ -74,7 +69,7 @@ dependencies {
     // CorDapp dependencies.
     cordapp project(":contracts")
 
-    compile(files(selectionProject.jar.archivePath))
+    compile project(':modules:selection')
 
     //CI for confidential tokens
     cordapp "$confidential_id_release_group:ci-workflows:$confidential_id_release_version"
@@ -83,15 +78,15 @@ dependencies {
     compileOnly project(":modules:contracts-for-testing")
     testCompile project(":modules:contracts-for-testing")
 
-    compileOnly("org.postgresql:postgresql:42.2.8")
+    compileOnly "org.postgresql:postgresql:42.2.8"
 
 }
 
-task integrationTest(type: Test, dependsOn: []) {
+tasks.register('integrationTest', Test) {
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
 }
 
-jar {
-    baseName "tokens-workflows"
+tasks.named('jar', Jar) {
+    archiveBaseName = 'tokens-workflows'
 }

@@ -10,8 +10,12 @@ import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.money.BTC
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
-import com.r3.corda.lib.tokens.testing.states.Appartment
-import com.r3.corda.lib.tokens.workflows.flows.rpc.*
+import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialIssueTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialMoveFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.ConfidentialMoveNonFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.RedeemFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.RedeemNonFungibleTokens
 import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
@@ -81,7 +85,7 @@ class RedeemTokenTestsFlow{
         network.runNetwork()
 
         // Checking if the tokens are issued to nodeA.
-        assertThat(nodeA.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty()
+        assertThat(nodeA.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty
 
         // Redeeming the tokens.
         val amountToRedeem = 10.GBP
@@ -114,7 +118,7 @@ class RedeemTokenTestsFlow{
         network.runNetwork()
 
         // Checking if the tokens are issued to nodeA.
-        assertThat(nodeA.services.vaultService.heldTokensByToken(myTokenType).states).isNotEmpty()
+        assertThat(nodeA.services.vaultService.heldTokensByToken(myTokenType).states).isNotEmpty
 
         // Redeeming the tokens.
         nodeA.startFlow(RedeemNonFungibleTokens(myTokenType, issuer))
@@ -144,7 +148,7 @@ class RedeemTokenTestsFlow{
         network.runNetwork()
 
         // Checking if the tokens are issued to nodeA.
-        assertThat(nodeA.services.vaultService.heldTokensByToken(myTokenType).states).isNotEmpty()
+        assertThat(nodeA.services.vaultService.heldTokensByToken(myTokenType).states).isNotEmpty
 
         // Redeeming the tokens.
         nodeA.startFlow(RedeemNonFungibleTokens(myTokenType, issuer))
@@ -164,7 +168,7 @@ class RedeemTokenTestsFlow{
         val issuer: Party = nodeI.legalIdentity()
         val holder: Party = nodeA.legalIdentity()
 
-        val myTokenType: TokenType = TokenType(tokenIdentifier = "TEST", fractionDigits = 2)
+        val myTokenType = TokenType(tokenIdentifier = "TEST", fractionDigits = 2)
         // Creating an instance of IssuedTokenType with GBP token type and nodeI as issuer.
         val myIssuedTokenType: IssuedTokenType = myTokenType issuedBy issuer
 
@@ -179,7 +183,7 @@ class RedeemTokenTestsFlow{
         network.runNetwork()
 
         // Checking if the tokens are issued to nodeA.
-        assertThat(nodeA.services.vaultService.tokenAmountsByToken(myTokenType).states).isNotEmpty()
+        assertThat(nodeA.services.vaultService.tokenAmountsByToken(myTokenType).states).isNotEmpty
 
         // Redeeming the tokens.
         nodeA.startFlow(RedeemFungibleTokens(amount = 10 of myTokenType, issuer = issuer))
@@ -195,7 +199,7 @@ class RedeemTokenTestsFlow{
         val issuer: Party = nodeI.legalIdentity()
         val holder: Party = nodeA.legalIdentity()
 
-        val myTokenType: TokenType = TokenType(tokenIdentifier = "TEST", fractionDigits = 2)
+        val myTokenType = TokenType(tokenIdentifier = "TEST", fractionDigits = 2)
         // Creating an instance of IssuedTokenType with myTokenType token type and nodeI as issuer.
         val myIssuedTokenType: IssuedTokenType = myTokenType issuedBy issuer
 
@@ -215,8 +219,8 @@ class RedeemTokenTestsFlow{
         nodeI.startFlow(IssueTokens(listOf(fungibleToken, btcFungibleToken)))
         network.runNetwork()
         // Checking if the tokens are issued to nodeA.
-        assertThat(nodeA.services.vaultService.tokenAmountsByToken(myTokenType).states).isNotEmpty()
-        assertThat(nodeA.services.vaultService.tokenAmountsByToken(BTC).states).isNotEmpty()
+        assertThat(nodeA.services.vaultService.tokenAmountsByToken(myTokenType).states).isNotEmpty
+        assertThat(nodeA.services.vaultService.tokenAmountsByToken(BTC).states).isNotEmpty
         // Redeeming the myTokenType tokens.
         nodeA.startFlow(RedeemFungibleTokens(amount = 10 of myTokenType, issuer = issuer))
         network.runNetwork()
@@ -249,8 +253,8 @@ class RedeemTokenTestsFlow{
         network.runNetwork()
 
         // Checking if the tokens are issued to nodeA.
-        assertThat(nodeA.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty()
-        assertThat(nodeB.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty()
+        assertThat(nodeA.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty
+        assertThat(nodeB.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty
 
         // Redeeming the tokens.
         val amountToRedeem = 10.GBP
@@ -281,7 +285,7 @@ class RedeemTokenTestsFlow{
         network.runNetwork()
 
         // Checking if the tokens are issued to nodeA.
-        assertThat(nodeA.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty()
+        assertThat(nodeA.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty
         assertThat(nodeI.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
 
         // Redeeming the tokens.
@@ -309,8 +313,8 @@ class RedeemTokenTestsFlow{
         network.runNetwork()
 
         // Checking if the tokens are issued to nodeA.
-        assertThat(nodeA.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty()
-        assertThat(nodeB.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty()
+        assertThat(nodeA.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty
+        assertThat(nodeB.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty
         assertNotEquals(nodeA.services.vaultService.tokenAmountsByToken(GBP).states.single().state.data.holder, nodeA.legalIdentity())
 
         // Redeeming the tokens.
@@ -340,14 +344,14 @@ class RedeemTokenTestsFlow{
         network.runNetwork()
 
         // Checking if the tokens are issued to nodeA.
-        assertThat(nodeA.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty()
+        assertThat(nodeA.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty
 
         // Moving tokens to holder2.
         nodeA.startFlow(ConfidentialMoveFungibleTokens(PartyAndAmount(holder2,10.GBP), listOf(issuer)))
         network.runNetwork()
 
         // Checking if the tokens are moved to nodeB.
-        assertThat(nodeB.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty()
+        assertThat(nodeB.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty
         assertNotEquals(nodeB.services.vaultService.tokenAmountsByToken(GBP).states.single().state.data.holder, nodeB.legalIdentity())
         assertThat(nodeA.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
 
@@ -377,7 +381,7 @@ class RedeemTokenTestsFlow{
         network.runNetwork()
 
         // Checking if the tokens are issued to nodeA.
-        assertThat(nodeA.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty()
+        assertThat(nodeA.services.vaultService.tokenAmountsByToken(GBP).states).isNotEmpty
 
         // Redeeming the tokens.
         val amountToRedeem = 40.GBP
@@ -408,7 +412,7 @@ class RedeemTokenTestsFlow{
         network.runNetwork()
 
         // Checking if the tokens are issued to nodeA.
-        assertThat(nodeA.services.vaultService.heldTokensByToken(myTokenType).states).isNotEmpty()
+        assertThat(nodeA.services.vaultService.heldTokensByToken(myTokenType).states).isNotEmpty
 
         // Redeeming the tokens.
         nodeA.startFlow(RedeemNonFungibleTokens(myTokenType, issuer))
@@ -439,7 +443,7 @@ class RedeemTokenTestsFlow{
         network.runNetwork()
 
         // Checking if the token is issued to nodeA.
-        assertThat(nodeA.services.vaultService.heldTokensByToken(myTokenType).states).isNotEmpty()
+        assertThat(nodeA.services.vaultService.heldTokensByToken(myTokenType).states).isNotEmpty
 
         // Moving tokens to holder2.
         nodeA.startFlow(ConfidentialMoveNonFungibleTokens(PartyAndToken(holder2,myTokenType), listOf(issuer)))
@@ -447,7 +451,7 @@ class RedeemTokenTestsFlow{
 
         // Checking if the token is moved to nodeB.
         assertThat(nodeA.services.vaultService.heldTokensByToken(myTokenType).states).isEmpty()
-        assertThat(nodeB.services.vaultService.heldTokensByToken(myTokenType).states).isNotEmpty()
+        assertThat(nodeB.services.vaultService.heldTokensByToken(myTokenType).states).isNotEmpty
 
         // Redeeming the tokens.
         nodeB.startFlow(RedeemNonFungibleTokens(myTokenType, issuer))

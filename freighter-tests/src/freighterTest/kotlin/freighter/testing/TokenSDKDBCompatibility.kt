@@ -3,35 +3,24 @@ package freighter.testing
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.workflows.OwnerMigration
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import freighter.deployments.DeploymentContext
 import freighter.deployments.NodeBuilder
 import freighter.deployments.SingleNodeDeployment
+import freighter.deployments.UnitOfDeployment.DeploymentVersion
 import freighter.machine.DeploymentMachineProvider
 import freighter.machine.generateRandomString
-import liquibase.database.DatabaseConnection
-import liquibase.database.core.PostgresDatabase
 import net.corda.core.contracts.Amount
 import net.corda.core.messaging.startFlow
 import net.corda.core.utilities.getOrThrow
-import net.corda.nodeapi.internal.persistence.DatabaseConfig
-import org.hamcrest.MatcherAssert
-import org.hamcrest.core.Is
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import utility.LoggingUtils
-import utility.Retry
-import utility.getArtifactAndDependencies
+import org.junit.jupiter.api.fail
 import utility.getOrThrow
-import java.net.URLClassLoader
-import java.sql.Connection
-import java.sql.Driver
 import java.time.Duration
-import java.util.*
-import java.util.concurrent.CompletableFuture
 
 class TokenSDKDBCompatibility : DockerRemoteMachineBasedTest() {
+    private val testCordaReleaseVersion: String = System.getProperty("test.corda.release.version")
+        ?: fail("test.corda.release.version system property missing.")
 
     val tokenContracts =
             NodeBuilder.DeployedCordapp.fromClassPath("tokens-contracts")
@@ -90,7 +79,7 @@ class TokenSDKDBCompatibility : DockerRemoteMachineBasedTest() {
                         .withCordapp(tokenSelection)
                         .withCordapp(modernCiV1)
                         .withDatabase(machineProvider.requestDatabase(db))
-        ).withVersion("4.3")
+        ).withVersion(DeploymentVersion(testCordaReleaseVersion, false))
                 .deploy(deploymentContext)
 
         val nodeMachine = deploymentResult.getOrThrow().nodeMachines.single()
@@ -110,6 +99,4 @@ class TokenSDKDBCompatibility : DockerRemoteMachineBasedTest() {
         }
         println("Successfully issued tokens: ${issueTx.coreTransaction.outputs}")
     }
-
 }
-
