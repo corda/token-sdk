@@ -19,6 +19,11 @@ internal fun sortByStateRefAscending(): Sort {
     return Sort(setOf(Sort.SortColumn(sortAttribute, Sort.Direction.ASC)))
 }
 
+internal fun sortByTimeStampAscending(): Sort {
+    val sortAttribute = SortAttribute.Standard(Sort.VaultStateAttribute.RECORDED_TIME)
+    return Sort(setOf(Sort.SortColumn(sortAttribute, Sort.Direction.ASC)))
+}
+
 // Returns all held token amounts of a specified token with given issuer.
 // We need to discriminate on the token type as well as the symbol as different tokens might use the same symbols.
 @Suspendable
