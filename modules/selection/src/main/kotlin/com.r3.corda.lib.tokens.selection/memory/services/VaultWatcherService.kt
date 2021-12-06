@@ -42,7 +42,7 @@ const val PLACE_HOLDER: String = "THIS_IS_A_PLACE_HOLDER"
 @CordaService
 class VaultWatcherService(
 	private val tokenObserver: TokenObserver,
-	private val providedConfig: InMemorySelectionConfig
+	val providedConfig: InMemorySelectionConfig
 ) : SingletonSerializeAsToken() {
 
 	private val __backingMap: ConcurrentMap<StateAndRef<FungibleToken>, String> = ConcurrentHashMap()
@@ -84,7 +84,7 @@ class VaultWatcherService(
 		val LOG = contextLogger()
 
 		private fun getObservableFromAppServiceHub(appServiceHub: AppServiceHub): TokenObserver {
-			val updaterThread = Executors.newSingleThreadScheduledExecutor()
+			val loadingThread = Executors.newSingleThreadScheduledExecutor()
 			val config = appServiceHub.cordappProvider.getAppContext().config
 			val configOptions: InMemorySelectionConfig = InMemorySelectionConfig.parse(config)
 
@@ -117,7 +117,7 @@ class VaultWatcherService(
 
 					val scanResultFuture = CompletableFuture.supplyAsync(Supplier {
 						classGraph.scan()
-					}, updaterThread)
+					}, loadingThread)
 
 					scanResultFuture.thenApplyAsync(Function<ScanResult, Unit> { scanResult ->
 						val subclasses : Set<Class<out FungibleToken>> = scanResult.getSubclasses(FungibleToken::class.java.canonicalName)
@@ -126,7 +126,7 @@ class VaultWatcherService(
 
 						val enrichedClasses = (subclasses - setOf(FungibleToken::class.java))
 						LOG.info("Enriching token query with types: $enrichedClasses")
-						updaterThread.submit {
+						loadingThread.submit {
 							LOG.info("Querying for tokens of types: $subclasses")
 							try {
 								var shouldLoop = true
@@ -141,13 +141,18 @@ class VaultWatcherService(
 									shouldLoop = newlyLoadedStates.isNotEmpty()
 									LOG.debug("shouldLoop=${shouldLoop}")
 									currentPage++
+
+									if (configOptions.sleep > 0){
+										Thread.sleep(configOptions.sleep.toLong() * 1000)
+									}
+
 								}
 								LOG.info("finished token loading")
 							} catch (t: Throwable) {
 								LOG.error("Token Loading Failed due to: ", t)
 							}
 						}
-					}, updaterThread)
+					}, loadingThread)
 				}
 			}
 

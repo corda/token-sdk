@@ -16,7 +16,8 @@ data class InMemorySelectionConfig @JvmOverloads constructor(
     val enabled: Boolean,
     val indexingStrategies: List<VaultWatcherService.IndexingType>,
     val cacheSize: Int = CACHE_SIZE_DEFAULT,
-    val pageSize: Int = 1000
+    val pageSize: Int = 1000,
+	val sleep: Int = 0
 ) : StateSelectionConfig {
 	companion object {
 		private val logger = LoggerFactory.getLogger("inMemoryConfigSelectionLogger")
@@ -31,7 +32,8 @@ data class InMemorySelectionConfig @JvmOverloads constructor(
 			}
 			val cacheSize = config.getIntOrNull("stateSelection.inMemory.cacheSize")
 				?: CACHE_SIZE_DEFAULT
-            val pageSize: Int = config.getIntOrNull("stateSelection.inMemory.cacheSize")?: PAGE_SIZE_DEFAULT
+            val pageSize: Int = config.getIntOrNull("stateSelection.inMemory.pageSize")?: PAGE_SIZE_DEFAULT
+            val loadingSleep: Int = config.getIntOrNull("stateSelection.inMemory.loadingSleepSeconds")?: 0
 			val indexingType = try {
 				(config.get("stateSelection.inMemory.indexingStrategies") as List<Any>).map { VaultWatcherService.IndexingType.valueOf(it.toString()) }
 			} catch (e: CordappConfigException) {
@@ -42,7 +44,7 @@ data class InMemorySelectionConfig @JvmOverloads constructor(
 				emptyList<VaultWatcherService.IndexingType>()
 			}
 			logger.info("Found in memory token selection configuration with values indexing strategy: $indexingType, cacheSize: $cacheSize")
-			return InMemorySelectionConfig(enabled, indexingType, cacheSize, pageSize)
+			return InMemorySelectionConfig(enabled, indexingType, cacheSize, pageSize, loadingSleep)
 		}
 
 		fun defaultConfig(): InMemorySelectionConfig {

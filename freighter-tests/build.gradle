@@ -41,6 +41,7 @@ dependencies {
 
     freighterTestCompile project(":contracts")
     freighterTestCompile project(":workflows")
+    freighterTestCompile project(":workflows-integration-test")
 }
 
 
