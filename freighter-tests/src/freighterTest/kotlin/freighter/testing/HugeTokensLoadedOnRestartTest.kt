@@ -107,15 +107,16 @@ class HugeTokensLoadedOnRestartTest : DockerRemoteMachineBasedTest() {
 
 		val issuedNumber = AtomicLong(0)
 
-		val numberIssued = StreamSupport.stream((0..9999).chunked(1000).spliterator(), true).map { toIssue ->
-			repeat(toIssue.size) {
-				nodeMachine1.rpc {
+		val numberIssued = StreamSupport.stream((0..4999).chunked(250).spliterator(), true).map { toIssue ->
+			nodeMachine1.rpc {
+				repeat(toIssue.size) {
 					startFlow(
 						::IssueTokens,
 						tokenToIssue, listOf()
 					).returnValue.getOrThrow(Duration.ofMinutes(1))
+					println("[${Thread.currentThread().name}] Total number issued: ${issuedNumber.addAndGet(tokenToIssue.size * 1L)}")
 				}
-				println("Total number issued: ${ issuedNumber.addAndGet(tokenToIssue.size * 1L) }")
+
 			}
 
 			toIssue.size
@@ -132,8 +133,8 @@ class HugeTokensLoadedOnRestartTest : DockerRemoteMachineBasedTest() {
 					tokenType
 				).returnValue.getOrThrow(Duration.ofMinutes(1))
 			}
-			println(tokenValueLoadedInCache)
-			Thread.sleep(1000)
+			println("TOTAL TOKEN VALUE IN CACHE: $tokenValueLoadedInCache")
+			Thread.sleep(20000)
 		}
 
 	}

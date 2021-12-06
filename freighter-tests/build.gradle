@@ -28,6 +28,11 @@ task freighterTest(type: Test, dependsOn: [project(":workflows").jar]) {
         includeTags "DOCKER"
         excludeTags "AZURE", "FULL_LINUX_KERNEL", "ORACLE"
     }
+
+    testLogging {
+        showStandardStreams = true
+    }
+
 }
 
 configurations {
