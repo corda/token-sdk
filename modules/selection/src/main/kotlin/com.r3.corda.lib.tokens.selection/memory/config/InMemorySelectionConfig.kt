@@ -3,6 +3,7 @@ package com.r3.corda.lib.tokens.selection.memory.config
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.selection.api.StateSelectionConfig
 import com.r3.corda.lib.tokens.selection.memory.selector.LocalTokenSelector
+import com.r3.corda.lib.tokens.selection.memory.services.IndexingType
 import com.r3.corda.lib.tokens.selection.memory.services.VaultWatcherService
 import net.corda.core.cordapp.CordappConfig
 import net.corda.core.cordapp.CordappConfigException
@@ -13,12 +14,12 @@ const val CACHE_SIZE_DEFAULT = 1024
 const val PAGE_SIZE_DEFAULT = 1024
 
 data class InMemorySelectionConfig @JvmOverloads constructor(
-    val enabled: Boolean,
-    val indexingStrategies: List<VaultWatcherService.IndexingType>,
-    val cacheSize: Int = CACHE_SIZE_DEFAULT,
-    val pageSize: Int = 1000,
-	val sleep: Int = 0,
-	val loadingThreads: Int = 4
+        val enabled: Boolean,
+        val indexingStrategies: List<IndexingType>,
+        val cacheSize: Int = CACHE_SIZE_DEFAULT,
+        val pageSize: Int = 1000,
+        val sleep: Int = 0,
+        val loadingThreads: Int = 4
 ) : StateSelectionConfig {
 	companion object {
 		private val logger = LoggerFactory.getLogger("inMemoryConfigSelectionLogger")
@@ -37,13 +38,13 @@ data class InMemorySelectionConfig @JvmOverloads constructor(
             val loadingSleep: Int = config.getIntOrNull("stateSelection.inMemory.loadingSleepSeconds")?: 0
             val loadingThreads: Int = config.getIntOrNull("stateSelection.inMemory.loadingThreads")?: 4
 			val indexingType = try {
-				(config.get("stateSelection.inMemory.indexingStrategies") as List<Any>).map { VaultWatcherService.IndexingType.valueOf(it.toString()) }
+				(config.get("stateSelection.inMemory.indexingStrategies") as List<Any>).map { IndexingType.valueOf(it.toString()) }
 			} catch (e: CordappConfigException) {
 				logger.warn("No indexing method specified. Indexes will be created at run-time for each invocation of selectTokens")
-				emptyList<VaultWatcherService.IndexingType>()
+				emptyList<IndexingType>()
 			} catch (e: ClassCastException) {
 				logger.warn("No indexing method specified. Indexes will be created at run-time for each invocation of selectTokens")
-				emptyList<VaultWatcherService.IndexingType>()
+				emptyList<IndexingType>()
 			}
 			logger.info("Found in memory token selection configuration with values indexing strategy: $indexingType, cacheSize: $cacheSize")
 			return InMemorySelectionConfig(enabled, indexingType, cacheSize, pageSize, loadingSleep, loadingThreads)

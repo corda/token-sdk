@@ -8,6 +8,7 @@ import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelectio
 import com.r3.corda.lib.tokens.selection.memory.config.CACHE_SIZE_DEFAULT
 import com.r3.corda.lib.tokens.selection.memory.config.InMemorySelectionConfig
 import com.r3.corda.lib.tokens.selection.memory.selector.LocalTokenSelector
+import com.r3.corda.lib.tokens.selection.memory.services.IndexingType
 import com.r3.corda.lib.tokens.selection.memory.services.VaultWatcherService
 import com.typesafe.config.ConfigFactory
 import net.corda.core.identity.CordaX500Name
@@ -58,14 +59,14 @@ class ConfigSelectionTest {
         val config = ConfigFactory.parseString("stateSelection {\n" +
                 "inMemory {\n" +
                 "cacheSize: 9000\n" +
-                "indexingStrategies: [${VaultWatcherService.IndexingType.PUBLIC_KEY}]\n" +
+                "indexingStrategies: [${IndexingType.PUBLIC_KEY}]\n" +
                 "}\n" +
                 "}")
         val cordappConfig = TypesafeCordappConfig(config)
 
         val inMemoryConfig = InMemorySelectionConfig.parse(cordappConfig)
         assertThat(inMemoryConfig.cacheSize).isEqualTo(9000)
-        assertThat(inMemoryConfig.indexingStrategies).isEqualTo(listOf(VaultWatcherService.IndexingType.PUBLIC_KEY))
+        assertThat(inMemoryConfig.indexingStrategies).isEqualTo(listOf(IndexingType.PUBLIC_KEY))
 
         val selection = ConfigSelection.getPreferredSelection(services, cordappConfig)
         assertThat(selection).isInstanceOf(LocalTokenSelector::class.java)
@@ -76,13 +77,13 @@ class ConfigSelectionTest {
         val config = ConfigFactory.parseString("stateSelection {\n" +
                 "inMemory {\n" +
                 "cacheSize: 9000\n" +
-                "indexingStrategies: [\"${VaultWatcherService.IndexingType.EXTERNAL_ID}\", \"${VaultWatcherService.IndexingType.PUBLIC_KEY}\"]\n" +
+                "indexingStrategies: [\"${IndexingType.EXTERNAL_ID}\", \"${IndexingType.PUBLIC_KEY}\"]\n" +
                 "}\n" +
                 "}")
         val cordappConfig = TypesafeCordappConfig(config)
         val inMemoryConfig = InMemorySelectionConfig.parse(cordappConfig)
         assertThat(inMemoryConfig.cacheSize).isEqualTo(9000)
-        assertThat(inMemoryConfig.indexingStrategies).isEqualTo(listOf(VaultWatcherService.IndexingType.EXTERNAL_ID, VaultWatcherService.IndexingType.PUBLIC_KEY))
+        assertThat(inMemoryConfig.indexingStrategies).isEqualTo(listOf(IndexingType.EXTERNAL_ID, IndexingType.PUBLIC_KEY))
     }
 
     @Test

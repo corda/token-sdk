@@ -35,7 +35,6 @@ import net.corda.core.utilities.unwrap
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 import java.util.*
-import javax.swing.plaf.nimbus.State
 
 // This is very simple test flow for DvP.
 @CordaSerializable
