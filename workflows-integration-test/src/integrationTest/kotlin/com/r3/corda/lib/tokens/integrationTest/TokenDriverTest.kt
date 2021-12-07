@@ -292,11 +292,11 @@ class TokenDriverTest {
                     listOf(50.USD issuedBy nodeParty heldBy nodeParty),
                     emptyList<Party>()
             ).returnValue.getOrThrow()
-            // Run select and lock tokens flow with 5 seconds sleep in it.
+            // Run select and lock tokens flow
             node.rpc.startFlowDynamic(
                     SelectAndLockFlow::class.java,
                     50.GBP,
-                    5.seconds
+                    50.seconds
             )
             // Stop node
             (node as OutOfProcess).process.destroyForcibly()
@@ -305,6 +305,8 @@ class TokenDriverTest {
             // Restart the node
             val restartedNode = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
             // Try to spend same states, they should be locked after restart, so we expect insufficient not locked balance exception to be thrown.
+            Thread.sleep(15000) // because token loading is now async, we must wait a bit of time before we can attempt to select.
+
             assertFailsWith<InsufficientNotLockedBalanceException> {
                 restartedNode.rpc.startFlowDynamic(
                     SelectAndLockFlow::class.java,

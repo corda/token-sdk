@@ -15,6 +15,7 @@ import freighter.machine.generateRandomString
 import net.corda.core.contracts.Amount
 import net.corda.core.messaging.startFlow
 import net.corda.core.utilities.getOrThrow
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import utility.getOrThrow
 import java.time.Duration
@@ -25,6 +26,10 @@ import java.util.stream.StreamSupport
 import kotlin.concurrent.withLock
 import kotlin.streams.toList
 
+@Tag("LARGE_TEST")
+annotation class LargeTest
+
+@LargeTest
 class HugeTokensLoadedOnRestartTest : DockerRemoteMachineBasedTest() {
 
     val loadingThreads = 8
