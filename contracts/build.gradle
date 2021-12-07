@@ -47,7 +47,14 @@ cordapp {
         versionId 2
     }
     signing {
-        enabled false
+        enabled true
+        options {
+            keystore "./signing-infra/keyStore.jks"
+            alias "cordapp_signing"
+            storepass "monkey"
+            keypass "monkey"
+            storetype "PKCS12"
+        }
     }
 }
 
