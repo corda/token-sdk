@@ -136,7 +136,7 @@ class HugeTokensLoadedOnRestartTest : DockerRemoteMachineBasedTest() {
             }
         }
 
-        while (amountLoaded != (issuedTotal.toLong() + 500)) {
+        while (amountLoaded != (issuedTotal.toLong())) {
             nodeMachine1.rpc {
                 amountLoaded = startFlow(
                         ::LockEverythingGetValue,
