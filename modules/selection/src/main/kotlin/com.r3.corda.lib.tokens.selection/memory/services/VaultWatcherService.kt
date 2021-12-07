@@ -28,6 +28,8 @@ import net.corda.core.utilities.contextLogger
 import rx.Observable
 import java.time.Duration
 import java.util.concurrent.*
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.function.Function
@@ -84,7 +86,6 @@ class VaultWatcherService(
 		val LOG = contextLogger()
 
 		private fun getObservableFromAppServiceHub(appServiceHub: AppServiceHub): TokenObserver {
-			val loadingThread = Executors.newSingleThreadScheduledExecutor()
 			val config = appServiceHub.cordappProvider.getAppContext().config
 			val configOptions: InMemorySelectionConfig = InMemorySelectionConfig.parse(config)
 
@@ -105,9 +106,14 @@ class VaultWatcherService(
 				}
 			}
 
+			val (_, vaultObservable) = appServiceHub.vaultService.trackBy(
+					contractStateType = FungibleToken::class.java,
+					paging = PageSpecification(pageNumber = DEFAULT_PAGE_NUM, pageSize = 1),
+					criteria = QueryCriteria.VaultQueryCriteria(status = Vault.StateStatus.ALL),
+					sorting = sortByStateRefAscending()
+			)
 
 			val pageSize = configOptions.pageSize
-			var currentPage = DEFAULT_PAGE_NUM
 			val asyncLoader = object : ((Vault.Update<FungibleToken>) -> Unit) -> Unit {
 				override fun invoke(callback: (Vault.Update<FungibleToken>) -> Unit) {
 					LOG.info("Starting async token loading from vault")
@@ -115,54 +121,47 @@ class VaultWatcherService(
 					val classGraph = ClassGraph()
 					classGraph.enableClassInfo()
 
-					val scanResultFuture = CompletableFuture.supplyAsync(Supplier {
+					val scanResultFuture = CompletableFuture.supplyAsync {
 						classGraph.scan()
-					}, loadingThread)
+					}
 
-					scanResultFuture.thenApplyAsync(Function<ScanResult, Unit> { scanResult ->
-						val subclasses : Set<Class<out FungibleToken>> = scanResult.getSubclasses(FungibleToken::class.java.canonicalName)
-							.map { it.name }
-							.map { Class.forName(it) as Class<out FungibleToken> }.toSet()
+					scanResultFuture.thenApplyAsync { scanResult ->
+						val subclasses: Set<Class<out FungibleToken>> = scanResult.getSubclasses(FungibleToken::class.java.canonicalName)
+								.map { it.name }
+								.map { Class.forName(it) as Class<out FungibleToken> }.toSet()
 
 						val enrichedClasses = (subclasses - setOf(FungibleToken::class.java))
 						LOG.info("Enriching token query with types: $enrichedClasses")
-						loadingThread.submit {
-							LOG.info("Querying for tokens of types: $subclasses")
-							try {
-								var shouldLoop = true
-								while (shouldLoop) {
-									val newlyLoadedStates = appServiceHub.vaultService.queryBy<FungibleToken>(
-										paging = PageSpecification(pageNumber = currentPage, pageSize = pageSize),
-										criteria = QueryCriteria.VaultQueryCriteria(contractStateTypes = subclasses),
-										sorting = sortByTimeStampAscending()
-									).states.toSet()
-									callback(Vault.Update(emptySet(), newlyLoadedStates))
-									LOG.info("publishing ${newlyLoadedStates.size} to async state loading callback")
-									shouldLoop = newlyLoadedStates.isNotEmpty()
-									LOG.debug("shouldLoop=${shouldLoop}")
-									currentPage++
 
-									if (configOptions.sleep > 0){
-										Thread.sleep(configOptions.sleep.toLong() * 1000)
+						val shouldLoop = AtomicBoolean(true)
+						val pageNumber = AtomicInteger(DEFAULT_PAGE_NUM - 1)
+						val loadingFutures: List<CompletableFuture<Void>> = 0.until(configOptions.loadingThreads).map {
+							CompletableFuture.runAsync {
+								try {
+									while (shouldLoop.get()) {
+										val newlyLoadedStates = appServiceHub.vaultService.queryBy<FungibleToken>(
+												paging = PageSpecification(pageNumber = pageNumber.addAndGet(1), pageSize = pageSize),
+												criteria = QueryCriteria.VaultQueryCriteria(contractStateTypes = subclasses),
+												sorting = sortByTimeStampAscending()
+										).states.toSet()
+										callback(Vault.Update(emptySet(), newlyLoadedStates))
+										LOG.info("publishing ${newlyLoadedStates.size} to async state loading callback")
+										shouldLoop.compareAndSet(newlyLoadedStates.isNotEmpty(), true)
+										LOG.debug("shouldLoop=${shouldLoop}")
+										if (configOptions.sleep > 0) {
+											Thread.sleep(configOptions.sleep.toLong() * 1000)
+										}
+
 									}
-
+									LOG.info("finished token loading")
+								} catch (t: Throwable) {
+									LOG.error("Token Loading Failed due to: ", t)
 								}
-								LOG.info("finished token loading")
-							} catch (t: Throwable) {
-								LOG.error("Token Loading Failed due to: ", t)
 							}
 						}
-					}, loadingThread)
+					}
 				}
 			}
-
-			val (_, vaultObservable) = appServiceHub.vaultService.trackBy(
-				contractStateType = FungibleToken::class.java,
-				paging = PageSpecification(pageNumber = DEFAULT_PAGE_NUM, pageSize = 1),
-				criteria = QueryCriteria.VaultQueryCriteria(status = Vault.StateStatus.ALL),
-				sorting = sortByStateRefAscending()
-			)
-
 
 			return TokenObserver(emptyList(), uncheckedCast(vaultObservable), ownerProvider, asyncLoader)
 		}
