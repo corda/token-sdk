@@ -5,7 +5,7 @@ buildscript {
         corda_release_group = 'net.corda'
         corda_release_version = '4.3'
         tokens_release_group = "com.r3.corda.lib.tokens"
-        tokens_release_version = "1.2.4-SNAPSHOT"
+        tokens_release_version = "1.2.5-ASYNC-LOADING-SNAPSHOT"
         corda_gradle_plugins_version = '5.0.12'
         kotlin_version = '1.2.71'
         junit_version = '4.12'

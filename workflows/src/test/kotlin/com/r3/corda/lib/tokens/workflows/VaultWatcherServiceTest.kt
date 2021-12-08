@@ -12,6 +12,7 @@ import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
 import com.r3.corda.lib.tokens.selection.memory.config.InMemorySelectionConfig
 import com.r3.corda.lib.tokens.selection.memory.internal.Holder
+import com.r3.corda.lib.tokens.selection.memory.services.IndexingType
 import com.r3.corda.lib.tokens.selection.memory.services.TokenObserver
 import com.r3.corda.lib.tokens.selection.memory.services.VaultWatcherService
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
@@ -205,14 +206,14 @@ class VaultWatcherServiceTest {
             }
         }.toMap()
 
-        val ownerProvider = object : (StateAndRef<FungibleToken>, VaultWatcherService.IndexingType) -> Holder {
-            override fun invoke(tokenState: StateAndRef<FungibleToken>, indexingType: VaultWatcherService.IndexingType): Holder {
+        val ownerProvider = object : (StateAndRef<FungibleToken>, IndexingType) -> Holder {
+            override fun invoke(tokenState: StateAndRef<FungibleToken>, indexingType: IndexingType): Holder {
                 return when (indexingType) {
-                    VaultWatcherService.IndexingType.EXTERNAL_ID -> {
+                    IndexingType.EXTERNAL_ID -> {
                         Holder.MappedIdentity(keyToAccount[tokenState.state.data.holder.owningKey]
                                 ?: error("should never happen"))
                     }
-                    VaultWatcherService.IndexingType.PUBLIC_KEY -> {
+                    IndexingType.PUBLIC_KEY -> {
                         Holder.KeyIdentity(tokenState.state.data.holder.owningKey)
                     }
                 }

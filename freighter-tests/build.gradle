@@ -26,8 +26,13 @@ task freighterTest(type: Test, dependsOn: [project(":workflows").jar]) {
     classpath = sourceSets.freighterTest.runtimeClasspath
     useJUnitPlatform {
         includeTags "DOCKER"
-        excludeTags "AZURE", "FULL_LINUX_KERNEL", "ORACLE"
+        excludeTags "AZURE", "FULL_LINUX_KERNEL", "ORACLE", "LARGE_TEST"
     }
+
+    testLogging {
+        showStandardStreams = true
+    }
+
 }
 
 configurations {
@@ -37,10 +42,11 @@ configurations {
 
 dependencies {
     freighterTestCompile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    freighterTestCompile "freighter:freighter-testing-core-junit5:0.7.3-TEST-SNAPSHOT"
+    freighterTestCompile "freighter:freighter-testing-core-junit5:0.9.0-SNAPSHOT"
 
     freighterTestCompile project(":contracts")
     freighterTestCompile project(":workflows")
+    freighterTestCompile project(":workflows-integration-test")
 }
 
 

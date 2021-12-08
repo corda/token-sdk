@@ -55,6 +55,7 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Assert
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
 import kotlin.test.assertFailsWith
 
 class TokenDriverTest {
@@ -264,7 +265,7 @@ class TokenDriverTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `tokens locked in memory are still locked after restart`() {
         driver(DriverParameters(
                 inMemoryDB = false,
@@ -292,12 +293,15 @@ class TokenDriverTest {
                     listOf(50.USD issuedBy nodeParty heldBy nodeParty),
                     emptyList<Party>()
             ).returnValue.getOrThrow()
-            // Run select and lock tokens flow with 5 seconds sleep in it.
-            node.rpc.startFlowDynamic(
+            // Run select and lock tokens flow
+            val pt = node.rpc.startTrackedFlowDynamic(
                     SelectAndLockFlow::class.java,
                     50.GBP,
-                    5.seconds
-            )
+                    50.seconds
+            ).returnValue
+
+            Thread.sleep(10_000)
+
             // Stop node
             (node as OutOfProcess).process.destroyForcibly()
             node.stop()
@@ -305,6 +309,8 @@ class TokenDriverTest {
             // Restart the node
             val restartedNode = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
             // Try to spend same states, they should be locked after restart, so we expect insufficient not locked balance exception to be thrown.
+            Thread.sleep(15000) // because token loading is now async, we must wait a bit of time before we can attempt to select.
+
             assertFailsWith<InsufficientNotLockedBalanceException> {
                 restartedNode.rpc.startFlowDynamic(
                     SelectAndLockFlow::class.java,

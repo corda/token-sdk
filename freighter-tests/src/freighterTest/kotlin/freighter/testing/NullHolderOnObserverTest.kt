@@ -67,12 +67,6 @@ class NullHolderOnObserverTest : DockerRemoteMachineBasedTest() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.MS_SQL)
 	}
 
-	@Test
-	@OracleTest
-	fun `tokens can be observed on node that does not know CI running oracle 12 r2`() {
-		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.ORACLE_12_R2)
-	}
-
 	private fun runTokensOnNodeRunningDatabase(db: DeploymentMachineProvider.DatabaseType) {
 		val randomString = generateRandomString()
 		val deploymentContext = DeploymentContext(machineProvider, nms, artifactoryUsername, artifactoryPassword)
@@ -83,7 +77,7 @@ class NullHolderOnObserverTest : DockerRemoteMachineBasedTest() {
 				.withCordapp(modernCiV1)
 				.withCordapp(freighterHelperCordapp)
 				.withDatabase(machineProvider.requestDatabase(db))
-		).withVersion(UnitOfDeployment.CORDA_4_6)
+		).withVersion(UnitOfDeployment.CORDA_4_7)
 			.deploy(deploymentContext)
 
 		val node2 = SingleNodeDeployment(
@@ -93,7 +87,7 @@ class NullHolderOnObserverTest : DockerRemoteMachineBasedTest() {
 				.withCordapp(modernCiV1)
 				.withCordapp(freighterHelperCordapp)
 				.withDatabase(machineProvider.requestDatabase(db))
-		).withVersion(UnitOfDeployment.CORDA_4_6)
+		).withVersion(UnitOfDeployment.CORDA_4_7)
 			.deploy(deploymentContext)
 
 		val nodeMachine1 = node1.getOrThrow().nodeMachines.single()
