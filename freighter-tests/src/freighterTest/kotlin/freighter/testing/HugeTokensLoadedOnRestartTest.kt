@@ -29,7 +29,6 @@ import kotlin.streams.toList
 @Tag("LARGE_TEST")
 annotation class LargeTest
 
-@LargeTest
 class HugeTokensLoadedOnRestartTest : DockerRemoteMachineBasedTest() {
 
     val loadingThreads = 8
@@ -98,7 +97,7 @@ class HugeTokensLoadedOnRestartTest : DockerRemoteMachineBasedTest() {
 
         val tokenToIssue = (0.until(100)).map { FungibleToken(Amount(1, issuedTokenType), createdCi) }.toList()
 
-        val numberIssued = StreamSupport.stream((0.until(5000)).chunked(200).spliterator(), true).map { toIssue ->
+        val numberIssued = StreamSupport.stream((0.until(500)).chunked(200).spliterator(), true).map { toIssue ->
             nodeMachine1.rpc {
                 repeat(toIssue.size) {
                     startFlow(
@@ -107,10 +106,9 @@ class HugeTokensLoadedOnRestartTest : DockerRemoteMachineBasedTest() {
                     ).returnValue.getOrThrow(Duration.ofMinutes(1))
                     println("[${Thread.currentThread().name}] Total number issued: ${issuedTotal.addAndGet(tokenToIssue.size * 1L)}")
                 }
-
             }
 
-            toIssue.size
+            toIssue.size * tokenToIssue.size
         }.toList().sum()
 
         nodeMachine1.stopNode()

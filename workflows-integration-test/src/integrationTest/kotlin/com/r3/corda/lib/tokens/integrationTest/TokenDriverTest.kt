@@ -55,6 +55,7 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Assert
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
 import kotlin.test.assertFailsWith
 
 class TokenDriverTest {
@@ -264,7 +265,7 @@ class TokenDriverTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `tokens locked in memory are still locked after restart`() {
         driver(DriverParameters(
                 inMemoryDB = false,
@@ -293,11 +294,14 @@ class TokenDriverTest {
                     emptyList<Party>()
             ).returnValue.getOrThrow()
             // Run select and lock tokens flow
-            node.rpc.startFlowDynamic(
+            val pt = node.rpc.startTrackedFlowDynamic(
                     SelectAndLockFlow::class.java,
                     50.GBP,
                     50.seconds
-            )
+            ).returnValue
+
+            Thread.sleep(10_000)
+
             // Stop node
             (node as OutOfProcess).process.destroyForcibly()
             node.stop()

@@ -180,6 +180,11 @@ class VaultWatcherService(
 	}
 
 	fun lockTokensExternal(list: List<StateAndRef<FungibleToken>>, knownSelectionId: String, autoUnlockDelay: Duration? = null) {
+
+		list.forEach {
+			__backingMap.putIfAbsent(it, PLACE_HOLDER)
+		}
+
 		list.forEach {
 			__backingMap.replace(it, PLACE_HOLDER, knownSelectionId)
 		}

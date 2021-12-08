@@ -30,6 +30,7 @@ import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.seconds
 import net.corda.core.utilities.unwrap
 import java.time.Duration
@@ -134,11 +135,23 @@ class RedeemFungibleGBP(
 // Helper flow for selection testing
 @StartableByRPC
 class SelectAndLockFlow(val amount: Amount<TokenType>, val delay: Duration = 1.seconds) : FlowLogic<Unit>() {
+
+
+	companion object {
+		val SELECTED =  ProgressTracker.Step("SELECTED")
+	}
+
+	override val progressTracker: ProgressTracker?
+		get() = ProgressTracker(ProgressTracker.STARTING, SELECTED, ProgressTracker.DONE)
+
 	@Suspendable
 	override fun call() {
+		progressTracker?.currentStep = ProgressTracker.STARTING
 		val selector = LocalTokenSelector(serviceHub)
 		selector.selectTokens(amount)
+		progressTracker?.currentStep = SELECTED
 		sleep(delay)
+		progressTracker?.currentStep = ProgressTracker.DONE
 	}
 }
 

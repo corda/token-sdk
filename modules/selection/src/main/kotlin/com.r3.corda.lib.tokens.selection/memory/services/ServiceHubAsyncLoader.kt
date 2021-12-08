@@ -45,6 +45,7 @@ class ServiceHubAsyncLoader(private val appServiceHub: AppServiceHub,
                 CompletableFuture.runAsync {
                     try {
                         while (shouldLoop.get()) {
+                            LOG.info("loading page: ${pageNumber.get() + 1}, should loop: ${shouldLoop.get()}")
                             val newlyLoadedStates = appServiceHub.vaultService.queryBy<FungibleToken>(
                                     paging = PageSpecification(pageNumber = pageNumber.addAndGet(1), pageSize = configOptions.pageSize),
                                     criteria = QueryCriteria.VaultQueryCriteria(contractStateTypes = subclasses),
@@ -68,7 +69,7 @@ class ServiceHubAsyncLoader(private val appServiceHub: AppServiceHub,
             }
         }
     }
-    
+
     companion object {
         val LOG = contextLogger()
     }
