@@ -15,16 +15,17 @@ class ObserverAwareFinalityFlowHandler(val otherSession: FlowSession, val expect
 	@Suspendable
 	override fun call(): SignedTransaction? {
 
-		val ourLegalIdentities = serviceHub.myInfo.legalIdentities
+		val ourKeys = serviceHub.keyManagementService.filterMyKeys(serviceHub.keyManagementService.keys)
+
 		val role = otherSession.receive<TransactionRole>().unwrap { it }
 		val statesToRecord = role.toStatesToRecord()
 
-		return if (otherSession.counterparty in ourLegalIdentities) null else {
+		return if (otherSession.counterparty.owningKey in ourKeys) null else {
 			subFlow(object : ReceiveTransactionFlow(otherSession, true, statesToRecord) {
 				override fun checkBeforeRecording(stx: SignedTransaction) {
-					val participants = stx.toLedgerTransaction(serviceHub).participants
+					val participantKeys = stx.toLedgerTransaction(serviceHub).participants.map { it.owningKey }
 
-					if (ourLegalIdentities.any { it !in participants } && role == TransactionRole.PARTICIPANT) {
+					if (ourKeys.none { it in participantKeys } && role == TransactionRole.PARTICIPANT) {
 						throw FlowException("Our identity is not a transaction participant, but we were sent the PARTICIPANT role.")
 					}
 
