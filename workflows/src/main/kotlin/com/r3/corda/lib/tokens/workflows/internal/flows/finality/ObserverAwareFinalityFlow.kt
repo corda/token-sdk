@@ -33,45 +33,42 @@ import net.corda.core.transactions.TransactionBuilder
  * @property allSessions a set of sessions for, at least, all the transaction participants and maybe observers
  */
 class ObserverAwareFinalityFlow private constructor(
-        val allSessions: List<FlowSession>,
-        val signedTransaction: SignedTransaction? = null,
-        val transactionBuilder: TransactionBuilder? = null
+	val allSessions: List<FlowSession>,
+	val signedTransaction: SignedTransaction? = null,
+	val transactionBuilder: TransactionBuilder? = null
 ) : FlowLogic<SignedTransaction>() {
 
-    constructor(transactionBuilder: TransactionBuilder, allSessions: List<FlowSession>)
-            : this(allSessions, null, transactionBuilder)
+	constructor(transactionBuilder: TransactionBuilder, allSessions: List<FlowSession>)
+			: this(allSessions, null, transactionBuilder)
 
-    constructor(signedTransaction: SignedTransaction, allSessions: List<FlowSession>)
-            : this(allSessions, signedTransaction)
+	constructor(signedTransaction: SignedTransaction, allSessions: List<FlowSession>)
+			: this(allSessions, signedTransaction)
 
-    @Suspendable
-    override fun call(): SignedTransaction {
-        // Check there is a session for each participant, apart from the node itself.
-        val ledgerTransaction: LedgerTransaction = transactionBuilder?.toLedgerTransaction(serviceHub)
-                ?: signedTransaction!!.toLedgerTransaction(serviceHub, false)
-        val participants: List<AbstractParty> = ledgerTransaction.participants
-        val issuers: Set<Party> = ledgerTransaction.commands
-                .map(CommandWithParties<*>::value)
-                .filterIsInstance<RedeemTokenCommand>()
-                .map { it.token.issuer }
-                .toSet()
-        val wellKnownParticipantsAndIssuers: Set<Party> = participants.toWellKnownParties(serviceHub).toSet() + issuers
-        val wellKnownParticipantsApartFromUs: Set<Party> = wellKnownParticipantsAndIssuers - ourIdentity
-        // We need participantSessions for all participants apart from us.
-        requireSessionsForParticipants(wellKnownParticipantsApartFromUs, allSessions)
-        val finalSessions = allSessions.filter { it.counterparty != ourIdentity }
-        // Notify all session counterparties of their role. Observers store the transaction using
-        // StatesToRecord.ALL_VISIBLE, participants store the transaction using StatesToRecord.ONLY_RELEVANT.
-        finalSessions.forEach { session ->
-            if (session.counterparty in wellKnownParticipantsAndIssuers) session.send(TransactionRole.PARTICIPANT)
-            else session.send(TransactionRole.OBSERVER)
-        }
-        // Sign and finalise the transaction, obtaining the signing keys required from the LedgerTransaction.
-        val ourSigningKeys = ledgerTransaction.ourSigningKeys(serviceHub)
-        val stx = transactionBuilder?.let {
-            serviceHub.signInitialTransaction(it, signingPubKeys = ourSigningKeys)
-        } ?: signedTransaction
-        ?: throw IllegalArgumentException("Didn't provide transactionBuilder nor signedTransaction to the flow.")
-        return subFlow(FinalityFlow(transaction = stx, sessions = finalSessions))
-    }
+	@Suspendable
+	override fun call(): SignedTransaction {
+		// Check there is a session for each participant, apart from the node itself.
+		val ledgerTransaction: LedgerTransaction = transactionBuilder?.toLedgerTransaction(serviceHub)
+			?: signedTransaction!!.toLedgerTransaction(serviceHub, false)
+		val participants: List<AbstractParty> = ledgerTransaction.participants
+		val issuers: Set<Party> = ledgerTransaction.commands
+			.map(CommandWithParties<*>::value)
+			.filterIsInstance<RedeemTokenCommand>()
+			.map { it.token.issuer }
+			.toSet()
+		val wellKnownParticipantsAndIssuers: Set<Party> = participants.toWellKnownParties(serviceHub).toSet() + issuers
+		val wellKnownParticipantsApartFromUs: Set<Party> = wellKnownParticipantsAndIssuers - ourIdentity
+		// We need participantSessions for all participants apart from us.
+		requireSessionsForParticipants(wellKnownParticipantsApartFromUs, allSessions)
+		val finalSessions = allSessions.filter { it.counterparty != ourIdentity }
+		// Notify all session counterparties of their role. Observers store the transaction using
+		// StatesToRecord.ALL_VISIBLE, participants store the transaction using StatesToRecord.ONLY_RELEVANT.
+		finalSessions.forEach { it.send(if (it.counterparty in wellKnownParticipantsAndIssuers) TransactionRole.PARTICIPANT else TransactionRole.OBSERVER) }
+		// Sign and finalise the transaction, obtaining the signing keys required from the LedgerTransaction.
+		val ourSigningKeys = ledgerTransaction.ourSigningKeys(serviceHub)
+		val stx = transactionBuilder?.let {
+			serviceHub.signInitialTransaction(it, signingPubKeys = ourSigningKeys)
+		} ?: signedTransaction
+		?: throw IllegalArgumentException("Didn't provide transactionBuilder nor signedTransaction to the flow.")
+		return subFlow(FinalityFlow(transaction = stx, sessions = finalSessions))
+	}
 }
