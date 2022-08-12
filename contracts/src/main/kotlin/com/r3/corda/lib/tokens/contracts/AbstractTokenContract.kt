@@ -12,6 +12,7 @@ import net.corda.core.contracts.*
 import net.corda.core.crypto.SecureHash
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.transactions.LedgerTransaction
+
 /**
  * This is an abstract contract which contains common functionality used by [FungibleTokenContract] and
  * [NonFungibleTokenContract]. It works by grouping tokens by type and then verifying each group individually. It must
@@ -130,8 +131,8 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
 
 	private fun groupMatchesCommand(it: CommandWithParties<TokenCommand>, group: IndexedInOutGroup<AbstractToken, TokenInfo>): Boolean {
 		return it.value.token == group.groupingKey.issuedTokenType
-				&& it.value.inputIndicies() == group.inputIndicies
-				&& it.value.outputIndicies() == group.outputIndicies
+				&& it.value.inputIndexes == group.inputIndexes
+				&& it.value.outputIndexes == group.outputIndexes
 
 	}
 
@@ -192,8 +193,8 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
 		val outputs: List<IndexedState<T>>,
 		val groupingKey: K
 	) {
-		val inputIndicies = inputs.map { it.index }.sortedBy { it }
-		val outputIndicies = outputs.map { it.index }.sortedBy { it }
+		val inputIndexes = inputs.map { it.index }.sorted()
+		val outputIndexes = outputs.map { it.index }.sorted()
 	}
 
 	data class IndexedState<out T : ContractState>(val state: TransactionState<T>, val index: Int)

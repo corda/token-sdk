@@ -7,7 +7,7 @@ import com.r3.corda.lib.tokens.contracts.utilities.sumTokensOrThrow
 import com.r3.corda.lib.tokens.money.BTC
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
-import com.r3.corda.lib.tokens.testing.states.Appartment
+import com.r3.corda.lib.tokens.testing.tokentypes.Apartment
 import com.r3.corda.lib.tokens.workflows.utilities.*
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.queryBy
@@ -38,9 +38,9 @@ class TokenQueryTests : MockNetworkTest(numberOfNodes = 3) {
     private val btcTokens = listOf(500.BTC)
     private val allTokens = gbpTokens + usdTokens + btcTokens
 
-    private val fooToken = Appartment("FOO")
-    private val barToken = Appartment("BAR")
-    private val bazToken = Appartment("BAZ")
+    private val fooToken = Apartment("FOO")
+    private val barToken = Apartment("BAR")
+    private val bazToken = Apartment("BAZ")
     private val allOtherTokens = listOf(fooToken, barToken, bazToken)
 
     @Before

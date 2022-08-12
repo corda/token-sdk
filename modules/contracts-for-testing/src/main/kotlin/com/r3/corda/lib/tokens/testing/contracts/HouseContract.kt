@@ -9,6 +9,11 @@ import net.corda.core.transactions.LedgerTransaction
 // TODO: When contract scanning bug is fixed then this does not need to implement Contract.
 class HouseContract : EvolvableTokenContract(), Contract {
 
+    companion object {
+        @JvmStatic
+        val ID: String = this::class.java.enclosingClass.canonicalName
+    }
+
     override fun additionalCreateChecks(tx: LedgerTransaction) {
         // Not much to do for this example token.
         val newHouse = tx.outputStates.single() as House

@@ -2,10 +2,10 @@ import static org.gradle.api.JavaVersion.VERSION_1_8
 
 buildscript {
     ext {
-        corda_release_group = 'net.corda'
-        corda_release_version = '4.3'
-        tokens_release_group = "com.r3.corda.lib.tokens"
-        tokens_release_version = "2.0.0-rc1"
+        corda_release_group = getProperty("cordaGroup")
+        corda_release_version = getProperty("cordaVersion")
+        tokens_release_group = getProperty("group")
+        tokens_release_version = getProperty("version")
         corda_gradle_plugins_version = '5.0.12'
         kotlin_version = '1.2.71'
         junit_version = '4.12'
@@ -18,6 +18,12 @@ buildscript {
         aetherVersion = '1.0.0.v20140518'
         mavenVersion = '3.1.0'
         maven_resolver_version = "1.1.1"
+
+        cordapp_vendor = getProperty("cordapp.vendor")
+        cordapp_license = getProperty("cordapp.license")
+        cordapp_version_id = getProperty("cordapp.versionId") as Integer
+        cordapp_target_platform_version = getProperty("cordapp.targetPlatformVersion") as Integer
+        cordapp_minimum_platform_version = getProperty("cordapp.minimumPlatformVersion") as Integer
     }
 
     repositories {

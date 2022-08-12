@@ -62,7 +62,7 @@ fun addMoveTokens(
                 outputStartingIdx++
             }
 
-            addCommand(MoveTokenCommand(issuedTokenType, inputs = inputIdx, outputs = outputIdx), keys)
+            addCommand(MoveTokenCommand(issuedTokenType, inputIndexes = inputIdx, outputIndexes = outputIdx), keys)
         }
     }
 

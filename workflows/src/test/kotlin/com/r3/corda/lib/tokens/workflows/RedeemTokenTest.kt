@@ -6,7 +6,7 @@ import com.r3.corda.lib.tokens.contracts.utilities.sumTokenStateAndRefs
 import com.r3.corda.lib.tokens.money.GBP
 import com.r3.corda.lib.tokens.money.USD
 import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
-import com.r3.corda.lib.tokens.testing.states.Appartment
+import com.r3.corda.lib.tokens.testing.tokentypes.Apartment
 import com.r3.corda.lib.tokens.workflows.utilities.heldTokenAmountCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.heldTokensByToken
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountsByToken
@@ -28,7 +28,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
     lateinit var B: StartedMockNode
     lateinit var I: StartedMockNode
 
-    private val fooToken = Appartment()
+    private val fooToken = Apartment()
 
     @Before
     override fun initialiseNodes() {

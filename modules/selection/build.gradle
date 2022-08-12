@@ -1,13 +1,13 @@
 apply plugin: 'net.corda.plugins.cordapp'
 
 cordapp {
-    targetPlatformVersion 4
-    minimumPlatformVersion 4
+    targetPlatformVersion cordapp_target_platform_version
+    minimumPlatformVersion cordapp_minimum_platform_version
     contract {
-        name "Token SDK test-selection"
-        vendor "R3"
-        licence "Apache 2"
-        versionId 1
+        name "Token SDK Test Selection"
+        vendor cordapp_vendor
+        licence cordapp_license
+        versionId cordapp_version_id
     }
     signing {
         enabled false

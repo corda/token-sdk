@@ -5,18 +5,22 @@ import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.TypeOnlyCommandData
 
 /**
- * A standard set of commands for creating and updating [EvolvableTokenType]s. Additional commands can be added
- * which implement [EvolvableTokenTypeCommand]. For example, a stock token will require a "stock split" command,
- * which would implement the [EvolvableTokenTypeCommand] interface.
+ * Defines a command mechanism for creating and updating [EvolvableTokenType] instances.
  *
- * Note, that for the time being, [EvolvableTokenType]s cannot be removed from the ledger. Doing so would break
- * the evolvable token model. Given that [EvolvableTokenType]s are not storage hungry, this is an acceptable
- * trade-off - they can just persist on the ledger even if they are not required any more.
+ * Additional commands can be added which implement [EvolvableTokenTypeCommand].
+ * For example, a stock token will require a "stock split" command, which would implement the [EvolvableTokenTypeCommand] interface.
+ *
+ * For the time being, [EvolvableTokenType] instances cannot be removed from the ledger. Doing so would break the evolvable token model.
+ * Given that [EvolvableTokenType] instances are not storage hungry, they can just persist on the ledger even if they are not required any more.
  */
 interface EvolvableTokenTypeCommand : CommandData
 
-/** Used when creating new [EvolvableTokenType]s. */
+/**
+ * Represents the evolvable token command used to create new [EvolvableTokenType] instances.
+ */
 class Create : EvolvableTokenTypeCommand, TypeOnlyCommandData()
 
-/** Used when updating existing [EvolvableTokenType]s. */
+/**
+ * Represents the evolvable token command used to update existing [EvolvableTokenType] instances.
+ */
 class Update : EvolvableTokenTypeCommand, TypeOnlyCommandData()

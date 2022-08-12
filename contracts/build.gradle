@@ -38,13 +38,13 @@ dependencies {
 }
 
 cordapp {
-    targetPlatformVersion 4
-    minimumPlatformVersion 4
+    targetPlatformVersion cordapp_target_platform_version
+    minimumPlatformVersion cordapp_minimum_platform_version
     contract {
         name "Token SDK Contracts"
-        vendor "R3"
-        licence "Apache 2"
-        versionId 2
+        vendor cordapp_vendor
+        licence cordapp_license
+        versionId cordapp_version_id
     }
     signing {
         enabled false
@@ -53,4 +53,14 @@ cordapp {
 
 jar {
     baseName "tokens-contracts"
+}
+
+test {
+
+    // Add dependency on jar task, since it will be main target for testing
+    dependsOn jar
+
+    // Rearrange test classpath, add compiled JAR instead of main classes
+    classpath = project.sourceSets.test.output + configurations.testRuntimeClasspath + files(jar.archiveFile)
+
 }

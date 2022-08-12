@@ -13,6 +13,11 @@ import java.math.BigDecimal
  */
 class DiamondGradingReportContract : EvolvableTokenContract(), Contract {
 
+    companion object {
+        @JvmStatic
+        val ID: String = this::class.java.enclosingClass.canonicalName
+    }
+
     override fun additionalCreateChecks(tx: LedgerTransaction) {
         val outputDiamond = tx.outputsOfType<DiamondGradingReport>().first()
         requireThat {
@@ -30,6 +35,4 @@ class DiamondGradingReportContract : EvolvableTokenContract(), Contract {
             "Diamond's cut may not be changed" using (inDiamond.cut == outDiamond.cut)
         }
     }
-
-
 }

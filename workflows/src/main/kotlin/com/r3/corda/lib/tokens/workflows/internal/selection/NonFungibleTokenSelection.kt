@@ -53,7 +53,7 @@ fun generateMoveNonFungible(
         val currentOutputSize = outputStates().size
         addInputState(input)
         addOutputState(state = output withNotary notary)
-        addCommand(MoveTokenCommand(output.token, inputs = listOf(currentInputSize), outputs = listOf(currentOutputSize)), signingKey)
+        addCommand(MoveTokenCommand(output.token, inputIndexes = listOf(currentInputSize), outputIndexes = listOf(currentOutputSize)), signingKey)
     }
 }
 

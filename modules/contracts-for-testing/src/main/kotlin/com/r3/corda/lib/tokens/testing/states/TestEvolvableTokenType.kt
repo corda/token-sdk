@@ -1,12 +1,12 @@
 package com.r3.corda.lib.tokens.testing.states
 
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
-import com.r3.corda.lib.tokens.testing.contracts.TestEvolvableTokenContract
+import com.r3.corda.lib.tokens.testing.contracts.TestEvolvableTokenTypeContract
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.Party
 
-@BelongsToContract(TestEvolvableTokenContract::class)
+@BelongsToContract(TestEvolvableTokenTypeContract::class)
 data class TestEvolvableTokenType(
         override val maintainers: List<Party>,
         val observers: List<Party> = emptyList(),

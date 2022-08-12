@@ -108,8 +108,8 @@ class CheckTokenPointer(val housePtr: TokenPointer<House>) : FlowLogic<House>() 
 // TODO This is hack that will be removed after fix in Corda 5. startFlowDynamic doesn't handle type parameters properly.
 @StartableByRPC
 class RedeemNonFungibleHouse(
-        val housePtr: TokenPointer<House>,
-        val issuerParty: Party
+    val housePtr: TokenPointer<House>,
+    val issuerParty: Party
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {

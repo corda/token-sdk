@@ -1,21 +1,15 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run Contract Tests" type="GradleRunConfiguration" factoryName="Gradle">
-    <ExternalSystemSettings>
-      <option name="executionName" />
-      <option name="externalProjectPath" value="$PROJECT_DIR$/contract" />
-      <option name="externalSystemIdString" value="GRADLE" />
-      <option name="scriptParameters" value="" />
-      <option name="taskDescriptions">
-        <list />
-      </option>
-      <option name="taskNames">
-        <list>
-          <option value="test" />
-        </list>
-      </option>
-      <option name="vmOptions" value="" />
-    </ExternalSystemSettings>
-    <GradleScriptDebugEnabled>true</GradleScriptDebugEnabled>
-    <method v="2" />
+  <configuration default="false" name="Run Contract Tests" type="JUnit" factoryName="JUnit">
+    <module name="token-sdk.contracts.test" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <option name="ALTERNATIVE_JRE_PATH" value="1.8" />
+    <option name="PACKAGE_NAME" value="com.r3.corda.lib.tokens.contracts" />
+    <option name="MAIN_CLASS_NAME" value="" />
+    <option name="METHOD_NAME" value="" />
+    <option name="TEST_OBJECT" value="package" />
+    <option name="VM_PARAMETERS" value="-ea -javaagent:../lib/quasar.jar" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
   </configuration>
 </component>

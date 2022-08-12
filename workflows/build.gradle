@@ -8,13 +8,13 @@ evaluationDependsOn(":modules:selection")
 def selectionProject = project(":modules:selection")
 
 cordapp {
-    targetPlatformVersion 5
-    minimumPlatformVersion 5
-    workflow {
+    targetPlatformVersion cordapp_target_platform_version
+    minimumPlatformVersion cordapp_minimum_platform_version
+    contract {
         name "Token SDK Workflows"
-        vendor "R3"
-        licence "Apache 2"
-        versionId 2
+        vendor cordapp_vendor
+        licence cordapp_license
+        versionId cordapp_version_id
     }
     signing {
         enabled false

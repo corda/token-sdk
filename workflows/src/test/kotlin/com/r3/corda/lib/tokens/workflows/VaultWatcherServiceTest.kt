@@ -456,12 +456,12 @@ class VaultWatcherServiceTest {
         }
 
         fun createNewFiatCurrencyTokenRef(amountToIssue: Long,
-                                          owner: PublicKey,
-                                          notary: Party,
-                                          issuer: Party,
-                                          currency: TokenType = GBP,
-                                          observable: PublishSubject<Vault.Update<FungibleToken>>? = null,
-                                          database: CordaPersistence): StateAndRef<FungibleToken> {
+										  owner: PublicKey,
+										  notary: Party,
+										  issuer: Party,
+										  currency: TokenType = GBP,
+										  observable: PublishSubject<Vault.Update<FungibleToken>>? = null,
+										  database: CordaPersistence): StateAndRef<FungibleToken> {
             val amount = Amount(amountToIssue, currency)
             return createNewTokenRef(amount, owner, notary, issuer, observable, database = database)
         }

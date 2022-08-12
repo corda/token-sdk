@@ -14,22 +14,22 @@ import java.math.BigDecimal
  */
 @BelongsToContract(DiamondGradingReportContract::class)
 data class DiamondGradingReport(
-        val caratWeight: BigDecimal,
-        val color: ColorScale,
-        val clarity: ClarityScale,
-        val cut: CutScale,
-        val assessor: Party,
-        val requester: Party,
-        override val linearId: UniqueIdentifier = UniqueIdentifier()
+	val caratWeight: BigDecimal,
+	val color: ColorScale,
+	val clarity: ClarityScale,
+	val cut: CutScale,
+	val assessor: Party,
+	val requester: Party,
+	override val linearId: UniqueIdentifier = UniqueIdentifier()
 ) : EvolvableTokenType() {
     constructor(
-            caratWeight: String,
-            color: ColorScale,
-            clarity: ClarityScale,
-            cut: CutScale,
-            assessor: Party,
-            requester: Party,
-            linearId: UniqueIdentifier = UniqueIdentifier()) : this(BigDecimal(caratWeight), color, clarity, cut, assessor, requester, linearId)
+		caratWeight: String,
+		color: ColorScale,
+		clarity: ClarityScale,
+		cut: CutScale,
+		assessor: Party,
+		requester: Party,
+		linearId: UniqueIdentifier = UniqueIdentifier()) : this(BigDecimal(caratWeight), color, clarity, cut, assessor, requester, linearId)
 
     @CordaSerializable
     enum class ColorScale { A, B, C, D, E, F }
