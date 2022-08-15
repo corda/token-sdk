@@ -45,7 +45,7 @@ class MoveTokensTest {
     fun setup() {
         network = MockNetwork(
                 MockNetworkParameters(
-                        networkParameters = testNetworkParameters(minimumPlatformVersion = 4),
+                        networkParameters = testNetworkParameters(minimumPlatformVersion = 6),
                         cordappsForAllNodes = listOf(TestCordapp.findCordapp("com.r3.corda.lib.tokens.money"),
                                 TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
                                 TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),

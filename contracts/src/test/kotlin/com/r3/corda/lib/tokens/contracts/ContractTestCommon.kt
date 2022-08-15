@@ -60,7 +60,7 @@ abstract class ContractTestCommon {
                 doReturn(ISSUER.party).whenever(it).partyFromKey(ISSUER.publicKey)
             },
             networkParameters = testNetworkParameters(
-                    minimumPlatformVersion = 4,
+                    minimumPlatformVersion = 6,
                     notaries = listOf(NotaryInfo(NOTARY.party, false))
             )
     )

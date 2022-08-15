@@ -29,7 +29,7 @@ class ConfigSelectionTest {
         services = MockServices.makeTestDatabaseAndPersistentServices(
                 cordappPackages = listOf("com.r3.corda.lib.tokens.workflows"),
                 initialIdentity = TestIdentity(CordaX500Name("Test", "London", "GB")),
-                networkParameters = testNetworkParameters(minimumPlatformVersion = 4),
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 6),
                 moreIdentities = emptySet(),
                 moreKeys = emptySet()
         ).second

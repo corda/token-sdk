@@ -71,7 +71,7 @@ class TokenDriverTest {
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
                         TestCordapp.findCordapp("com.r3.corda.lib.ci")
                 ),
-                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 6, notaries = emptyList())
         )) {
             val (issuer, otherNode) = listOf(startNode(providedName = BOC_NAME),
                     startNode(providedName = DUMMY_BANK_A_NAME)).map { it.getOrThrow() }
@@ -106,7 +106,7 @@ class TokenDriverTest {
                     TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
                         TestCordapp.findCordapp("com.r3.corda.lib.ci")
                 ),
-                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 6, notaries = emptyList())
         )) {
             val (issuer) = listOf(startNode(providedName = BOC_NAME)).map { it.getOrThrow() }
 
@@ -143,7 +143,7 @@ class TokenDriverTest {
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
                         TestCordapp.findCordapp("com.r3.corda.lib.ci")
                 ),
-                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 6, notaries = emptyList())
         )) {
             val issuer = startNode(providedName = BOC_NAME).getOrThrow()
 
@@ -169,7 +169,7 @@ class TokenDriverTest {
                         TestCordapp.findCordapp("com.r3.corda.lib.ci")
                 ),
                 // TODO this should be default to 4 in main corda no?
-                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList())
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 6, notaries = emptyList())
         )) {
             val (issuer, nodeA, nodeB) = listOf(
                     startNode(providedName = BOC_NAME),
@@ -276,7 +276,7 @@ class TokenDriverTest {
                         TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
                         TestCordapp.findCordapp("com.r3.corda.lib.ci")
                 ),
-                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList()))
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 6, notaries = emptyList()))
         ) {
             val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
             val nodeParty = node.nodeInfo.singleIdentity()
@@ -333,7 +333,7 @@ class TokenDriverTest {
                     TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
                         TestCordapp.findCordapp("com.r3.corda.lib.ci")
                 ),
-                networkParameters = testNetworkParameters(minimumPlatformVersion = 4, notaries = emptyList()))
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 6, notaries = emptyList()))
         ) {
             val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
             val nodeParty = node.nodeInfo.singleIdentity()
