@@ -11,22 +11,26 @@ import net.corda.core.utilities.unwrap
 
 /** In-line counter-flow to [CreateEvolvableTokensFlow]. */
 class CreateEvolvableTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
-    @Suspendable
-    override fun call() {
-        // Receive the notification
-        val notification = otherSession.receive<CreateEvolvableTokensFlow.Notification>().unwrap { it }
+	@Suspendable
+	override fun call() {
+		val ourKeys = serviceHub.keyManagementService.filterMyKeys(serviceHub.keyManagementService.keys)
 
-        // Sign the transaction proposal, if required
-        if (notification.signatureRequired) {
-            val signTransactionFlow = object : SignTransactionFlow(otherSession) {
-                override fun checkTransaction(stx: SignedTransaction) = requireThat {
-                    // TODO
-                }
-            }
-            subFlow(signTransactionFlow)
-        }
+		// Receive the notification
+		val notification = otherSession.receive<CreateEvolvableTokensFlow.Notification>().unwrap { it }
 
-        // Resolve the creation transaction.
-        subFlow(ObserverAwareFinalityFlowHandler(otherSession))
-    }
+		// Sign the transaction proposal, if required
+		if (notification.signatureRequired) {
+			val signTransactionFlow = object : SignTransactionFlow(otherSession) {
+				override fun checkTransaction(stx: SignedTransaction) = requireThat {
+					require(stx.getMissingSigners().any { it in ourKeys }) {
+						"Our node was asked to sign this transaction '${stx.id} but our signature is not required."
+					}
+				}
+			}
+			subFlow(signTransactionFlow)
+		}
+
+		// Resolve the creation transaction.
+		subFlow(ObserverAwareFinalityFlowHandler(otherSession))
+	}
 }
