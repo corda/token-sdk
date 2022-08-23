@@ -46,17 +46,17 @@ pipeline {
             }
         }
 
-        stage('Freighter Tests') {
-            steps {
-                timeout(60) {
-                    sh '''
-                        export ARTIFACTORY_USERNAME=\"\${ARTIFACTORY_CREDENTIALS_USR}\"
-                        export ARTIFACTORY_PASSWORD=\"\${ARTIFACTORY_CREDENTIALS_PSW}\"
-                        ./gradlew freighterTest --info --stacktrace --no-daemon
-                        '''
-                }
-            }
-        }
+//         stage('Freighter Tests') {
+//             steps {
+//                 timeout(60) {
+//                     sh '''
+//                         export ARTIFACTORY_USERNAME=\"\${ARTIFACTORY_CREDENTIALS_USR}\"
+//                         export ARTIFACTORY_PASSWORD=\"\${ARTIFACTORY_CREDENTIALS_PSW}\"
+//                         ./gradlew freighterTest --info --stacktrace --no-daemon
+//                         '''
+//                 }
+//             }
+//         }
     }
 
     post {
