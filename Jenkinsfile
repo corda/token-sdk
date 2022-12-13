@@ -5,10 +5,15 @@ killAllExistingBuildsForJob(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
 
 pipeline {
     agent {
-        dockerfile {
-            filename '.ci/Dockerfile'
-            additionalBuildArgs "--build-arg USER=stresstester"
-            args '-v /var/run/docker.sock:/var/run/docker.sock --group-add 999'
+        docker {
+            // Our custom docker image
+            image 'build-zulu-openjdk:8'
+            label 'docker'
+            registryUrl 'https://engineering-docker.software.r3.com/'
+            registryCredentialsId 'artifactory-credentials'
+            // Used to mount storage from the host as a volume to persist the cache between builds
+            args '-v /tmp:/host_tmp -v /var/run/docker.sock:/var/run/docker.sock --group-add 999'
+            alwaysPull true
         }
     }
     options { timestamps() }
@@ -18,6 +23,7 @@ pipeline {
         LOOPBACK_ADDRESS = "172.17.0.1"
         ARTIFACTORY_CREDENTIALS = credentials('artifactory-credentials')
         DOCKER_CREDENTIALS = credentials('docker-for-oracle-login')
+        GRADLE_USER_HOME = "/host_tmp/gradle"
     }
 
     stages {
