@@ -3,6 +3,9 @@ import static com.r3.build.BuildControl.killAllExistingBuildsForJob
 
 killAllExistingBuildsForJob(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
 
+boolean isReleaseBranch = (env.BRANCH_NAME =~ /^release\/.*/)
+boolean isReleaseTag = (env.TAG_NAME =~ /^release-.*$/)
+
 pipeline {
     agent {
         docker {
@@ -24,6 +27,7 @@ pipeline {
         ARTIFACTORY_CREDENTIALS = credentials('artifactory-credentials')
         DOCKER_CREDENTIALS = credentials('docker-for-oracle-login')
         GRADLE_USER_HOME = "/host_tmp/gradle"
+        SNYK_TOKEN  = credentials("c4-sdk-snyk")
     }
 
     parameters {
@@ -37,6 +41,21 @@ pipeline {
                 sh '''
                     docker login --username ${DOCKER_CREDENTIALS_USR} --password ${DOCKER_CREDENTIALS_PSW}
                    '''
+            }
+        }
+
+        stage('Snyk Security') {
+            // when {
+            //     expression { isReleaseTag || isReleaseBranch }
+            // }
+            steps {
+                script {
+                    // Invoke Snyk for each Gradle sub project we wish to scan
+                    def modulesToScan = ['contracts', 'workflows'
+                    modulesToScan.each { module ->
+                        snykSecurityScan("${env.SNYK_TOKEN}", "--sub-project=$module --configuration-matching='^runtimeClasspath\$' --prune-repeated-subdependencies --debug --target-reference='${env.BRANCH_NAME}' --project-tags=Branch='${env.BRANCH_NAME.replaceAll("[^0-9|a-z|A-Z]+","_")}'")
+                    }
+                }
             }
         }
 
