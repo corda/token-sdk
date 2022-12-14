@@ -26,6 +26,10 @@ pipeline {
         GRADLE_USER_HOME = "/host_tmp/gradle"
     }
 
+    parameters {
+        booleanParam(name: 'RUN_FREIGHTER_TESTS', defaultValue: false, description: 'Publish Kotlin version to artifactory')
+    }
+
     stages {
 
         stage("Auth Docker for Oracle Images") {
@@ -53,6 +57,9 @@ pipeline {
         }
 
         stage('Freighter Tests') {
+           when {
+                expression { params.DO_TEST }
+            }
             steps {
                 timeout(60) {
                     sh '''
