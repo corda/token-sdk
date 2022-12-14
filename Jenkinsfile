@@ -51,7 +51,7 @@ pipeline {
             steps {
                 script {
                     // Invoke Snyk for each Gradle sub project we wish to scan
-                    def modulesToScan = ['contracts', 'workflows'
+                    def modulesToScan = ['contracts', 'workflows']
                     modulesToScan.each { module ->
                         snykSecurityScan("${env.SNYK_TOKEN}", "--sub-project=$module --configuration-matching='^runtimeClasspath\$' --prune-repeated-subdependencies --debug --target-reference='${env.BRANCH_NAME}' --project-tags=Branch='${env.BRANCH_NAME.replaceAll("[^0-9|a-z|A-Z]+","_")}'")
                     }
