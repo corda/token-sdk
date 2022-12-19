@@ -28,7 +28,7 @@ RUN DEBIAN_ARCH="$(dpkg --print-architecture)" && DEST=/tmp/snyk-delta \
  && if [ "${DEBIAN_ARCH}" != amd64 ]; then echo "There is no binary for ${DEBIAN_ARCH} architecture, skipping installation"; exit 0; fi \
  && curl -o "${DEST}" "https://github.com/snyk-tech-services/snyk-delta/releases/latest/download/snyk-delta-linux" \
  && for item in snyk-delta snyk-delta-linux; do install -v -T --mode=0755 "${DEST}" "/usr/local/bin/${item}"; done \
- && rm "${DEST}" \
+ && rm "${DEST}"
 
 ARG USER="stresstester"
 RUN useradd -m ${USER}

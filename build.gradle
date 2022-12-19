@@ -5,7 +5,8 @@ buildscript {
         corda_release_group = 'net.corda'
         corda_release_version = '4.3'
         tokens_release_group = "com.r3.corda.lib.tokens"
-        tokens_release_version = "1.2.4-SNAPSHOT"
+        tokens_release_version = "$version"
+        tokens_release_suffix= "$versionSuffix"
         corda_gradle_plugins_version = '5.0.12'
         kotlin_version = '1.2.71'
         junit_version = '4.12'
@@ -63,7 +64,11 @@ buildScan {
 }
 
 allprojects {
-    version "$tokens_release_version"
+    if (tokens_release_suffix.isEmpty()) {
+        version tokens_release_version
+    } else {
+        version "$tokens_release_version-$tokens_release_suffix"
+    }
     group "$tokens_release_group"
 
     configurations.all {
