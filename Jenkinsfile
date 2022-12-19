@@ -107,7 +107,7 @@ pipeline {
 
         stage('Freighter Tests') {
            when {
-                expression { params.DO_TEST }
+                expression { params.RUN_FREIGHTER_TESTS}
             }
             steps {
                 timeout(60) {
