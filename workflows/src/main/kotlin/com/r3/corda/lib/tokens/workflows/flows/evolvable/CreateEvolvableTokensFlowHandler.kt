@@ -1,6 +1,7 @@
 package com.r3.corda.lib.tokens.workflows.flows.evolvable
 
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlowHandler
 import net.corda.core.contracts.requireThat
 import net.corda.core.flows.FlowLogic
@@ -24,6 +25,12 @@ class CreateEvolvableTokensFlowHandler(val otherSession: FlowSession) : FlowLogi
 				override fun checkTransaction(stx: SignedTransaction) = requireThat {
 					require(stx.getMissingSigners().any { it in ourKeys }) {
 						"Our node was asked to sign this transaction '${stx.id} but our signature is not required."
+					}
+					val ledgerTransaction = stx.toLedgerTransaction(serviceHub, checkSufficientSignatures = false)
+					val evolvableTokenTypeStateRefs = ledgerTransaction.outRefsOfType<EvolvableTokenType>()
+					val allMaintainers = evolvableTokenTypeStateRefs.map { it.state.data.maintainers }.flatten()
+					require(ourIdentity in allMaintainers) {
+						"Our node was asked to sign this transaction '${stx.id} but we are not a maintainer"
 					}
 				}
 			}
