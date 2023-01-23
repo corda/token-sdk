@@ -105,16 +105,16 @@ pipeline {
             }
         }
 
-//         stage('Freighter Tests') {
-//            when {
-//                 expression { params.RUN_FREIGHTER_TESTS}
-//             }
-//             steps {
-//                 timeout(60) {
-//                     sh './gradlew freighterTest -Si --no-daemon'
-//                 }
-//             }
-//         }
+        stage('Freighter Tests') {
+           when {
+                expression { params.RUN_FREIGHTER_TESTS}
+            }
+            steps {
+                timeout(60) {
+                    sh './gradlew freighterTest -Si --no-daemon'
+                }
+            }
+        }
 
         stage('Publish to Artifactory') {
             when {
