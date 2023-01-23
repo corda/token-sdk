@@ -6,6 +6,7 @@ buildscript {
         corda_release_version = '4.4'
         tokens_release_group = getProperty("group")
         tokens_release_version = getProperty("version")
+        tokens_release_suffix= "$versionSuffix"
         corda_gradle_plugins_version = '5.0.12'
         kotlin_version = '1.2.71'
         junit_version = '4.12'
@@ -36,6 +37,8 @@ buildscript {
         classpath "net.corda.plugins:quasar-utils:$corda_gradle_plugins_version"
         classpath "net.corda.plugins:cordapp:$corda_gradle_plugins_version"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:$dokka_version"
+        classpath "com.gradle:gradle-enterprise-gradle-plugin:$gradleEnterprisePlugin"
+        classpath "com.gradle:common-custom-user-data-gradle-plugin:$customUserDataGradlePlugin"
     }
 }
 
@@ -43,8 +46,29 @@ plugins {
     id "com.jfrog.artifactory" version "4.7.5"
 }
 
+apply plugin: "com.gradle.build-scan"
+apply plugin: "com.gradle.common-custom-user-data-gradle-plugin"
+
+buildScan {
+    server = gradleEnterpriseUrl
+    allowUntrustedServer = false
+    def apiKey = project.findProperty('CORDA_GRADLE_SCAN_KEY') ?: System.getenv('CORDA_GRADLE_SCAN_KEY')
+    if (apiKey?.trim()) {
+        publishAlways()
+        capture {
+            taskInputFiles = true
+        }
+        uploadInBackground = false
+        accessKey = apiKey
+    }
+}
+
 allprojects {
-    version "$tokens_release_version"
+    if (tokens_release_suffix.isEmpty()) {
+        version tokens_release_version
+    } else {
+        version "$tokens_release_version-$tokens_release_suffix"
+    }
     group "$tokens_release_group"
 
     configurations.all {
