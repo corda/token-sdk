@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlowHandler
 import net.corda.core.contracts.requireThat
+import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.SignTransactionFlow
@@ -17,6 +18,7 @@ class UpdateEvolvableTokenFlowHandler(val otherSession: FlowSession) : FlowLogic
         // Receive the notification
         val notification = otherSession.receive<UpdateEvolvableTokenFlow.Notification>().unwrap { it }
 
+        var expectedTransactionId: SecureHash? = null
         // Sign the transaction proposal, if required
         if (notification.signatureRequired) {
             val signTransactionFlow = object : SignTransactionFlow(otherSession) {
@@ -28,12 +30,13 @@ class UpdateEvolvableTokenFlowHandler(val otherSession: FlowSession) : FlowLogic
                         "This flow can only be started by existing maintainers of the EvolvableTokenType. However it " +
                                 "was started by ${otherSession.counterparty} who is not a maintainer."
                     }
+                    expectedTransactionId = stx.id
                 }
             }
             subFlow(signTransactionFlow)
         }
 
         // Resolve the update transaction.
-        subFlow(ObserverAwareFinalityFlowHandler(otherSession))
+        subFlow(ObserverAwareFinalityFlowHandler(otherSession, expectedTransactionId))
     }
 }
