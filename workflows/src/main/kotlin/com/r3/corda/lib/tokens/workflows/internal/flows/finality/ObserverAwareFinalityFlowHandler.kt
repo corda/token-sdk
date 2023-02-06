@@ -11,16 +11,13 @@ import net.corda.core.node.StatesToRecord
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.unwrap
 
-class ObserverAwareFinalityFlowHandler(val otherSession: FlowSession, val expectedTxId: SecureHash? = null) : FlowLogic<SignedTransaction?>() {
+class ObserverAwareFinalityFlowHandler @JvmOverloads constructor(val otherSession: FlowSession, val expectedTxId: SecureHash? = null) : FlowLogic<SignedTransaction?>() {
 	@Suspendable
 	override fun call(): SignedTransaction? {
-
-		val ourKeys = serviceHub.keyManagementService.filterMyKeys(serviceHub.keyManagementService.keys)
-
 		val role = otherSession.receive<TransactionRole>().unwrap { it }
 		val statesToRecord = role.toStatesToRecord()
 
-		return if (otherSession.counterparty.owningKey in ourKeys) null else {
+		return if (serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) null else {
 			subFlow(object : ReceiveTransactionFlow(otherSession, true, statesToRecord) {
 				override fun checkBeforeRecording(stx: SignedTransaction) {
 					val ledgerTransaction = stx.toLedgerTransaction(serviceHub, false)

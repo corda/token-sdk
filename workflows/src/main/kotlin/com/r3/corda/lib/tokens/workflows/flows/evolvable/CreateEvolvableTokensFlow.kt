@@ -52,7 +52,7 @@ constructor(
         val ptx: SignedTransaction = serviceHub.signInitialTransaction(transactionBuilder)
 
         // Gather signatures from other maintainers
-        // Check that we have sessions with all maitainers but not with ourselves
+        // Check that we have sessions with all maintainers but not with ourselves
         val otherMaintainerSessions = participantSessions.filter { it.counterparty in evolvableTokens.otherMaintainers(ourIdentity) }
         otherMaintainerSessions.forEach { it.send(Notification(signatureRequired = true)) }
         val stx = subFlow(CollectSignaturesFlow(

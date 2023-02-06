@@ -15,8 +15,6 @@ import net.corda.core.utilities.unwrap
 class CreateEvolvableTokensFlowHandler(val otherSession: FlowSession) : FlowLogic<Unit>() {
 	@Suspendable
 	override fun call() {
-		val ourKeys = serviceHub.keyManagementService.filterMyKeys(serviceHub.keyManagementService.keys)
-
 		// Receive the notification
 		val notification = otherSession.receive<CreateEvolvableTokensFlow.Notification>().unwrap { it }
 
@@ -25,9 +23,6 @@ class CreateEvolvableTokensFlowHandler(val otherSession: FlowSession) : FlowLogi
 		if (notification.signatureRequired) {
 			val signTransactionFlow = object : SignTransactionFlow(otherSession) {
 				override fun checkTransaction(stx: SignedTransaction) = requireThat {
-					require(stx.getMissingSigners().any { it in ourKeys }) {
-						"Our node was asked to sign this transaction '${stx.id} but our signature is not required."
-					}
 					val ledgerTransaction = stx.toLedgerTransaction(serviceHub, checkSufficientSignatures = false)
 					val evolvableTokenTypeStateRefs = ledgerTransaction.outRefsOfType<EvolvableTokenType>()
 					val allMaintainers = evolvableTokenTypeStateRefs.map { it.state.data.maintainers }.flatten()
