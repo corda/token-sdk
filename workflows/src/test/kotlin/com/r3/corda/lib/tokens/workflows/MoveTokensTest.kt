@@ -261,7 +261,7 @@ class MoveTokensTest {
         assertFailsWith<InsufficientBalanceException> {
             val moveTokenToC = nodeA.startFlow(MoveFungibleTokens(PartyAndAmount(nodeC.legalIdentity(), 100.GBP)))
             network.runNetwork()
-            val movedTokeninNodeC = moveTokenToC.getOrThrow()
+            moveTokenToC.getOrThrow()
         }
     }
 

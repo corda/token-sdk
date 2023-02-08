@@ -50,7 +50,7 @@ abstract class ContractTestCommon {
     val testSerialization = SerializationEnvironmentRule()
 
     protected val aliceServices = MockServices(
-            cordappPackages = listOf("com.r3.corda.lib.tokens.contracts", "com.r3.corda.lib.tokens.money"),
+            cordappPackages = listOf("com.r3.corda.lib.tokens.contracts"),
             initialIdentity = ALICE,
             identityService = mock<IdentityService>().also {
                 doReturn(ALICE.party).whenever(it).partyFromKey(ALICE.publicKey)

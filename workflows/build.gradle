@@ -63,6 +63,10 @@ dependencies {
         changing = true
     }
 
+    cordaCompile("$corda_release_group:corda-core-test-utils:$corda_release_version") {
+        changing = true
+    }
+
     // Logging.
     testCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
 

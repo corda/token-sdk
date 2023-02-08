@@ -17,15 +17,21 @@ import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.services.Vault
 import net.corda.nodeapi.internal.persistence.CordaPersistence
 import net.corda.testing.common.internal.testNetworkParameters
+import net.corda.testing.core.SerializationEnvironmentRule
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import rx.subjects.PublishSubject
 import java.util.*
 
 class InMemorySelectionTest {
+    @Rule
+    @JvmField
+    val testSerialization = SerializationEnvironmentRule()
+
     private lateinit var services: MockServices
     private lateinit var database: CordaPersistence
 

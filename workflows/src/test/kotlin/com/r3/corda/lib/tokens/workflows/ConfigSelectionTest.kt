@@ -13,15 +13,21 @@ import com.typesafe.config.ConfigFactory
 import net.corda.core.identity.CordaX500Name
 import net.corda.node.internal.cordapp.TypesafeCordappConfig
 import net.corda.testing.common.internal.testNetworkParameters
+import net.corda.testing.core.SerializationEnvironmentRule
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.createMockCordaService
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 class ConfigSelectionTest {
+    @Rule
+    @JvmField
+    val testSerialization = SerializationEnvironmentRule()
+
     private lateinit var services: MockServices
 
     @Before

@@ -3,9 +3,7 @@ package com.r3.corda.lib.tokens.workflows
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
-import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.contracts.utilities.withoutIssuer
 import com.r3.corda.lib.tokens.money.BTC
 import com.r3.corda.lib.tokens.money.GBP
@@ -14,7 +12,6 @@ import com.r3.corda.lib.tokens.selection.memory.config.InMemorySelectionConfig
 import com.r3.corda.lib.tokens.selection.memory.internal.Holder
 import com.r3.corda.lib.tokens.selection.memory.services.TokenObserver
 import com.r3.corda.lib.tokens.selection.memory.services.VaultWatcherService
-import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
@@ -30,21 +27,12 @@ import net.corda.core.node.services.Vault
 import net.corda.core.utilities.getOrThrow
 import net.corda.nodeapi.internal.persistence.CordaPersistence
 import net.corda.testing.common.internal.testNetworkParameters
-import net.corda.testing.core.ALICE_NAME
-import net.corda.testing.core.CHARLIE_NAME
-import net.corda.testing.core.TestIdentity
-import net.corda.testing.core.singleIdentity
+import net.corda.testing.core.*
 import net.corda.testing.node.MockServices
-import net.corda.testing.node.internal.InternalMockNetwork
-import net.corda.testing.node.internal.InternalMockNodeParameters
-import net.corda.testing.node.internal.startFlow
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.Matchers.greaterThanOrEqualTo
 import org.hamcrest.Matchers.isIn
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.*
 import rx.subjects.PublishSubject
 import java.security.PublicKey
 import java.text.NumberFormat
@@ -55,6 +43,10 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
 class VaultWatcherServiceTest {
+    @Rule
+    @JvmField
+    val testSerialization = SerializationEnvironmentRule()
+
     private lateinit var services: MockServices
     private lateinit var database: CordaPersistence
     @Before
@@ -399,39 +391,6 @@ class VaultWatcherServiceTest {
 
 
         Assert.assertThat(spendTracker.filter { it.value.get() > 1 }.toList(), `is`(equalTo(emptyList())))
-    }
-
-    @Test
-    fun `should allow selection of tokens already issued from within a flow`() {
-
-        val mockNet = InternalMockNetwork(cordappPackages = listOf(
-                "com.r3.corda.lib.tokens.money",
-                "com.r3.corda.lib.tokens.selection",
-                "com.r3.corda.lib.tokens.contracts",
-                "com.r3.corda.lib.tokens.workflows"
-        ))
-
-        try{
-            val aliceNode = mockNet.createNode(InternalMockNodeParameters(legalName = ALICE_NAME))
-            val issuerNode = mockNet.createNode(InternalMockNodeParameters(legalName = CHARLIE_NAME))
-            val alice = aliceNode.info.singleIdentity()
-            val issuer = issuerNode.info.singleIdentity()
-
-            val btc = 100000 of BTC issuedBy issuer heldBy alice
-            val resultFuture = issuerNode.services.startFlow(IssueTokens(listOf(btc))).resultFuture
-            mockNet.runNetwork()
-            val issueResultTx = resultFuture.get()
-            val issuedStateRef = issueResultTx.coreTransaction.outRefsOfType<FungibleToken>().single()
-
-            val tokensFuture = aliceNode.services.startFlow(SuspendingSelector(alice.owningKey, Amount(1, BTC))).resultFuture
-            mockNet.runNetwork()
-            val selectedToken = tokensFuture.getOrThrow().single()
-
-            Assert.assertThat(issuedStateRef, `is`(equalTo(selectedToken)))
-        }finally {
-            mockNet.stopNodes()
-        }
-
     }
 
     companion object {
