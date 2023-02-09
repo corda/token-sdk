@@ -40,10 +40,7 @@ import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.millis
 import net.corda.core.utilities.seconds
 import net.corda.testing.common.internal.testNetworkParameters
-import net.corda.testing.core.BOC_NAME
-import net.corda.testing.core.DUMMY_BANK_A_NAME
-import net.corda.testing.core.DUMMY_BANK_B_NAME
-import net.corda.testing.core.singleIdentity
+import net.corda.testing.core.*
 import net.corda.testing.driver.DriverParameters
 import net.corda.testing.driver.OutOfProcess
 import net.corda.testing.driver.driver
@@ -54,10 +51,14 @@ import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Assert
+import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertFailsWith
 
 class TokenDriverTest {
+    @Rule
+    @JvmField
+    val testSerialization = SerializationEnvironmentRule()
 
     @Test
     fun `should allow issuance of inline defined token`() {
