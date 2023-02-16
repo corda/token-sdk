@@ -21,19 +21,17 @@ import com.r3.corda.lib.tokens.workflows.utilities.heldTokenAmountCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.heldTokenCriteria
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountCriteria
 import net.corda.core.CordaRuntimeException
-import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
-import net.corda.core.internal.concurrent.doneFuture
 import net.corda.core.internal.concurrent.transpose
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.messaging.startFlow
 import net.corda.core.messaging.vaultQueryBy
-import net.corda.core.toFuture
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
@@ -53,6 +51,9 @@ import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import rx.Observer
+import java.time.Duration
+import java.util.concurrent.TimeoutException
 import kotlin.test.assertFailsWith
 
 class TokenDriverTest {
@@ -180,6 +181,8 @@ class TokenDriverTest {
             val issuerParty = issuer.nodeInfo.singleIdentity()
             val nodeAParty = nodeA.nodeInfo.singleIdentity()
             val nodeBParty = nodeB.nodeInfo.singleIdentity()
+            val nodeATxnObserver = TransactionObserver(nodeA.rpc, Duration.ofSeconds(30))
+            val nodeBTxnObserver = TransactionObserver(nodeB.rpc, Duration.ofSeconds(30))
             // Create evolvable house state.
             val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(issuerParty), linearId = UniqueIdentifier())
             val housePublishTx = issuer.rpc.startFlowDynamic(
@@ -199,8 +202,8 @@ class TokenDriverTest {
             val moneyB = 900000 of GBP issuedBy issuerParty heldBy nodeBParty
             val issueA = issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(moneyA), emptyList<Party>()).returnValue.getOrThrow()
             val issueB = issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(moneyB), emptyList<Party>()).returnValue.getOrThrow()
-            nodeA.rpc.watchForTransaction(issueA).getOrThrow()
-            nodeB.rpc.watchForTransaction(issueB).getOrThrow()
+            nodeATxnObserver.waitForTransaction(issueA)
+            nodeBTxnObserver.waitForTransaction(issueB)
             // Check that node A has cash and house.
             assertThat(nodeA.rpc.vaultQuery(House::class.java).states).isNotEmpty
             assertThat(nodeA.rpc.vaultQueryBy<FungibleToken>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs())
@@ -215,8 +218,8 @@ class TokenDriverTest {
                     nodeBParty
             ).returnValue.getOrThrow()
             // Wait for both nodes to record the transaction.
-            nodeA.rpc.watchForTransaction(dvpTx).getOrThrow()
-            nodeB.rpc.watchForTransaction(dvpTx).getOrThrow()
+            nodeATxnObserver.waitForTransaction(dvpTx)
+            nodeBTxnObserver.waitForTransaction(dvpTx)
             // NodeB has house, NodeA doesn't.
             assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken>(heldTokenCriteria(housePtr)).states).isNotEmpty
             assertThat(nodeA.rpc.vaultQueryBy<NonFungibleToken>(heldTokenCriteria(housePtr)).states).isEmpty()
@@ -231,8 +234,8 @@ class TokenDriverTest {
             val newHouse = oldHouse.state.data.copy(valuation = 800_000L.GBP)
             val houseUpdateTx = issuer.rpc.startFlowDynamic(UpdateEvolvableToken::class.java, oldHouse, newHouse, emptyList<Party>()).returnValue.getOrThrow()
             // Check that both nodeA and B got update.
-            nodeA.rpc.watchForTransaction(houseUpdateTx).getOrThrow()
-            nodeB.rpc.watchForTransaction(houseUpdateTx).getOrThrow()
+            nodeATxnObserver.waitForTransaction(houseUpdateTx)
+            nodeBTxnObserver.waitForTransaction(houseUpdateTx)
             val houseA = nodeA.rpc.startFlow(::CheckTokenPointer, housePtr).returnValue.getOrThrow()
             val houseB = nodeB.rpc.startFlow(::CheckTokenPointer, housePtr).returnValue.getOrThrow()
             assertThat(houseA.valuation).isEqualTo(800_000L.GBP)
@@ -251,7 +254,7 @@ class TokenDriverTest {
                     housePtr,
                     issuerParty
             ).returnValue.getOrThrow()
-            nodeB.rpc.watchForTransaction(redeemHouseTx).getOrThrow()
+            nodeBTxnObserver.waitForTransaction(redeemHouseTx)
             assertThat(nodeB.rpc.vaultQueryBy<NonFungibleToken>(heldTokenCriteria(housePtr)).states).isEmpty()
             // NodeA redeems 1_100_000L.GBP with the issuer, check it received 800_000L change, check, that issuer didn't record cash.
             val redeemGBPTx = nodeA.rpc.startFlowDynamic(
@@ -259,9 +262,11 @@ class TokenDriverTest {
                     1_100_000L.GBP,
                     issuerParty
             ).returnValue.getOrThrow()
-            nodeA.rpc.watchForTransaction(redeemGBPTx).getOrThrow()
+            nodeATxnObserver.waitForTransaction(redeemGBPTx)
             assertThat(nodeA.rpc.vaultQueryBy<FungibleToken>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefs()).isEqualTo(800_000L.GBP issuedBy issuerParty)
             assertThat(issuer.rpc.vaultQueryBy<FungibleToken>(tokenAmountCriteria(GBP)).states.sumTokenStateAndRefsOrZero(GBP issuedBy issuerParty)).isEqualTo(Amount.zero(GBP issuedBy issuerParty))
+            nodeATxnObserver.stopObserving()
+            nodeBTxnObserver.stopObserving()
         }
     }
 
@@ -374,15 +379,36 @@ class TokenDriverTest {
     }
 }
 
-/**
- * It's internal because it uses deprecated [internalVerifiedTransactionsFeed].
- */
-fun CordaRPCOps.watchForTransaction(tx: SignedTransaction): CordaFuture<SignedTransaction> {
-    val (snapshot, feed) = internalVerifiedTransactionsFeed()
-    return if (tx in snapshot) {
-        doneFuture(tx)
-    } else {
-        feed.filter { it == tx }.toFuture()
+class TransactionObserver(private val rpcOps: CordaRPCOps, private val duration: Duration) {
+    val txns = mutableSetOf<SecureHash>()
+    val feed = rpcOps.internalVerifiedTransactionsFeed()
+    val subscription = feed.updates.subscribe(
+            object : Observer<SignedTransaction> {
+                override fun onNext(value: SignedTransaction) {
+                    txns.add(value.id)
+                }
+
+                override fun onCompleted() {
+                }
+
+                override fun onError(e: Throwable?) {
+                    throw e!!
+                }
+            })
+
+    fun stopObserving() {
+        subscription.unsubscribe()
+    }
+
+    fun waitForTransaction(txn: SignedTransaction) {
+        val startTime = System.nanoTime()
+        while (System.nanoTime() - startTime < duration.toNanos()) {
+            if (txns.contains(txn.id)) {
+                return
+            }
+            Thread.sleep(10)
+        }
+        throw TimeoutException("Timed out waiting for transaction with id: $txn.id")
     }
 }
 
