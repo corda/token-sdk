@@ -30,7 +30,7 @@ abstract class MockNetworkTest(val names: List<CordaX500Name>) {
                     TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
                     TestCordapp.findCordapp("com.r3.corda.lib.ci")),
             threadPerNode = true,
-            networkParameters = testNetworkParameters(minimumPlatformVersion = 4)
+            networkParameters = testNetworkParameters(minimumPlatformVersion = 6)
     )
     )
 

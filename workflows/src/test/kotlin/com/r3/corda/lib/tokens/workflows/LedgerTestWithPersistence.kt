@@ -3,11 +3,11 @@ package com.r3.corda.lib.tokens.workflows
 import com.nhaarman.mockito_kotlin.whenever
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.node.services.IdentityService
+import net.corda.coretesting.internal.rigorousMock
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.DUMMY_NOTARY_NAME
 import net.corda.testing.core.SerializationEnvironmentRule
 import net.corda.testing.core.TestIdentity
-import net.corda.testing.internal.rigorousMock
 import net.corda.testing.node.MockServices
 import org.junit.Rule
 import org.mockito.Mockito
@@ -43,7 +43,7 @@ abstract class LedgerTestWithPersistence {
             cordappPackages = listOf("com.r3.corda.lib.tokens"),
             initialIdentity = ALICE,
             identityService = mockIdentityService,
-            networkParameters = testNetworkParameters(minimumPlatformVersion = 4)
+            networkParameters = testNetworkParameters(minimumPlatformVersion = 6)
     )
 
     protected val aliceDB = aliceDbAndServices.first
@@ -53,7 +53,7 @@ abstract class LedgerTestWithPersistence {
             cordappPackages = listOf("com.r3.corda.lib.tokens"),
             initialIdentity = BOB,
             identityService = mockIdentityService,
-            networkParameters = testNetworkParameters(minimumPlatformVersion = 4)
+            networkParameters = testNetworkParameters(minimumPlatformVersion = 6)
     )
 
     protected val bobDB = aliceDbAndServices.first
@@ -63,7 +63,7 @@ abstract class LedgerTestWithPersistence {
             cordappPackages = listOf("com.r3.corda.lib.tokens"),
             initialIdentity = ISSUER,
             identityService = mockIdentityService,
-            networkParameters = testNetworkParameters(minimumPlatformVersion = 4)
+            networkParameters = testNetworkParameters(minimumPlatformVersion = 6)
     )
 
     protected val issuerDB = aliceDbAndServices.first

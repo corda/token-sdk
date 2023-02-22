@@ -355,7 +355,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         // The transaction to update the token with newly created token type should fail since bob is an Observer and Observer should not be able to update
         assertFailsWith(NotaryException::class, "Bob is not a maintainer") {
             val updateTxIResult = bob.startFlow(UpdateEvolvableToken(createdTokenStateFromTransaction, newToken, listOf(bob.legalIdentity())))
-            val updateTxI = updateTxIResult.getOrThrow()
+            updateTxIResult.getOrThrow()
         }
     }
 
@@ -382,7 +382,7 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
         ) {
             val newTokenB = House("24 Leinster Gardens, Bayswater, London", 850_000.GBP, listOf(alice.legalIdentity()), linearId = house.linearId)
             val updateTxBResult = bob.startFlow(UpdateEvolvableToken(createdToken, newTokenB))
-            val updateTxB = updateTxBResult.getOrThrow()
+            updateTxBResult.getOrThrow()
         }
         // Set alice and bob as maintainers
         val newMaintainers = listOf(alice.legalIdentity(), bob.legalIdentity())

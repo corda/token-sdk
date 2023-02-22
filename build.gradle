@@ -3,9 +3,9 @@ import static org.gradle.api.JavaVersion.VERSION_1_8
 buildscript {
     ext {
         corda_release_group = 'net.corda'
-        corda_release_version = '4.3'
-        tokens_release_group = "com.r3.corda.lib.tokens"
-        tokens_release_version = "$version"
+        corda_release_version = '4.10'
+        tokens_release_group = getProperty("group")
+        tokens_release_version = getProperty("version")
         tokens_release_suffix= "$versionSuffix"
         corda_gradle_plugins_version = '5.0.12'
         kotlin_version = '1.2.71'
@@ -117,7 +117,7 @@ subprojects {
         }
     }
 
-    tasks.withType(Test){
+    tasks.withType(Test) {
         minHeapSize = "128m"
         maxHeapSize = "4096m"
     }

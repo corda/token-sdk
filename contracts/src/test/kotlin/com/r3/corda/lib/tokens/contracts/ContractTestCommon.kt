@@ -50,7 +50,7 @@ abstract class ContractTestCommon {
     val testSerialization = SerializationEnvironmentRule()
 
     protected val aliceServices = MockServices(
-            cordappPackages = listOf("com.r3.corda.lib.tokens.contracts", "com.r3.corda.lib.tokens.money"),
+            cordappPackages = listOf("com.r3.corda.lib.tokens.contracts"),
             initialIdentity = ALICE,
             identityService = mock<IdentityService>().also {
                 doReturn(ALICE.party).whenever(it).partyFromKey(ALICE.publicKey)
@@ -60,7 +60,7 @@ abstract class ContractTestCommon {
                 doReturn(ISSUER.party).whenever(it).partyFromKey(ISSUER.publicKey)
             },
             networkParameters = testNetworkParameters(
-                    minimumPlatformVersion = 4,
+                    minimumPlatformVersion = 6,
                     notaries = listOf(NotaryInfo(NOTARY.party, false))
             )
     )
