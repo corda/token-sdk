@@ -26,7 +26,7 @@ pipeline {
         LOOPBACK_ADDRESS = "172.17.0.1"
         DOCKER_CREDENTIALS = credentials('docker-for-oracle-login')
         MAVEN_LOCAL_PUBLISH = "${env.WORKSPACE}/${mavenLocal}"
-        SNYK_TOKEN  = credentials("c4-sdk-snyk")
+        SNYK_TOKEN = credentials('c4-ent-snyk-api-token-secret')
     }
 
     parameters {
