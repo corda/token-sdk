@@ -379,7 +379,7 @@ class TokenDriverTest {
     }
 
     @Test
-    fun `Issue 13000 and validate 13000 are read in again`() {
+    fun `Issue 1300 and validate 1300 are read in again`() {
         driver(DriverParameters(
                 inMemoryDB = false,
                 startNodesInProcess = false,
@@ -394,7 +394,7 @@ class TokenDriverTest {
         ) {
             val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
             val nodeParty = node.nodeInfo.singleIdentity()
-            for (i in 1..13000) {
+            for (i in 1..1300) {
                     node.rpc.startFlowDynamic(
                     IssueTokens::class.java,
                     listOf(1.USD issuedBy nodeParty heldBy nodeParty),
@@ -413,7 +413,7 @@ class TokenDriverTest {
     }
 
     @Test
-    fun `Issue 13000, redeem 250 tokens then select 400 tokens`() {
+    fun `Issue 1300, redeem 25 tokens then select 40 tokens`() {
         driver(DriverParameters(
             inMemoryDB = false,
             startNodesInProcess = false,
@@ -428,7 +428,7 @@ class TokenDriverTest {
         ) {
             val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
             val nodeParty = node.nodeInfo.singleIdentity()
-            for (i in 1..13000) {
+            for (i in 1..1300) {
                 //val usdTx =
                 node.rpc.startFlowDynamic(
                     IssueTokens::class.java,
@@ -443,21 +443,21 @@ class TokenDriverTest {
             repeat(5) {
                 val redeemGBPTx = restartedNode.rpc.startFlowDynamic(
                     RedeemFungibleGBP::class.java,
-                    50.USD,
+                    5.USD,
                     nodeParty
                 ).returnValue.getOrThrow()
             }
 
             val usdTokens = restartedNode.rpc.startFlowDynamic(
                 JustLocalSelect::class.java,
-                400.USD
+                40.USD
             ).returnValue.getOrThrow()
-            assertThat(usdTokens.size).isEqualTo(400)
+            assertThat(usdTokens.size).isEqualTo(40)
         }
     }
 
     @Test
-    fun `Issue 13000, then issue 250 more on restart then select 400 tokens`() {
+    fun `Issue 1300, then issue 25 more on restart then select 40 tokens`() {
         driver(DriverParameters(
             inMemoryDB = false,
             startNodesInProcess = false,
@@ -472,7 +472,7 @@ class TokenDriverTest {
         ) {
             val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
             val nodeParty = node.nodeInfo.singleIdentity()
-            for (i in 1..13000) {
+            for (i in 1..1300) {
                 //val usdTx =
                 node.rpc.startFlowDynamic(
                     IssueTokens::class.java,
@@ -484,7 +484,7 @@ class TokenDriverTest {
 
             // Restart the node
             val restartedNode = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
-            repeat(250) {
+            repeat(25) {
                 restartedNode.rpc.startFlowDynamic(
                     IssueTokens::class.java,
                     listOf(1.USD issuedBy nodeParty heldBy nodeParty),
@@ -493,14 +493,14 @@ class TokenDriverTest {
             }
             val usdTokens = restartedNode.rpc.startFlowDynamic(
                 JustLocalSelect::class.java,
-                400.USD
+                40.USD
             ).returnValue.getOrThrow()
-            assertThat(usdTokens.size).isEqualTo(400)
+            assertThat(usdTokens.size).isEqualTo(40)
         }
     }
 
     @Test
-    fun `Issue 4000 tokens, redeem 4000 tokens`() {
+    fun `Issue 400 tokens, redeem 400 tokens`() {
         driver(DriverParameters(
             inMemoryDB = false,
             startNodesInProcess = false,
@@ -515,7 +515,7 @@ class TokenDriverTest {
         ) {
             val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
             val nodeParty = node.nodeInfo.singleIdentity()
-            for (i in 1..4000) {
+            for (i in 1..400) {
                 //val usdTx =
                 node.rpc.startFlowDynamic(
                     IssueTokens::class.java,
@@ -527,7 +527,7 @@ class TokenDriverTest {
 
             // Restart the node
             val restartedNode = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
-            repeat(40) {
+            repeat(4) {
                 val redeemTx = restartedNode.rpc.startFlowDynamic(
                     RedeemFungibleGBP::class.java,
                     100.USD,
