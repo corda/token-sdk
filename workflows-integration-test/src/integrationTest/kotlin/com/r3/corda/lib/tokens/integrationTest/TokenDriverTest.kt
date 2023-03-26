@@ -377,6 +377,165 @@ class TokenDriverTest {
             assertThat(usdToken).isEqualTo(usdTx.singleOutput<FungibleToken>())
         }
     }
+
+    @Test
+    fun `Issue 13000 and validate 13000 are read in again`() {
+        driver(DriverParameters(
+                inMemoryDB = false,
+                startNodesInProcess = false,
+                cordappsForAllNodes = listOf(
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.integration.workflows"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                        TestCordapp.findCordapp("com.r3.corda.lib.ci")
+                ),
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 6, notaries = emptyList()))
+        ) {
+            val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+            val nodeParty = node.nodeInfo.singleIdentity()
+            for (i in 1..13000) {
+                    node.rpc.startFlowDynamic(
+                    IssueTokens::class.java,
+                    listOf(1.USD issuedBy nodeParty heldBy nodeParty),
+                    emptyList<Party>()
+                ).returnValue.getOrThrow()
+            }
+            node.stop()
+            // Restart the node
+            val restartedNode = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+            val usdTokens = restartedNode.rpc.startFlowDynamic(
+                    JustLocalSelect::class.java,
+                    20.USD
+                ).returnValue.getOrThrow()
+            assertThat(usdTokens.size).isEqualTo(20)
+        }
+    }
+
+    @Test
+    fun `Issue 13000, redeem 250 tokens then select 400 tokens`() {
+        driver(DriverParameters(
+            inMemoryDB = false,
+            startNodesInProcess = false,
+            cordappsForAllNodes = listOf(
+                TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                TestCordapp.findCordapp("com.r3.corda.lib.tokens.integration.workflows"),
+                TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                TestCordapp.findCordapp("com.r3.corda.lib.ci")
+            ),
+            networkParameters = testNetworkParameters(minimumPlatformVersion = 6, notaries = emptyList()))
+        ) {
+            val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+            val nodeParty = node.nodeInfo.singleIdentity()
+            for (i in 1..13000) {
+                //val usdTx =
+                node.rpc.startFlowDynamic(
+                    IssueTokens::class.java,
+                    listOf(1.USD issuedBy nodeParty heldBy nodeParty),
+                    emptyList<Party>()
+                ).returnValue.getOrThrow()
+            }
+            node.stop()
+
+            // Restart the node
+            val restartedNode = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+            repeat(5) {
+                val redeemGBPTx = restartedNode.rpc.startFlowDynamic(
+                    RedeemFungibleGBP::class.java,
+                    50.USD,
+                    nodeParty
+                ).returnValue.getOrThrow()
+            }
+
+            val usdTokens = restartedNode.rpc.startFlowDynamic(
+                JustLocalSelect::class.java,
+                400.USD
+            ).returnValue.getOrThrow()
+            assertThat(usdTokens.size).isEqualTo(400)
+        }
+    }
+
+    @Test
+    fun `Issue 13000, then issue 250 more on restart then select 400 tokens`() {
+        driver(DriverParameters(
+            inMemoryDB = false,
+            startNodesInProcess = false,
+            cordappsForAllNodes = listOf(
+                TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                TestCordapp.findCordapp("com.r3.corda.lib.tokens.integration.workflows"),
+                TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                TestCordapp.findCordapp("com.r3.corda.lib.ci")
+            ),
+            networkParameters = testNetworkParameters(minimumPlatformVersion = 6, notaries = emptyList()))
+        ) {
+            val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+            val nodeParty = node.nodeInfo.singleIdentity()
+            for (i in 1..13000) {
+                //val usdTx =
+                node.rpc.startFlowDynamic(
+                    IssueTokens::class.java,
+                    listOf(1.USD issuedBy nodeParty heldBy nodeParty),
+                    emptyList<Party>()
+                ).returnValue.getOrThrow()
+            }
+            node.stop()
+
+            // Restart the node
+            val restartedNode = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+            repeat(250) {
+                restartedNode.rpc.startFlowDynamic(
+                    IssueTokens::class.java,
+                    listOf(1.USD issuedBy nodeParty heldBy nodeParty),
+                    emptyList<Party>()
+                ).returnValue.getOrThrow()
+            }
+            val usdTokens = restartedNode.rpc.startFlowDynamic(
+                JustLocalSelect::class.java,
+                400.USD
+            ).returnValue.getOrThrow()
+            assertThat(usdTokens.size).isEqualTo(400)
+        }
+    }
+
+    @Test
+    fun `Issue 4000 tokens, redeem 4000 tokens`() {
+        driver(DriverParameters(
+            inMemoryDB = false,
+            startNodesInProcess = false,
+            cordappsForAllNodes = listOf(
+                TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
+                TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                TestCordapp.findCordapp("com.r3.corda.lib.tokens.integration.workflows"),
+                TestCordapp.findCordapp("com.r3.corda.lib.tokens.testing"),
+                TestCordapp.findCordapp("com.r3.corda.lib.ci")
+            ),
+            networkParameters = testNetworkParameters(minimumPlatformVersion = 6, notaries = emptyList()))
+        ) {
+            val node = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+            val nodeParty = node.nodeInfo.singleIdentity()
+            for (i in 1..4000) {
+                //val usdTx =
+                node.rpc.startFlowDynamic(
+                    IssueTokens::class.java,
+                    listOf(1.USD issuedBy nodeParty heldBy nodeParty),
+                    emptyList<Party>()
+                ).returnValue.getOrThrow()
+            }
+            node.stop()
+
+            // Restart the node
+            val restartedNode = startNode(providedName = DUMMY_BANK_A_NAME, customOverrides = mapOf("p2pAddress" to "localhost:30000")).getOrThrow()
+            repeat(40) {
+                val redeemTx = restartedNode.rpc.startFlowDynamic(
+                    RedeemFungibleGBP::class.java,
+                    100.USD,
+                    nodeParty
+                ).returnValue.getOrThrow()
+            }
+        }
+    }
 }
 
 class TransactionObserver(private val rpcOps: CordaRPCOps, private val duration: Duration) {
