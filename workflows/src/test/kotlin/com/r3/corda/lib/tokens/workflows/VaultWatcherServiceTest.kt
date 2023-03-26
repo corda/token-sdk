@@ -71,18 +71,7 @@ class VaultWatcherServiceTest {
         val owner = Crypto.generateKeyPair(Crypto.DEFAULT_SIGNATURE_SCHEME).public
         val amountToIssue: Long = 100
         val stateAndRef = createNewFiatCurrencyTokenRef(amountToIssue, owner, notary1, issuer1, GBP, observable, database)
-        var insufficientBalance = true
-        var iter = 0
-        var selectedTokens:  List<StateAndRef<FungibleToken>>? = null
-        while (insufficientBalance) {
-            try {
-                selectedTokens = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(5, GBP), selectionId = "abc")
-                insufficientBalance = false
-            } catch (ex: InsufficientBalanceException) {
-                Thread.sleep(300)
-                if (iter++ > 10) throw ex
-            }
-        }
+        val selectedTokens = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(5, GBP), selectionId = "abc")
         Assert.assertThat(selectedTokens, `is`(equalTo(listOf(stateAndRef))))
     }
 

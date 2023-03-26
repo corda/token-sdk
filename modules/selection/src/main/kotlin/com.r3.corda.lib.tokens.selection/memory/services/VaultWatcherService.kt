@@ -249,7 +249,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
         tokenObserver.source.doOnError {
             LOG.error("received error from observable", it)
         }
-        tokenObserver.source.subscribe{UPDATER.submit{ onVaultUpdate(it)}}
+        tokenObserver.source.subscribe(::onVaultUpdate)
     }
 
     private fun processToken(token: StateAndRef<FungibleToken>, indexingType: IndexingType): TokenIndex {
