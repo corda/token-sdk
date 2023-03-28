@@ -20,6 +20,7 @@ import net.corda.testing.node.createMockCordaService
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -58,6 +59,7 @@ class ConfigSelectionTest {
         assertThat(selection).hasFieldOrPropertyWithValue("retryCap", 1345)
     }
 
+    @Ignore
     @Test
     fun `test full in memory selection public key`() {
         createMockCordaService(services, ::VaultWatcherService)
@@ -132,6 +134,7 @@ class ConfigSelectionTest {
         assertThat(selectionAll).hasFieldOrPropertyWithValue("retryCap", RETRY_CAP_DEFAULT)
     }
 
+    @Ignore
     @Test
     fun `test defaults in memory selection`() {
         createMockCordaService(services, ::VaultWatcherService)

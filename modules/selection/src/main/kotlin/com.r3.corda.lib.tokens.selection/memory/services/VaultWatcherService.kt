@@ -15,6 +15,7 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
+import net.corda.core.node.services.ServiceLifecycleEvent
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.vault.DEFAULT_PAGE_NUM
 import net.corda.core.node.services.vault.PageSpecification
@@ -23,11 +24,14 @@ import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.utilities.contextLogger
 import rx.Observable
 import java.time.Duration
+import java.util.ArrayDeque
+import java.util.Collections
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
+import kotlin.math.floor
 
 val UPDATER: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 val EMPTY_BUCKET = TokenBucket()
@@ -67,7 +71,18 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
 
     }
 
-    constructor(appServiceHub: AppServiceHub) : this(getObservableFromAppServiceHub(appServiceHub), InMemorySelectionConfig.parse(appServiceHub.getAppContext().config))
+    var tokenLoadingStarted = false
+    constructor(appServiceHub: AppServiceHub) : this(getObservableFromAppServiceHub(appServiceHub), InMemorySelectionConfig.parse(appServiceHub.getAppContext().config)) {
+        appServiceHub.register(AppServiceHub.SERVICE_PRIORITY_NORMAL) { event ->
+            when (event.name) {
+                ServiceLifecycleEvent.BEFORE_STATE_MACHINE_START.toString(),
+                ServiceLifecycleEvent.STATE_MACHINE_STARTED.toString() -> if (!tokenLoadingStarted) {
+                    tokenLoadingStarted = true
+                    tokenObserver.startLoading(::onVaultUpdate)
+                }
+            }
+        }
+    }
 
     companion object {
         val LOG = contextLogger()
@@ -95,10 +110,9 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
 
 
             val pageSize = 1000
-            var currentPage = DEFAULT_PAGE_NUM
             val (_, vaultObservable) = appServiceHub.vaultService.trackBy(
                     contractStateType = FungibleToken::class.java,
-                    paging = PageSpecification(pageNumber = currentPage, pageSize = pageSize),
+                    paging = PageSpecification(pageNumber = DEFAULT_PAGE_NUM, pageSize = pageSize),
                     criteria = QueryCriteria.VaultQueryCriteria(status = Vault.StateStatus.ALL),
                     sorting = sortByStateRefAscending())
 
@@ -111,18 +125,15 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
                     UPDATER.submit {
                         try {
                             var shouldLoop = true
+                            var startResultSetIndex = 0L
                             while (shouldLoop) {
-                                val newlyLoadedStates = appServiceHub.vaultService.queryBy(
-                                        contractStateType = FungibleToken::class.java,
-                                        paging = PageSpecification(pageNumber = currentPage, pageSize = pageSize),
-                                        criteria = QueryCriteria.VaultQueryCriteria(),
-                                        sorting = sortByStateRefAscending()
-                                ).states.toSet()
+                                val queryResult = queryVaultForStates(appServiceHub, startResultSetIndex)
+                                val newlyLoadedStates = queryResult.first.toSet()
+                                startResultSetIndex = queryResult.second
+                                shouldLoop = queryResult.third
                                 LOG.info("publishing ${newlyLoadedStates.size} to async state loading callback")
                                 callback(Vault.Update(emptySet(), newlyLoadedStates))
-                                shouldLoop = newlyLoadedStates.isNotEmpty()
                                 LOG.debug("shouldLoop=${shouldLoop}")
-                                currentPage++
                             }
                             LOG.info("finished token loading")
                         } catch (t: Throwable) {
@@ -130,9 +141,112 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
                         }
                     }
                 }
+
+                private val pageSpecifications = ArrayDeque<PageSpecification>()
+                private var syncPoint: SyncPoint? = null
+                val initialSpecification = PageSpecification(DEFAULT_PAGE_NUM, 1999)
+                val primes = intArrayOf(1009, 1013, 1019, 1021, 1031, 1033, 1039, 1049, 1051, 1061, 1063, 1069, 1087, 1091, 1093, 1097, 1103, 1109, 1117, 1123, 1129, 1151, 1153, 1163, 1171, 1181, 1187, 1193, 1201, 1213, 1217, 1223, 1229, 1231, 1237, 1249, 1259, 1277, 1279, 1283, 1289, 1291, 1297, 1301, 1303, 1307, 1319, 1321, 1327, 1361, 1367, 1373, 1381, 1399, 1409, 1423, 1427, 1429, 1433, 1439, 1447, 1451, 1453, 1459, 1471, 1481, 1483, 1487, 1489, 1493, 1499, 1511, 1523, 1531, 1543, 1549, 1553, 1559, 1567, 1571, 1579, 1583, 1597, 1601, 1607, 1609, 1613, 1619, 1621, 1627, 1637, 1657, 1663, 1667, 1669, 1693, 1697, 1699, 1709, 1721, 1723, 1733, 1741, 1747, 1753, 1759, 1777, 1783, 1787, 1789, 1801, 1811, 1823, 1831, 1847, 1861, 1867, 1871, 1873, 1877, 1879, 1889, 1901, 1907, 1913, 1931, 1933, 1949, 1951, 1973, 1979, 1987, 1993, 1997, 1999)
+                val stateAndRefComparator = compareBy<StateAndRef<FungibleToken>> { it.ref.txhash }.thenBy { it.ref.index }
+                // if item not found in list, binary search gives us the inverted search result (-insertion point - 1)
+                // so convert this to the next element down from the insertion point (or -1 if no next element down)
+                private fun convertBinarySearchResult(result: Int): Int = if (result < 0) {(result * -1) - 2} else result
+
+                private fun queryVaultForStates(appServiceHub: AppServiceHub, startResultSetIndex: Long): Triple<List<StateAndRef<FungibleToken>>, Long, Boolean> {
+                    var newlyLoadedStatesList: List<StateAndRef<FungibleToken>> = emptyList()
+                    var specification = getOverlappingPageSpecification(startResultSetIndex)
+                    var newStartPos = -1
+                    while (newStartPos == -1) {
+                        newlyLoadedStatesList = appServiceHub.vaultService.queryBy(
+                            contractStateType = FungibleToken::class.java,
+                            paging = specification,
+                            criteria = QueryCriteria.VaultQueryCriteria(),
+                            sorting = sortByStateRefAscending()
+                        ).states
+                        newStartPos = isListInSync(newlyLoadedStatesList, specification)
+                        if (newStartPos == -1) {
+                            specification = popPriorPageSpecification()
+                        }
+                    }
+                    val lastResultSetIndex = toResultSetIndex(newlyLoadedStatesList.lastIndex, specification)
+                    val shouldLoop = newlyLoadedStatesList.size == specification.pageSize
+                    return Triple(newlyLoadedStatesList.subList(newStartPos, newlyLoadedStatesList.size), lastResultSetIndex, shouldLoop)
+                }
+                private fun getOverlappingPageSpecification(startResultSetIndex: Long): PageSpecification {
+                    val specification = if (startResultSetIndex == 0L) {
+                        initialSpecification
+                    }
+                    else {
+                        var numberPages = 1
+                        var dec = 1.0
+                        var pageSz = 0
+                        primes.forEach { prime ->
+                            val (intPart, decPart) = splitDouble(startResultSetIndex.toDouble() / prime)
+                            if (decPart > 0 && dec > decPart) {
+                                dec = decPart
+                                numberPages = intPart + 1     // Pages number start at 1
+                                pageSz = prime
+                            }
+                        }
+                        PageSpecification(numberPages, pageSz)
+                    }
+                    pageSpecifications.add(specification)
+                    return specification
+                }
+                private fun splitDouble(multiple: Double): Pair<Int, Double> {
+                    val intPart = floor(multiple).toInt()
+                    return Pair(intPart, multiple - intPart)
+                }
+                private fun isListInSync(states: List<StateAndRef<FungibleToken>>, specification: PageSpecification): Int {
+                    if (states.isEmpty()) {
+                        return 0
+                    }
+                    if (syncPoint == null) {
+                        syncPoint = SyncPoint(states.last(), specification, toResultSetIndex(states.lastIndex, specification))
+                        return 0
+                    }
+                    val localSyncPoint: SyncPoint = syncPoint!!     // We're single threaded here
+
+                    val listIndex = toIndexWithinPage(localSyncPoint.lastKnownResultSetIndexOfStateAndRef, specification)
+                    if (listIndex in 0..states.lastIndex && states[listIndex] == localSyncPoint.stateAndRef) {
+                        // No change in the list
+                        syncPoint = SyncPoint(states.last(), specification, toResultSetIndex(states.lastIndex, specification))
+                        return listIndex+1 // Return first unread entry index, which is sync pos + 1
+                    }
+                    val largestSeenStateRefIndex = convertBinarySearchResult(Collections.binarySearch(states, localSyncPoint.stateAndRef, stateAndRefComparator))
+                    if (largestSeenStateRefIndex != -1) {
+                        syncPoint = SyncPoint(states.last(), specification, toResultSetIndex(states.lastIndex, specification))
+                        if (largestSeenStateRefIndex == states.lastIndex) {
+                            // We have seen the whole list already, so just return last element which we have already seen,
+                            // to simplify processing. Could happen if large number of tokens gets added while we are reading in.
+                            return largestSeenStateRefIndex
+                        }
+                        return largestSeenStateRefIndex + 1 // first unread element
+                    }
+                    LOG.info("Token loading has become out of sync, will re-sync")
+                    return -1
+                }
+                private fun popPriorPageSpecification(): PageSpecification {
+                    pageSpecifications.pollLast()
+                    return if (pageSpecifications.isEmpty()) {
+                        syncPoint = null
+                        pageSpecifications.add(initialSpecification)
+                        initialSpecification
+                    } else {
+                        pageSpecifications.last
+                    }
+                }
+
+                private fun toResultSetIndex(listEntryIndex: Int, specification: PageSpecification): Long {
+                    return specification.pageSize * (specification.pageNumber-1) + listEntryIndex.toLong()
+                }
+
+                private fun toIndexWithinPage(resultSetIndex: Long, specification: PageSpecification): Int {
+                    return (resultSetIndex - ((specification.pageNumber-1) * specification.pageSize)).toInt()
+                }
             }
             return TokenObserver(emptyList(), uncheckedCast(vaultObservable), ownerProvider, asyncLoader)
         }
+        data class SyncPoint(val stateAndRef: StateAndRef<FungibleToken>, val specification: PageSpecification, var lastKnownResultSetIndexOfStateAndRef: Long)
     }
 
     init {
@@ -140,7 +254,6 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
         tokenObserver.source.doOnError {
             LOG.error("received error from observable", it)
         }
-        tokenObserver.startLoading(::onVaultUpdate)
         tokenObserver.source.subscribe(::onVaultUpdate)
     }
 
@@ -186,7 +299,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
             for (stateAndRef in stateAndRefs) {
                 val existingMark = __backingMap.putIfAbsent(stateAndRef, PLACE_HOLDER)
                 existingMark?.let {
-                    LOG.warn("Attempted to overwrite existing token ${stateAndRef.ref}, this suggests incorrect vault behaviours")
+                    LOG.debug("Attempted to overwrite existing token ${stateAndRef.ref}, this suggests a result set re-sync occurred")
                 }
                 for (key in __indexed.keys) {
                     val index = processToken(stateAndRef, IndexingType.fromHolder(key))
