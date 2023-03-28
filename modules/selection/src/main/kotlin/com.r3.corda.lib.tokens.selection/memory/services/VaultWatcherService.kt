@@ -22,10 +22,10 @@ import net.corda.core.node.services.vault.PageSpecification
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.utilities.contextLogger
-import net.corda.core.utilities.toHexString
 import rx.Observable
 import java.time.Duration
 import java.util.ArrayDeque
+import java.util.Collections
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -146,6 +146,10 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
                 private var syncPoint: SyncPoint? = null
                 val initialSpecification = PageSpecification(DEFAULT_PAGE_NUM, 1999)
                 val primes = intArrayOf(1009, 1013, 1019, 1021, 1031, 1033, 1039, 1049, 1051, 1061, 1063, 1069, 1087, 1091, 1093, 1097, 1103, 1109, 1117, 1123, 1129, 1151, 1153, 1163, 1171, 1181, 1187, 1193, 1201, 1213, 1217, 1223, 1229, 1231, 1237, 1249, 1259, 1277, 1279, 1283, 1289, 1291, 1297, 1301, 1303, 1307, 1319, 1321, 1327, 1361, 1367, 1373, 1381, 1399, 1409, 1423, 1427, 1429, 1433, 1439, 1447, 1451, 1453, 1459, 1471, 1481, 1483, 1487, 1489, 1493, 1499, 1511, 1523, 1531, 1543, 1549, 1553, 1559, 1567, 1571, 1579, 1583, 1597, 1601, 1607, 1609, 1613, 1619, 1621, 1627, 1637, 1657, 1663, 1667, 1669, 1693, 1697, 1699, 1709, 1721, 1723, 1733, 1741, 1747, 1753, 1759, 1777, 1783, 1787, 1789, 1801, 1811, 1823, 1831, 1847, 1861, 1867, 1871, 1873, 1877, 1879, 1889, 1901, 1907, 1913, 1931, 1933, 1949, 1951, 1973, 1979, 1987, 1993, 1997, 1999)
+                val stateAndRefComparator = compareBy<StateAndRef<FungibleToken>> { it.ref.txhash }.thenBy { it.ref.index }
+                // if item not found in list, binary search gives us the inverted search result (-insertion point - 1)
+                // so convert this to the next element down from the insertion point (or -1 if no next element down)
+                private fun convertBinarySearchResult(result: Int): Int = if (result < 0) {(result * -1) - 2} else result
 
                 private fun queryVaultForStates(appServiceHub: AppServiceHub, startResultSetIndex: Long): Triple<List<StateAndRef<FungibleToken>>, Long, Boolean> {
                     var newlyLoadedStatesList: List<StateAndRef<FungibleToken>> = emptyList()
@@ -208,7 +212,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
                         syncPoint = SyncPoint(states.last(), specification, toResultSetIndex(states.lastIndex, specification))
                         return listIndex+1 // Return first unread entry index, which is sync pos + 1
                     }
-                    val largestSeenStateRefIndex = seachForLargestSeenStateRef(states, localSyncPoint.stateAndRef)
+                    val largestSeenStateRefIndex = convertBinarySearchResult(Collections.binarySearch(states, localSyncPoint.stateAndRef, stateAndRefComparator))
                     if (largestSeenStateRefIndex != -1) {
                         syncPoint = SyncPoint(states.last(), specification, toResultSetIndex(states.lastIndex, specification))
                         if (largestSeenStateRefIndex == states.lastIndex) {
@@ -238,40 +242,6 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
 
                 private fun toIndexWithinPage(resultSetIndex: Long, specification: PageSpecification): Int {
                     return (resultSetIndex - ((specification.pageNumber-1) * specification.pageSize)).toInt()
-                }
-
-                fun seachForLargestSeenStateRef(values: List<StateAndRef<FungibleToken>>, element: StateAndRef<FungibleToken>): Int {
-                    var left = 0
-                    var right = values.size - 1
-                    var result = -1
-                    while (left <= right) {
-                        val midPoint: Int = left + (right - left) / 2
-                        val value = values[midPoint]
-                        when (compare(value, element)) {
-                            0  -> return midPoint
-                            -1 -> {
-                                result = midPoint
-                                left = midPoint +1
-                            }
-                            else -> right = midPoint -1
-                        }
-                    }
-                    return result
-                }
-                private fun compare(first: StateAndRef<FungibleToken>, second: StateAndRef<FungibleToken>): Int {
-                    if (first.ref.txhash.bytes.toHexString() < second.ref.txhash.bytes.toHexString()) {
-                        return -1
-                    }
-                    if (first.ref.txhash.bytes.toHexString() > second.ref.txhash.bytes.toHexString()) {
-                        return 1
-                    }
-                    if (first.ref.index < second.ref.index) {
-                        return -1
-                    }
-                    if (first.ref.index > second.ref.index) {
-                        return 1
-                    }
-                    return 0
                 }
             }
             return TokenObserver(emptyList(), uncheckedCast(vaultObservable), ownerProvider, asyncLoader)
