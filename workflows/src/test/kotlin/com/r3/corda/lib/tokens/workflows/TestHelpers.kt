@@ -1,15 +1,12 @@
 package com.r3.corda.lib.tokens.workflows
 
-import net.corda.core.concurrent.CordaFuture
+import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.internal.concurrent.doneFuture
-import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.queryBy
 import net.corda.core.node.services.vault.QueryCriteria
-import net.corda.core.toFuture
 import net.corda.core.transactions.SignedTransaction
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
@@ -85,5 +82,22 @@ inline fun <reified T : ContractState> assertNotHasStateAndRef(stateAndRef: Stat
     val criteria = QueryCriteria.VaultQueryCriteria(stateStatus)
     nodes.forEach {
         assert(!it.services.vaultService.queryBy<T>(criteria).states.contains(stateAndRef)) { "Found $stateAndRef in ${it.legalIdentity()} vault" }
+    }
+}
+
+fun <R> waitForTokens(block: () -> R): R {
+    var retryCount = 0
+    while (true) {
+        try {
+            return block()
+        } catch (ex: InsufficientBalanceException) {
+            if (retryCount > 2) {
+                throw ex
+            }
+            else {
+                Thread.sleep(1000)
+                retryCount++
+            }
+        }
     }
 }
