@@ -296,7 +296,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
             for (stateAndRef in stateAndRefs) {
                 val existingMark = __backingMap.remove(stateAndRef)
                 existingMark
-                        ?: LOG.warn("Attempted to remove existing token ${stateAndRef.ref}, but it was not found this suggests incorrect vault behaviours")
+                        ?: LOG.warn("Attempted to remove existing token ${stateAndRef.ref}, but it was not found this suggests tokens were removed while initial token loading took place")
                 for (key in __indexed.keys) {
                     val index = processToken(stateAndRef, IndexingType.fromHolder(key))
                     val indexedViewForHolder = __indexed[key]
