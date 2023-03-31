@@ -302,7 +302,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
                 val existingMark = __backingMap.remove(stateAndRef)
                 if (existingMark == null) {
                     if (tokenLoadingFinished) {
-                        LOG.warn("Attempted to remove existing token ${stateAndRef.ref}, but it was not found this suggests tokens were removed while initial token loading took place")
+                        LOG.warn("Attempted to remove existing token ${stateAndRef.ref}, but it was not found this suggests incorrect vault behaviours")
                     }
                     else if (stateAndRefs !== missedConsumes){
                         missedConsumes.add(stateAndRef)
