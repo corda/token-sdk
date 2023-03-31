@@ -301,10 +301,10 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
             for (stateAndRef in stateAndRefs) {
                 val existingMark = __backingMap.remove(stateAndRef)
                 if (existingMark == null) {
-                    if (tokenLoadingFinished) {
+                    if (!tokenLoadingStarted || tokenLoadingFinished) {
                         LOG.warn("Attempted to remove existing token ${stateAndRef.ref}, but it was not found this suggests incorrect vault behaviours")
                     }
-                    else if (stateAndRefs !== missedConsumes){
+                    else if (tokenLoadingStarted && stateAndRefs !== missedConsumes){
                         missedConsumes.add(stateAndRef)
                     }
                 }
