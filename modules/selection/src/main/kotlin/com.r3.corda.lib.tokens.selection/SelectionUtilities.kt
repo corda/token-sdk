@@ -15,9 +15,13 @@ import net.corda.core.node.services.vault.builder
 // TODO clean up the module structure of token-sdk, because these function and types (eg PartyAndAmount) should be separate from workflows
 // Sorts a query by state ref ascending.
 internal fun sortByStateRefAscending(): Sort {
-    val sortAttributeTxnId = SortAttribute.Standard(Sort.CommonStateAttribute.STATE_REF_TXN_ID)
-    val sortAttributeIndex = SortAttribute.Standard(Sort.CommonStateAttribute.STATE_REF_INDEX)
-    return Sort(listOf(Sort.SortColumn(sortAttributeTxnId, Sort.Direction.ASC), Sort.SortColumn(sortAttributeIndex, Sort.Direction.ASC)))
+    val sortAttribute = SortAttribute.Standard(Sort.CommonStateAttribute.STATE_REF)
+    return Sort(setOf(Sort.SortColumn(sortAttribute, Sort.Direction.ASC)))
+}
+
+internal fun sortByTimeStampAscending(): Sort {
+    val sortAttribute = SortAttribute.Standard(Sort.VaultStateAttribute.RECORDED_TIME)
+    return Sort(setOf(Sort.SortColumn(sortAttribute, Sort.Direction.ASC)))
 }
 
 // Returns all held token amounts of a specified token with given issuer.

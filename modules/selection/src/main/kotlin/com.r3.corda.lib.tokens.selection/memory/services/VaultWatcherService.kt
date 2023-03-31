@@ -9,7 +9,7 @@ import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
 import com.r3.corda.lib.tokens.selection.InsufficientNotLockedBalanceException
 import com.r3.corda.lib.tokens.selection.memory.internal.Holder
 import com.r3.corda.lib.tokens.selection.memory.internal.lookupExternalIdFromKey
-import com.r3.corda.lib.tokens.selection.sortByStateRefAscending
+import com.r3.corda.lib.tokens.selection.sortByTimeStampAscending
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.internal.uncheckedCast
@@ -114,7 +114,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
                     contractStateType = FungibleToken::class.java,
                     paging = PageSpecification(pageNumber = DEFAULT_PAGE_NUM, pageSize = pageSize),
                     criteria = QueryCriteria.VaultQueryCriteria(status = Vault.StateStatus.ALL),
-                    sorting = sortByStateRefAscending())
+                    sorting = sortByTimeStampAscending())
 
             // we use the UPDATER thread for two reasons
             // 1 this means we return the service before all states are loaded, and so do not hold up the node startup
@@ -146,31 +146,47 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
                 private var syncPoint: SyncPoint? = null
                 val initialSpecification = PageSpecification(DEFAULT_PAGE_NUM, 1999)
                 val primes = intArrayOf(1009, 1013, 1019, 1021, 1031, 1033, 1039, 1049, 1051, 1061, 1063, 1069, 1087, 1091, 1093, 1097, 1103, 1109, 1117, 1123, 1129, 1151, 1153, 1163, 1171, 1181, 1187, 1193, 1201, 1213, 1217, 1223, 1229, 1231, 1237, 1249, 1259, 1277, 1279, 1283, 1289, 1291, 1297, 1301, 1303, 1307, 1319, 1321, 1327, 1361, 1367, 1373, 1381, 1399, 1409, 1423, 1427, 1429, 1433, 1439, 1447, 1451, 1453, 1459, 1471, 1481, 1483, 1487, 1489, 1493, 1499, 1511, 1523, 1531, 1543, 1549, 1553, 1559, 1567, 1571, 1579, 1583, 1597, 1601, 1607, 1609, 1613, 1619, 1621, 1627, 1637, 1657, 1663, 1667, 1669, 1693, 1697, 1699, 1709, 1721, 1723, 1733, 1741, 1747, 1753, 1759, 1777, 1783, 1787, 1789, 1801, 1811, 1823, 1831, 1847, 1861, 1867, 1871, 1873, 1877, 1879, 1889, 1901, 1907, 1913, 1931, 1933, 1949, 1951, 1973, 1979, 1987, 1993, 1997, 1999)
-                val stateAndRefComparator = compareBy<StateAndRef<FungibleToken>> { it.ref.txhash }.thenBy { it.ref.index }
+                val stateMetadataComparator = compareBy<Vault.StateMetadata> { it.recordedTime }.thenBy { it.ref.index }.thenBy { it.ref.txhash }
                 // if item not found in list, binary search gives us the inverted search result (-insertion point - 1)
                 // so convert this to the next element down from the insertion point (or -1 if no next element down)
                 private fun convertBinarySearchResult(result: Int): Int = if (result < 0) {(result * -1) - 2} else result
 
                 private fun queryVaultForStates(appServiceHub: AppServiceHub, startResultSetIndex: Long): Triple<List<StateAndRef<FungibleToken>>, Long, Boolean> {
                     var newlyLoadedStatesList: List<StateAndRef<FungibleToken>> = emptyList()
+                    var sortedStateMetadata: List<Vault.StateMetadata> = emptyList()
                     var specification = getOverlappingPageSpecification(startResultSetIndex)
                     var newStartPos = -1
                     while (newStartPos == -1) {
-                        newlyLoadedStatesList = appServiceHub.vaultService.queryBy(
+                        val page = appServiceHub.vaultService.queryBy(
                             contractStateType = FungibleToken::class.java,
                             paging = specification,
                             criteria = QueryCriteria.VaultQueryCriteria(),
-                            sorting = sortByStateRefAscending()
-                        ).states
-                        newStartPos = isListInSync(newlyLoadedStatesList, specification)
+                            sorting = sortByTimeStampAscending()
+                        )
+                        newlyLoadedStatesList = page.states
+                        sortedStateMetadata = extractSortedMetadataList(page)
+                        newStartPos = isListInSync(sortedStateMetadata, specification)
                         if (newStartPos == -1) {
                             specification = popPriorPageSpecification()
                         }
                     }
-                    val lastResultSetIndex = toResultSetIndex(newlyLoadedStatesList.lastIndex, specification)
-                    val shouldLoop = newlyLoadedStatesList.size == specification.pageSize
-                    return Triple(newlyLoadedStatesList.subList(newStartPos, newlyLoadedStatesList.size), lastResultSetIndex, shouldLoop)
+                    val lastResultSetIndex = toResultSetIndex(sortedStateMetadata.lastIndex, specification)
+                    val shouldLoop = sortedStateMetadata.size == specification.pageSize
+                    val states = convertStateMetadataListToStateAndRefList(newlyLoadedStatesList, sortedStateMetadata.subList(newStartPos, sortedStateMetadata.size))
+                    return Triple(states, lastResultSetIndex, shouldLoop)
                 }
+
+                private fun extractSortedMetadataList(page: Vault.Page<FungibleToken>): List<Vault.StateMetadata> {
+                    val statesMetadata = page.statesMetadata.toMutableList()
+                    Collections.sort<Vault.StateMetadata>(statesMetadata, stateMetadataComparator)
+                    return statesMetadata
+                }
+
+                private fun convertStateMetadataListToStateAndRefList(states: List<StateAndRef<FungibleToken>>, statesMetadata: List<Vault.StateMetadata>): List<StateAndRef<FungibleToken>> {
+                    val statesMap = states.associateBy { it.ref }
+                    return statesMetadata.mapNotNull { statesMap[it.ref] }
+                }
+
                 private fun getOverlappingPageSpecification(startResultSetIndex: Long): PageSpecification {
                     val specification = if (startResultSetIndex == 0L) {
                         initialSpecification
@@ -196,26 +212,26 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
                     val intPart = floor(multiple).toInt()
                     return Pair(intPart, multiple - intPart)
                 }
-                private fun isListInSync(states: List<StateAndRef<FungibleToken>>, specification: PageSpecification): Int {
-                    if (states.isEmpty()) {
+                private fun isListInSync(stateMetadataList: List<Vault.StateMetadata>, specification: PageSpecification): Int {
+                    if (stateMetadataList.isEmpty()) {
                         return 0
                     }
                     if (syncPoint == null) {
-                        syncPoint = SyncPoint(states.last(), specification, toResultSetIndex(states.lastIndex, specification))
+                        syncPoint = SyncPoint(stateMetadataList.last(), specification, toResultSetIndex(stateMetadataList.lastIndex, specification))
                         return 0
                     }
                     val localSyncPoint: SyncPoint = syncPoint!!     // We're single threaded here
 
-                    val listIndex = toIndexWithinPage(localSyncPoint.lastKnownResultSetIndexOfStateAndRef, specification)
-                    if (listIndex in 0..states.lastIndex && states[listIndex] == localSyncPoint.stateAndRef) {
+                    val listIndex = toIndexWithinPage(localSyncPoint.lastKnownResultSetIndexOfStateMetadata, specification)
+                    if (listIndex in 0..stateMetadataList.lastIndex && stateMetadataList[listIndex] == localSyncPoint.stateMetadata) {
                         // No change in the list
-                        syncPoint = SyncPoint(states.last(), specification, toResultSetIndex(states.lastIndex, specification))
+                        syncPoint = SyncPoint(stateMetadataList.last(), specification, toResultSetIndex(stateMetadataList.lastIndex, specification))
                         return listIndex+1 // Return first unread entry index, which is sync pos + 1
                     }
-                    val largestSeenStateRefIndex = convertBinarySearchResult(Collections.binarySearch(states, localSyncPoint.stateAndRef, stateAndRefComparator))
+                    val largestSeenStateRefIndex = convertBinarySearchResult(Collections.binarySearch(stateMetadataList, localSyncPoint.stateMetadata, stateMetadataComparator))
                     if (largestSeenStateRefIndex != -1) {
-                        syncPoint = SyncPoint(states.last(), specification, toResultSetIndex(states.lastIndex, specification))
-                        if (largestSeenStateRefIndex == states.lastIndex) {
+                        syncPoint = SyncPoint(stateMetadataList.last(), specification, toResultSetIndex(stateMetadataList.lastIndex, specification))
+                        if (largestSeenStateRefIndex == stateMetadataList.lastIndex) {
                             // We have seen the whole list already, so just return last element which we have already seen,
                             // to simplify processing. Could happen if large number of tokens gets added while we are reading in.
                             return largestSeenStateRefIndex
@@ -246,7 +262,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
             }
             return TokenObserver(emptyList(), uncheckedCast(vaultObservable), ownerProvider, asyncLoader)
         }
-        data class SyncPoint(val stateAndRef: StateAndRef<FungibleToken>, val specification: PageSpecification, var lastKnownResultSetIndexOfStateAndRef: Long)
+        data class SyncPoint(val stateMetadata: Vault.StateMetadata, val specification: PageSpecification, var lastKnownResultSetIndexOfStateMetadata: Long)
     }
 
     init {
@@ -254,7 +270,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
         tokenObserver.source.doOnError {
             LOG.error("received error from observable", it)
         }
-        tokenObserver.source.subscribe(::onVaultUpdate)
+        tokenObserver.source.subscribe{UPDATER.submit{ onVaultUpdate(it)}}
     }
 
     private fun processToken(token: StateAndRef<FungibleToken>, indexingType: IndexingType): TokenIndex {
