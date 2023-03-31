@@ -77,7 +77,7 @@ class InMemorySelectionTest {
         vaultWatcherService.lockTokensExternal(listOf(biggerStateAndRef), UUID.randomUUID().toString())
 
         database.transaction {
-            waitForTokens { vaultWatcherService.selectTokens(Holder.MappedIdentity(uuid), Amount(60, USD), selectionId = "abc") }
+            vaultWatcherService.selectTokens(Holder.MappedIdentity(uuid), Amount(60, USD), selectionId = "abc")
         }
     }
 
