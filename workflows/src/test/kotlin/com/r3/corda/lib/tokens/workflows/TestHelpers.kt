@@ -1,15 +1,11 @@
 package com.r3.corda.lib.tokens.workflows
 
-import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.internal.concurrent.doneFuture
-import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.queryBy
 import net.corda.core.node.services.vault.QueryCriteria
-import net.corda.core.toFuture
 import net.corda.core.transactions.SignedTransaction
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
