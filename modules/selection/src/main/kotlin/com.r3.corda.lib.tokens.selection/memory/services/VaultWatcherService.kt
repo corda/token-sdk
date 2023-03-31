@@ -86,6 +86,8 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
 
     companion object {
         val LOG = contextLogger()
+        @Volatile var tokenLoadingFinished = false
+        val missedConsumes = ConcurrentHashMap.newKeySet<StateAndRef<FungibleToken>>()
 
         private fun getObservableFromAppServiceHub(appServiceHub: AppServiceHub): TokenObserver {
             val config = appServiceHub.cordappProvider.getAppContext().config
@@ -133,12 +135,15 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
                                 shouldLoop = queryResult.third
                                 LOG.info("publishing ${newlyLoadedStates.size} to async state loading callback")
                                 callback(Vault.Update(emptySet(), newlyLoadedStates))
+                                callback(Vault.Update(missedConsumes, emptySet()))
+                                missedConsumes.clear()
                                 LOG.debug("shouldLoop=${shouldLoop}")
                             }
                             LOG.info("finished token loading")
                         } catch (t: Throwable) {
                             LOG.error("Token Loading Failed due to: ", t)
                         }
+                        tokenLoadingFinished = true
                     }
                 }
 
@@ -270,7 +275,7 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
         tokenObserver.source.doOnError {
             LOG.error("received error from observable", it)
         }
-        tokenObserver.source.subscribe{UPDATER.submit{ onVaultUpdate(it)}}
+        tokenObserver.source.subscribe(::onVaultUpdate)
     }
 
     private fun processToken(token: StateAndRef<FungibleToken>, indexingType: IndexingType): TokenIndex {
@@ -295,8 +300,14 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
         indexViewCreationLock.read {
             for (stateAndRef in stateAndRefs) {
                 val existingMark = __backingMap.remove(stateAndRef)
-                existingMark
-                        ?: LOG.warn("Attempted to remove existing token ${stateAndRef.ref}, but it was not found this suggests tokens were removed while initial token loading took place")
+                if (existingMark == null) {
+                    if (tokenLoadingFinished) {
+                        LOG.warn("Attempted to remove existing token ${stateAndRef.ref}, but it was not found this suggests tokens were removed while initial token loading took place")
+                    }
+                    else if (stateAndRefs !== missedConsumes){
+                        missedConsumes.add(stateAndRef)
+                    }
+                }
                 for (key in __indexed.keys) {
                     val index = processToken(stateAndRef, IndexingType.fromHolder(key))
                     val indexedViewForHolder = __indexed[key]

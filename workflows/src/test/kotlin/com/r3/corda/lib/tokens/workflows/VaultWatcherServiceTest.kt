@@ -66,11 +66,12 @@ class VaultWatcherServiceTest {
     fun `should accept token into the cache`() {
 
         val (VaultObserver, observable) = getDefaultVaultObserver()
+
         val vaultWatcherService = VaultWatcherService(VaultObserver, InMemorySelectionConfig.defaultConfig())
         val owner = Crypto.generateKeyPair(Crypto.DEFAULT_SIGNATURE_SCHEME).public
         val amountToIssue: Long = 100
         val stateAndRef = createNewFiatCurrencyTokenRef(amountToIssue, owner, notary1, issuer1, GBP, observable, database)
-        val selectedTokens = waitForTokens { vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(5, GBP), selectionId = "abc") }
+        val selectedTokens = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(5, GBP), selectionId = "abc")
         Assert.assertThat(selectedTokens, `is`(equalTo(listOf(stateAndRef))))
     }
 
@@ -85,7 +86,7 @@ class VaultWatcherServiceTest {
             createNewFiatCurrencyTokenRef(((Math.random() * 10) + 1).toLong(), owner, notary1, issuer1, GBP, observable, database)
         }
 
-        val selectedTokens = waitForTokens { vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(45, GBP), selectionId = "abc") }
+        val selectedTokens = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(45, GBP), selectionId = "abc")
         Assert.assertThat(selectedTokens.map { it.state.data.amount.quantity }.sumByLong { it }, `is`(greaterThanOrEqualTo(45L)))
     }
 
@@ -100,7 +101,7 @@ class VaultWatcherServiceTest {
         val amountToIssue: Long = 100
         val stateAndRef = createNewFiatCurrencyTokenRef(amountToIssue, owner, notary1, issuer1, GBP, observable, database)
 
-        val selectedTokens = waitForTokens { vaultWatcherService.selectTokens(Holder.TokenOnly(), Amount(5, IssuedTokenType(issuer1, GBP)), selectionId = "abc") }
+        val selectedTokens = vaultWatcherService.selectTokens(Holder.TokenOnly(), Amount(5, IssuedTokenType(issuer1, GBP)), selectionId = "abc")
         Assert.assertThat(selectedTokens, `is`(equalTo(listOf<StateAndRef<FungibleToken>>(stateAndRef))))
         vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(5, IssuedTokenType(issuer1, GBP)), selectionId = "abc")
     }
@@ -120,9 +121,9 @@ class VaultWatcherServiceTest {
         createNewFiatCurrencyTokenRef(amountToIssue + 2, owner, notary2, issuer1, GBP, observable, database)
         createNewFiatCurrencyTokenRef(amountToIssue + 3, owner, notary2, issuer1, GBP, observable, database)
 
-        val selectedTokens = waitForTokens { vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(5, GBP), {
+        val selectedTokens = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(5, GBP), {
             it.state.notary == notary1
-        }, selectionId = "abc") }
+        }, selectionId = "abc")
 
         Assert.assertThat(selectedTokens, `is`(equalTo(listOf<StateAndRef<FungibleToken>>(stateAndRef))))
 
@@ -145,7 +146,7 @@ class VaultWatcherServiceTest {
             createNewFiatCurrencyTokenRef((Math.random() * 10).toLong(), owner, notary1, issuer1, GBP, observable, database)
         }
 
-        val selectedTokens = waitForTokens { vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(50, GBP), selectionId = "abc").toSet() }
+        val selectedTokens = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(50, GBP), selectionId = "abc").toSet()
         val (spentInputs, _) = executeTx(
                 selectedTokens,
                 Amount(50, GBP),
@@ -171,7 +172,7 @@ class VaultWatcherServiceTest {
             createNewFiatCurrencyTokenRef((Math.random() * 10).toLong(), owner, notary1, issuer1, GBP, observable, database)
         }
 
-        val selectedTokens = waitForTokens { vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(50, GBP), selectionId = "abc").toSet() }
+        val selectedTokens = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(50, GBP), selectionId = "abc").toSet()
         executeConsumption(selectedTokens, observable, database)
 
         val selectedTokensAfterSpend = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(10000000000, GBP), allowShortfall = true, selectionId = "abc")

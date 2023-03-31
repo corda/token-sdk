@@ -1,6 +1,5 @@
 package com.r3.corda.lib.tokens.workflows
 
-import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
@@ -82,22 +81,5 @@ inline fun <reified T : ContractState> assertNotHasStateAndRef(stateAndRef: Stat
     val criteria = QueryCriteria.VaultQueryCriteria(stateStatus)
     nodes.forEach {
         assert(!it.services.vaultService.queryBy<T>(criteria).states.contains(stateAndRef)) { "Found $stateAndRef in ${it.legalIdentity()} vault" }
-    }
-}
-
-fun <R> waitForTokens(block: () -> R): R {
-    var retryCount = 0
-    while (true) {
-        try {
-            return block()
-        } catch (ex: InsufficientBalanceException) {
-            if (retryCount > 2) {
-                throw ex
-            }
-            else {
-                Thread.sleep(1000)
-                retryCount++
-            }
-        }
     }
 }

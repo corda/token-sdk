@@ -59,7 +59,7 @@ class InMemorySelectionTest {
         VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, USD, observable, database)
         VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, GBP, observable, database)
         database.transaction {
-            waitForTokens { vaultWatcherService.selectTokens(Holder.MappedIdentity(uuid), Amount(10, GBP), selectionId = "abc") }
+            vaultWatcherService.selectTokens(Holder.MappedIdentity(uuid), Amount(10, GBP), selectionId = "abc")
         }
     }
 
@@ -91,7 +91,7 @@ class InMemorySelectionTest {
         val amountToIssue: Long = 100
         val stateAndRef1 = VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key1, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, GBP, observable, database)
         val stateAndRef2 = VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key2, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, GBP, observable, database)
-        val selectedTokens1 = waitForTokens { selector.selectTokens(holdingKey = key1, requiredAmount = Amount(5, GBP)) }
+        val selectedTokens1 = selector.selectTokens(holdingKey = key1, requiredAmount = Amount(5, GBP))
         selector.rollback()
         val selectedTokens2 = selector.selectTokens(holdingKey = key2, requiredAmount = Amount(10, GBP))
         assertThat(selectedTokens1).containsExactly(stateAndRef1)
@@ -110,7 +110,7 @@ class InMemorySelectionTest {
         val amountToIssue: Long = 100
         val stateAndRef1 = VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key1, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, GBP, observable, database)
         val stateAndRef2 = VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key2, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, GBP, observable, database)
-        val selectedTokens1 = waitForTokens { selector.selectTokens(uuid1, Amount(5, GBP)) }
+        val selectedTokens1 = selector.selectTokens(uuid1, Amount(5, GBP))
         selector.rollback()
         val selectedTokens2 = selector.selectTokens(uuid2, Amount(10, GBP))
         assertThat(selectedTokens1).containsExactly(stateAndRef1)
@@ -126,7 +126,7 @@ class InMemorySelectionTest {
         val amountToIssue: Long = 100
         val stateAndRef1 = VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, GBP, observable, database)
         val stateAndRef2 = VaultWatcherServiceTest.createNewFiatCurrencyTokenRef(amountToIssue, key, VaultWatcherServiceTest.notary1, VaultWatcherServiceTest.issuer1, USD, observable, database)
-        val selectedTokens1 = waitForTokens { selector.selectTokens(Amount(5, GBP)) }
+        val selectedTokens1 = selector.selectTokens(Amount(5, GBP))
         selector.rollback()
         val selectedTokens2 = selector.selectTokens(Amount(10, USD))
         assertThat(selectedTokens1).containsExactly(stateAndRef1)
