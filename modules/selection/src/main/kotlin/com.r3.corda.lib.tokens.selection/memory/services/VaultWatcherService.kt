@@ -15,7 +15,6 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
-import net.corda.core.node.services.ServiceLifecycleEvent
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.vault.DEFAULT_PAGE_NUM
 import net.corda.core.node.services.vault.PageSpecification
@@ -75,8 +74,8 @@ class VaultWatcherService(private val tokenObserver: TokenObserver,
     constructor(appServiceHub: AppServiceHub) : this(getObservableFromAppServiceHub(appServiceHub), InMemorySelectionConfig.parse(appServiceHub.getAppContext().config)) {
         appServiceHub.register(AppServiceHub.SERVICE_PRIORITY_NORMAL) { event ->
             when (event.name) {
-                ServiceLifecycleEvent.BEFORE_STATE_MACHINE_START.toString(),
-                ServiceLifecycleEvent.STATE_MACHINE_STARTED.toString() -> if (!tokenLoadingStarted) {
+                "BEFORE_STATE_MACHINE_START",
+                "STATE_MACHINE_STARTED" -> if (!tokenLoadingStarted) {
                     tokenLoadingStarted = true
                     tokenObserver.startLoading(::onVaultUpdate)
                 }
