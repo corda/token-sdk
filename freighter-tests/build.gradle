@@ -5,7 +5,7 @@ apply plugin: 'idea'
 
 
 repositories {
-    maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/freighter-dev" }
+    maven { url "${publicArtifactURL}/freighter-dev" }
 }
 
 sourceSets {
