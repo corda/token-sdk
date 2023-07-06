@@ -25,8 +25,8 @@ buildscript {
         jcenter()
         mavenCentral()
         mavenLocal()
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-releases" }
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-dependencies" }
+        maven { url "${publicArtifactURL}/corda-releases" }
+        maven { url "${publicArtifactURL}/corda-dependencies" }
         maven { url "https://repo.gradle.org/gradle/libs-releases-local/" }
     }
 
@@ -91,13 +91,12 @@ subprojects {
         mavenCentral()
         mavenLocal()
         maven { url 'https://jitpack.io' }
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-dev" }
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-releases" }
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib" }
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib-dev" }
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib" }
+        maven { url "${publicArtifactURL}/corda-dev" }
+        maven { url "${publicArtifactURL}/corda-releases" }
+        maven { url "${publicArtifactURL}/corda-lib" }
+        maven { url "${publicArtifactURL}/corda-lib-dev" }
         maven { url "https://repo.gradle.org/gradle/libs-releases-local/" }
-        maven { url "http://ci-artifactory.corda.r3cev.com/artifactory/corda-dependencies" }
+        maven { url "${publicArtifactURL}/corda-dependencies" }
     }
 
     apply plugin: 'kotlin'
@@ -166,7 +165,7 @@ configure(publishProjects) { subproject ->
 
 artifactory {
     publish {
-        contextUrl = 'https://ci-artifactory.corda.r3cev.com/artifactory'
+        contextUrl = artifactoryContextUrl
         repository {
             repoKey = 'corda-lib'
             username = System.getenv('CORDA_ARTIFACTORY_USERNAME') ?: System.getProperty('corda.artifactory.username')
