@@ -4,9 +4,6 @@ import groovy.transform.Field
 
 killAllExistingBuildsForJob(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
 
-@Field
-String mavenLocal = 'tmp/mavenlocal'
-
 pipeline {
     agent {
         dockerfile {
@@ -38,48 +35,13 @@ pipeline {
             steps {
                 sh '''
                     docker login --username ${DOCKER_CREDENTIALS_USR} --password ${DOCKER_CREDENTIALS_PSW}
-                    rm -rf $MAVEN_LOCAL_PUBLISH
-                    mkdir -p $MAVEN_LOCAL_PUBLISH
                    '''
             }
         }
 
         stage('Build') {
             steps {
-                script {
-                    // Also publish to local maven repo as this is required for nexus
-                    sh './gradlew assemble contracts:publishToMavenLocal workflows:publishToMavenLocal -Dmaven.repo.local="${MAVEN_LOCAL_PUBLISH}" --parallel'
-                    sh 'ls -lR "${MAVEN_LOCAL_PUBLISH}"'
-                }
-            }
-        }
-
-        stage('Nexus Scan') {
-            steps {
-                script {
-                    def props = readProperties file: 'gradle.properties'
-                    version = props['version']
-                    groupId = props['group']
-                    def artifactId = 'sdk-tokens'
-                    nexusAppId = "${groupId}-${artifactId}-${version}"
-                    echo nexusAppId
-                }
-                dir(mavenLocal) {
-                    script {
-                        fileToScan = findFiles(
-                            excludes: '**/*-javadoc.jar, **/*-sources.jar',
-                            glob: '**/*.jar, **/*.zip'
-                        ).collect {
-                            f -> [scanPattern: f.path]
-                        }
-                    }
-                    nexusPolicyEvaluation(
-                        failBuildOnNetworkError: true,
-                        iqApplication: nexusAppId, // application *has* to exist before a build starts!
-                        iqScanPatterns: fileToScan,
-                        iqStage: nexusIqStage()
-                    )
-                }
+                sh './gradlew assemble --parallel'
             }
         }
 
@@ -146,16 +108,4 @@ def isReleaseCandidate() {
 
 def isReleaseBranch() {
     return (env.BRANCH_NAME =~ /^release\/.*$/) || (env.BRANCH_NAME =~ /^1.2$/)
-}
-
-def nexusIqStage() {
-    if (isReleaseCandidate()) {
-        return 'stage-release'
-    } else if (isReleaseTag()) {
-        return 'release'
-    } else if (env.CHANGE_ID || isReleaseBranch() ) {
-        return 'develop'
-    } else {
-        return 'operate'
-    }
 }
