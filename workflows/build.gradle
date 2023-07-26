@@ -1,4 +1,4 @@
-apply plugin: 'kotlin-jpa'
+apply plugin: 'org.jetbrains.kotlin.plugin.jpa'
 apply plugin: 'net.corda.plugins.quasar-utils'
 apply plugin: 'net.corda.plugins.cordapp'
 
@@ -9,8 +9,8 @@ evaluationDependsOn(":modules:selection")
 def selectionProject = project(":modules:selection")
 
 cordapp {
-    targetPlatformVersion 6
-    minimumPlatformVersion 6
+    targetPlatformVersion 14
+    minimumPlatformVersion 14
     workflow {
         name "Token SDK Workflows"
         vendor "R3"
@@ -43,7 +43,7 @@ sourceSets {
 }
 
 configurations {
-    integrationTestCompile.extendsFrom testCompile
+    integrationTestImplementation.extendsFrom testImplementation
     integrationTestRuntime.extendsFrom testRuntime
 }
 
@@ -52,44 +52,61 @@ compileKotlin{
 }
 
 dependencies {
-    // Kotlin.
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-
     // Corda dependencies.
-    cordaCompile("$corda_release_group:corda-core:$corda_release_version") {
+    cordaProvided("$corda_release_group:corda-core:$corda_release_version") {
         changing = true
     }
 
-    cordaCompile("$corda_release_group:corda-node-api:$corda_release_version") {
+    cordaProvided("$corda_release_group:corda-node-api:$corda_release_version") {
         changing = true
     }
 
-    cordaCompile("$corda_release_group:corda-core-test-utils:$corda_release_version") {
+    cordaProvided("$corda_release_group:corda-serialization:$corda_release_version") {
         changing = true
     }
+
+    cordaProvided("$corda_release_group:corda-core-test-utils:$corda_release_version") {
+        changing = true
+    }
+
+    implementation "org.slf4j:slf4j-api:$slf4j_version"
+    implementation "org.liquibase:liquibase-core:$liquibase_version"
+    implementation "org.hibernate:hibernate-core:$hibernate_version"
+    implementation "com.google.guava:guava:$guava_version"
+    implementation "org.postgresql:postgresql:42.2.8"
+    implementation(files(selectionProject.jar.archivePath))
+
+    runtimeOnly "org.iq80.snappy:snappy:$snappy_version"
 
     // Logging.
-    testCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
+    testImplementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
+
+    testImplementation "com.typesafe:config:$typesafe_config_version"
+    testImplementation "io.reactivex:rxjava:$rxjava_version"
+    testImplementation "co.paralleluniverse:quasar-core:$quasar_version"
 
     // Testing.
-    testCompile "$corda_release_group:corda-node-driver:$corda_release_version"
-    testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
-    testCompile "junit:junit:$junit_version"
+    testImplementation "$corda_release_group:corda-node:$corda_release_version"
+    testImplementation("$corda_release_group:corda-node-driver:$corda_release_version") {
+        exclude module: "gradle-tooling-api"
+    }
+    testImplementation "$corda_release_group:corda-test-utils:$corda_release_version"
+    testImplementation "org.hamcrest:hamcrest-library:2.1"
+    testImplementation "org.mockito.kotlin:mockito-kotlin:$mockito_kotlin_version"
+    testImplementation "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
+    testImplementation "org.assertj:assertj-core:$assertj_version"
+    testImplementation "junit:junit:$junit_version"
 
     // CorDapp dependencies.
     cordapp project(":contracts")
-
-    compile(files(selectionProject.jar.archivePath))
 
     //CI for confidential tokens
     cordapp "$confidential_id_release_group:ci-workflows:$confidential_id_release_version"
 
     //just for testing - this means you MUST specify the contracts-for-testing cordapp as a cordapp in all tests using test flows
-    compileOnly project(":modules:contracts-for-testing")
-    testCompile project(":modules:contracts-for-testing")
+    cordapp project(":modules:contracts-for-testing")
 
-    compileOnly("org.postgresql:postgresql:42.2.8")
-
+    testImplementation "org.gradle:gradle-tooling-api:7.1"
 }
 
 task integrationTest(type: Test, dependsOn: []) {
@@ -98,5 +115,39 @@ task integrationTest(type: Test, dependsOn: []) {
 }
 
 jar {
-    baseName "tokens-workflows"
+    archiveBaseName = "tokens-workflows"
+}
+
+quasar {
+    excludePackages.addAll(
+            "antlr**",
+            "com.codahale**",
+            "com.fasterxml.**",
+            "com.github.benmanes.caffeine.**",
+            "com.google.**",
+            "com.lmax.**",
+            "com.zaxxer.**",
+            "net.bytebuddy**",
+            "io.github.classgraph**",
+            "io.netty*",
+            "liquibase**",
+            "net.i2p.crypto.**",
+            "nonapi.io.github.classgraph.**",
+            "org.apiguardian.**",
+            "org.bouncycastle**",
+            "org.codehaus.**",
+            "org.h2**",
+            "org.hibernate**",
+            "org.jboss.**",
+            "org.objenesis**",
+            "org.w3c.**",
+            "org.xml**",
+            "org.yaml**",
+            "rx**",
+            "kotlin**"
+    )
+}
+
+test {
+    jvmArgs test_module_opens
 }

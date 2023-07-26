@@ -1,6 +1,6 @@
 package com.r3.corda.lib.tokens.workflows
 
-import com.nhaarman.mockito_kotlin.whenever
+import org.mockito.kotlin.whenever
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.node.services.IdentityService
 import net.corda.coretesting.internal.rigorousMock

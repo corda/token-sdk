@@ -31,16 +31,15 @@ task freighterTest(type: Test, dependsOn: [project(":workflows").jar]) {
 }
 
 configurations {
-    freighterTestCompile.extendsFrom testCompile
+    freighterTestImplementation.extendsFrom testImplementation
     freighterTestRuntime.extendsFrom testRuntime
 }
 
 dependencies {
-    freighterTestCompile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    freighterTestCompile "freighter:freighter-testing-core-junit5:0.7.3-TEST-SNAPSHOT"
+    freighterTestImplementation "freighter:freighter-testing-core-junit5:0.7.3-TEST-SNAPSHOT"
 
-    freighterTestCompile project(":contracts")
-    freighterTestCompile project(":workflows")
+    freighterTestImplementation project(":contracts")
+    freighterTestImplementation project(":workflows")
 }
 
 
