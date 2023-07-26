@@ -26,7 +26,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should be updatable with just a maintainer.
      * Maintainers is equal to participants.
      */
-    @Test
+    @Test(timeout = 300_000)
     fun `with 1 maintainer`() {
         // Create the token
         val token = factory.withOneMaintainer()
@@ -53,7 +53,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should be updatable with two maintainers. Both must sign.
      * Maintainers is equal to participants.
      */
-    @Test
+    @Test(timeout = 300_000)
     fun `with 2 maintainers`() {
         // Create the token
         val token = factory.withTwoMaintainers()
@@ -80,7 +80,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should be creatable with a maintainer and an additional participant. Only maintainers must sign.
      * Participants is a superset of maintainers.
      */
-    @Test
+    @Test(timeout = 300_000)
     fun `with 1 maintainer and 1 additional participant`() {
         // Create the token
         val token = factory.withOneMaintainerAndOneParticipant()
@@ -107,7 +107,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should be creatable with a maintainer and two additional participants. Only maintainers must sign.
      * Participants is a superset of maintainers.
      */
-    @Test
+    @Test(timeout = 300_000)
     fun `with 1 maintainer and 2 additional participants`() {
         // Create the token
         val token = factory.withOneMaintainerAndTwoParticipants()
@@ -134,7 +134,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should be updatable with two maintainers and an additional participant. Only maintainers must sign.
      * Participants is a superset of maintainers.
      */
-    @Test
+    @Test(timeout = 300_000)
     fun `with 2 maintainers and 1 additional participant`() {
         // Create the token
         val token = factory.withTwoMaintainersAndOneParticipant()
@@ -161,7 +161,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should be creatable with two maintainers and two additional participants. Only maintainers must sign.
      * Participants is a superset of maintainers.
      */
-    @Test
+    @Test(timeout = 300_000)
     fun `with 2 maintainers and 2 additional participants`() {
         // Create the token
         val token = factory.withTwoMaintainersAndTwoParticipants()
@@ -188,7 +188,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should *not* be updatable if not all maintainers are participants.
      * Participants is *not* a superset of maintainers.
      */
-    @Test
+    @Test(timeout = 300_000)
     fun `fails if participants is not a superset of maintainers`() {
         // Create the token
         val token = factory.withOneMaintainer()
@@ -207,7 +207,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should allow adding a maintainer.
      * Participants is a superset of maintainers.
      */
-    @Test
+    @Test(timeout = 300_000)
     fun `from 1 maintainers to 2 maintainers`() {
         // Create the token
         val token = factory.withOneMaintainer()
@@ -234,7 +234,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should allow removing a maintainer.
      * Participants is a superset of maintainers.
      */
-    @Test
+    @Test(timeout = 300_000)
     fun `from 2 maintainers to 1 maintainer`() {
         // Create the token
         val token = factory.withTwoMaintainers()
@@ -261,7 +261,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should allow adding an observer.
      * Participants is a superset of maintainers.
      */
-    @Test
+    @Test(timeout = 300_000)
     fun `adding 1 participant`() {
         // Create the token
         val token = factory.withOneMaintainer()
@@ -288,7 +288,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should allow adding an observer.
      * Participants is a superset of maintainers.
      */
-    @Test
+    @Test(timeout = 300_000)
     fun `removing 1 participant`() {
         // Create the token
         val token = factory.withOneMaintainerAndOneParticipant()
@@ -315,7 +315,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
      * An evolvable token should allow changing a maintainer.
      * Participants is a superset of maintainers.
      */
-    @Test
+    @Test(timeout = 300_000)
     fun `changing maintainer`() {
         // Create the token
         val token = factory.withOneMaintainer()
@@ -339,7 +339,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
     }
 
     // Flows with observers
-    @Test
+    @Test(timeout = 300_000)
     fun `with unrelated observer`() {
         // Create the token
         val token = factory.withOneMaintainerAndOneParticipant()
@@ -366,7 +366,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(updatedToken, deniseQuery.single())
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `with observer that is maintainer`() {
         // Create the token
         val token = factory.withOneMaintainerAndOneParticipant()
@@ -390,7 +390,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(updatedToken, charlieToken.single())
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `with observer that is participant`() {
         // Create the token
         val token = factory.withOneMaintainerAndOneParticipant()
@@ -414,7 +414,7 @@ class UpdateEvolvableTokenTests : JITMockNetworkTests() {
         assertEquals(updatedToken, charlieToken.single())
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `non maintainer updating an evolvable token type fails`() {
         // Alice creates an evolvable token type.
         val token = factory.withOneMaintainer(maintainer = alice.info.legalIdentities.first())

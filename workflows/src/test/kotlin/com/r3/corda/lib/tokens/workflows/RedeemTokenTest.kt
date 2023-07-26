@@ -37,7 +37,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         I = nodes[2]
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `redeem fungible happy path`() {
         I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         network.waitQuiescent()
@@ -46,7 +46,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         assertThat(I.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `redeem fungible with change`() {
         I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         network.waitQuiescent()
@@ -57,7 +57,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         assertThat(I.services.vaultService.queryBy<FungibleToken>(heldTokenAmountCriteria(GBP, I.legalIdentity())).states).isEmpty()
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `isufficient balance`() {
         I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         network.waitQuiescent()
@@ -66,7 +66,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `different issuers for fungible tokens`() {
         I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         network.waitQuiescent()
@@ -77,7 +77,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `redeem non-fungible happy path`() {
         I.issueNonFungibleTokens(fooToken, A).getOrThrow()
         network.waitQuiescent()
@@ -87,7 +87,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         assertThat(I.services.vaultService.heldTokensByToken(fooToken).states).isEmpty()
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `redeem tokens from different issuer - non fungible`() {
         I.issueNonFungibleTokens(fooToken, A).getOrThrow()
         network.waitQuiescent()
@@ -97,7 +97,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         }.hasMessageContaining("Exactly one held token of a particular type $fooToken should be in the vault at any one time.")
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `non fungible two same tokens`() {
         I.issueNonFungibleTokens(fooToken, A).getOrThrow()
         I.issueNonFungibleTokens(fooToken, A).getOrThrow()
@@ -107,7 +107,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         }.hasMessageContaining("Exactly one held token of a particular type $fooToken should be in the vault at any one time.")
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `redeem states with confidential identities not known to issuer`() {
         I.issueFungibleTokens(A, 100.GBP).getOrThrow()
         network.waitQuiescent()
@@ -122,7 +122,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         assertThat(statesAfterRedeem.sumTokenStateAndRefs()).isEqualTo(20.GBP issuedBy I.legalIdentity())
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `redeem fungible tokens with observers`() {
         val observer: StartedMockNode = network.createPartyNode(CordaX500Name("Observer", "London", "GB"))
         val obs = listOf(observer.legalIdentity())
@@ -140,7 +140,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         assertHasTransaction(rtx, network, observer)
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `redeem from two different keys on the same node - correct signatures`() {
         val itx1 = I.issueFungibleTokens(A, 100.GBP, true).getOrThrow()
         val itx2 = I.issueFungibleTokens(A, 13.GBP, true).getOrThrow()
@@ -152,7 +152,7 @@ class RedeemTokenTest : MockNetworkTest(numberOfNodes = 3) {
         assertThat(rtx.sigs.map { it.by }).contains(key1, key2, I.legalIdentity().owningKey)
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `issue to self and redeem with self`() {
         I.issueFungibleTokens(I, 100.GBP, true).getOrThrow()
         network.waitQuiescent()

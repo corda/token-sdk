@@ -42,32 +42,32 @@ class NullHolderOnObserverTest : DockerRemoteMachineBasedTest() {
 
 	val freighterHelperCordapp = NodeBuilder.DeployedCordapp.fromClassPath("freighter-cordapp-flows")
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `tokens can be observed on node that does not know CI running postgres 9_6`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.PG_9_6)
 	}
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `tokens can be observed on node that does not know CI running H2`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.H2)
 	}
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `tokens can be observed on node that does not know CI running postgres 10_10`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.PG_10_10)
 	}
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `tokens can be observed on node that does not know CI running postgres 11_5`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.PG_11_5)
 	}
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `tokens can be observed on node that does not know CI running ms_sql`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.MS_SQL)
 	}
 
-	@Test
+	@Test(timeout = 300_000)
 	@OracleTest
 	fun `tokens can be observed on node that does not know CI running oracle 12 r2`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.ORACLE_12_R2)

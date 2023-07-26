@@ -19,7 +19,7 @@ import org.junit.Test
 // TODO: Some of these tests are testing AbstractToken and should be moved into the super-class.
 class FungibleTokenTests : ContractTestCommon() {
 
-    @Test
+    @Test(timeout = 300_000)
     fun `issue token tests`() {
 
         val issuedToken = GBP issuedBy ISSUER.party
@@ -114,7 +114,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `move token tests`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -229,7 +229,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should prevent moving of tokens to a subclass`() {
         val issuedToken = RUB issuedBy ISSUER.party
         val amount = 10 of issuedToken
@@ -260,7 +260,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should prevent moving of tokens to a class controlled by different contract`() {
         val issuedToken = RUB issuedBy ISSUER.party
         val amount = 10 of issuedToken
@@ -277,7 +277,7 @@ class FungibleTokenTests : ContractTestCommon() {
     }
 
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should be possible to redeem single token without change output`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -288,7 +288,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should be possible to redeem single token with change output`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -300,7 +300,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should not be possible to redeem single token without owner signature`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -311,7 +311,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should not be possible to redeem single token without issuer signature`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -322,7 +322,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should not be possible to redeem multiple tokens with different issuers without all issuer signatures`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -335,7 +335,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should fail to redeem token group if an unmatched group is also provided`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -348,7 +348,7 @@ class FungibleTokenTests : ContractTestCommon() {
     }
 
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should allow redemption of two separate groups`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -361,7 +361,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should allow redemption with change to different owner`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -373,7 +373,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should not allow redemption if change is equal to input`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -385,7 +385,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should not allow redemption if change is greater than input`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -397,7 +397,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should not allow redemption if change is zero`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -409,7 +409,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should not allow redemption if more than one change output is present`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -422,7 +422,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should not allow redemption if no input states present`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -433,7 +433,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should not allow redemption if zero valued inputs`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -444,7 +444,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should enforce the presence of the token type jar`() {
         val issuedToken = RUB issuedBy ISSUER.party
         transaction {
@@ -458,7 +458,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should enforce that the hash providing the token type cannot change during a transaction`() {
         val issuedToken = GBP issuedBy ISSUER.party
         transaction {
@@ -472,7 +472,7 @@ class FungibleTokenTests : ContractTestCommon() {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should enforce that the jar providing a tokentype cannot be null for non-sdk types`() {
         val issuedToken = RUB issuedBy ISSUER.party
         transaction {

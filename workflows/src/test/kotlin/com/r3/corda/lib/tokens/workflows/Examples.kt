@@ -20,7 +20,7 @@ import kotlin.test.assertEquals
 
 class UsabilityTests : LedgerTestWithPersistence() {
 
-    @Test
+    @Test(timeout = 300_000)
     fun `create a fungible token of some token type`() {
         // Some amount of GBP issued by the Bank of England and held by Alice.
         val tenPoundsIssuedByIssuerHeldByAlice: FungibleToken = 10.GBP issuedBy ISSUER.party heldBy ALICE.party
@@ -32,7 +32,7 @@ class UsabilityTests : LedgerTestWithPersistence() {
         println(tenPoundsIssuedByIssuerHeldByAlice)
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `create a (non) fungible token of some token pointer type`() {
         val house = House("24 Leinster Gardens, Bayswater, London", 900_000.GBP, listOf(BOB.party), linearId = UniqueIdentifier())
         val housePointer: TokenPointer<House> = house.toPointer()
@@ -48,7 +48,7 @@ class UsabilityTests : LedgerTestWithPersistence() {
         val description: String get() = "Pitch Token Classic"
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `usability test`() {
         // Create issued TokenType.
         val gbp: TokenType = GBP

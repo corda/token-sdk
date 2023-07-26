@@ -8,7 +8,7 @@ import org.junit.Test;
 import static com.r3.corda.lib.tokens.testing.states.Rubles.RUB;
 
 public class NonFungibleTokenJavaTests extends ContractTestCommon {
-    @Test
+    @Test(timeout = 300_000)
     public void testFungibleToken() {
         IssuedTokenType issuedRubles = new IssuedTokenType(ALICE.getParty(), RUB);
         new NonFungibleToken(issuedRubles, ALICE.getParty(), new UniqueIdentifier());

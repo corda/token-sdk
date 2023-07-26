@@ -1,19 +1,43 @@
-@Library('corda-shared-build-pipeline-steps')
+#!groovy
+
+/**
+ * Kill already started job.
+ * Assume new commit takes precendence and results from previous
+ * unfinished builds are not required.
+ * This feature doesn't play well with disableConcurrentBuilds() option
+ */
+@Library('existing-build-control')
 import static com.r3.build.BuildControl.killAllExistingBuildsForJob
 import groovy.transform.Field
-
 killAllExistingBuildsForJob(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
 
+def isReleaseTag() {
+    return (env.TAG_NAME =~ /^release-.*$/)
+}
+
+def isReleaseCandidate() {
+    return (isReleaseTag()) && (env.TAG_NAME =~ /.*-(RC|HC)\d+(-.*)?/)
+}
+
+def isReleaseBranch() {
+    return (env.BRANCH_NAME =~ /^release\/.*$/)
+}
+
+def isRelease = isReleaseTag() || isReleaseCandidate() || isReleaseBranch()
+String publishOptions = isRelease ? "-s --info" : "--no-daemon -s -PversionFromGit"
+
 pipeline {
-    agent {
-        dockerfile {
-            filename '.ci/Dockerfile'
-            additionalBuildArgs "--build-arg USER=stresstester"
-            args '-v /var/run/docker.sock:/var/run/docker.sock --group-add 999'
-        }
+    agent { label 'standard' }
+
+    parameters {
+        booleanParam name: 'DO_PUBLISH', defaultValue: isRelease, description: 'Publish artifacts to Artifactory?'
+        booleanParam name: 'RUN_FREIGHTER_TESTS', defaultValue: false, description: 'Publish Kotlin version to artifactory'
     }
 
-    options { timestamps() }
+    options {
+        timestamps()
+        timeout(time: 1, unit: 'HOURS')
+    }
 
     triggers {
         cron (isReleaseBranch() ? 'H 0 * * 1,4' : '')
@@ -27,21 +51,10 @@ pipeline {
         LOOPBACK_ADDRESS = "172.17.0.1"
         DOCKER_CREDENTIALS = credentials('docker-for-oracle-login')
         SNYK_TOKEN = credentials('c4-ent-snyk-api-token-secret')
-    }
-
-    parameters {
-        booleanParam name: 'RUN_FREIGHTER_TESTS', defaultValue: false, description: 'Publish Kotlin version to artifactory'
+        JAVA_HOME="/usr/lib/jvm/java-17-amazon-corretto"
     }
 
     stages {
-        stage("Prep") {
-            steps {
-                sh '''
-                    docker login --username ${DOCKER_CREDENTIALS_USR} --password ${DOCKER_CREDENTIALS_PSW}
-                   '''
-            }
-        }
-
         stage('Build') {
             steps {
                 sh './gradlew assemble --parallel'
@@ -62,11 +75,16 @@ pipeline {
                 }
             }
         }
-        stage('Unit / Integration Tests') {
+
+        stage('Unit Tests') {
             steps {
-                timeout(30) {
-                    sh "./gradlew test integrationTest -Si --no-daemon --parallel"
-                }
+                sh "./gradlew test -Si"
+            }
+        }
+
+        stage('Integration Tests') {
+            steps {
+                sh "./gradlew integrationTest -Si"
             }
         }
 
@@ -83,12 +101,35 @@ pipeline {
 
         stage('Publish to Artifactory') {
             when {
-                expression { isReleaseTag() }
+                expression { params.DO_PUBLISH }
+                beforeAgent true
             }
             steps {
-                sh './gradlew artifactoryPublish -Si'
+                rtServer(
+                        id: 'R3-Artifactory',
+                        url: 'https://software.r3.com/artifactory',
+                        credentialsId: 'artifactory-credentials'
+                )
+                rtGradleDeployer(
+                        id: 'deployer',
+                        serverId: 'R3-Artifactory',
+                        repo: isRelease ? 'corda-lib' : 'corda-lib-dev'
+                )
+                rtGradleRun(
+                        usesPlugin: true,
+                        useWrapper: true,
+                        switches: publishOptions,
+                        tasks: 'artifactoryPublish',
+                        deployerId: 'deployer',
+                        buildName: env.ARTIFACTORY_BUILD_NAME
+                )
+                rtPublishBuildInfo(
+                        serverId: 'R3-Artifactory',
+                        buildName: env.ARTIFACTORY_BUILD_NAME
+                )
             }
         }
+
     }
 
     post {
@@ -101,14 +142,3 @@ pipeline {
     }
 }
 
-def isReleaseTag() {
-    return (env.TAG_NAME =~ /^release-.*$/)
-}
-
-def isReleaseCandidate() {
-    return (isReleaseTag()) && (env.TAG_NAME =~ /.*-(RC|HC)\d+(-.*)?/)
-}
-
-def isReleaseBranch() {
-    return (env.BRANCH_NAME =~ /^release\/.*$/) || (env.BRANCH_NAME =~ /^1.2$/)
-}
