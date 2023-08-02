@@ -16,7 +16,7 @@ pipeline {
     options { timestamps() }
 
     triggers {
-        cron (isReleaseBranch ? 'H 0 * * 1,4' : '')
+        cron (isReleaseBranch() ? 'H 0 * * 1,4' : '')
     }
 
     environment {
