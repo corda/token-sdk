@@ -1,5 +1,7 @@
 apply plugin: 'net.corda.plugins.cordapp'
 
+description 'token-sdk token selection'
+
 cordapp {
     targetPlatformVersion 6
     minimumPlatformVersion 6
