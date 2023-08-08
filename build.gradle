@@ -128,7 +128,7 @@ def publishProjects = [
         project(":workflows")
 ]
 
-configure(publishProjects) { subproject ->
+configure(publishProjects) { Project subproject ->
     apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.artifactory'
 
