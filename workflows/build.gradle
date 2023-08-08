@@ -2,6 +2,7 @@ apply plugin: 'kotlin-jpa'
 apply plugin: 'net.corda.plugins.quasar-utils'
 apply plugin: 'net.corda.plugins.cordapp'
 
+description 'token-sdk workflows'
 
 evaluationDependsOn(":modules:selection")
 
