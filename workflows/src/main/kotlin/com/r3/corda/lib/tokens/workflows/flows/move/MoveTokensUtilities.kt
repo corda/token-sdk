@@ -19,6 +19,7 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.TransactionBuilder
+import java.security.PublicKey
 
 /* For fungible tokens. */
 
@@ -29,7 +30,8 @@ import net.corda.core.transactions.TransactionBuilder
 fun addMoveTokens(
         transactionBuilder: TransactionBuilder,
         inputs: List<StateAndRef<AbstractToken>>,
-        outputs: List<AbstractToken>
+        outputs: List<AbstractToken>,
+        additionalSignerKeysProvider: ((IssuedTokenType) -> List<PublicKey>)? = null
 ): TransactionBuilder {
     val outputGroups: Map<IssuedTokenType, List<AbstractToken>> = outputs.groupBy { it.issuedTokenType }
     val inputGroups: Map<IssuedTokenType, List<StateAndRef<AbstractToken>>> = inputs.groupBy {
@@ -47,7 +49,6 @@ fun addMoveTokens(
         outputGroups.forEach { issuedTokenType: IssuedTokenType, outputStates: List<AbstractToken> ->
             val inputGroup = inputGroups[issuedTokenType]
                     ?: throw IllegalArgumentException("No corresponding inputs for the outputs issued token type: $issuedTokenType")
-            val keys = inputGroup.map { it.state.data.holder.owningKey }
 
             var inputStartingIdx = inputStates().size
             var outputStartingIdx = outputStates().size
@@ -61,6 +62,9 @@ fun addMoveTokens(
                 addOutputState(it)
                 outputStartingIdx++
             }
+
+            val additionalKeys = additionalSignerKeysProvider?.invoke(issuedTokenType) ?: emptyList()
+            val keys = inputGroup.map { it.state.data.holder.owningKey } + additionalKeys
 
             addCommand(MoveTokenCommand(issuedTokenType, inputs = inputIdx, outputs = outputIdx), keys)
         }
@@ -78,9 +82,15 @@ fun addMoveTokens(
 fun addMoveTokens(
         transactionBuilder: TransactionBuilder,
         input: StateAndRef<AbstractToken>,
-        output: AbstractToken
+        output: AbstractToken,
+        additionalSignerKeysProvider: ((IssuedTokenType) -> List<PublicKey>)? = null
 ): TransactionBuilder {
-    return addMoveTokens(transactionBuilder = transactionBuilder, inputs = listOf(input), outputs = listOf(output))
+    return addMoveTokens(
+        transactionBuilder = transactionBuilder,
+        inputs = listOf(input),
+        outputs = listOf(output),
+        additionalSignerKeysProvider = additionalSignerKeysProvider
+    )
 }
 
 /**
