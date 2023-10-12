@@ -8,7 +8,7 @@ import static com.r3.corda.lib.tokens.contracts.utilities.AmountUtilities.amount
 import static com.r3.corda.lib.tokens.testing.states.Rubles.RUB;
 
 public class FungibleTokenJavaTests extends ContractTestCommon {
-    @Test
+    @Test(timeout = 300_000)
     public void testFungibleToken() {
         IssuedTokenType issuedRubles = new IssuedTokenType(ALICE.getParty(), RUB);
         new FungibleToken(amount(10, issuedRubles), ALICE.getParty());

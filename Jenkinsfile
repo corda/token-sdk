@@ -34,7 +34,10 @@ pipeline {
         booleanParam name: 'RUN_FREIGHTER_TESTS', defaultValue: false, description: 'Publish Kotlin version to artifactory'
     }
 
-    options { timestamps() }
+    options {
+        timestamps()
+        timeout(time: 1, unit: 'HOURS')
+    }
 
     triggers {
         cron (isReleaseBranch() ? 'H 0 * * 1,4' : '')

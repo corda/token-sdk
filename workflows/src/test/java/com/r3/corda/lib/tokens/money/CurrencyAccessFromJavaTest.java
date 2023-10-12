@@ -11,7 +11,7 @@ public class CurrencyAccessFromJavaTest {
     /**
      * Sanity check for easy access of digital currency TokenTypes from java code
      */
-    @Test
+    @Test(timeout = 300_000)
     public void javaWrappedDigitalCurrencyIsIdenticalToKotlinCompanionObject() throws Exception {
 
         List<String> digitalCurrencies = Arrays.asList("XRP", "BTC", "ETH", "DOGE");
@@ -28,7 +28,7 @@ public class CurrencyAccessFromJavaTest {
     /**
      * Sanity check for easy access of fiat currency TokenTypes from java code
      */
-    @Test
+    @Test(timeout = 300_000)
     public void javaWrappedFiatCurrencyIsIdenticalToKotlinCompanionObject() throws Exception {
 
         List<String> fiatCurrencies = Arrays.asList("GBP", "USD", "EUR", "CHF", "JPY", "CAD", "AUD", "NZD");

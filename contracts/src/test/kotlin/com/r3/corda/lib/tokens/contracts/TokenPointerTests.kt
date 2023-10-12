@@ -15,7 +15,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 
 class TokenPointerTests : ContractTestCommon() {
-    @Test
+    @Test(timeout = 300_000)
     fun test() {
         // Create the evolvable token type.
         val evolvableToken = TestEvolvableTokenType(listOf(ALICE.party))
@@ -52,7 +52,7 @@ class TokenPointerTests : ContractTestCommon() {
         assertEquals(((fungibleToken.tokenType) as TokenPointer<TestEvolvableTokenType>).pointer.resolve(ledgerTransaction), outputStateAndRef)
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `tokenTypeJarHash must be not null if tokenType is not a pointer`() {
         val pointer: TokenPointer<TestEvolvableTokenType> = TestEvolvableTokenType(listOf(ALICE.party)).toPointer()
         val pointerToken: NonFungibleToken = pointer issuedBy ISSUER.party heldBy ALICE.party

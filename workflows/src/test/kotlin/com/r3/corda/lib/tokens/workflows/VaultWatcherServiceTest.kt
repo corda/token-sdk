@@ -62,7 +62,7 @@ class VaultWatcherServiceTest {
         database = mockDbAndServices.first
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should accept token into the cache`() {
 
         val (VaultObserver, observable) = getDefaultVaultObserver()
@@ -75,7 +75,7 @@ class VaultWatcherServiceTest {
         Assert.assertThat(selectedTokens, `is`(equalTo(listOf(stateAndRef))))
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should select enough tokens to satisfy the requested amount`() {
         val (VaultObserver,
                 observable) = getDefaultVaultObserver()
@@ -106,7 +106,7 @@ class VaultWatcherServiceTest {
         vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(5, IssuedTokenType(issuer1, GBP)), selectionId = "abc")
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should allow filtering based on arbitary predicate`() {
         val (VaultObserver,
                 observable) = getDefaultVaultObserver()
@@ -134,7 +134,7 @@ class VaultWatcherServiceTest {
         Assert.assertThat(notary2Selected, `is`(equalTo(notary2Selected.filter { it.state.notary == notary2 })))
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should remove states which have been spent`() {
         val (VaultObserver,
                 observable) = getDefaultVaultObserver()
@@ -160,7 +160,7 @@ class VaultWatcherServiceTest {
         Assert.assertThat(spentInputs, everyItem(not(isIn(selectedTokensAfterSpend))))
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should remove states which have been spent via redeem`() {
         val (VaultObserver,
                 observable) = getDefaultVaultObserver()
@@ -180,7 +180,7 @@ class VaultWatcherServiceTest {
         Assert.assertThat(selectedTokens, everyItem(not(isIn(selectedTokensAfterSpend))))
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should allow selection by multiple holder types`() {
 
         val accountsAndKeys = (0 until 10).map {
@@ -246,7 +246,7 @@ class VaultWatcherServiceTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     @Ignore
     fun `very basic memory checking state scales`() {
 
@@ -266,7 +266,7 @@ class VaultWatcherServiceTest {
 
     }
 
-    @Test
+    @Test(timeout = 300_000)
     @Ignore
     fun `very basic memory checking owner scales`() {
         val (VaultObserver, observable) = getDefaultVaultObserver()
@@ -282,7 +282,7 @@ class VaultWatcherServiceTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should support concurrent requests and inserts for tokens`() {
         val (VaultObserver,
                 observable) = getDefaultVaultObserver()

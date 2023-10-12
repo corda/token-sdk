@@ -62,7 +62,7 @@ class TokenDriverTest {
     @JvmField
     val testSerialization = SerializationEnvironmentRule()
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should allow issuance of inline defined token`() {
         driver(DriverParameters(
                 portAllocation = incrementalPortAllocation(),
@@ -97,7 +97,7 @@ class TokenDriverTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should allow retrieval of tokens by owning key`() {
 
         driver(DriverParameters(
@@ -271,7 +271,7 @@ class TokenDriverTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `tokens locked in memory are still locked after restart`() {
         driver(DriverParameters(
                 inMemoryDB = false,
@@ -328,7 +328,7 @@ class TokenDriverTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `tokens are loaded back in memory after restart`() {
         driver(DriverParameters(
                 inMemoryDB = false,
@@ -379,7 +379,7 @@ class TokenDriverTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     @Ignore("TODO JDK17:Fixme")
     fun `Issue 1300 and validate 1300 are read in again`() {
         driver(DriverParameters(
@@ -414,7 +414,7 @@ class TokenDriverTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     @Ignore("TODO JDK17:Fixme")
     fun `Issue 1300, redeem 25 tokens then select 40 tokens`() {
         driver(DriverParameters(
@@ -459,7 +459,7 @@ class TokenDriverTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     @Ignore("TODO JDK17:Fixme")
     fun `Issue 1300, then issue 25 more on restart then select 40 tokens`() {
         driver(DriverParameters(
@@ -503,7 +503,7 @@ class TokenDriverTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     @Ignore("TODO JDK17:Fixme")
     fun `Issue 400 tokens, redeem 400 tokens`() {
         driver(DriverParameters(

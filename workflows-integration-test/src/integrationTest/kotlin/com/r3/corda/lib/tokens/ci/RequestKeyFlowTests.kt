@@ -69,7 +69,7 @@ class RequestKeyFlowTests {
         mockNet.stopNodes()
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `request a new key`() {
         // Alice requests that bob generates a new key for an account
         val anonymousParty = aliceNode.startFlow(RequestKey(bob)).getOrThrow()
@@ -87,7 +87,7 @@ class RequestKeyFlowTests {
         assertThat(resolvedBobParty).isEqualTo(bob)
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `request new key with a uuid provided`() {
         // Alice requests that bob generates a new key for an account
         val anonymousParty = aliceNode.startFlow(RequestKeyForUUIDInitiator(bob, UUID.randomUUID())).getOrThrow()
@@ -108,7 +108,7 @@ class RequestKeyFlowTests {
         assertThat(bob).isEqualTo(partyOnBob)
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `verify a known key with another party`() {
         // Charlie issues then pays some cash to a new confidential identity
         val anonymousParty = charlieNode.startFlow(RequestKey(alice)).getOrThrow()

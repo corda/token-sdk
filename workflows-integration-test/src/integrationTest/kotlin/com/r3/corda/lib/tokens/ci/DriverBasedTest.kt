@@ -31,7 +31,7 @@ import kotlin.test.assertNull
 
 class DriverBasedTest {
 
-    @Test
+    @Test(timeout = 300_000)
     fun `request a key mapping for a confidential identity`() = withDriver {
         val aUser = User("aUser", "testPassword1", permissions = setOf(Permissions.all()))
         val bUser = User("bUser", "testPassword2", permissions = setOf(Permissions.all()))
@@ -67,7 +67,7 @@ class DriverBasedTest {
         assertEquals(expected, actual)
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `sync confidential identities within a transaction`() = withDriver {
         val aUser = User("aUser", "testPassword1", permissions = setOf(Permissions.all()))
         val bUser = User("bUser", "testPassword2", permissions = setOf(Permissions.all()))
@@ -99,7 +99,7 @@ class DriverBasedTest {
     }
 
 
-    @Test
+    @Test(timeout = 300_000)
     fun `sync list of confidential identities`() = withDriver {
         val aUser = User("aUser", "testPassword1", permissions = setOf(Permissions.all()))
         val bUser = User("bUser", "testPassword2", permissions = setOf(Permissions.all()))

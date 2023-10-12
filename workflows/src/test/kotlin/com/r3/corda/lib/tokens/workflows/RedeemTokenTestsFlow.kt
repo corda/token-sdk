@@ -64,7 +64,7 @@ class RedeemTokenTestsFlow {
 	}
 
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `should redeem fungible tokens`() {
 		val issuer: Party = nodeI.legalIdentity()
 		val holder: Party = nodeA.legalIdentity()
@@ -93,7 +93,7 @@ class RedeemTokenTestsFlow {
 	}
 
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `should redeem non fungible tokens`() {
 		val issuer: Party = nodeI.legalIdentity()
 		val holder: Party = nodeA.legalIdentity()
@@ -123,7 +123,7 @@ class RedeemTokenTestsFlow {
 		assertThat(nodeA.services.vaultService.heldTokensByToken(myTokenType).states).isEmpty()
 	}
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `should not redeem same token more than once`() {
 		val issuer: Party = nodeI.legalIdentity()
 		val holder: Party = nodeA.legalIdentity()
@@ -157,7 +157,7 @@ class RedeemTokenTestsFlow {
 		assertFailsWith<IllegalStateException> { exception.getOrThrow() }
 	}
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `should redeem a new TokenType instance`() {
 		val issuer: Party = nodeI.legalIdentity()
 		val holder: Party = nodeA.legalIdentity()
@@ -188,7 +188,7 @@ class RedeemTokenTestsFlow {
 		assertThat(nodeI.services.vaultService.tokenAmountsByToken(myTokenType).states).isEmpty()
 	}
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `should redeem multiple instances of TokenType`() {
 		val issuer: Party = nodeI.legalIdentity()
 		val holder: Party = nodeA.legalIdentity()
@@ -230,7 +230,7 @@ class RedeemTokenTestsFlow {
 
 	}
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `should redeem fungible tokens and broadcast the transaction to an observer`() {
 		val issuer: Party = nodeI.legalIdentity()
 		val holder: Party = nodeA.legalIdentity()
@@ -263,7 +263,7 @@ class RedeemTokenTestsFlow {
 		assertHasTransaction(redeemedTransactionHash, network, nodeI, nodeA, nodeB)
 	}
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `should try to redeem fungible tokens by the issuer`() {
 		val issuer: Party = nodeI.legalIdentity()
 		val holder: Party = nodeA.legalIdentity()
@@ -290,7 +290,7 @@ class RedeemTokenTestsFlow {
 	}
 
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `should redeem fungible tokens issued confidentially`() {
 		val issuer: Party = nodeI.legalIdentity()
 		val holder: Party = nodeA.legalIdentity()
@@ -321,7 +321,7 @@ class RedeemTokenTestsFlow {
 		assertThat(nodeI.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
 	}
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `should redeem fungible tokens moved confidentially`() {
 		val issuer: Party = nodeI.legalIdentity()
 		val holder: Party = nodeA.legalIdentity()
@@ -359,7 +359,7 @@ class RedeemTokenTestsFlow {
 		assertThat(nodeI.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
 	}
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `should redeem fungible tokens partially`() {
 		val issuer: Party = nodeI.legalIdentity()
 		val holder: Party = nodeA.legalIdentity()
@@ -387,7 +387,7 @@ class RedeemTokenTestsFlow {
 		assertThat(nodeI.services.vaultService.tokenAmountsByToken(GBP).states).isEmpty()
 	}
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `should redeem non fungible tokens issued confidentially`() {
 		val issuer: Party = nodeI.legalIdentity()
 		val holder: Party = nodeA.legalIdentity()
@@ -417,7 +417,7 @@ class RedeemTokenTestsFlow {
 		assertThat(nodeA.services.vaultService.heldTokensByToken(myTokenType).states).isEmpty()
 	}
 
-	@Test
+	@Test(timeout = 300_000)
 	fun `should redeem non fungible tokens moved confidentially`() {
 		val issuer: Party = nodeI.legalIdentity()
 		val holder: Party = nodeA.legalIdentity()

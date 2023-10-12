@@ -81,7 +81,7 @@ class InMemorySelectionTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `indexing and selection by public key`() {
         val (vaultObserver, observable) = getPublicKeyVaultObserver()
         val vaultWatcherService = VaultWatcherService(vaultObserver, InMemorySelectionConfig.defaultConfig())
@@ -98,7 +98,7 @@ class InMemorySelectionTest {
         assertThat(selectedTokens2).containsExactly(stateAndRef2)
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `indexing and selection by external id`() {
         val (vaultObserver, observable) = getExternalIdVaultObserver()
         val vaultWatcherService = VaultWatcherService(vaultObserver, InMemorySelectionConfig.defaultConfig())
@@ -117,7 +117,7 @@ class InMemorySelectionTest {
         assertThat(selectedTokens2).containsExactly(stateAndRef2)
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `indexing and selection by token only`() {
         val (vaultObserver, observable) = getTokenOnlyVaultObserver()
         val vaultWatcherService = VaultWatcherService(vaultObserver, InMemorySelectionConfig.defaultConfig())
