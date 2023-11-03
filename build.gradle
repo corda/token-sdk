@@ -71,7 +71,7 @@ plugins {
 // If the command line project option -PversionFromGit is added to the gradle invocation, we'll resolve
 // the latest git commit hash and timestamp and create a version postfix from that
 if (project.hasProperty("versionFromGit")) {
-    ext.versionSuffix = "202309-01"
+    ext.versionSuffix = "${grgit.head().dateTime.format("yyyyMMdd_HHmmss")}-${grgit.head().abbreviatedId}"
 }
 
 if (ext.versionSuffix != "") {
