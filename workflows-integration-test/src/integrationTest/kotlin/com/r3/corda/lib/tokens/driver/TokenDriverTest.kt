@@ -49,7 +49,6 @@ import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Assert
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import rx.Observer
@@ -380,7 +379,6 @@ class TokenDriverTest {
     }
 
     @Test(timeout = 300_000)
-    @Ignore("TODO JDK17:Fixme")
     fun `Issue 1300 and validate 1300 are read in again`() {
         driver(DriverParameters(
                 inMemoryDB = false,
@@ -415,7 +413,6 @@ class TokenDriverTest {
     }
 
     @Test(timeout = 300_000)
-    @Ignore("TODO JDK17:Fixme")
     fun `Issue 1300, redeem 25 tokens then select 40 tokens`() {
         driver(DriverParameters(
             inMemoryDB = false,
@@ -460,7 +457,6 @@ class TokenDriverTest {
     }
 
     @Test(timeout = 300_000)
-    @Ignore("TODO JDK17:Fixme")
     fun `Issue 1300, then issue 25 more on restart then select 40 tokens`() {
         driver(DriverParameters(
             inMemoryDB = false,
@@ -504,7 +500,6 @@ class TokenDriverTest {
     }
 
     @Test(timeout = 300_000)
-    @Ignore("TODO JDK17:Fixme")
     fun `Issue 400 tokens, redeem 400 tokens`() {
         driver(DriverParameters(
             inMemoryDB = false,

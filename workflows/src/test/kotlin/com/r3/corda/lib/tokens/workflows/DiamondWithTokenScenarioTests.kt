@@ -4,7 +4,6 @@ import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.testing.states.DiamondGradingReport
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
-import org.junit.Ignore
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -33,7 +32,6 @@ class DiamondWithTokenScenarioTests : JITMockNetworkTests() {
      *    holdable token as replacement)
      */
     @Test(timeout = 300_000)
-    @Ignore("TODO JDK17:Fixme")
     fun `lifecycle example`() {
 
         // STEP 01: GIC publishes the diamond certificate

@@ -21,6 +21,7 @@ import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import utility.getOrThrow
 import java.time.Duration
 
@@ -60,32 +61,32 @@ class TokenSDKUpgrade46Compatibility : DockerRemoteMachineBasedTest() {
 
 	val freighterHelperCordapp = NodeBuilder.DeployedCordapp.fromClassPath("freighter-cordapp-flows")
 
-	@Test(timeout = 300_000)
+	@Test @Timeout(300_000)
 	fun `tokens can be upgraded on a node running postgres 9_6`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.PG_9_6)
 	}
 
-	@Test(timeout = 300_000)
+	@Test @Timeout(300_000)
 	fun `tokens can be upgraded on a node running postgres H2`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.H2)
 	}
 
-	@Test(timeout = 300_000)
+	@Test @Timeout(300_000)
 	fun `tokens can be upgraded on a node running postgres 10_10`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.PG_10_10)
 	}
 
-	@Test(timeout = 300_000)
+	@Test @Timeout(300_000)
 	fun `tokens can be upgraded on a node running postgres 11_5`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.PG_11_5)
 	}
 
-	@Test(timeout = 300_000)
+	@Test @Timeout(300_000)
 	fun `tokens can be upgraded on a node running ms_sql`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.MS_SQL)
 	}
 
-	@Test(timeout = 300_000)
+	@Test @Timeout(300_000)
 	@OracleTest
 	fun `tokens can be upgraded on a node running oracle 12 r2`() {
 		runTokensOnNodeRunningDatabase(DeploymentMachineProvider.DatabaseType.ORACLE_12_R2)

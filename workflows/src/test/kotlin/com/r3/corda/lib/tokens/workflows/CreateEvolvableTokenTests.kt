@@ -18,7 +18,6 @@ import kotlin.test.assertFailsWith
 import net.corda.core.identity.Party
 import net.corda.core.flows.NotaryException
 import net.corda.core.contracts.UniqueIdentifier
-import org.junit.Ignore
 
 class CreateEvolvableTokenTests : JITMockNetworkTests() {
 
@@ -325,7 +324,6 @@ class CreateEvolvableTokenTests : JITMockNetworkTests() {
     */
 
     @Test(timeout = 300_000)
-    @Ignore("TODO JDK17: Fixme - timeout")
     fun `should change the maintainer to observer and the party should not be able to update anymore`() {
         // Create Maintainers list
         val maintainers = listOf(alice.legalIdentity(), bob.legalIdentity())
