@@ -3,7 +3,7 @@ import static org.gradle.api.JavaVersion.VERSION_11
 buildscript {
     ext {
         corda_release_group = 'net.corda'
-        corda_release_version = '4.12-HC01'
+        corda_release_version = '4.12-20231108_151736-24da24e'
         confidential_id_release_group = "com.r3.corda.lib.ci"
         confidential_id_release_version = "1.2-HC01"
 
