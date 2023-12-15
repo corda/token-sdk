@@ -17,7 +17,7 @@ import org.junit.*
 
 class TokenSelectionWithInFlowTest {
 
-    @Test
+    @Test(timeout = 300_000)
     fun `should allow selection of tokens already issued from within a flow`() {
 
         val mockNet = InternalMockNetwork(

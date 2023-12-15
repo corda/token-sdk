@@ -59,7 +59,7 @@ public class SelectionUtilitiesFromJavaTest {
     /**
      * Sanity check for easy access of selection utilities from Java code.
      */
-    @Test
+    @Test(timeout = 300_000)
     public void javaWrappedSelectionCriteriaIsIdenticalToKotlinCompanionObject() throws Exception {
 
         TokenType testTokenType = new TokenType("TEST", 1);

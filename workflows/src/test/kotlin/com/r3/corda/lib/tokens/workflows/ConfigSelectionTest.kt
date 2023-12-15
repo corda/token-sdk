@@ -42,7 +42,7 @@ class ConfigSelectionTest {
         ).second
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `test full database selection`() {
         val config = ConfigFactory.parseString("stateSelection {\n" +
                 "database {\n" +
@@ -60,7 +60,7 @@ class ConfigSelectionTest {
     }
 
     @Ignore
-    @Test
+    @Test(timeout = 300_000)
     fun `test full in memory selection public key`() {
         createMockCordaService(services, ::VaultWatcherService)
         val config = ConfigFactory.parseString("stateSelection {\n" +
@@ -79,7 +79,7 @@ class ConfigSelectionTest {
         assertThat(selection).isInstanceOf(LocalTokenSelector::class.java)
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `test full in memory selection with external id`() {
         val config = ConfigFactory.parseString("stateSelection {\n" +
                 "inMemory {\n" +
@@ -93,7 +93,7 @@ class ConfigSelectionTest {
         assertThat(inMemoryConfig.indexingStrategies).isEqualTo(listOf(VaultWatcherService.IndexingType.EXTERNAL_ID, VaultWatcherService.IndexingType.PUBLIC_KEY))
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `test no selection in config`() {
         // no
         val configNull = ConfigFactory.parseString("string=string\nint=1\nfloat=1.0\ndouble=1.0\nnumber=2\ndouble=1.01\nbool=false")
@@ -108,7 +108,7 @@ class ConfigSelectionTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `test defaults database selection`() {
         val configOne = ConfigFactory.parseString("stateSelection {\n" +
                 "database {\n" +
@@ -135,7 +135,7 @@ class ConfigSelectionTest {
     }
 
     @Ignore
-    @Test
+    @Test(timeout = 300_000)
     fun `test defaults in memory selection`() {
         createMockCordaService(services, ::VaultWatcherService)
         val config = ConfigFactory.parseString("stateSelection {\n" +
@@ -147,7 +147,7 @@ class ConfigSelectionTest {
         assertThat(inMemoryConfig.cacheSize).isEqualTo(CACHE_SIZE_DEFAULT)
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `test fail database selection`() {
         val config = ConfigFactory.parseString("stateSelection {\n" +
                 "database {\n" +
@@ -162,7 +162,7 @@ class ConfigSelectionTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `test fail in memory selection`() {
         val config = ConfigFactory.parseString("stateSelection {\n" +
                 "inMemory {\n" +
@@ -175,7 +175,7 @@ class ConfigSelectionTest {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     fun `no in memory selection installed on node`() {
         val config = ConfigFactory.parseString("stateSelection {\n" +
                 "inMemory {\n" +

@@ -15,7 +15,7 @@ class TransactionUtilityTests {
     val ISSUER_TWO: TestIdentity = TestIdentity.fresh("ISSUER TWO")
     val NOTARY: TestIdentity = TestIdentity.fresh("NOTARY")
 
-    @Test
+    @Test(timeout = 300_000)
     fun `sum issued tokens with different issuers`() {
         val a = 10.GBP issuedBy ISSUER_ONE.party heldBy ALICE.party
         val b = 25.GBP issuedBy ISSUER_ONE.party heldBy ALICE.party

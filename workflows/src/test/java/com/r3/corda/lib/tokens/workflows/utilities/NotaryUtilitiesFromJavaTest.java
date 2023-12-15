@@ -26,7 +26,7 @@ public class NotaryUtilitiesFromJavaTest extends JITMockNetworkTests {
     /**
      * Sanity check for notary utilities wrapped in class for access from Java.
      */
-    @Test
+    @Test(timeout = 300_000)
     public void javaWrappedNotarySelectionIsIdenticalToKotlinCompanionObject() throws Exception {
         Party javaWrappedAllArgs = NotaryUtilities.getPreferredNotary(a.getServices(), NotaryUtilities.firstNotary());
         Party javaWrappedDefaultArgs = NotaryUtilities.getPreferredNotary(a.getServices());
@@ -42,7 +42,7 @@ public class NotaryUtilitiesFromJavaTest extends JITMockNetworkTests {
     /**
      * Sanity check for preferred notary backup selector.
      */
-    @Test
+    @Test(timeout = 300_000)
     public void javaWrappedNotarySelectionWorksWithBackupSelection() throws Exception {
         Party preferredNotaryWithBackup = NotaryUtilities.getPreferredNotary(a.getServices(), NotaryUtilities.firstNotary());
         Party preferredNotary = NotaryUtilities.getPreferredNotary(a.getServices());

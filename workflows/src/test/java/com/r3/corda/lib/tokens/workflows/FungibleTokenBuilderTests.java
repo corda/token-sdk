@@ -19,7 +19,7 @@ import java.security.PublicKey;
 
 public class FungibleTokenBuilderTests {
 
-    @Test
+    @Test(timeout = 300_000)
     public void fungibleTokenBuilderResolvesWithoutThrowing() throws TokenBuilderException, NoSuchAlgorithmException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         PublicKey aliceKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
@@ -47,7 +47,7 @@ public class FungibleTokenBuilderTests {
                 .buildFungibleToken();
     }
 
-    @Test
+    @Test(timeout = 300_000)
     public void varyingInputAmountTypesAreEquivalent() throws TokenBuilderException {
         Amount<TokenType> intAmountTokenType = new FungibleTokenBuilder()
                 .withAmount(1)
@@ -77,7 +77,7 @@ public class FungibleTokenBuilderTests {
         assert(total.getQuantity() == AmountUtilities.of(4, FiatCurrency.getInstance("USD")).getQuantity());
     }
 
-    @Test
+    @Test(timeout = 300_000)
     public void amountMayBeSetMoreThanOnce() throws Exception {
         Amount<TokenType> amount = new FungibleTokenBuilder()
                 .withAmount(new Long(1))
@@ -87,7 +87,7 @@ public class FungibleTokenBuilderTests {
         assert (amount.getQuantity() == 200L);
     }
 
-    @Test
+    @Test(timeout = 300_000)
     public void unableToRetrieveAmountTokenTypeWithoutTokenType() throws Exception {
         try {
             new FungibleTokenBuilder()
@@ -99,7 +99,7 @@ public class FungibleTokenBuilderTests {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     public void unableToRetrieveAmountIssuedTokenTypeWithoutIssuer() throws Exception {
         try {
             new FungibleTokenBuilder()
@@ -112,7 +112,7 @@ public class FungibleTokenBuilderTests {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     public void unableToRetrieveFungibleTokenWithoutHolder() throws TokenBuilderException, NoSuchAlgorithmException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         PublicKey aliceKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();

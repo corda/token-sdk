@@ -15,7 +15,7 @@ import java.security.PublicKey;
 
 public class NonFungibleTokenBuilderTests {
 
-    @Test
+    @Test(timeout = 300_000)
     public void nonFungibleTokenBuilderResolvesWithoutThrowing() throws TokenBuilderException, NoSuchAlgorithmException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         PublicKey aliceKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
@@ -35,7 +35,7 @@ public class NonFungibleTokenBuilderTests {
                 .buildNonFungibleToken();
     }
 
-    @Test
+    @Test(timeout = 300_000)
     public void tokenTypeMayBeSetMoreThanOnce() throws NoSuchAlgorithmException, TokenBuilderException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         PublicKey aliceKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
@@ -48,7 +48,7 @@ public class NonFungibleTokenBuilderTests {
         assert (issuedTokenType.getIssuer() == aliceParty);
     }
 
-    @Test
+    @Test(timeout = 300_000)
     public void unableToRetrieveIssuedTokenTypeWithoutTokenType() throws NoSuchAlgorithmException, TokenBuilderException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         PublicKey aliceKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
@@ -63,7 +63,7 @@ public class NonFungibleTokenBuilderTests {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     public void unableToRetrieveIssuedTokenTypeWithoutIssuer() throws TokenBuilderException {
         try {
             new NonFungibleTokenBuilder()
@@ -75,7 +75,7 @@ public class NonFungibleTokenBuilderTests {
         }
     }
 
-    @Test
+    @Test(timeout = 300_000)
     public void unableToRetrieveNonFungibleTokenWithoutHolder() throws TokenBuilderException, NoSuchAlgorithmException {
         CordaX500Name aliceX500Name = new CordaX500Name("Alice", "NY", "US");
         PublicKey aliceKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
