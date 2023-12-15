@@ -21,7 +21,6 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
-import net.corda.core.internal.sumByLong
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.services.Vault
 import net.corda.core.utilities.getOrThrow
@@ -87,7 +86,7 @@ class VaultWatcherServiceTest {
         }
 
         val selectedTokens = vaultWatcherService.selectTokens(Holder.KeyIdentity(owner), Amount(45, GBP), selectionId = "abc")
-        Assert.assertThat(selectedTokens.map { it.state.data.amount.quantity }.sumByLong { it }, `is`(greaterThanOrEqualTo(45L)))
+        Assert.assertThat(selectedTokens.map { it.state.data.amount.quantity }.sumOf { it }, `is`(greaterThanOrEqualTo(45L)))
     }
 
     @Test(expected = InsufficientBalanceException::class)
