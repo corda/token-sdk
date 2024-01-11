@@ -23,14 +23,14 @@ def isReleaseBranch() {
     return (env.BRANCH_NAME =~ /^release\/.*$/)
 }
 
-def isRelease = isReleaseTag() || isReleaseCandidate() || isReleaseBranch()
-String publishOptions = isRelease ? "-s --info" : "--no-daemon -s -PversionFromGit"
+def isRelease = isReleaseTag() || isReleaseCandidate()
+String publishOptions = isReleaseBranch() ? "-s --info" : "--no-daemon -s -PversionFromGit"
 
 pipeline {
     agent { label 'standard' }
 
     parameters {
-        booleanParam name: 'DO_PUBLISH', defaultValue: isRelease, description: 'Publish artifacts to Artifactory?'
+        booleanParam name: 'DO_PUBLISH', defaultValue: (isRelease || isReleaseBranch()), description: 'Publish artifacts to Artifactory?'
         booleanParam name: 'RUN_FREIGHTER_TESTS', defaultValue: false, description: 'Publish Kotlin version to artifactory'
     }
 

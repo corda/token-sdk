@@ -7,7 +7,6 @@ import net.corda.core.cordapp.CordappConfig
 import net.corda.core.cordapp.CordappConfigException
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
-import net.corda.core.internal.randomOrNull
 import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.TransactionBuilder
 
