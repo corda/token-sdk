@@ -23,8 +23,8 @@ def isReleaseBranch() {
     return (env.BRANCH_NAME =~ /^release\/.*$/)
 }
 
-def isRelease = isReleaseTag() || isReleaseCandidate() || isReleaseBranch()
-String publishOptions = isRelease ? "-s --info" : "--no-daemon -s -PversionFromGit"
+def isRelease = isReleaseTag() || isReleaseCandidate()
+String publishOptions = isReleaseBranch() ? "-s --info" : "--no-daemon -s -PversionFromGit"
 
 pipeline {
     agent { label 'standard' }
