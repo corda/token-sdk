@@ -3,9 +3,9 @@ import static org.gradle.api.JavaVersion.VERSION_17
 buildscript {
     ext {
         corda_release_group = 'net.corda'
-        corda_release_version = '4.12-SNAPSHOT'
+        corda_release_version = '4.12-HC02'
         confidential_id_release_group = "com.r3.corda.lib.ci"
-        confidential_id_release_version = "1.2-SNAPSHOT"
+        confidential_id_release_version = "1.2-HC02"
 
         corda_gradle_plugins_version = '5.1.1'
         snappy_version = '0.4'
