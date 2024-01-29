@@ -1,6 +1,5 @@
 package com.r3.corda.lib.tokens.workflows
 
-import org.mockito.kotlin.whenever
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.node.services.IdentityService
 import net.corda.coretesting.internal.rigorousMock
@@ -11,6 +10,7 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.Rule
 import org.mockito.Mockito
+import org.mockito.kotlin.whenever
 
 abstract class LedgerTestWithPersistence {
 

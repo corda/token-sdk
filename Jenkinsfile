@@ -1,4 +1,7 @@
 #!groovy
+import static com.r3.build.BuildControl.killAllExistingBuildsForJob
+@Library('existing-build-control')
+import static com.r3.build.BuildControl.killAllExistingBuildsForJob
 
 /**
  * Kill already started job.
@@ -6,9 +9,6 @@
  * unfinished builds are not required.
  * This feature doesn't play well with disableConcurrentBuilds() option
  */
-@Library('existing-build-control')
-import static com.r3.build.BuildControl.killAllExistingBuildsForJob
-import groovy.transform.Field
 killAllExistingBuildsForJob(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
 
 def isReleaseTag() {

@@ -10,12 +10,12 @@ import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.contracts.utilities.sumIssuedTokensOrNull
 import com.r3.corda.lib.tokens.contracts.utilities.withNotary
 import com.r3.corda.lib.tokens.money.GBP
+import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.testing.states.House
+import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveFungibleTokens
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.getDistributionList
-import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
-import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
 import com.r3.corda.lib.tokens.workflows.utilities.getLinearStateById
 import com.r3.corda.lib.tokens.workflows.utilities.tokenAmountsByToken
 import com.r3.corda.lib.tokens.workflows.utilities.tokenBalance
@@ -301,8 +301,8 @@ class TokenFlowTests : MockNetworkTest(numberOfNodes = 4) {
         assertThat(nodeABalance.quantity).isEqualTo(100)
 
         // Move 1 token to node B
-        val amountToMove = Amount(1, issuedTokenType)
-        val flow3 = MoveFungibleTokens(amountToMove as Amount<TokenType>, bParty) // Force using IssuedTokenType
+        val amountToMove : Amount<TokenType> = Amount(1, issuedTokenType)
+        val flow3 = MoveFungibleTokens(amountToMove, bParty) // Force using IssuedTokenType
         val future3 = A.startFlow(flow3)
         future3.get()
 

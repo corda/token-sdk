@@ -2,14 +2,11 @@ package com.r3.corda.lib.tokens.selection.database.config
 
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.selection.api.ConfigSelection
-import com.r3.corda.lib.tokens.selection.api.Selector
 import com.r3.corda.lib.tokens.selection.api.StateSelectionConfig
 import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
-import com.r3.corda.lib.tokens.selection.memory.config.InMemorySelectionConfig
 import com.r3.corda.lib.tokens.selection.memory.config.getIntOrNull
 import net.corda.core.cordapp.CordappConfig
 import net.corda.core.node.ServiceHub
-import org.slf4j.LoggerFactory
 
 const val MAX_RETRIES_DEFAULT = 8
 const val RETRY_SLEEP_DEFAULT = 100

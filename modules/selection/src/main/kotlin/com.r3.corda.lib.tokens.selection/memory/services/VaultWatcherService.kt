@@ -4,9 +4,9 @@ import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.withoutIssuer
-import com.r3.corda.lib.tokens.selection.memory.config.InMemorySelectionConfig
 import com.r3.corda.lib.tokens.selection.InsufficientBalanceException
 import com.r3.corda.lib.tokens.selection.InsufficientNotLockedBalanceException
+import com.r3.corda.lib.tokens.selection.memory.config.InMemorySelectionConfig
 import com.r3.corda.lib.tokens.selection.memory.internal.Holder
 import com.r3.corda.lib.tokens.selection.memory.internal.lookupExternalIdFromKey
 import com.r3.corda.lib.tokens.selection.sortByTimeStampAscending
@@ -23,8 +23,7 @@ import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.utilities.contextLogger
 import rx.Observable
 import java.time.Duration
-import java.util.ArrayDeque
-import java.util.Collections
+import java.util.*
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantReadWriteLock

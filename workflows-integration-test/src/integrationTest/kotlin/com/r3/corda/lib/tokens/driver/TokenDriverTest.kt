@@ -46,8 +46,8 @@ import net.corda.testing.driver.internal.incrementalPortAllocation
 import net.corda.testing.node.TestCordapp
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
-import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.`is`
 import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Rule

@@ -11,7 +11,6 @@ import net.corda.core.contracts.Amount;
 import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
 import org.junit.Test;
-
 import java.math.BigDecimal;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -65,7 +64,7 @@ public class FungibleTokenBuilderTests {
                 .buildAmountTokenType();
 
         Amount<TokenType> longAmountTokenType = new FungibleTokenBuilder()
-                .withAmount(new Long(1))
+                .withAmount(1L)
                 .ofTokenType(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
 
@@ -80,7 +79,7 @@ public class FungibleTokenBuilderTests {
     @Test(timeout = 300_000)
     public void amountMayBeSetMoreThanOnce() throws Exception {
         Amount<TokenType> amount = new FungibleTokenBuilder()
-                .withAmount(new Long(1))
+                .withAmount(1L)
                 .withAmount(2)
                 .ofTokenType(FiatCurrency.getInstance("USD"))
                 .buildAmountTokenType();
@@ -91,7 +90,7 @@ public class FungibleTokenBuilderTests {
     public void unableToRetrieveAmountTokenTypeWithoutTokenType() throws Exception {
         try {
             new FungibleTokenBuilder()
-                    .withAmount(new Long(1))
+                    .withAmount(1L)
                     .buildAmountTokenType();
             assert(false);
         } catch(TokenBuilderException ex) {
@@ -103,7 +102,7 @@ public class FungibleTokenBuilderTests {
     public void unableToRetrieveAmountIssuedTokenTypeWithoutIssuer() throws Exception {
         try {
             new FungibleTokenBuilder()
-                    .withAmount(new Long(1))
+                    .withAmount(1L)
                     .ofTokenType(FiatCurrency.getInstance("USD"))
                     .buildAmountIssuedTokenType();
             assert(false);
@@ -119,7 +118,7 @@ public class FungibleTokenBuilderTests {
         Party aliceParty = new Party(aliceX500Name, aliceKey);
         try {
             FungibleToken test = new FungibleTokenBuilder()
-                    .withAmount(new Long(1))
+                    .withAmount(1L)
                     .ofTokenType(FiatCurrency.getInstance("USD"))
                     .issuedBy(aliceParty)
                     .buildFungibleToken();

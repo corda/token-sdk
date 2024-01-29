@@ -1,16 +1,11 @@
 package com.r3.corda.lib.tokens.workflows.internal.flows.finality
 
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.lib.tokens.contracts.commands.RedeemTokenCommand
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
-import com.r3.corda.lib.tokens.workflows.utilities.participants
 import com.r3.corda.lib.tokens.workflows.utilities.requireSessionsForParticipants
-import com.r3.corda.lib.tokens.workflows.utilities.toWellKnownParties
-import net.corda.core.contracts.CommandWithParties
 import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
-import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.SignedTransaction

@@ -4,7 +4,6 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.schemas.PersistentState
-import java.security.PublicKey
 import javax.persistence.*
 
 object FungibleTokenSchema

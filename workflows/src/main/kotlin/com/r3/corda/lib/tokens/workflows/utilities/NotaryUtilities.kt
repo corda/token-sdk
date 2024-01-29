@@ -2,7 +2,6 @@
 package com.r3.corda.lib.tokens.workflows.utilities
 
 import co.paralleluniverse.fibers.Suspendable
-import com.google.common.collect.Iterables.getFirst
 import net.corda.core.cordapp.CordappConfig
 import net.corda.core.cordapp.CordappConfigException
 import net.corda.core.identity.CordaX500Name

@@ -1,8 +1,5 @@
 package com.r3.corda.lib.tokens.contracts
 
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
 import com.r3.corda.lib.tokens.contracts.types.IssuedTokenType
 import com.r3.corda.lib.tokens.contracts.types.TokenType
@@ -27,6 +24,9 @@ import net.corda.testing.node.MockServices
 import net.corda.testing.node.transaction
 import net.corda.testing.services.MockAttachmentStorage
 import org.junit.Rule
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 abstract class ContractTestCommon {
 

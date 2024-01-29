@@ -1,24 +1,24 @@
 package com.r3.corda.lib.tokens.workflows
 
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType
+import com.r3.corda.lib.tokens.contracts.utilities.withNotary
+import com.r3.corda.lib.tokens.money.GBP
+import com.r3.corda.lib.tokens.testing.states.House
 import com.r3.corda.lib.tokens.testing.states.TestEvolvableTokenType
 import com.r3.corda.lib.tokens.workflows.factories.TestEvolvableTokenTypeFactory
+import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
+import com.r3.corda.lib.tokens.workflows.flows.rpc.UpdateEvolvableToken
+import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.flows.NotaryException
+import net.corda.core.identity.Party
 import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
+import org.junit.Ignore
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
-import com.r3.corda.lib.tokens.testing.states.House
-import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
-import com.r3.corda.lib.tokens.contracts.utilities.withNotary
-import com.r3.corda.lib.tokens.workflows.flows.rpc.UpdateEvolvableToken
-import com.r3.corda.lib.tokens.money.GBP
 import kotlin.test.assertFailsWith
-import net.corda.core.identity.Party
-import net.corda.core.flows.NotaryException
-import net.corda.core.contracts.UniqueIdentifier
-import org.junit.Ignore
 
 class CreateEvolvableTokenTests : JITMockNetworkTests() {
 

@@ -18,8 +18,8 @@ import net.corda.core.internal.sumByLong
 import net.corda.core.messaging.startFlow
 import net.corda.core.utilities.getOrThrow
 import org.hamcrest.MatcherAssert
-import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.containsInAnyOrder
+import org.hamcrest.Matchers.`is`
 import org.junit.jupiter.api.Test
 import utility.getOrThrow
 import java.time.Duration

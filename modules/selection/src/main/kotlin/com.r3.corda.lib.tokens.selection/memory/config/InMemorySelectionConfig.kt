@@ -28,7 +28,7 @@ data class InMemorySelectionConfig @JvmOverloads constructor(val enabled: Boolea
             val cacheSize = config.getIntOrNull("stateSelection.inMemory.cacheSize")
                     ?: CACHE_SIZE_DEFAULT
             val indexingType = try {
-                (config.get("stateSelection.inMemory.indexingStrategies") as List<Any>).map { VaultWatcherService.IndexingType.valueOf(it.toString()) }
+                (config.get("stateSelection.inMemory.indexingStrategies") as List<*>).map { VaultWatcherService.IndexingType.valueOf(it.toString()) }
             } catch (e: CordappConfigException) {
                 logger.warn("No indexing method specified. Indexes will be created at run-time for each invocation of selectTokens")
                 emptyList<VaultWatcherService.IndexingType>()
