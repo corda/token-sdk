@@ -4,7 +4,12 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.schemas.PersistentState
-import javax.persistence.*
+import javax.persistence.AttributeConverter
+import javax.persistence.Column
+import javax.persistence.Convert
+import javax.persistence.Entity
+import javax.persistence.Index
+import javax.persistence.Table
 
 object NonFungibleTokenSchema
 
