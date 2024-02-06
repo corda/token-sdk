@@ -93,6 +93,7 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
 		references: List<StateAndRef<ContractState>>
 	)
 
+	@Suppress("UNUSED_VARIABLE")
 	final override fun verify(tx: LedgerTransaction) {
 		// Group token amounts by token type. We need to do this because tokens of different types need to be
 		// verified separately. This works for the same token type with different issuers, or different token types
@@ -122,6 +123,10 @@ abstract class AbstractTokenContract<AT : AbstractToken> : Contract {
 			}
 			dispatchOnCommand(commands, group.inputs, group.outputs, tx.attachments, tx.references)
 		}
+
+
+		val allMatchedCommands = groupsAndCommands.map { it.first.first() }.toSet()
+		val extraCommands = (tokenCommands - allMatchedCommands).toSet()
 	}
 
 	private fun groupMatchesCommand(it: CommandWithParties<TokenCommand>, group: IndexedInOutGroup<AbstractToken, TokenInfo>): Boolean {
