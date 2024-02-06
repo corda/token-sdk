@@ -4,6 +4,7 @@ import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
 import net.corda.core.serialization.SingletonSerializeAsToken
 
+@Suppress("UNUSED_PARAMETER")
 @CordaService
 class VaultMigratorService(appServiceHub: AppServiceHub) : SingletonSerializeAsToken() {
     //TODO - we should attempt to migrate the old vault contents. This must be done a service because we cannot guarantee

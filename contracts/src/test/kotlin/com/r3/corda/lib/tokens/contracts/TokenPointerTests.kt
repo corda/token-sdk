@@ -15,6 +15,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 
 class TokenPointerTests : ContractTestCommon() {
+    @Suppress("UNCHECKED_CAST")
     @Test(timeout = 300_000)
     fun test() {
         // Create the evolvable token type.

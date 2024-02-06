@@ -57,7 +57,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                sh './gradlew assemble --parallel'
+                sh './gradlew -Pcompilation.warningsAsErrors=true assemble --parallel'
             }
         }
 
