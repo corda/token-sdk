@@ -13,6 +13,7 @@ import net.corda.testing.node.internal.InternalMockNetwork
 import net.corda.testing.node.internal.InternalMockNodeParameters
 import net.corda.testing.node.internal.startFlow
 import org.hamcrest.CoreMatchers.*
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.*
 
 class TokenSelectionWithInFlowTest {
@@ -45,7 +46,7 @@ class TokenSelectionWithInFlowTest {
             mockNet.runNetwork()
             val selectedToken = tokensFuture.getOrThrow().single()
 
-            Assert.assertThat(issuedStateRef, `is`(equalTo(selectedToken)))
+            assertThat(issuedStateRef, `is`(equalTo(selectedToken)))
         } finally {
             mockNet.stopNodes()
         }

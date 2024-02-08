@@ -243,7 +243,6 @@ class IssueTokensTest {
      * It should be possible to issue multiple token types in a single flow
      */
     @Test(timeout = 300_000)
-    @Ignore("TODO JDK17: Fixme - timeout")
     fun `should issue multiple token types`() {
         //Creating two token types
         val tokenType1 = 100.GBP issuedBy nodeA.legalIdentity() heldBy nodeB.legalIdentity()

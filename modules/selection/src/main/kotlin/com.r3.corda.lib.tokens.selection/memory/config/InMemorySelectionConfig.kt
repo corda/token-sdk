@@ -17,6 +17,7 @@ data class InMemorySelectionConfig @JvmOverloads constructor(val enabled: Boolea
     companion object {
         private val logger = LoggerFactory.getLogger("inMemoryConfigSelectionLogger")
 
+        @Suppress("UNCHECKED_CAST")
         @JvmStatic
         fun parse(config: CordappConfig): InMemorySelectionConfig {
             val enabled = if (!config.exists("stateSelection.inMemory.enabled")) {

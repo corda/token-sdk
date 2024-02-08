@@ -46,10 +46,9 @@ import net.corda.testing.driver.internal.incrementalPortAllocation
 import net.corda.testing.node.TestCordapp
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
-import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.equalTo
-import org.junit.Assert
-import org.junit.Ignore
+import org.hamcrest.CoreMatchers.`is`
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Rule
 import org.junit.Test
 import rx.Observer
@@ -91,8 +90,8 @@ class TokenDriverTest {
             issuer.rpc.startFlowDynamic(IssueTokens::class.java, listOf(tokenToIssueToIssuer, tokenToIssueToOther), emptyList<Party>()).returnValue.getOrThrow()
             val queryResult = issuer.rpc.vaultQueryByCriteria(heldTokenAmountCriteria(customToken, issuerParty), FungibleToken::class.java)
 
-            Assert.assertThat(queryResult.states.size, `is`(1))
-            Assert.assertThat(queryResult.states.first().state.data.holder, `is`(equalTo((issuerParty as AbstractParty))))
+            assertThat(queryResult.states.size, `is`(1))
+            assertThat(queryResult.states.first().state.data.holder, `is`(equalTo((issuerParty as AbstractParty))))
 
         }
     }
@@ -128,8 +127,8 @@ class TokenDriverTest {
 
             val queryResult = issuer.rpc.vaultQueryByCriteria(heldTokenAmountCriteria(customToken, newCi1), FungibleToken::class.java)
 
-            Assert.assertThat(queryResult.states.size, `is`(1))
-            Assert.assertThat(queryResult.states.first().state.data.holder, `is`(equalTo((newCi1 as AbstractParty))))
+            assertThat(queryResult.states.size, `is`(1))
+            assertThat(queryResult.states.first().state.data.holder, `is`(equalTo((newCi1 as AbstractParty))))
 
         }
     }
@@ -380,7 +379,6 @@ class TokenDriverTest {
     }
 
     @Test(timeout = 300_000)
-    @Ignore("TODO JDK17:Fixme")
     fun `Issue 1300 and validate 1300 are read in again`() {
         driver(DriverParameters(
                 inMemoryDB = false,
@@ -414,8 +412,8 @@ class TokenDriverTest {
         }
     }
 
+    @Suppress("UNUSED_VARIABLE")
     @Test(timeout = 300_000)
-    @Ignore("TODO JDK17:Fixme")
     fun `Issue 1300, redeem 25 tokens then select 40 tokens`() {
         driver(DriverParameters(
             inMemoryDB = false,
@@ -460,7 +458,6 @@ class TokenDriverTest {
     }
 
     @Test(timeout = 300_000)
-    @Ignore("TODO JDK17:Fixme")
     fun `Issue 1300, then issue 25 more on restart then select 40 tokens`() {
         driver(DriverParameters(
             inMemoryDB = false,
@@ -503,8 +500,8 @@ class TokenDriverTest {
         }
     }
 
+    @Suppress("UNUSED_VARIABLE")
     @Test(timeout = 300_000)
-    @Ignore("TODO JDK17:Fixme")
     fun `Issue 400 tokens, redeem 400 tokens`() {
         driver(DriverParameters(
             inMemoryDB = false,
@@ -543,6 +540,7 @@ class TokenDriverTest {
     }
 }
 
+@Suppress("DEPRECATION")
 class TransactionObserver(private val rpcOps: CordaRPCOps, private val duration: Duration) {
     val txns = mutableSetOf<SecureHash>()
     val feed = rpcOps.internalVerifiedTransactionsFeed()

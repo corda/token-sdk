@@ -6,16 +6,13 @@ import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.selection.TokenQueryBy
 import com.r3.corda.lib.tokens.selection.memory.selector.LocalTokenSelector
 import com.r3.corda.lib.tokens.selection.memory.services.VaultWatcherService
-import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
+import net.corda.core.flows.FlowExternalAsyncOperation
 import net.corda.core.flows.FlowLogic
-import net.corda.core.internal.FlowAsyncOperation
-import net.corda.core.internal.executeAsync
 import java.security.PublicKey
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
-import java.util.concurrent.Future
 
 
 val e = Executors.newSingleThreadExecutor()
@@ -33,22 +30,14 @@ class SuspendingSelector(val owningKey: PublicKey,
 
         println("SUSPENDING:::: ${runId.uuid}")
 
-        val string = executeAsync(object : FlowAsyncOperation<String> {
-            override fun execute(deduplicationId: String): CordaFuture<String> {
+        val string = await(object : FlowExternalAsyncOperation<String> {
+            override fun execute(deduplicationId: String): CompletableFuture<String> {
                 val f = CompletableFuture<String>()
                 e.submit {
                     Thread.sleep(1000)
                     f.complete("yes")
                 }
-                return object : Future<String> by f, CordaFuture<String> {
-                    override fun <W> then(callback: (CordaFuture<String>) -> W) {
-                        f.thenAccept { callback(this) }
-                    }
-
-                    override fun toCompletableFuture(): CompletableFuture<String> {
-                        return f
-                    }
-                }
+                return f
             }
         })
 
