@@ -1,8 +1,8 @@
 apply plugin: 'net.corda.plugins.cordapp'
 
 cordapp {
-    targetPlatformVersion 14
-    minimumPlatformVersion 14
+    targetPlatformVersion 140
+    minimumPlatformVersion 140
     contract {
         name "Token SDK test-contracts"
         vendor "R3"

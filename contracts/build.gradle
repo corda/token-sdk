@@ -39,8 +39,8 @@ dependencies {
 }
 
 cordapp {
-    targetPlatformVersion 14
-    minimumPlatformVersion 14
+    targetPlatformVersion 140
+    minimumPlatformVersion 140
     contract {
         name "Token SDK Contracts"
         vendor "R3"

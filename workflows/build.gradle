@@ -9,8 +9,8 @@ evaluationDependsOn(":modules:selection")
 def selectionProject = project(":modules:selection")
 
 cordapp {
-    targetPlatformVersion 14
-    minimumPlatformVersion 14
+    targetPlatformVersion 140
+    minimumPlatformVersion 140
     workflow {
         name "Token SDK Workflows"
         vendor "R3"
