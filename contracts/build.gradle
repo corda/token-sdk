@@ -45,7 +45,7 @@ cordapp {
         name "Token SDK Contracts"
         vendor "R3"
         licence "Apache 2"
-        versionId 2
+        versionId 3
     }
     signing {
         enabled false
