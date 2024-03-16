@@ -5,9 +5,9 @@ import static org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9
 buildscript {
     ext {
         corda_release_group = 'net.corda'
-        corda_release_version = '4.12-HC03'
+        corda_release_version = '4.12-HC04'
         confidential_id_release_group = "com.r3.corda.lib.ci"
-        confidential_id_release_version = "1.2-HC03"
+        confidential_id_release_version = "1.2-HC04"
 
         corda_gradle_plugins_version = '5.1.1'
         snappy_version = '0.4'
