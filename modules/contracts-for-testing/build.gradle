@@ -9,9 +9,6 @@ cordapp {
         licence "Apache 2"
         versionId 1
     }
-    signing {
-        enabled false
-    }
 }
 
 sourceSets {
