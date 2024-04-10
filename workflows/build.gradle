@@ -79,7 +79,7 @@ dependencies {
     runtimeOnly "org.iq80.snappy:snappy:$snappy_version"
 
     // Logging.
-    testImplementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
+    testImplementation "org.apache.logging.log4j:log4j-slf4j2-impl:${log4j_version}"
 
     testImplementation "com.typesafe:config:$typesafe_config_version"
     testImplementation "io.reactivex:rxjava:$rxjava_version"

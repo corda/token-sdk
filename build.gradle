@@ -14,9 +14,9 @@ buildscript {
         kotlin_version = '1.9.0'
         junit_version = '4.12'
         dokka_version = '0.9.17'
-        slf4j_version = '1.7.25'
-        log4j_version = '2.9.1'
-        jackson_version = '2.9.0'
+        slf4j_version = '2.0.12'
+        log4j_version = '2.23.1'
+        jackson_version = '2.17.0'
         aetherVersion = '1.0.0.v20140518'
         mavenVersion = '3.1.0'
         maven_resolver_version = "1.1.1"
