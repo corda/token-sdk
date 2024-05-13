@@ -73,7 +73,7 @@ dependencies {
     implementation "org.liquibase:liquibase-core:$liquibase_version"
     implementation "org.hibernate:hibernate-core:$hibernate_version"
     implementation "com.google.guava:guava:$guava_version"
-    implementation "org.postgresql:postgresql:42.2.8"
+    implementation "org.postgresql:postgresql:42.7.3"
     implementation(files(selectionProject.jar.archivePath))
 
     runtimeOnly "org.iq80.snappy:snappy:$snappy_version"

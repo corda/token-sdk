@@ -71,7 +71,7 @@ dependencies {
 
     implementation project(":modules:contracts-for-testing")
     implementation project(":modules:selection")
-    implementation "org.postgresql:postgresql:42.2.8"
+    implementation "org.postgresql:postgresql:42.7.3"
     implementation "org.slf4j:slf4j-api:$slf4j_version"
 
     testImplementation project(":modules:contracts-for-testing")
