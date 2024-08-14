@@ -12,7 +12,7 @@ import java.security.PublicKey
 /**
  * See kdoc for [FungibleTokenContract].
  */
-class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>() {
+open class NonFungibleTokenContract : AbstractTokenContract<NonFungibleToken>() {
 
     override val accepts: Class<NonFungibleToken> get() = uncheckedCast(NonFungibleToken::class.java)
 
