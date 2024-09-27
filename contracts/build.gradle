@@ -48,9 +48,6 @@ cordapp {
         licence "Apache 2"
         versionId 2
     }
-    signing {
-        enabled false
-    }
 }
 
 jar {
