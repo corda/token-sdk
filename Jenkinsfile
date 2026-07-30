@@ -24,7 +24,8 @@ def isReleaseBranch() {
 }
 
 def isSnykBranch() {
-    return (env.BRANCH_NAME =~ /^snyk\/release\/.*$/)
+    def branch = env.CHANGE_BRANCH ?: env.BRANCH_NAME
+    return (branch =~ /^snyk\/release\/.*$/)
 }
 
 def isRelease = isReleaseTag() || isReleaseCandidate()
