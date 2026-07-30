@@ -23,6 +23,10 @@ def isReleaseBranch() {
     return (env.BRANCH_NAME =~ /^release\/.*$/)
 }
 
+def isSnykBranch() {
+    return (env.BRANCH_NAME =~ /^snyk\/release\/.*$/)
+}
+
 def isRelease = isReleaseTag() || isReleaseCandidate()
 String publishOptions = (isReleaseBranch() || isRelease) ? "-s --info" : "--no-daemon -s -PversionFromGit"
 
@@ -63,7 +67,7 @@ pipeline {
 
         stage('Snyk Security') {
             when {
-                expression { isReleaseTag() || isReleaseBranch() }
+                expression { isReleaseTag() || isReleaseBranch() || isSnykBranch() }
             }
             steps {
                 script {
