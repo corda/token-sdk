@@ -96,6 +96,19 @@ allprojects {
             force "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
             cacheChangingModulesFor 0, 'seconds'
             force "org.yaml:snakeyaml:$snake_yaml_version"
+
+            eachDependency { details ->
+                // SNYK-JAVA-IONETTY-18170211 / CVE-2026-55851
+                // SNYK-JAVA-IONETTY-18233122 / CVE-2026-59919
+                // Vulnerability in io.netty:netty-codec-haproxy, which is a transitive dependency
+                if (details.requested.group == 'io.netty' && details.requested.name.startsWith('netty-')) {
+                    if (details.requested.name.startsWith('netty-tcnative')) {
+                        details.useVersion tcnative_version
+                    } else {
+                        details.useVersion netty_version
+                    }
+                }
+            }
         }
     }
 }
