@@ -96,6 +96,12 @@ allprojects {
             force "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
             cacheChangingModulesFor 0, 'seconds'
             force "org.yaml:snakeyaml:$snake_yaml_version"
+            eachDependency { details ->
+                // SNYK-JAVA-IOMICROMETER-19233327 / CVE-2026-59296
+                if (details.requested.group == 'io.micrometer') {
+                    details.useVersion micrometerVersion
+                }
+            }
         }
     }
 }
