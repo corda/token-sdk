@@ -44,7 +44,7 @@ pipeline {
     }
 
     environment {
-        ARTIFACTORY_CREDENTIALS = credentials('artifactory-credentials')
+        ARTIFACTORY_CREDENTIALS = credentials('artifactory-credentials-2')
         CORDA_ARTIFACTORY_USERNAME = "${env.ARTIFACTORY_CREDENTIALS_USR}"
         CORDA_ARTIFACTORY_PASSWORD = "${env.ARTIFACTORY_CREDENTIALS_PSW}"
         EXECUTOR_NUMBER = "${env.EXECUTOR_NUMBER}"
@@ -107,8 +107,8 @@ pipeline {
             steps {
                 rtServer(
                         id: 'R3-Artifactory',
-                        url: 'https://software.r3.com/artifactory',
-                        credentialsId: 'artifactory-credentials'
+                        url: 'https://software2.r3.com/artifactory',
+                        credentialsId: 'artifactory-credentials-2'
                 )
                 rtGradleDeployer(
                         id: 'deployer',
