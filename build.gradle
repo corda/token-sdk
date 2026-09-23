@@ -3,7 +3,7 @@ import static org.gradle.api.JavaVersion.VERSION_1_8
 buildscript {
     ext {
         corda_release_group = 'net.corda'
-        corda_release_version = '4.10'
+        corda_release_version = '4.11-SNAPSHOT'
         tokens_release_group = getProperty("group")
         tokens_release_version = getProperty("version")
         tokens_release_suffix= "$versionSuffix"
@@ -12,7 +12,7 @@ buildscript {
         junit_version = '4.12'
         dokka_version = '0.9.17'
         slf4j_version = '1.7.25'
-        log4j_version = '2.9.1'
+        log4j_version = '2.25.5'
         jackson_version = '2.9.0'
         confidential_id_release_group = "com.r3.corda.lib.ci"
         confidential_id_release_version = "1.0"

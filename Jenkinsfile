@@ -29,9 +29,6 @@ pipeline {
         SNYK_TOKEN = credentials('c4-ent-snyk-api-token-secret')
     }
 
-    parameters {
-        booleanParam name: 'RUN_FREIGHTER_TESTS', defaultValue: false, description: 'Publish Kotlin version to artifactory'
-    }
 
     stages {
         stage("Prep") {
@@ -69,7 +66,7 @@ pipeline {
                 }
             }
         }
-
+/*
         stage('Freighter Tests') {
            when {
                 expression { params.RUN_FREIGHTER_TESTS}
@@ -80,7 +77,7 @@ pipeline {
                 }
             }
         }
-
+*/
         stage('Publish to Artifactory') {
             when {
                 expression { isReleaseTag() }
