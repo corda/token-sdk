@@ -29,9 +29,6 @@ pipeline {
         SNYK_TOKEN = credentials('c4-ent-snyk-api-token-secret')
     }
 
-    parameters {
-        booleanParam name: 'RUN_FREIGHTER_TESTS', defaultValue: false, description: 'Publish Kotlin version to artifactory'
-    }
 
     stages {
         stage("Prep") {
@@ -66,17 +63,6 @@ pipeline {
             steps {
                 timeout(30) {
                     sh "./gradlew test integrationTest -Si --no-daemon --parallel"
-                }
-            }
-        }
-
-        stage('Freighter Tests') {
-           when {
-                expression { params.RUN_FREIGHTER_TESTS}
-            }
-            steps {
-                timeout(60) {
-                    sh './gradlew freighterTest -Si --no-daemon'
                 }
             }
         }
