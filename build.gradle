@@ -108,6 +108,10 @@ allprojects {
                         details.useVersion netty_version
                     }
                 }
+                // SNYK-JAVA-IOMICROMETER-19233327 / CVE-2026-59296
+                if (details.requested.group == 'io.micrometer') {
+                    details.useVersion micrometerVersion
+                }
             }
         }
     }
