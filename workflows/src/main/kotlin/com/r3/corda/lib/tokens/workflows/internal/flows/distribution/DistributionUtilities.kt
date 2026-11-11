@@ -14,15 +14,17 @@ import net.corda.core.identity.Party
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.CordaSerializable
 import java.util.*
-import javax.persistence.criteria.CriteriaQuery
 
 @CordaSerializable
 data class DistributionListUpdate(val sender: Party, val receiver: Party, val linearId: UniqueIdentifier)
 
+// The entity manager blocks below name no persistence API type explicitly: Corda 4.14 and earlier hand over a
+// javax.persistence.EntityManager, Corda 4.15 a jakarta.persistence one, and the same source compiles against either.
+
 // Gets the distribution list for a particular token.
 fun getDistributionList(services: ServiceHub, linearId: UniqueIdentifier): List<DistributionRecord> {
     return services.withEntityManager {
-        val query: CriteriaQuery<DistributionRecord> = criteriaBuilder.createQuery(DistributionRecord::class.java)
+        val query = criteriaBuilder.createQuery(DistributionRecord::class.java)
         query.apply {
             val root = from(DistributionRecord::class.java)
             where(criteriaBuilder.equal(root.get<UUID>("linearId"), linearId.id))
@@ -35,7 +37,7 @@ fun getDistributionList(services: ServiceHub, linearId: UniqueIdentifier): List<
 // Gets the distribution record for a particular token and party.
 fun getDistributionRecord(serviceHub: ServiceHub, linearId: UniqueIdentifier, party: Party): DistributionRecord? {
     return serviceHub.withEntityManager {
-        val query: CriteriaQuery<DistributionRecord> = criteriaBuilder.createQuery(DistributionRecord::class.java)
+        val query = criteriaBuilder.createQuery(DistributionRecord::class.java)
         query.apply {
             val root = from(DistributionRecord::class.java)
             val linearIdEq = criteriaBuilder.equal(root.get<UUID>("linearId"), linearId.id)

@@ -1,5 +1,23 @@
 ## Changelog
 
+### V1.3.5 (unreleased)
+
+#### General
+
+* The Token SDK no longer depends on Hibernate (ENT-15178). `tokens-workflows` used to declare
+  `org.hibernate:hibernate-core:5.6.14.Final` at runtime scope in its POM, which Gradle refuses to put on one classpath with
+  Corda 4.15 (Hibernate 7): `Cannot select module with conflict on capability 'org.hibernate:hibernate-core'`. The only
+  Hibernate use, `@Type(type = "uuid-char")` on the distribution record's `linear_id`, is replaced by a JPA `AttributeConverter`
+  that stores the same 36-character string, so existing rows stay readable. The `javax.persistence` and `jakarta.persistence`
+  APIs are compile-only dependencies now; neither is bundled, the node provides the one its Hibernate version implements.
+* The schema classes carry both the `javax.persistence` (Corda 4.14 and earlier) and the `jakarta.persistence` (Corda 4.15)
+  annotations, so one jar runs on both. Build the SDK against Corda 4.12 (the default) for a jar that runs on 4.12 and 4.15
+  nodes; a jar built against 4.15 runs on 4.15 only, because its `withEntityManager` code is bound to the Jakarta
+  `EntityManager`.
+* The Corda version to build and test against is a Gradle property: `./gradlew build -PcordaReleaseVersion=4.15-RC02`.
+  The default, `4.12-SNAPSHOT`, is `cordaReleaseVersion` in `gradle.properties`. Corda release candidates resolve from the `corda-releases` repository on
+  `software.r3.com`, with the `CORDA_ARTIFACTORY_USERNAME` and `CORDA_ARTIFACTORY_PASSWORD` environment variables.
+
 ### V1.1
 
 #### Workflows
