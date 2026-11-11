@@ -3,9 +3,15 @@ package com.r3.corda.lib.tokens.workflows.internal.schemas
 import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.serialization.CordaSerializable
-import org.hibernate.annotations.Type
-import java.util.*
-import javax.persistence.*
+import java.util.UUID
+import javax.persistence.AttributeConverter
+import javax.persistence.Column
+import javax.persistence.Convert
+import javax.persistence.Entity
+import javax.persistence.GeneratedValue
+import javax.persistence.Id
+import javax.persistence.Index
+import javax.persistence.Table
 
 object DistributionRecordSchema
 
@@ -25,7 +31,7 @@ class DistributionRecord(
         var id: Long,
 
         @Column(name = "linear_id", nullable = false)
-        @Type(type = "uuid-char")
+        @Convert(converter = UUIDConverter::class)
         var linearId: UUID,
 
         @Column(name = "party", nullable = false)
@@ -33,4 +39,13 @@ class DistributionRecord(
 
 ) {
     constructor(linearId: UUID, party: Party) : this(0, linearId, party)
+}
+
+/**
+ * Stores a [UUID] as its 36-character string, the same format Hibernate 5's `uuid-char` type used, so that existing rows stay readable.
+ * A JPA converter rather than a Hibernate `@Type`, so that the SDK does not depend on Hibernate.
+ */
+class UUIDConverter : AttributeConverter<UUID, String> {
+    override fun convertToDatabaseColumn(attribute: UUID?): String? = attribute?.toString()
+    override fun convertToEntityAttribute(dbData: String?): UUID? = dbData?.let(UUID::fromString)
 }
