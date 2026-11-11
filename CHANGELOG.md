@@ -15,7 +15,7 @@
   nodes; a jar built against 4.15 runs on 4.15 only, because its `withEntityManager` code is bound to the Jakarta
   `EntityManager`.
 * The Corda version to build and test against is a Gradle property: `./gradlew build -PcordaReleaseVersion=4.15-RC02`.
-  The default is `4.12-SNAPSHOT`. Corda release candidates resolve from the `corda-releases` repository on
+  The default, `4.12-SNAPSHOT`, is `cordaReleaseVersion` in `gradle.properties`. Corda release candidates resolve from the `corda-releases` repository on
   `software.r3.com`, with the `CORDA_ARTIFACTORY_USERNAME` and `CORDA_ARTIFACTORY_PASSWORD` environment variables.
 
 ### V1.1

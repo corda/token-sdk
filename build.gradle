@@ -5,9 +5,10 @@ import static org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9
 buildscript {
     ext {
         corda_release_group = 'net.corda'
-        // The Corda version to build and test against: -PcordaReleaseVersion=4.15-RC02 for a Corda 4.15 (Hibernate 7) build.
-        // A jar built against 4.12 runs on both 4.12 and 4.15 nodes; one built against 4.15 runs on 4.15 only.
-        corda_release_version = project.hasProperty('cordaReleaseVersion') ? project.property('cordaReleaseVersion') : '4.12-SNAPSHOT'
+        // The Corda version to build and test against: the default is in gradle.properties, -PcordaReleaseVersion=4.15-RC02
+        // on the command line gives a Corda 4.15 (Hibernate 7) build. A jar built against 4.12 runs on both 4.12 and 4.15
+        // nodes; one built against 4.15 runs on 4.15 only.
+        corda_release_version = cordaReleaseVersion
         confidential_id_release_group = "com.r3.corda.lib.ci"
         confidential_id_release_version = "1.2.7"
 

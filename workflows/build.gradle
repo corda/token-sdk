@@ -71,8 +71,8 @@ dependencies {
 
     // Both persistence APIs are compile-only and neither is bundled: the node provides the one its Hibernate version
     // implements (javax.persistence on Corda 4.14 and earlier, jakarta.persistence on Corda 4.15). No Hibernate dependency.
-    compileOnly 'javax.persistence:javax.persistence-api:2.2'
-    compileOnly 'jakarta.persistence:jakarta.persistence-api:3.2.0'
+    compileOnly "javax.persistence:javax.persistence-api:$javax_persistence_version"
+    compileOnly "jakarta.persistence:jakarta.persistence-api:$jakarta_persistence_version"
 
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation "org.liquibase:liquibase-core:$liquibase_version"
