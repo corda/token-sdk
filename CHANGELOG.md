@@ -4,12 +4,16 @@
 
 #### General
 
-* The Token SDK no longer depends on Hibernate (ENT-15178). `tokens-workflows` used to declare
+* The Token SDK no longer depends on Hibernate at runtime (ENT-15178). `tokens-workflows` used to declare
   `org.hibernate:hibernate-core:5.6.14.Final` at runtime scope in its POM, which Gradle refuses to put on one classpath with
-  Corda 4.15 (Hibernate 7): `Cannot select module with conflict on capability 'org.hibernate:hibernate-core'`. The only
-  Hibernate use, `@Type(type = "uuid-char")` on the distribution record's `linear_id`, is replaced by a JPA `AttributeConverter`
-  that stores the same 36-character string, so existing rows stay readable. The `javax.persistence` and `jakarta.persistence`
-  APIs are compile-only dependencies now; neither is bundled, the node provides the one its Hibernate version implements.
+  Corda 4.15 (Hibernate 7): `Cannot select module with conflict on capability 'org.hibernate:hibernate-core'`. Hibernate 5 and
+  Hibernate 7 are compile-only dependencies now, as are the `javax.persistence` and `jakarta.persistence` APIs; none is bundled,
+  the node provides the ones it runs.
+* The distribution record's `linear_id` keeps its mapping, a `VARCHAR` holding the 36-character UUID string, on both Hibernate
+  versions: `@Type(type = "uuid-char")` is replaced by Hibernate 5's `@TypeDef`/`@Target` and Hibernate 7's `@JdbcTypeCode`, which
+  the other version does not have. A JPA `AttributeConverter`, as in earlier 1.3.5 snapshots, maps it as `NVARCHAR` on Corda
+  Enterprise's Oracle and SQL Server (nationalised character data), so nodes up to 4.14 failed schema validation at start-up
+  (`wrong column type encountered in column [linear_id] in table [distribution_record]`).
 * The schema classes carry both the `javax.persistence` (Corda 4.14 and earlier) and the `jakarta.persistence` (Corda 4.15)
   annotations, so one jar runs on both. Build the SDK against Corda 4.12 (the default) for a jar that runs on 4.12 and 4.15
   nodes; a jar built against 4.15 runs on 4.15 only, because its `withEntityManager` code is bound to the Jakarta

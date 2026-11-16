@@ -45,6 +45,11 @@ sourceSets {
 configurations {
     integrationTestImplementation.extendsFrom testImplementation
     integrationTestRuntime.extendsFrom testRuntime
+    // Hibernate 7, for the compile-only file dependency below.
+    hibernate7Annotations {
+        canBeConsumed = false
+        transitive = false
+    }
 }
 
 compileKotlin{
@@ -73,6 +78,13 @@ dependencies {
     // implements (javax.persistence on Corda 4.14 and earlier, jakarta.persistence on Corda 4.15). No Hibernate dependency.
     compileOnly "javax.persistence:javax.persistence-api:$javax_persistence_version"
     compileOnly "jakarta.persistence:jakarta.persistence-api:$jakarta_persistence_version"
+
+    // DistributionRecord carries the Hibernate 5 and the Hibernate 7 mapping of its linear_id column (see there). Both Hibernate jars
+    // are compile-only, neither is published or bundled: the node provides the one it runs. Hibernate 7 is a file dependency, because
+    // Gradle does not resolve both hibernate-core modules into one configuration (they declare the same capability).
+    compileOnly "org.hibernate:hibernate-core:$hibernate5_version"
+    hibernate7Annotations "org.hibernate.orm:hibernate-core:$hibernate7_version"
+    compileOnly files(configurations.hibernate7Annotations)
 
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation "org.liquibase:liquibase-core:$liquibase_version"
