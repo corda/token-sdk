@@ -85,6 +85,10 @@ dependencies {
     compileOnly "org.hibernate:hibernate-core:$hibernate5_version"
     hibernate7Annotations "org.hibernate.orm:hibernate-core:$hibernate7_version"
     compileOnly files(configurations.hibernate7Annotations)
+    // DistributionRecordMappingTest builds that mapping with the Hibernate of the Corda version the tests run on (Hibernate 7 from
+    // Corda 4.15), which the Corda dependencies only put on the test runtime classpath.
+    def cordaRunsHibernate7 = (corda_release_version.tokenize('.')[1].find(/^\d+/) as int) >= 15
+    testCompileOnly(cordaRunsHibernate7 ? "org.hibernate.orm:hibernate-core:$hibernate7_version" : "org.hibernate:hibernate-core:$hibernate5_version")
 
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation "org.liquibase:liquibase-core:$liquibase_version"

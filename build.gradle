@@ -251,6 +251,24 @@ configure(publishProjects) { Project subproject ->
                             email = 'dev@corda.net'
                         }
                     }
+                    // The cordapp plugin's implementation configuration extends cordaProvided, so the POM would list the Corda modules
+                    // the SDK is built against (Corda 4.12) at runtime scope. A CorDapp built against Corda 4.15 then gets
+                    // corda-node-api 4.12, and with it Hibernate 5 next to Corda 4.15's Hibernate 7, which Gradle refuses to resolve:
+                    // "Cannot select module with conflict on capability 'org.hibernate:hibernate-core'". The node provides Corda, so
+                    // these are provided dependencies, which Maven and Gradle do not pass on to the CorDapps that use the SDK.
+                    withXml {
+                        def cordaProvided = subproject.configurations.findByName('cordaProvided')
+                        def provided = (cordaProvided?.allDependencies ?: []).collect { "${it.group}:${it.name}".toString() } as Set
+                        asNode().dependencies.dependency.each { dependency ->
+                            if ("${dependency.groupId.text()}:${dependency.artifactId.text()}".toString() in provided) {
+                                if (dependency.scope) {
+                                    dependency.scope[0].value = 'provided'
+                                } else {
+                                    dependency.appendNode('scope', 'provided')
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
