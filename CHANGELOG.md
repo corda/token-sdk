@@ -16,8 +16,15 @@
   (`wrong column type encountered in column [linear_id] in table [distribution_record]`).
 * The schema classes carry both the `javax.persistence` (Corda 4.14 and earlier) and the `jakarta.persistence` (Corda 4.15)
   annotations, so one jar runs on both. Build the SDK against Corda 4.12 (the default) for a jar that runs on 4.12 and 4.15
-  nodes; a jar built against 4.15 runs on 4.15 only, because its `withEntityManager` code is bound to the Jakarta
-  `EntityManager`.
+  nodes.
+* The distribution list code calls the node's entity manager through whichever persistence API it implements, and its compiled
+  classes refer to neither. Classes compiled against the `javax.persistence` `EntityManager` only run on Corda 4.15 where the node
+  converts them as it loads the CorDapp jar; a CorDapp's `MockNetwork`, `MockServices` and in-process driver tests on Corda 4.15
+  load them unconverted, and distribution list updates (evolvable tokens) failed there with
+  `NoClassDefFoundError: javax/persistence/EntityManager`.
+* The POMs declare the Corda modules the SDK is built against with `provided` scope rather than `runtime`, so they are not passed on
+  to the CorDapps that use the SDK. A CorDapp built against Corda 4.15 got `corda-node-api` 4.12 from `tokens-workflows`, and with
+  it Hibernate 5 next to Corda 4.15's Hibernate 7: `Cannot select module with conflict on capability 'org.hibernate:hibernate-core'`.
 * The Corda version to build and test against is a Gradle property: `./gradlew build -PcordaReleaseVersion=4.15-RC02`.
   The default, `4.12-SNAPSHOT`, is `cordaReleaseVersion` in `gradle.properties`. Corda release candidates resolve from the `corda-releases` repository on
   `software.r3.com`, with the `CORDA_ARTIFACTORY_USERNAME` and `CORDA_ARTIFACTORY_PASSWORD` environment variables.
