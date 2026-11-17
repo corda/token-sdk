@@ -14,6 +14,8 @@ import net.corda.core.identity.Party
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.CordaSerializable
 import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.Method
+import java.util.concurrent.ConcurrentHashMap
 
 @CordaSerializable
 data class DistributionListUpdate(val sender: Party, val receiver: Party, val linearId: UniqueIdentifier)
@@ -57,17 +59,17 @@ fun ServiceHub.addPartyToDistributionList(party: Party, linearId: UniqueIdentifi
 }
 
 internal fun ServiceHub.persistDistributionRecord(distributionRecord: DistributionRecord) {
-    withUntypedEntityManager { entityManager -> entityManager.callPersistenceApi("persist", arrayOf(Any::class.java), distributionRecord) }
+    withUntypedEntityManager { entityManager -> persist.call(entityManager, distributionRecord) }
 }
 
 private fun ServiceHub.queryDistributionRecords(jpql: String, vararg parameters: Pair<String, Any>): List<DistributionRecord> {
     return withUntypedEntityManager { entityManager ->
-        val query = entityManager.callPersistenceApi("createQuery", arrayOf(String::class.java, Class::class.java), jpql, DistributionRecord::class.java)!!
+        val query = createQuery.call(entityManager, jpql, DistributionRecord::class.java)!!
         for ((name, value) in parameters) {
-            query.callPersistenceApi("setParameter", arrayOf(String::class.java, Any::class.java), name, value)
+            setParameter.call(query, name, value)
         }
         @Suppress("UNCHECKED_CAST")
-        query.callPersistenceApi("getResultList", emptyArray()) as List<DistributionRecord>
+        getResultList.call(query) as List<DistributionRecord>
     }
 }
 
@@ -77,20 +79,38 @@ private fun ServiceHub.queryDistributionRecords(jpql: String, vararg parameters:
  */
 private fun <T> ServiceHub.withUntypedEntityManager(block: (Any) -> T): T = withEntityManager(block)
 
-/** Calls the method [name] of a persistence API object through the `javax.persistence` or `jakarta.persistence` interface that declares it. */
-private fun Any.callPersistenceApi(name: String, parameterTypes: Array<Class<*>>, vararg arguments: Any?): Any? {
-    val method = persistenceApiInterfaces(javaClass).mapNotNull { api ->
-        try {
-            api.getMethod(name, *parameterTypes)
-        } catch (e: NoSuchMethodException) {
-            null
+// The persistence API methods called above: EntityManager.persist and createQuery, TypedQuery.setParameter and getResultList.
+private val persist = PersistenceApiMethod("persist", Any::class.java)
+private val createQuery = PersistenceApiMethod("createQuery", String::class.java, Class::class.java)
+private val setParameter = PersistenceApiMethod("setParameter", String::class.java, Any::class.java)
+private val getResultList = PersistenceApiMethod("getResultList")
+
+/**
+ * A method of the persistence API, called through the `javax.persistence` or `jakarta.persistence` interface that declares it. The
+ * interface method is looked up on the first call for each implementation class (the node's entity manager and query classes, which do
+ * not change while it runs) and reused after that.
+ */
+private class PersistenceApiMethod(private val name: String, private vararg val parameterTypes: Class<*>) {
+    private val methodByImplementation = ConcurrentHashMap<Class<*>, Method>()
+
+    fun call(target: Any, vararg arguments: Any?): Any? {
+        val method = methodByImplementation.computeIfAbsent(target.javaClass, ::findMethod)
+        return try {
+            method.invoke(target, *arguments)
+        } catch (e: InvocationTargetException) {
+            throw e.targetException
         }
-    }.firstOrNull() ?: throw IllegalStateException(
-            "${javaClass.name} implements no persistence API interface with $name(${parameterTypes.joinToString { it.simpleName }})")
-    return try {
-        method.invoke(this, *arguments)
-    } catch (e: InvocationTargetException) {
-        throw e.targetException
+    }
+
+    private fun findMethod(implementation: Class<*>): Method {
+        return persistenceApiInterfaces(implementation).mapNotNull { api ->
+            try {
+                api.getMethod(name, *parameterTypes)
+            } catch (e: NoSuchMethodException) {
+                null
+            }
+        }.firstOrNull() ?: throw IllegalStateException(
+                "${implementation.name} implements no persistence API interface with $name(${parameterTypes.joinToString { it.simpleName }})")
     }
 }
 
