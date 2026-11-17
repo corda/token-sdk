@@ -5,6 +5,7 @@ package com.r3.corda.lib.tokens.workflows.utilities
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.AbstractToken
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.hasDistributionRecord
+import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.persistDistributionRecord
 import com.r3.corda.lib.tokens.workflows.internal.schemas.DistributionRecord
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.ContractState
@@ -29,8 +30,7 @@ fun FlowLogic<*>.addPartyToDistributionList(party: Party, linearId: UniqueIdenti
 	// Create an persist a new entity.
 	val hasRecord = hasDistributionRecord(serviceHub, linearId, party)
 	if (!hasRecord) {
-		val distributionRecord = DistributionRecord(linearId.id, party)
-		serviceHub.withEntityManager { persist(distributionRecord) }
+		serviceHub.persistDistributionRecord(DistributionRecord(linearId.id, party))
 	} else {
 		logger.info("Already stored a distribution record for $party and $linearId.")
 	}
